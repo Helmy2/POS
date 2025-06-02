@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">نقاط البيع</string>
+    <string name="no_internet">لا يوجد اتصال بالإنترنت</string>
+    <string name="back_online">عاد الاتصال بالإنترنت</string>
+    <string name="something_went_wrong">حدث خطأ ما</string>
+    <string name="english">الإنجليزية</string>
+    <string name="arabic">العربية</string>
+    <string name="dashboard">لوحة التحكم</string>
+    <string name="inventory">المخزون</string>
+    <string name="settings">الإعدادات</string>
+    <string name="system_default">افتراضي النظام</string>
+    <string name="light_mode">الوضع الفاتح</string>
+    <string name="dark_mode">الوضع الداكن</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="name">الاسم</string>
+    <string name="logout">تسجيل الخروج</string>
+    <string name="theme">السمة</string>
+    <string name="language">اللغة</string>
+    <string name="update_name">تحديث الاسم</string>
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+</resources>

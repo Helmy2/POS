@@ -11,4 +11,12 @@
     <string name="system_default">System Default</string>
     <string name="light_mode">Light mode</string>
     <string name="dark_mode">Dark mode</string>
+    <string name="email">Email</string>
+    <string name="name">Name</string>
+    <string name="logout">Logout</string>
+    <string name="theme">Theme</string>
+    <string name="language">Language</string>
+    <string name="update_name">Update name</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
 </resources>
