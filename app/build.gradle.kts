@@ -53,6 +53,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material.icons)
+    implementation(libs.androidx.material3.adaptive.navigation)
+
+    implementation(libs.androidx.splashscreen)
 
     // Koin
     implementation(libs.koin.compose)
