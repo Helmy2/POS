@@ -16,9 +16,12 @@ import androidx.lifecycle.lifecycleScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,10 +29,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val splashScreen = installSplashScreen()
         val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
+        val sessionManager: SessionManager by inject()
 
         lifecycleScope.launch {
-            delay(1000) // Simulate loading time
-            startDestination.value = Result.success(Destination.Main)
+            sessionManager.isUserLongedIn().collectLatest { isLoggedIn ->
+                startDestination.value = if (isLoggedIn) {
+                    Result.success(Destination.Main)
+                } else {
+                    Result.success(Destination.Auth)
+                }
+            }
         }
 
         splashScreen.setKeepOnScreenCondition {

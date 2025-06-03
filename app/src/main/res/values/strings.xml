@@ -1,22 +1,44 @@
 <resources>
-    <string name="app_name">POS</string>
-    <string name="no_internet">No internet connection</string>
-    <string name="back_online">Back online</string>
-    <string name="something_went_wrong">Something went wrong</string>
+    <string name="app_name" translatable="false">POS</string>
+    <string name="login">Log In</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="login_to_your_account">Log in to your account</string>
+    <string name="logout">Log Out</string>
+
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="theme">Theme</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="light_mode">Light Mode</string>
+    <string name="system_default">System Default</string>
+    <string name="update_name">Update Name</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="language">Language</string>
     <string name="english">English</string>
     <string name="arabic">Arabic</string>
+    <string name="show_password">Show Password</string>
+    <string name="hide_password">Hide Password</string>
+    <string name="back_button">Back</string>
+    <string name="create">Create</string>
+    <string name="update">Update</string>
+    <string name="delete">Delete</string>
+
+    <string name="error_invalid_email">Invalid email address</string>
+    <string name="error_invalid_password">Invalid password</string>
+    <string name="error_password_empty">Password is required</string>
+    <string name="error_password_weak">Password must be at least 8 characters and contain an uppercase letter and a special character.</string>
+    <string name="error_name_required">Name is required</string>
+
+    <string name="logged_out_success">Logged out successfully</string>
+
     <string name="dashboard">Dashboard</string>
     <string name="inventory">Inventory</string>
     <string name="settings">Settings</string>
-    <string name="system_default">System Default</string>
-    <string name="light_mode">Light mode</string>
-    <string name="dark_mode">Dark mode</string>
-    <string name="email">Email</string>
-    <string name="name">Name</string>
-    <string name="logout">Logout</string>
-    <string name="theme">Theme</string>
-    <string name="language">Language</string>
-    <string name="update_name">Update name</string>
-    <string name="cancel">Cancel</string>
-    <string name="confirm">Confirm</string>
+
+    <string name="no_internet">No internet connection</string>
+    <string name="back_online">Back online</string>
+
+    <string name="something_went_wrong">Something went wrong</string>
 </resources>

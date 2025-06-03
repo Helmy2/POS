@@ -18,33 +18,39 @@ class SessionManagerImpl(
 ) : SessionManager {
 
     override fun getCurrentSession(): Flow<UserSession> {
-        return dataStore.data
-            .catch { exception ->
-                if (exception is IOException) {
-                    emit(emptyPreferences())
-                } else {
-                    throw exception
-                }
+        return dataStore.data.catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
             }
-            .map { preferences ->
-                UserSession(
-                    userId = preferences[SessionManager.USER_ID],
-                    userName = preferences[SessionManager.USER_NAME],
-                    userEmail = preferences[SessionManager.USER_EMAIL],
-                    userRole = preferences[SessionManager.USER_ROLE],
-                    authToken = preferences[SessionManager.AUTH_TOKEN],
-                )
-            }
+        }.map { preferences ->
+            UserSession(
+                userId = preferences[SessionManager.USER_ID],
+                userName = preferences[SessionManager.USER_NAME],
+                userEmail = preferences[SessionManager.USER_EMAIL],
+                userRole = preferences[SessionManager.USER_ROLE],
+                authToken = preferences[SessionManager.AUTH_TOKEN],
+            )
+        }
     }
 
-    override suspend fun saveSession(session: UserSession) {
-        withContext(Dispatchers.IO) {
-            dataStore.edit { preferences ->
-                session.userId?.let { preferences[SessionManager.USER_ID] = it } ?: preferences.remove(SessionManager.USER_ID)
-                session.userName?.let { preferences[SessionManager.USER_NAME] = it } ?: preferences.remove(SessionManager.USER_NAME)
-                session.userEmail?.let { preferences[SessionManager.USER_EMAIL] = it } ?: preferences.remove(SessionManager.USER_EMAIL)
-                session.userRole?.let { preferences[SessionManager.USER_ROLE] = it } ?: preferences.remove(SessionManager.USER_ROLE)
-                session.authToken?.let { preferences[SessionManager.AUTH_TOKEN] = it } ?: preferences.remove(SessionManager.AUTH_TOKEN)
+    override suspend fun saveSession(session: UserSession): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                dataStore.edit { preferences ->
+                    session.userId?.let { preferences[SessionManager.USER_ID] = it }
+                        ?: preferences.remove(SessionManager.USER_ID)
+                    session.userName?.let { preferences[SessionManager.USER_NAME] = it }
+                        ?: preferences.remove(SessionManager.USER_NAME)
+                    session.userEmail?.let { preferences[SessionManager.USER_EMAIL] = it }
+                        ?: preferences.remove(SessionManager.USER_EMAIL)
+                    session.userRole?.let { preferences[SessionManager.USER_ROLE] = it }
+                        ?: preferences.remove(SessionManager.USER_ROLE)
+                    session.authToken?.let { preferences[SessionManager.AUTH_TOKEN] = it }
+                        ?: preferences.remove(SessionManager.AUTH_TOKEN)
+                }
+                Unit
             }
         }
     }
@@ -58,16 +64,26 @@ class SessionManagerImpl(
     }
 
     override fun getAuthToken(): Flow<String?> {
-        return dataStore.data
-            .catch { exception ->
-                if (exception is IOException) {
-                    emit(emptyPreferences())
-                } else {
-                    throw exception
-                }
+        return dataStore.data.catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
             }
-            .map { preferences ->
-                preferences[SessionManager.AUTH_TOKEN]
+        }.map { preferences ->
+            preferences[SessionManager.AUTH_TOKEN]
+        }
+    }
+
+    override fun isUserLongedIn(): Flow<Boolean> {
+        return dataStore.data.catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
             }
+        }.map { preferences ->
+            preferences[SessionManager.USER_ID] != null
+        }
     }
 }

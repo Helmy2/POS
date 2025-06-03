@@ -7,11 +7,12 @@ import kotlinx.coroutines.flow.Flow
 
 interface SessionManager {
     fun getCurrentSession(): Flow<UserSession>
-    suspend fun saveSession(session: UserSession)
+    suspend fun saveSession(session: UserSession): Result<Unit>
     suspend fun clearSession()
     fun getAuthToken(): Flow<String?>
+    fun isUserLongedIn(): Flow<Boolean>
 
-    companion object{
+    companion object {
         val USER_ID = intPreferencesKey("user_id")
         val USER_NAME = stringPreferencesKey("user_name")
         val USER_EMAIL = stringPreferencesKey("user_email")

@@ -89,12 +89,14 @@ fun MainScaffold(
                     AppNavHost(
                         startDestination = startDestination,
                         navController = navController,
+                        snackbarState = snackbarHostState,
                     )
                 }
             } else {
                 AppNavHost(
                     startDestination = startDestination,
                     navController = navController,
+                    snackbarState = snackbarHostState,
                 )
             }
         }

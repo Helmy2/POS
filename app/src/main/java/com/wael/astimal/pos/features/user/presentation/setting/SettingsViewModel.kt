@@ -6,6 +6,9 @@ import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import com.wael.astimal.pos.features.user.presentation.login.LoginEffect
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
@@ -15,20 +18,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val settingManger: SettingsManager,
-    private val sessionManager: SessionManager
+    private val settingManger: SettingsManager, private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
-    val state = _state
-        .onStart {
+    val state = _state.onStart {
             initializeUserData()
-        }
-        .stateIn(
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),
             initialValue = SettingsState()
         )
+
+    private val _effect = MutableSharedFlow<SettingsEffect>()
+    val effect: Flow<SettingsEffect> = _effect
 
     fun handleEvent(event: SettingsEvent) {
         when (event) {
@@ -79,6 +82,9 @@ class SettingsViewModel(
     private fun initializeUserData() {
         viewModelScope.launch {
             launch {
+                sessionManager.isUserLongedIn().collectLatest { isLoggedIn ->
+                    if (isLoggedIn.not()) _effect.emit(SettingsEffect.NavigateToLogin)
+                }
                 sessionManager.getCurrentSession().collectLatest { result ->
                     _state.update { it.copy(userSession = result) }
                 }

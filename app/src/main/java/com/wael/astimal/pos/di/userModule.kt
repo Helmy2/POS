@@ -8,6 +8,7 @@ import com.wael.astimal.pos.features.user.data.repository.SessionManagerImpl
 import com.wael.astimal.pos.features.user.data.repository.SettingsManagerImpl
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import com.wael.astimal.pos.features.user.presentation.login.LoginViewModel
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsViewModel
 import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidApplication
@@ -31,4 +32,5 @@ val userModule = module {
     }
 
     viewModel { SettingsViewModel( get(),get()) }
+    viewModel { LoginViewModel(get()) }
 }

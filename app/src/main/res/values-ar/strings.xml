@@ -1,23 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">نقاط البيع</string>
-    <string name="no_internet">لا يوجد اتصال بالإنترنت</string>
-    <string name="back_online">عاد الاتصال بالإنترنت</string>
-    <string name="something_went_wrong">حدث خطأ ما</string>
-    <string name="english">الإنجليزية</string>
-    <string name="arabic">العربية</string>
-    <string name="dashboard">لوحة التحكم</string>
-    <string name="inventory">المخزون</string>
-    <string name="settings">الإعدادات</string>
-    <string name="system_default">افتراضي النظام</string>
-    <string name="light_mode">الوضع الفاتح</string>
-    <string name="dark_mode">الوضع الداكن</string>
-    <string name="email">البريد الإلكتروني</string>
-    <string name="name">الاسم</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="welcome_back">مرحباً بعودتك</string>
+    <string name="login_to_your_account">سجل الدخول إلى حسابك</string>
     <string name="logout">تسجيل الخروج</string>
-    <string name="theme">السمة</string>
-    <string name="language">اللغة</string>
+
+    <string name="name">الاسم</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="theme">المظهر</string>
+    <string name="dark_mode">الوضع الداكن</string>
+    <string name="light_mode">الوضع الفاتح</string>
+    <string name="system_default">إعدادات النظام</string>
     <string name="update_name">تحديث الاسم</string>
     <string name="cancel">إلغاء</string>
     <string name="confirm">تأكيد</string>
+    <string name="language">اللغة</string>
+    <string name="english">الإنجليزية</string>
+    <string name="arabic">العربية</string>
+    <string name="show_password">إظهار كلمة المرور</string>
+    <string name="hide_password">إخفاء كلمة المرور</string>
+    <string name="back_button">رجوع</string>
+    <string name="create">إنشاء</string>
+    <string name="update">تحديث</string>
+    <string name="delete">حذف</string>
+
+    <string name="error_invalid_email">عنوان بريد إلكتروني غير صالح</string>
+    <string name="error_invalid_password">كلمة مرور غير صالحة</string>
+    <string name="error_password_empty">كلمة المرور مطلوبة</string>
+    <string name="error_password_weak">يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وأن تحتوي على حرف كبير وحرف خاص.</string>
+    <string name="error_name_required">الاسم مطلوب</string>
+
+    <string name="logged_out_success">تم تسجيل الخروج بنجاح</string>
+
+    <string name="dashboard">لوحة التحكم</string>
+    <string name="inventory">المخزون</string>
+    <string name="settings">الإعدادات</string>
+
+    <string name="no_internet">لا يوجد اتصال بالإنترنت</string>
+    <string name="back_online">تم استعادة الاتصال بالإنترنت</string>
+
+    <string name="something_went_wrong">حدث خطأ ما</string>
 </resources>
