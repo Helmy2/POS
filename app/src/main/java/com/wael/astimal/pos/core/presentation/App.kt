@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.core.presentation
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -65,7 +65,7 @@ fun MainScaffold(
             targetState = TopLevelRoutes.routes.any {
                 navBackStackEntry?.destination?.hasRoute(it.route::class) == true
             },
-            modifier = Modifier.consumeWindowInsets(paddingValues),
+            modifier = Modifier.systemBarsPadding(),
         ) {
             if (it) {
                 NavigationSuiteScaffold(

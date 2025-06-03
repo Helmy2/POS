@@ -41,4 +41,9 @@
     <string name="back_online">Back online</string>
 
     <string name="something_went_wrong">Something went wrong</string>
+
+    <string name="unit_of_measures">Unit</string>
+    <string name="stores">Stores</string>
+    <string name="categories">Categories</string>
+    <string name="products">Products</string>
 </resources>

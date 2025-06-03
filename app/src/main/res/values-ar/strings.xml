@@ -41,4 +41,9 @@
     <string name="back_online">تم استعادة الاتصال بالإنترنت</string>
 
     <string name="something_went_wrong">حدث خطأ ما</string>
+
+    <string name="unit_of_measures">الوحدات</string>
+    <string name="stores">المتاجر</string>
+    <string name="categories">الفئات</string>
+    <string name="products">المنتجات</string>
 </resources>

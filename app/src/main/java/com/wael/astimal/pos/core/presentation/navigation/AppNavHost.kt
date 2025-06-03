@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.features.inventory.presentation.inventory.InventoryRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 
@@ -32,7 +33,7 @@ fun AppNavHost(
                 Text("Dashboard")
             }
             composable<Destination.Main.Inventory> {
-                Text("Inventory")
+                InventoryRoute(navController = navController)
             }
             composable<Destination.Main.Settings> {
                 SettingsRoute(navController = navController)
