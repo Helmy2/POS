@@ -59,7 +59,7 @@ fun SettingsScreen(
         ) {
             LabeledRow(
                 label = stringResource(R.string.email),
-                content = { Text(state.user?.email ?: "") },
+                content = { Text(state.userSession?.userEmail ?: "") },
                 modifier = Modifier.sizeIn(maxWidth = 400.dp).fillMaxWidth()
             )
 
@@ -69,7 +69,7 @@ fun SettingsScreen(
                     ClickableText(
                         content = {
                             Row {
-                                Text(text = state.user?.name ?: "Anonymous")
+                                Text(text = state.userSession?.userName ?: "Anonymous")
                                 Spacer(Modifier.width(8.dp))
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,

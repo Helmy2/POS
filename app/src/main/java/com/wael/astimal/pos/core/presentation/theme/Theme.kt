@@ -17,8 +17,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
-import com.wael.astimal.pos.features.user.domain.usecase.settings.GetLanguageUseCase
-import com.wael.astimal.pos.features.user.domain.usecase.settings.GetThemeModeUseCase
+import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
 import org.koin.compose.koinInject
 import java.util.Locale
 
@@ -45,10 +44,11 @@ fun POSTheme(
     dynamicColor: Boolean = true, content: @Composable () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    val getThemeModeUseCase: GetThemeModeUseCase = koinInject()
-    val getLanguageUseCase: GetLanguageUseCase = koinInject()
-    val mode = getThemeModeUseCase().collectAsStateWithLifecycle(ThemeMode.System).value
-    val language = getLanguageUseCase().collectAsStateWithLifecycle(Language.English).value
+    val getThemeModeUseCase: SettingsManager = koinInject()
+    val mode =
+        getThemeModeUseCase.getThemeMode().collectAsStateWithLifecycle(ThemeMode.System).value
+    val language =
+        getThemeModeUseCase.getLanguage().collectAsStateWithLifecycle(Language.English).value
 
     val darkTheme = remember(mode) {
         when (mode) {
@@ -83,8 +83,6 @@ fun POSTheme(
 
 object LocalAppLocale {
     private var default: Locale? = null
-    val current: String
-        @Composable get() = Locale.getDefault().toString()
 
     @Composable
     infix fun provides(value: String?): ProvidedValue<*> {

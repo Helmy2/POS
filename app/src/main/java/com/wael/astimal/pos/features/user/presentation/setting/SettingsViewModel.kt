@@ -4,10 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
-import com.wael.astimal.pos.features.user.domain.usecase.settings.ChangeLanguageUseCase
-import com.wael.astimal.pos.features.user.domain.usecase.settings.ChangeThemeModeUseCase
-import com.wael.astimal.pos.features.user.domain.usecase.settings.GetLanguageUseCase
-import com.wael.astimal.pos.features.user.domain.usecase.settings.GetThemeModeUseCase
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
@@ -17,10 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val getThemeModeUseCase: GetThemeModeUseCase,
-    private val changeThemeModeUseCase: ChangeThemeModeUseCase,
-    private val getLanguageUseCase: GetLanguageUseCase,
-    private val changeLanguageUseCase: ChangeLanguageUseCase,
+    private val settingManger: SettingsManager,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -57,13 +53,13 @@ class SettingsViewModel(
 
     private fun updateLanguage(language: Language) {
         viewModelScope.launch {
-            changeLanguageUseCase(language)
+            settingManger.changeLanguage(language)
         }
     }
 
     private fun updateTheme(mode: ThemeMode) {
         viewModelScope.launch {
-            changeThemeModeUseCase(mode)
+            settingManger.changeTheme(mode)
         }
     }
 
@@ -83,15 +79,17 @@ class SettingsViewModel(
     private fun initializeUserData() {
         viewModelScope.launch {
             launch {
-                // todo: Fetch user data from a repository or use case
+                sessionManager.getCurrentSession().collectLatest { result ->
+                    _state.update { it.copy(userSession = result) }
+                }
             }
             launch {
-                getThemeModeUseCase().collectLatest { result ->
+                settingManger.getThemeMode().collectLatest { result ->
                     _state.update { it.copy(themeMode = result) }
                 }
             }
             launch {
-                getLanguageUseCase().collectLatest { result ->
+                settingManger.getLanguage().collectLatest { result ->
                     _state.update { it.copy(language = result) }
                 }
             }
@@ -99,6 +97,8 @@ class SettingsViewModel(
     }
 
     private fun logout() {
-        // todo: Implement the logic to handle user logout
+        viewModelScope.launch {
+            sessionManager.clearSession()
+        }
     }
 }
