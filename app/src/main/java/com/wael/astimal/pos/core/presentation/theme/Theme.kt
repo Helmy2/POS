@@ -2,7 +2,10 @@ package com.wael.astimal.pos.core.presentation.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -14,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
@@ -21,23 +25,18 @@ import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
 import org.koin.compose.koinInject
 import java.util.Locale
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80, secondary = PurpleGrey80, tertiary = Pink80
+val LightColorScheme: ColorScheme = lightColorScheme()
+
+val DarkColorScheme: ColorScheme = darkColorScheme()
+
+val Shapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(8.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(16.dp)
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40, secondary = PurpleGrey40, tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
 
 @Composable
 fun POSTheme(
@@ -74,7 +73,7 @@ fun POSTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            shapes = Shapes,
             content = content,
         )
     }

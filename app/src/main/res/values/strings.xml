@@ -46,4 +46,8 @@
     <string name="stores">Stores</string>
     <string name="categories">Categories</string>
     <string name="products">Products</string>
+    <string name="search">Search</string>
+    <string name="ar_name">Arabic name</string>
+    <string name="en_name">English name</string>
+    <string name="rate">Rate</string>
 </resources>

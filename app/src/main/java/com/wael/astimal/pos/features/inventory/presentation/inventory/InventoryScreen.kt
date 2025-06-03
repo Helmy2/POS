@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGridRes
+import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -26,9 +27,7 @@ fun InventoryRoute(
     navController: NavHostController,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    InventoryScreen(state = state, onEvent = viewModel::handleEvent){
-        navController.navigateUp()
-    }
+    InventoryScreen(state = state, onEvent = viewModel::handleEvent, navController = navController)
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -36,7 +35,7 @@ fun InventoryRoute(
 fun InventoryScreen(
     state: InventoryState,
     onEvent: (InventoryEvent) -> Unit,
-    onNavigateBack: () -> Unit,
+    navController: NavHostController,
 ) {
     val scope = rememberCoroutineScope()
     val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<InventoryDestination>()
@@ -47,7 +46,7 @@ fun InventoryScreen(
                 scaffoldNavigator.navigateBack()
             }
         } else {
-            onNavigateBack()
+            navController.navigateUp()
         }
     }
 
@@ -81,7 +80,7 @@ fun InventoryScreen(
             AnimatedPane {
                 when (scaffoldNavigator.currentDestination?.contentKey) {
                     InventoryDestination.UnitOfMeasures -> {
-                        Text("UnitOfMeasures")
+                        UnitRoute(onBack = { scope.launch { scaffoldNavigator.navigateBack() } })
                     }
 
                     InventoryDestination.Stores -> {

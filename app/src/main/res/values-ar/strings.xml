@@ -46,4 +46,8 @@
     <string name="stores">المتاجر</string>
     <string name="categories">الفئات</string>
     <string name="products">المنتجات</string>
+    <string name="search">بحث</string>
+    <string name="ar_name">الاسم بالعربية</string>
+    <string name="en_name">الاسم بالإنجليزية</string>
+    <string name="rate">نسبه</string>
 </resources>
