@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
-import com.wael.astimal.pos.features.user.presentation.login.LoginEffect
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -82,10 +81,8 @@ class SettingsViewModel(
     private fun initializeUserData() {
         viewModelScope.launch {
             launch {
-                sessionManager.isUserLongedIn().collectLatest { isLoggedIn ->
-                    if (isLoggedIn.not()) _effect.emit(SettingsEffect.NavigateToLogin)
-                }
                 sessionManager.getCurrentSession().collectLatest { result ->
+                    if (result.isLoggedIn.not()) _effect.emit(SettingsEffect.NavigateToLogin)
                     _state.update { it.copy(userSession = result) }
                 }
             }

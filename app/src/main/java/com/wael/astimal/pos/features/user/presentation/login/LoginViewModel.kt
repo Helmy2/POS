@@ -3,16 +3,13 @@ package com.wael.astimal.pos.features.user.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.features.user.domain.entity.UserRole
 import com.wael.astimal.pos.features.user.domain.entity.UserSession
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -21,9 +18,7 @@ class LoginViewModel(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginState())
-    val state: StateFlow<LoginState> = _state.onStart {
-        observeCurrentUser()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LoginState())
+    val state: StateFlow<LoginState> = _state
 
     private val _effect = MutableSharedFlow<LoginEffect>()
     val effect: Flow<LoginEffect> = _effect
@@ -34,15 +29,6 @@ class LoginViewModel(
             is LoginEvent.PasswordChanged -> updatePassword(event.password)
             LoginEvent.TogglePasswordVisibility -> togglePasswordVisibility()
             LoginEvent.Login -> login()
-        }
-    }
-
-    // Observe current user for the desktop login with google
-    private fun observeCurrentUser() {
-        viewModelScope.launch {
-            sessionManger.isUserLongedIn().collectLatest {
-                if (it) _effect.emit(LoginEffect.NavigateToHome)
-            }
         }
     }
 
@@ -65,9 +51,9 @@ class LoginViewModel(
                 UserSession(
                     userId = 413, // Assuming userId is not needed for login
                     userName = state.value.username,
-                    userEmail = null, // Assuming email is not needed for login
-                    userRole = null, // Assuming role is not needed for login
-                    authToken = null // Assuming token is not needed for login
+                    userEmail = "", // Assuming email is not needed for login
+                    userRole = UserRole.EMPLOYEE, // Assuming role is not needed for login
+                    authToken = "" // Assuming token is not needed for login
                 )
             )
             handleAuthResult(result) {

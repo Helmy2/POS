@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.user.domain.repository
 
+import androidx.datastore.preferences.core.byteArrayPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.wael.astimal.pos.features.user.domain.entity.UserSession
@@ -10,13 +11,12 @@ interface SessionManager {
     suspend fun saveSession(session: UserSession): Result<Unit>
     suspend fun clearSession()
     fun getAuthToken(): Flow<String?>
-    fun isUserLongedIn(): Flow<Boolean>
 
     companion object {
         val USER_ID = intPreferencesKey("user_id")
         val USER_NAME = stringPreferencesKey("user_name")
         val USER_EMAIL = stringPreferencesKey("user_email")
         val USER_ROLE = stringPreferencesKey("user_role")
-        val AUTH_TOKEN = stringPreferencesKey("auth_token")
+        val AUTH_TOKEN = byteArrayPreferencesKey("auth_token")
     }
 }

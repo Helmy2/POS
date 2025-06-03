@@ -5,6 +5,7 @@ import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import com.wael.astimal.pos.features.user.domain.entity.UserRole
 import com.wael.astimal.pos.features.user.domain.entity.UserSession
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -25,12 +26,25 @@ class SessionManagerImpl(
                 throw exception
             }
         }.map { preferences ->
+            val userId = preferences[SessionManager.USER_ID] ?: UserSession.DEFAULT_USER_ID
+            val userName = preferences[SessionManager.USER_NAME] ?: ""
+            val userEmail = preferences[SessionManager.USER_EMAIL] ?: ""
+            val roleName = preferences[SessionManager.USER_ROLE]
+            val userRole = try {
+                if (roleName != null) UserRole.valueOf(roleName) else UserRole.UNKNOWN
+            } catch (_: IllegalArgumentException) {
+                UserRole.UNKNOWN
+            }
+            val authToken = preferences[SessionManager.AUTH_TOKEN]?.let {
+                Crypto.decrypt(it)
+            }.toString()
+
             UserSession(
-                userId = preferences[SessionManager.USER_ID],
-                userName = preferences[SessionManager.USER_NAME],
-                userEmail = preferences[SessionManager.USER_EMAIL],
-                userRole = preferences[SessionManager.USER_ROLE],
-                authToken = preferences[SessionManager.AUTH_TOKEN],
+                userId = userId,
+                userName = userName,
+                userEmail = userEmail,
+                userRole = userRole,
+                authToken = authToken,
             )
         }
     }
@@ -39,16 +53,12 @@ class SessionManagerImpl(
         return withContext(Dispatchers.IO) {
             runCatching {
                 dataStore.edit { preferences ->
-                    session.userId?.let { preferences[SessionManager.USER_ID] = it }
-                        ?: preferences.remove(SessionManager.USER_ID)
-                    session.userName?.let { preferences[SessionManager.USER_NAME] = it }
-                        ?: preferences.remove(SessionManager.USER_NAME)
-                    session.userEmail?.let { preferences[SessionManager.USER_EMAIL] = it }
-                        ?: preferences.remove(SessionManager.USER_EMAIL)
-                    session.userRole?.let { preferences[SessionManager.USER_ROLE] = it }
-                        ?: preferences.remove(SessionManager.USER_ROLE)
-                    session.authToken?.let { preferences[SessionManager.AUTH_TOKEN] = it }
-                        ?: preferences.remove(SessionManager.AUTH_TOKEN)
+                    preferences[SessionManager.USER_ID] = session.userId
+                    preferences[SessionManager.USER_NAME] = session.userName
+                    preferences[SessionManager.USER_EMAIL] = session.userEmail
+                    preferences[SessionManager.USER_ROLE] = session.userRole.name
+                    preferences[SessionManager.AUTH_TOKEN] =
+                        Crypto.encrypt(session.authToken.toByteArray())
                 }
                 Unit
             }
@@ -71,19 +81,9 @@ class SessionManagerImpl(
                 throw exception
             }
         }.map { preferences ->
-            preferences[SessionManager.AUTH_TOKEN]
-        }
-    }
-
-    override fun isUserLongedIn(): Flow<Boolean> {
-        return dataStore.data.catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }.map { preferences ->
-            preferences[SessionManager.USER_ID] != null
+            preferences[SessionManager.AUTH_TOKEN]?.let {
+                Crypto.decrypt(it)
+            }.toString()
         }
     }
 }

@@ -5,7 +5,7 @@ import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.features.user.domain.entity.UserSession
 
 data class SettingsState(
-    val userSession: UserSession? = null,
+    val userSession: UserSession = UserSession.default(),
     val showEditNameDialog: Boolean = false,
     val showEditProfilePictureDialog: Boolean = false,
     val showThemeDialog: Boolean = false,
