@@ -12,11 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.features.inventory.presentation.components.ItemGridRes
+import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -37,6 +38,7 @@ fun InventoryScreen(
     onEvent: (InventoryEvent) -> Unit,
     navController: NavHostController,
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<InventoryDestination>()
 
@@ -55,7 +57,7 @@ fun InventoryScreen(
         value = scaffoldNavigator.scaffoldValue,
         listPane = {
             AnimatedPane {
-                ItemGridRes(
+                ItemGrid(
                     list = InventoryDestination.getAll(),
                     onItemClick = {
                         onEvent(InventoryEvent.UpdateSelectDestination(it))
@@ -65,10 +67,10 @@ fun InventoryScreen(
                     },
                     labelProvider = {
                         when (it) {
-                            InventoryDestination.UnitOfMeasures -> R.string.unit_of_measures
-                            InventoryDestination.Stores -> R.string.stores
-                            InventoryDestination.Categories -> R.string.categories
-                            InventoryDestination.Products -> R.string.products
+                            InventoryDestination.UnitOfMeasures -> context.getString(R.string.unit_of_measures)
+                            InventoryDestination.Stores -> context.getString(R.string.stores)
+                            InventoryDestination.Categories -> context.getString(R.string.categories)
+                            InventoryDestination.Products -> context.getString(R.string.products)
                         }
                     },
                     isSelected = { it == state.selectedDestination },

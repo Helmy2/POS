@@ -20,8 +20,8 @@ import com.wael.astimal.pos.core.domain.entity.Language
 @Composable
 fun LanguageSettingRow(
     showDialog: Boolean,
-    onShowDialog: (Boolean) -> Unit,
     language: Language,
+    onShowDialog: (Boolean) -> Unit,
     onLanguageChange: (Language) -> Unit,
     modifier: Modifier = Modifier,
 ) {

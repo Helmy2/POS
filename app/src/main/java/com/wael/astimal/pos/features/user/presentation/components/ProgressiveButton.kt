@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 fun ProgressiveButton(
     isLoading: Boolean,
     text: String,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,

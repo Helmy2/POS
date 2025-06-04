@@ -79,7 +79,7 @@ fun SettingsScreen(
                     ClickableText(
                         content = {
                             Row {
-                                Text(text = state.userSession?.userName ?: "Anonymous")
+                                Text(text = state.userSession.userName)
                                 Spacer(Modifier.width(8.dp))
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,

@@ -20,8 +20,8 @@ import com.wael.astimal.pos.core.domain.entity.ThemeMode
 @Composable
 fun ThemeSettingsRow(
     showDialog: Boolean,
-    onShowDialog: (Boolean) -> Unit,
     themeMode: ThemeMode,
+    onShowDialog: (Boolean) -> Unit,
     onThemeChange: (ThemeMode) -> Unit,
     modifier: Modifier = Modifier,
 ) {

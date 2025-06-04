@@ -27,7 +27,7 @@ import com.wael.astimal.pos.R
 @Composable
 fun PasswordTextField(
     value: String,
-    @StringRes  error: Int?,
+    error: String?,
     isVisible: Boolean,
     supportingText: @Composable (() -> Unit)?,
     keyboardOptions: KeyboardOptions,

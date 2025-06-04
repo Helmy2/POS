@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 @Composable
 fun LabeledRow(
     label: String,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
-    modifier: Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,

@@ -72,6 +72,7 @@ fun LoginScreen(
     onEvent: (LoginEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val focus = LocalFocusManager.current
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
@@ -82,13 +83,13 @@ fun LoginScreen(
             .padding(16.dp),
     ) {
         CredentialsHeader(
-            title = R.string.welcome_back,
-            body = R.string.login_to_your_account,
+            title = context.getString(R.string.welcome_back),
+            body = context.getString(R.string.login_to_your_account),
         )
         AuthTextField(
             value = state.username,
             label = stringResource(R.string.name),
-            error = state.usernameError,
+            error = state.usernameError?.let { context.getString(it) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
             ),
@@ -100,7 +101,7 @@ fun LoginScreen(
 
         PasswordTextField(
             value = state.password,
-            error = state.passwordError,
+            error = state.passwordError?.let { stringResource(it) },
             isVisible = state.isPasswordVisible,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
