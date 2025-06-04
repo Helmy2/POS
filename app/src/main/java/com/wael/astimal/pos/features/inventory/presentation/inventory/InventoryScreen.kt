@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.presentation.category.CategoryRoute
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
+import com.wael.astimal.pos.features.inventory.presentation.product.ProductRoute
 import com.wael.astimal.pos.features.inventory.presentation.store.StoreRoute
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
 import kotlinx.coroutines.launch
@@ -100,7 +101,9 @@ fun InventoryScreen(
                     }
 
                     InventoryDestination.Products -> {
-                        Text("Products")
+                        ProductRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                        )
                     }
 
                     else -> {}

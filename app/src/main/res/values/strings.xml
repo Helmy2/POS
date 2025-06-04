@@ -52,4 +52,14 @@
     <string name="rate">Rate</string>
     <string name="new_">New</string>
     <string name="store_type">Store type</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="default_unit">Default Unit</string>
+    <string name="average_cost_price">Average cost price</string>
+    <string name="selling_price">Selling price</string>
+    <string name="opening_balance_qty">Opening Balance</string>
+    <string name="min_stock_level">Min stock level</string>
+    <string name="min_stock_unit">Min stock unit</string>
+    <string name="max_stock_level">Max stock level</string>
+    <string name="max_stock_unit">Max stock unit</string>
+    <string name="first_period_data">First period data</string>
 </resources>
