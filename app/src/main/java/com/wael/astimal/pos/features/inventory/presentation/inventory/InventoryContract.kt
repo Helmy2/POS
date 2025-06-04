@@ -14,6 +14,6 @@ enum class InventoryDestination {
 
     companion object {
         fun getAll(): List<InventoryDestination> =
-            listOf(UnitOfMeasures, Stores, Categories, Products)
+            listOf(Stores, UnitOfMeasures, Categories, Products)
     }
 }

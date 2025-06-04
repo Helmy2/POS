@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
+import com.wael.astimal.pos.features.inventory.presentation.store.StoreRoute
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -86,11 +87,13 @@ fun InventoryScreen(
                     }
 
                     InventoryDestination.Stores -> {
-                        Text("Stores")
+                        StoreRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                        )
                     }
 
                     InventoryDestination.Categories -> {
-                        Text("Store")
+                        Text("Categories")
                     }
 
                     InventoryDestination.Products -> {

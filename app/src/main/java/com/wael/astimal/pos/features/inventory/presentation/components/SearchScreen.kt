@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.presentation.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -115,25 +116,23 @@ fun SearchScreen(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                AnimatedVisibility(visible = !isNew && !loading) {
+                    ElevatedButton(onClick = { onNew() },
+                    ) {
+                        Text(stringResource(R.string.new_))
+                    }
+                }
+
                 Row(
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ElevatedButton(
-                        onClick = {
-                            onDelete()
-                        },
+                        onClick = { onDelete() },
                         enabled = !isNew && !loading,
                     ) {
                         Text(stringResource(R.string.delete))
-                    }
-                    ElevatedButton(
-                        onClick = {
-                            onNew()
-                        },
-                    ) {
-                        Text(stringResource(R.string.new_))
                     }
                     Button(
                         onClick = {

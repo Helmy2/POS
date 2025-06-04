@@ -13,9 +13,6 @@ interface UnitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: List<UnitEntity>)
 
-    @Delete
-    suspend fun delete(list: List<UnitEntity>)
-
     @Query("SELECT * FROM units WHERE arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%'")
     fun getAll(query: String): Flow<List<UnitEntity>>
 
