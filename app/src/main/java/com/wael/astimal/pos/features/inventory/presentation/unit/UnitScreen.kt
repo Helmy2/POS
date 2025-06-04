@@ -53,9 +53,10 @@ fun UnitScreen(
         onSearch = { onEvent(UnitEvent.Search(it)) },
         onSearchActiveChange = { onEvent(UnitEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        onDelete = { onEvent(UnitEvent.DeleteUnitOfMeasure) },
-        onCreate = { onEvent(UnitEvent.CreateUnitOfMeasure) },
-        onUpdate = { onEvent(UnitEvent.UpdateUnitOfMeasure) },
+        onDelete = { onEvent(UnitEvent.DeleteUnit) },
+        onCreate = { onEvent(UnitEvent.CreateUnit) },
+        onUpdate = { onEvent(UnitEvent.UpdateUnit) },
+        onNew = { onEvent(UnitEvent.NewUnit) },
         searchResults = {
             ItemGrid(
                 list = state.searchResults,
@@ -63,7 +64,7 @@ fun UnitScreen(
                     onEvent(UnitEvent.UpdateIsQueryActive(false))
                     onEvent(UnitEvent.Select(it))
                 },
-                labelProvider = { "${it.arName}: ${it.enName}" },
+                labelProvider = { "${it.enName}: ${it.arName}" },
                 isSelected = { it.localId == state.selectedUnit?.localId },
             )
         },

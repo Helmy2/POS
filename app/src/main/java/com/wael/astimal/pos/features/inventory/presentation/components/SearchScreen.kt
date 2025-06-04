@@ -46,6 +46,7 @@ fun SearchScreen(
     onDelete: () -> Unit,
     onCreate: () -> Unit,
     onUpdate: () -> Unit,
+    onNew: () -> Unit,
     modifier: Modifier = Modifier,
     searchResults: @Composable () -> Unit,
     mainContent: @Composable () -> Unit,
@@ -89,7 +90,7 @@ fun SearchScreen(
             expanded = isSearchActive,
             onExpandedChange = onSearchActiveChange,
         ) {
-            AnimatedContent(loading) {
+            AnimatedContent(loading, modifier= Modifier.padding(8.dp)) { it ->
                 if (it) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -126,6 +127,13 @@ fun SearchScreen(
                         enabled = !isNew && !loading,
                     ) {
                         Text(stringResource(R.string.delete))
+                    }
+                    ElevatedButton(
+                        onClick = {
+                            onNew()
+                        },
+                    ) {
+                        Text(stringResource(R.string.new_))
                     }
                     Button(
                         onClick = {
