@@ -29,7 +29,7 @@ fun AppNavHost(
                 Text("Dashboard")
             }
             composable<Destination.Main.Inventory> {
-                InventoryRoute(navController = navController)
+                InventoryRoute(navController = navController, snackbarHostState = snackbarState)
             }
             composable<Destination.Main.Settings> {
                 SettingsRoute(navController = navController)

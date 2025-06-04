@@ -42,7 +42,7 @@
 
     <string name="something_went_wrong">Something went wrong</string>
 
-    <string name="unit_of_measures">Unit</string>
+    <string name="unit">Unit</string>
     <string name="stores">Stores</string>
     <string name="categories">Categories</string>
     <string name="products">Products</string>
@@ -62,4 +62,9 @@
     <string name="max_stock_level">Max stock level</string>
     <string name="max_stock_unit">Max stock unit</string>
     <string name="first_period_data">First period data</string>
+    <string name="from_store">From store</string>
+    <string name="to_store">To store</string>
+    <string name="product">Product</string>
+    <string name="quantity">Quantity</string>
+    <string name="stock_transfer">Stock tranfer</string>
 </resources>

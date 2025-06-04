@@ -1,0 +1,124 @@
+package com.wael.astimal.pos.features.inventory.data.repository
+
+import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.data.entity.toDomain
+import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+class StockTransferRepositoryImpl(
+    private val stockTransferDao: StockTransferDao,
+) : StockTransferRepository {
+    
+    override fun getStockTransfersWithDetails(): Flow<List<StockTransfer>> {
+        return stockTransferDao.getAllStockTransfersWithDetailsFlow().map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
+    override fun getStockTransferWithDetailsFlow(localId: Long): Flow<StockTransfer?> {
+        return stockTransferDao.getStockTransferWithDetailsFlow(localId).map { entityWithDetails ->
+            entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
+        }
+    }
+
+    override suspend fun getStockTransferWithDetails(localId: Long): StockTransfer? {
+        val entityWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
+        return entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
+    }
+
+
+    override suspend fun addStockTransfer(
+        fromStoreId: Long,
+        toStoreId: Long,
+        initiatedByUserId: Long,
+        items: List<StockTransferItemEntity>
+    ): Result<Unit> {
+        return try {
+            if (items.isEmpty()) {
+                return Result.failure(IllegalArgumentException("Stock transfer must have at least one item."))
+            }
+
+            val newTransferEntity = StockTransferEntity(
+                serverId = null,
+                fromStoreId = fromStoreId,
+                toStoreId = toStoreId,
+                initiatedByUserId = initiatedByUserId,
+                isAccepted = null,
+                transferDate = System.currentTimeMillis(),
+                isSynced = false,
+                lastModified = System.currentTimeMillis(),
+                isDeletedLocally = false
+            )
+            stockTransferDao.insertStockTransfer(newTransferEntity)
+
+            stockTransferDao.insertStockTransferItems(items)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateStockTransferStatus(localId: Long, isAccepted: Boolean?): Result<StockTransfer> {
+        return try {
+            val transferEntity = stockTransferDao.getStockTransferEntityByLocalId(localId)
+                ?: return Result.failure(NoSuchElementException("Stock transfer not found with localId: $localId"))
+
+            val updatedEntity = transferEntity.copy(
+                isAccepted = isAccepted,
+                isSynced = false,
+                lastModified = System.currentTimeMillis()
+            )
+            stockTransferDao.updateStockTransfer(updatedEntity)
+
+            val updatedTransferWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
+                ?: return Result.failure(IllegalStateException("Failed to retrieve transfer after status update"))
+
+            Result.success(updatedTransferWithDetails.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteStockTransfer(transferLocalId: Long): Result<Unit> {
+        return try {
+            val transferEntity = stockTransferDao.getStockTransferEntityByLocalId(transferLocalId)
+                ?: return Result.failure(NoSuchElementException("Stock transfer not found for deletion with localId: $transferLocalId"))
+
+            val transferToMarkAsDeleted = transferEntity.copy(
+                isDeletedLocally = true,
+                isSynced = false,
+                lastModified = System.currentTimeMillis()
+            )
+            stockTransferDao.updateStockTransfer(transferToMarkAsDeleted)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun permanentlyDeleteStockTransfers(localIds: List<Long>): Result<Unit> {
+        return try {
+            stockTransferDao.deleteStockTransfersByLocalIds(localIds)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun syncStockTransfers(): Result<Unit> {
+        // todo
+        // Placeholder for actual sync logic
+        // 1. Get local changes (new, status updated, soft-deleted)
+        // 2. Send to API
+        // 3. Handle API responses (update serverId, isSynced, permanently delete)
+        // 4. Fetch changes from server
+        // 5. Update local DB, map server IDs to local IDs for relations
+        println("StockTransferRepositoryImpl: syncStockTransfers() called, API service not yet integrated.")
+        return Result.success(Unit)
+    }
+}

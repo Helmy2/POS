@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.presentation.inventory
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
@@ -20,6 +20,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.presentation.category.CategoryRoute
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.product.ProductRoute
+import com.wael.astimal.pos.features.inventory.presentation.stock_transfer.StockTransferRoute
 import com.wael.astimal.pos.features.inventory.presentation.store.StoreRoute
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
 import kotlinx.coroutines.launch
@@ -29,9 +30,11 @@ import org.koin.androidx.compose.koinViewModel
 fun InventoryRoute(
     viewModel: InventoryViewModel = koinViewModel(),
     navController: NavHostController,
+    snackbarHostState : SnackbarHostState
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    InventoryScreen(state = state, onEvent = viewModel::handleEvent, navController = navController)
+    InventoryScreen(state = state, onEvent = viewModel::handleEvent,
+        navController = navController, snackbarHostState=snackbarHostState)
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -40,6 +43,7 @@ fun InventoryScreen(
     state: InventoryState,
     onEvent: (InventoryEvent) -> Unit,
     navController: NavHostController,
+    snackbarHostState :SnackbarHostState
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -70,10 +74,11 @@ fun InventoryScreen(
                     },
                     labelProvider = {
                         when (it) {
-                            InventoryDestination.UnitOfMeasures -> context.getString(R.string.unit_of_measures)
+                            InventoryDestination.UnitOfMeasures -> context.getString(R.string.unit)
                             InventoryDestination.Stores -> context.getString(R.string.stores)
                             InventoryDestination.Categories -> context.getString(R.string.categories)
                             InventoryDestination.Products -> context.getString(R.string.products)
+                            InventoryDestination.StockTransfer -> context.getString(R.string.stock_transfer)
                         }
                     },
                     isSelected = { it == state.selectedDestination },
@@ -103,6 +108,13 @@ fun InventoryScreen(
                     InventoryDestination.Products -> {
                         ProductRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                        )
+                    }
+
+                    InventoryDestination.StockTransfer -> {
+                        StockTransferRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
                         )
                     }
 

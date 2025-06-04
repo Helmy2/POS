@@ -103,8 +103,8 @@ class UnitViewModel(
             _state.update { it.copy(loading = true, error = null) }
             val newUnitEntity = UnitEntity(
                 serverId = null,
-                arName = currentState.arName.takeIf { it.isNotBlank() },
-                enName = currentState.enName.takeIf { it.isNotBlank() },
+                arName = currentState.arName,
+                enName = currentState.enName,
                 rate = currentState.rate.toFloatOrNull() ?: 1f,
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
@@ -150,8 +150,8 @@ class UnitViewModel(
             val updatedUnitEntity = UnitEntity(
                 localId = unitToUpdate.localId,
                 serverId = unitToUpdate.serverId,
-                arName = currentState.arName.takeIf { it.isNotBlank() },
-                enName = currentState.enName.takeIf { it.isNotBlank() },
+                arName = currentState.arName,
+                enName = currentState.enName,
                 rate = currentState.rate.toFloatOrNull() ?: 1f,
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
