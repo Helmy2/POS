@@ -1,10 +1,8 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,13 +16,11 @@ import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 fun AppNavHost(
     startDestination: Destination,
     navController: NavHostController,
-    modifier: Modifier = Modifier,
     snackbarState: SnackbarHostState,
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        modifier = modifier.systemBarsPadding(),
     ) {
         navigation<Destination.Main>(
             startDestination = Destination.Main.Dashboard

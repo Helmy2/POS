@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.core.presentation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -15,13 +14,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
-import com.wael.astimal.pos.core.domain.navigation.TopLevelRoutes
 import com.wael.astimal.pos.core.presentation.navigation.AppNavHost
 import com.wael.astimal.pos.core.presentation.navigation.mainNavigationItems
 import com.wael.astimal.pos.core.util.Connectivity
@@ -61,44 +58,30 @@ fun MainScaffold(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        AnimatedContent(
-            targetState = TopLevelRoutes.routes.any {
-                navBackStackEntry?.destination?.hasRoute(it.route::class) == true
-            },
-            modifier = Modifier.systemBarsPadding(),
-        ) {
-            if (it) {
-                NavigationSuiteScaffold(
-                    navigationSuiteItems = {
-                        mainNavigationItems(
-                            onDestinationSelected = {
-                                navController.apply {
-                                    navigate(it) {
-                                        popUpTo(graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
+        NavigationSuiteScaffold(
+            modifier = Modifier.padding(paddingValues),
+            navigationSuiteItems = {
+                mainNavigationItems(
+                    onDestinationSelected = {
+                        navController.apply {
+                            navigate(it) {
+                                popUpTo(graph.findStartDestination().id) {
+                                    saveState = true
                                 }
-                            },
-                            navBackStackEntry = navBackStackEntry
-                        )
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     },
-                ) {
-                    AppNavHost(
-                        startDestination = startDestination,
-                        navController = navController,
-                        snackbarState = snackbarHostState,
-                    )
-                }
-            } else {
-                AppNavHost(
-                    startDestination = startDestination,
-                    navController = navController,
-                    snackbarState = snackbarHostState,
+                    navBackStackEntry = navBackStackEntry
                 )
-            }
+            },
+        ) {
+            AppNavHost(
+                startDestination = startDestination,
+                navController = navController,
+                snackbarState = snackbarHostState,
+            )
         }
     }
 }

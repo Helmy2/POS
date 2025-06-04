@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.features.inventory.presentation.category.CategoryRoute
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.store.StoreRoute
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
@@ -93,7 +94,9 @@ fun InventoryScreen(
                     }
 
                     InventoryDestination.Categories -> {
-                        Text("Categories")
+                        CategoryRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                        )
                     }
 
                     InventoryDestination.Products -> {
