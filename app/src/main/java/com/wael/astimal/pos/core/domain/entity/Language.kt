@@ -12,4 +12,10 @@ enum class Language(val code: String, val layoutDirection: LayoutDirection) {
             Arabic -> R.string.arabic
         }
     }
+
+    companion object {
+        fun fromCode(code: String): Language {
+            return entries.firstOrNull { it.code == code } ?: English
+        }
+    }
 }

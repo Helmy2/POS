@@ -3,22 +3,13 @@ package com.wael.astimal.pos.features.inventory.presentation.product
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -26,6 +17,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
 import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
@@ -54,6 +47,7 @@ fun ProductScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val language = LocalAppLocale.current
     SearchScreen(
         modifier = modifier,
         query = state.query,
@@ -75,7 +69,7 @@ fun ProductScreen(
                     onEvent(ProductEvent.UpdateIsQueryActive(false))
                     onEvent(ProductEvent.SelectProduct(product))
                 },
-                labelProvider = { "${it.enName}: ${it.arName}" },
+                labelProvider = { it.localizedName.displayName(language) },
                 isSelected = { product -> product.localId == state.selectedProduct?.localId },
             )
         },
@@ -108,17 +102,7 @@ fun ProductScreen(
                     items = state.categories,
                     selectedItemId = state.selectedCategoryId,
                     onItemSelected = { category -> onEvent(ProductEvent.SelectCategoryId(category?.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
-                    itemToId = { it.localId }
-                )
-
-                // Unit Dropdown (Default Unit)
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.default_unit),
-                    items = state.units,
-                    selectedItemId = state.selectedUnitId,
-                    onItemSelected = { unit -> onEvent(ProductEvent.SelectUnitId(unit?.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId }
                 )
 
@@ -156,7 +140,7 @@ fun ProductScreen(
                     items = state.stores,
                     selectedItemId = state.selectedStoreId,
                     onItemSelected = { store -> onEvent(ProductEvent.SelectStoreId(store?.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId }
                 )
 
@@ -174,7 +158,7 @@ fun ProductScreen(
                     items = state.units,
                     selectedItemId = state.selectedMinStockUnitId,
                     onItemSelected = { unit -> onEvent(ProductEvent.SelectMinStockUnitId(unit?.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
+                    itemToDisplayString = { "${it.enName}: ${it.arName}"  },
                     itemToId = { it.localId }
                 )
 
@@ -207,58 +191,3 @@ fun ProductScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun <T> CustomExposedDropdownMenu(
-    label: String,
-    items: List<T>,
-    selectedItemId: Long?,
-    onItemSelected: (T?) -> Unit,
-    itemToDisplayString: (T) -> String,
-    itemToId: (T) -> Long,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val selectedItem = items.find { itemToId(it) == selectedItemId }
-    val currentSelectionString = selectedItem?.let { itemToDisplayString(it) } ?: ""
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = currentSelectionString,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(itemToDisplayString(item)) },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    }
-                )
-            }
-            if (selectedItem != null) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(id = R.string.clear_selection)) },
-                    onClick = {
-                        onItemSelected(null)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}

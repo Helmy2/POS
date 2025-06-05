@@ -5,8 +5,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 data class Store(
     val localId: Long,
     val serverId: Int?,
-    val arName: String?,
-    val enName: String?,
+    val localizedName: LocalizedString,
     val type: StoreType,
     val isSynced: Boolean,
     val lastModified: Long,

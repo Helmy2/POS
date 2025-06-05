@@ -17,7 +17,7 @@ import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 
 @Database(
     entities = [UserEntity::class, UnitEntity::class, StoreEntity::class, CategoryEntity::class, ProductEntity::class, StockTransferEntity::class, StockTransferItemEntity::class],
-    version = 6,
+    version = 9,
 )
 
 abstract class AppDatabase : RoomDatabase() {

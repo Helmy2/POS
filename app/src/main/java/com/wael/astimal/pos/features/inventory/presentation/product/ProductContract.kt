@@ -14,7 +14,6 @@ data class ProductState(
     val inputArName: String = "",
     val inputEnName: String = "",
     val selectedCategoryId: Long? = null,
-    val selectedUnitId: Long? = null,
     val inputAveragePrice: String = "",
     val inputSellingPrice: String = "",
     val inputOpeningBalance: String = "",
@@ -43,7 +42,6 @@ sealed interface ProductEvent {
     data class UpdateInputArName(val name: String) : ProductEvent
     data class UpdateInputEnName(val name: String) : ProductEvent
     data class SelectCategoryId(val id: Long?) : ProductEvent
-    data class SelectUnitId(val id: Long?) : ProductEvent
     data class UpdateInputAveragePrice(val price: String) : ProductEvent
     data class UpdateInputSellingPrice(val price: String) : ProductEvent
     data class UpdateInputOpeningBalance(val qty: String) : ProductEvent

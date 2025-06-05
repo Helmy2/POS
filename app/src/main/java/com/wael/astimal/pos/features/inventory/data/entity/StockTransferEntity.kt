@@ -35,15 +35,14 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 data class StockTransferEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0L,
-    val serverId: Int?, // Server ID for the transfer header
+    val serverId: Int?,
     @ColumnInfo(index = true)
     val fromStoreId: Long?,
     @ColumnInfo(index = true)
     val toStoreId: Long?,
     @ColumnInfo(index = true)
-    val initiatedByUserId: Long?, // User who created the transfer
-    var isAccepted: Boolean?, // null = pending, true = accepted, false = rejected/cancelled
-    val transferDate: Long, // Timestamp of creation/initiation
+    val initiatedByUserId: Long?,
+    val transferDate: Long,
 
     var isSynced: Boolean = false,
     var lastModified: Long = System.currentTimeMillis(),
@@ -130,7 +129,7 @@ data class StockTransferItemWithProductDetails(
         entityColumn = "localId",
         entity = ProductEntity::class
     )
-    val product: ProductEntity?,
+    val product: ProductWithDetailsEntity?,
 
     @Relation(
         parentColumn = "unitLocalId",
@@ -142,19 +141,13 @@ data class StockTransferItemWithProductDetails(
 
 
 fun StockTransferWithItemsAndDetails.toDomain(): StockTransfer {
-    val fromStoreNameDisplay = "${fromStore?.enName}: ${fromStore?.arName}"
-    val toStoreNameDisplay = "${toStore?.enName}: ${toStore?.arName}"
-    // todo
     return StockTransfer(
         localId = this.transfer.localId,
         serverId = this.transfer.serverId,
-        fromStoreId = this.transfer.fromStoreId ?: 0L,
-        fromStoreName = fromStoreNameDisplay,
-        toStoreId = this.transfer.toStoreId ?: 0L,
-        toStoreName = toStoreNameDisplay,
+        fromStore= this.fromStore?.toDomain(),
+        toStore = this.toStore?.toDomain(),
         initiatedByUserId = this.transfer.initiatedByUserId ?: 0L,
-        initiatedByUserName = "todo" ,
-        isAccepted = this.transfer.isAccepted,
+        initiatedByUserName = this.initiatedByUser?.name ,
         transferDate = this.transfer.transferDate,
         items = this.itemsWithProducts.map { it.toDomain() },
         isSynced = this.transfer.isSynced,
@@ -168,14 +161,10 @@ fun StockTransferItemWithProductDetails.toDomain(): StockTransferItem {
     return StockTransferItem(
         localId = this.item.localId,
         serverId = this.item.serverId,
-        productLocalId = this.item.productLocalId,
-        productArName = this.product?.arName,
-        productEnName = this.product?.enName,
-        unitLocalId = this.item.unitLocalId,
-        unitArName = this.unit?.arName,
-        unitEnName =  this.unit?.enName,
         quantity = this.item.quantity,
         maximumOpeningBalance = this.item.maximumOpeningBalance,
-        minimumOpeningBalance = this.item.minimumOpeningBalance
+        minimumOpeningBalance = this.item.minimumOpeningBalance,
+        product = this.product?.toDomain(),
+        unit = this.unit?.toDomain(),
     )
 }

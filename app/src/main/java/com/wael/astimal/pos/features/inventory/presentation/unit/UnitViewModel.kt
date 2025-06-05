@@ -3,8 +3,8 @@ package com.wael.astimal.pos.features.inventory.presentation.unit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
-import com.wael.astimal.pos.features.inventory.domain.entity.UnitDetails
-import com.wael.astimal.pos.features.inventory.domain.entity.toUnitDetails
+import com.wael.astimal.pos.features.inventory.data.entity.toDomain
+import com.wael.astimal.pos.features.inventory.domain.entity.Unit
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -41,6 +41,7 @@ class UnitViewModel(
                 _state.update { it.copy(query = event.query) }
                 searchUnits(event.query)
             }
+
             is UnitEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
             is UnitEvent.UpdateArName -> _state.update { it.copy(arName = event.name) }
             is UnitEvent.UpdateEnName -> _state.update { it.copy(enName = event.name) }
@@ -55,34 +56,33 @@ class UnitViewModel(
             if (query.length > 2 || query.isEmpty()) {
                 delay(300)
             }
-            unitRepository.getUnits(query)
-                .map { entities -> entities.map { it.toUnitDetails() } }
+            unitRepository.getUnits(query).map { entities -> entities.map { it.toDomain() } }
                 .catch { e ->
-                    _state.update { it.copy(loading = false, error = "Error fetching units: ${e.message}") }
-                }
-                .collect { unitDetailsList ->
+                    _state.update {
+                        it.copy(
+                            loading = false, error = "Error fetching units: ${e.message}"
+                        )
+                    }
+                }.collect { unitDetailsList ->
                     _state.update { it.copy(loading = false, searchResults = unitDetailsList) }
                 }
         }
     }
 
-    private fun handleSelectUnit(unitDetails: UnitDetails?) {
-        if (unitDetails == null) {
+    private fun handleSelectUnit(unit: Unit?) {
+        if (unit == null) {
             _state.update {
                 it.copy(
-                    selectedUnit = null,
-                    arName = "",
-                    enName = "",
-                    rate = "1"
+                    selectedUnit = null, arName = "", enName = "", rate = "1"
                 )
             }
         } else {
             _state.update {
                 it.copy(
-                    selectedUnit = unitDetails,
-                    arName = unitDetails.arName,
-                    enName = unitDetails.enName,
-                    rate = unitDetails.rate.toString()
+                    selectedUnit = unit,
+                    arName = unit.localizedName.arName ?: "",
+                    enName = unit.localizedName.enName ?: "",
+                    rate = unit.rate.toString()
                 )
             }
         }
@@ -111,21 +111,19 @@ class UnitViewModel(
                 isDeletedLocally = false
             )
             val result = unitRepository.addUnit(newUnitEntity)
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            arName = "",
-                            enName = "",
-                            rate = "1"
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update { it.copy(loading = false, error = "Failed to create unit: ${e.message}") }
+            result.fold(onSuccess = {
+                _state.update {
+                    it.copy(
+                        loading = false, arName = "", enName = "", rate = "1"
+                    )
                 }
-            )
+            }, onFailure = { e ->
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Failed to create unit: ${e.message}"
+                    )
+                }
+            })
         }
     }
 
@@ -158,22 +156,23 @@ class UnitViewModel(
                 isDeletedLocally = unitToUpdate.isDeletedLocally
             )
             val result = unitRepository.updateUnit(updatedUnitEntity)
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedUnit = null,
-                            arName = "",
-                            enName = "",
-                            rate = "1"
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update { it.copy(loading = false, error = "Failed to update unit: ${e.message}") }
+            result.fold(onSuccess = {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        selectedUnit = null,
+                        arName = "",
+                        enName = "",
+                        rate = "1"
+                    )
                 }
-            )
+            }, onFailure = { e ->
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Failed to update unit: ${e.message}"
+                    )
+                }
+            })
         }
     }
 
@@ -189,44 +188,29 @@ class UnitViewModel(
             val unitEntityToDelete = UnitEntity(
                 localId = unitToDeleteDetails.localId,
                 serverId = unitToDeleteDetails.serverId,
-                arName = unitToDeleteDetails.arName,
-                enName = unitToDeleteDetails.enName,
+                arName = unitToDeleteDetails.localizedName.arName,
+                enName = unitToDeleteDetails.localizedName.enName,
                 rate = unitToDeleteDetails.rate
             )
 
             val result = unitRepository.deleteUnit(unitEntityToDelete)
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedUnit = null,
-                            arName = "",
-                            enName = "",
-                            rate = "1"
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update { it.copy(loading = false, error = "Failed to delete unit: ${e.message}") }
+            result.fold(onSuccess = {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        selectedUnit = null,
+                        arName = "",
+                        enName = "",
+                        rate = "1"
+                    )
                 }
-            )
-        }
-    }
-
-    fun triggerSync() {
-        // todo: Implement sync logic
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
-            val syncResult = unitRepository.syncUnits()
-            syncResult.fold(
-                onSuccess = {
-                    _state.update { it.copy(loading = false) }
-                },
-                onFailure = { e ->
-                    _state.update { it.copy(loading = false, error = "Sync failed: ${e.message}") }
+            }, onFailure = { e ->
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Failed to delete unit: ${e.message}"
+                    )
                 }
-            )
+            })
         }
     }
 }

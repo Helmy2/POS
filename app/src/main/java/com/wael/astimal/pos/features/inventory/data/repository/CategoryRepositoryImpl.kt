@@ -96,10 +96,4 @@ class CategoryRepositoryImpl(
             Result.failure(e)
         }
     }
-
-    override suspend fun syncCategories(): Result<Unit> {
-        // todo: Implement the API service integration for syncing categories
-        println("CategoryRepositoryImpl: syncCategories() called, API service not yet integrated.")
-        return Result.success(Unit)
-    }
 }

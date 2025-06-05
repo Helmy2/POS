@@ -10,5 +10,4 @@ interface CategoryRepository {
     suspend fun addCategory(arName: String?, enName: String?): Result<Unit>
     suspend fun updateCategory(category: Category, newArName: String?, newEnName: String?): Result<Category>
     suspend fun deleteCategory(category: Category): Result<Unit>
-    suspend fun syncCategories(): Result<Unit>
 }

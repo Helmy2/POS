@@ -10,5 +10,4 @@ interface UnitRepository {
     suspend fun addUnit(unit: UnitEntity): Result<UnitEntity>
     suspend fun updateUnit(unit: UnitEntity): Result<UnitEntity>
     suspend fun deleteUnit(unit: UnitEntity): Result<Unit>
-    suspend fun syncUnits(): Result<Unit>
 }

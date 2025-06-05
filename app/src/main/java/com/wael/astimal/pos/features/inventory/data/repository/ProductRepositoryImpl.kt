@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
-import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.toDomain
+import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -91,11 +91,5 @@ class ProductRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    override suspend fun syncProducts(): Result<Unit> {
-        // todo : Implement API service integration for syncing products
-        println("ProductRepositoryImpl: syncProducts() called, API service not yet integrated.")
-        return Result.success(Unit)
     }
 }

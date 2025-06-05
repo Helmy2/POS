@@ -73,8 +73,8 @@ class CategoryViewModel(
             _state.update {
                 it.copy(
                     selectedCategory = category,
-                    inputArName = category.arName ?: "",
-                    inputEnName = category.enName ?: ""
+                    inputArName = category.localizedName.arName ?: "",
+                    inputEnName = category.localizedName.enName ?: "",
                 )
             }
         }
@@ -145,18 +145,6 @@ class CategoryViewModel(
                 onFailure = { e ->
                     _state.update { it.copy(loading = false, error = "Failed to delete category: ${e.message}") }
                 }
-            )
-        }
-    }
-
-    private fun triggerSyncCategories() {
-        // todo implement actual sync logic
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
-            val result = categoryRepository.syncCategories()
-            result.fold(
-                onSuccess = { _state.update { it.copy(loading = false, error = "Sync successful (placeholder)") } },
-                onFailure = { e -> _state.update { it.copy(loading = false, error = "Sync failed: ${e.message}") } }
             )
         }
     }

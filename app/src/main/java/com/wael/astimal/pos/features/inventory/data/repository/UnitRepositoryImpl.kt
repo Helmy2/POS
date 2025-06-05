@@ -68,13 +68,4 @@ class UnitRepositoryImpl(
             Result.failure(e)
         }
     }
-
-    override suspend fun syncUnits(): Result<Unit> {
-        // todo
-        // Placeholder: This method will be implemented when the API is ready.
-        // For now, it does nothing or could log that sync is not yet available.
-        println("UnitRepositoryImpl: syncUnits() called, but API service is not yet integrated.")
-        // Simulate success for now, or return a specific result indicating sync is pending/unavailable.
-        return Result.success(Unit)
-    }
 }

@@ -76,8 +76,8 @@ class StoreViewModel(
             _state.update {
                 it.copy(
                     selectedStore = store,
-                    inputArName = store.arName ?: "",
-                    inputEnName = store.enName ?: "",
+                    inputArName = store.localizedName.arName ?: "",
+                    inputEnName = store.localizedName.enName ?: "",
                     inputType = store.type
                 )
             }
@@ -98,14 +98,14 @@ class StoreViewModel(
                 storeRepository.addStore(
                     arName = currentState.inputArName,
                     enName = currentState.inputEnName,
-                    type = currentState.inputType
+                    type = currentState.inputType ?: StoreType.SUB
                 )
             } else {
                 storeRepository.updateStore(
                     store = currentState.selectedStore,
                     newArName = currentState.inputArName,
                     newEnName = currentState.inputEnName,
-                    newType = currentState.inputType
+                    newType = currentState.inputType ?: StoreType.SUB
                 )
             }
 
@@ -153,18 +153,6 @@ class StoreViewModel(
                 onFailure = { e ->
                     _state.update { it.copy(loading = false, error = "Failed to delete store: ${e.message}") }
                 }
-            )
-        }
-    }
-
-    private fun triggerSyncStores() {
-        // todo: Implement actual sync logic
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
-            val result = storeRepository.syncStores()
-            result.fold(
-                onSuccess = { _state.update { it.copy(loading = false, error = "Sync successful (placeholder)") } },
-                onFailure = { e -> _state.update { it.copy(loading = false, error = "Sync failed: ${e.message}") } }
             )
         }
     }

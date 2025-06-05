@@ -83,6 +83,10 @@ fun POSTheme(
 object LocalAppLocale {
     private var default: Locale? = null
 
+    val current: Language
+        @Composable get() = Language.fromCode(Locale.getDefault().language)
+
+
     @Composable
     infix fun provides(value: String?): ProvidedValue<*> {
         val configuration = LocalConfiguration.current

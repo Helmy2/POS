@@ -47,7 +47,6 @@ class StockTransferRepositoryImpl(
                 fromStoreId = fromStoreId,
                 toStoreId = toStoreId,
                 initiatedByUserId = initiatedByUserId,
-                isAccepted = null,
                 transferDate = System.currentTimeMillis(),
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
@@ -69,7 +68,6 @@ class StockTransferRepositoryImpl(
                 ?: return Result.failure(NoSuchElementException("Stock transfer not found with localId: $localId"))
 
             val updatedEntity = transferEntity.copy(
-                isAccepted = isAccepted,
                 isSynced = false,
                 lastModified = System.currentTimeMillis()
             )
@@ -99,26 +97,5 @@ class StockTransferRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    override suspend fun permanentlyDeleteStockTransfers(localIds: List<Long>): Result<Unit> {
-        return try {
-            stockTransferDao.deleteStockTransfersByLocalIds(localIds)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun syncStockTransfers(): Result<Unit> {
-        // todo
-        // Placeholder for actual sync logic
-        // 1. Get local changes (new, status updated, soft-deleted)
-        // 2. Send to API
-        // 3. Handle API responses (update serverId, isSynced, permanently delete)
-        // 4. Fetch changes from server
-        // 5. Update local DB, map server IDs to local IDs for relations
-        println("StockTransferRepositoryImpl: syncStockTransfers() called, API service not yet integrated.")
-        return Result.success(Unit)
     }
 }

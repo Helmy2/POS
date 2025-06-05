@@ -6,7 +6,6 @@ import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEnti
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +23,6 @@ class StockTransferViewModel(
     private val stockTransferRepository: StockTransferRepository,
     private val storeRepository: StoreRepository,
     private val productRepository: ProductRepository,
-    private val unitRepository: UnitRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -57,11 +55,6 @@ class StockTransferViewModel(
                 _state.update { it.copy(availableProducts = products) }
             }
         }
-        viewModelScope.launch {
-            unitRepository.getUnits("").collect { units ->
-                _state.update { it.copy(availableUnits = units) }
-            }
-        }
     }
 
     fun onEvent(event: StockTransferScreenEvent) {
@@ -82,13 +75,13 @@ class StockTransferViewModel(
                         it.copy(
                             currentTransferInput = EditableStockTransfer(
                                 localId = event.transfer.localId,
-                                fromStoreId = event.transfer.fromStoreId,
-                                toStoreId = event.transfer.toStoreId,
+                                fromStoreId = event.transfer.fromStore?.localId,
+                                toStoreId = event.transfer.toStore?.localId,
                                 items = event.transfer.items.map { item ->
                                     EditableStockTransferItem(
                                         tempEditorId = item.localId, // Use item's localId as editorId
-                                        productLocalId = item.productLocalId,
-                                        unitLocalId = item.unitLocalId,
+                                        product = item.product,
+                                        unit = item.unit,
                                         quantity = item.quantity.toString(),
                                         maxOpeningBalance = item.maximumOpeningBalance?.toString()
                                             ?: "",
@@ -96,7 +89,6 @@ class StockTransferViewModel(
                                             ?: ""
                                     )
                                 }.toMutableList(),
-                                isAccepted = event.transfer.isAccepted
                             )
                         )
                     }
@@ -151,15 +143,11 @@ class StockTransferViewModel(
             }
 
             is StockTransferScreenEvent.UpdateItemProduct -> updateTransferItem(event.itemEditorId) {
-                it.copy(
-                    productLocalId = event.productId
-                )
+                it.copy(product = event.product)
             }
 
             is StockTransferScreenEvent.UpdateItemUnit -> updateTransferItem(event.itemEditorId) {
-                it.copy(
-                    unitLocalId = event.unitId
-                )
+                it.copy(unit = event.unit)
             }
 
             is StockTransferScreenEvent.UpdateItemQuantity -> updateTransferItem(event.itemEditorId) {
@@ -180,7 +168,6 @@ class StockTransferViewModel(
             )
 
             is StockTransferScreenEvent.DeleteTransfer -> deleteTransfer(event.transferLocalId)
-            is StockTransferScreenEvent.TriggerSync -> triggerSyncTransfers()
             is StockTransferScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is StockTransferScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
         }
@@ -205,31 +192,30 @@ class StockTransferViewModel(
             // The repository's getStockTransfersWithDetails currently doesn't take a query.
             // We'll filter client-side for now, or update repository if server-side search is needed.
             stockTransferRepository.getStockTransfersWithDetails().catch { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false, error = "Error fetching transfers: ${e.message}"
-                        )
-                    }
-                }.map { transfers ->
-                    if (query.isBlank()) {
-                        transfers
-                    } else {
-                        transfers.filter { transfer ->
-                            (transfer.fromStoreName?.contains(
-                                query,
-                                ignoreCase = true
-                            ) == true) || (transfer.toStoreName?.contains(
-                                query, ignoreCase = true
-                            ) == true) || (transfer.initiatedByUserName?.contains(
-                                query, ignoreCase = true
-                            ) == true) || (SimpleDateFormat(
-                                "dd/MM/yyyy", Locale.getDefault()
-                            ).format(Date(transfer.transferDate)).contains(query))
-                        }
-                    }
-                }.collect { filteredTransfers ->
-                    _state.update { it.copy(loading = false, transfers = filteredTransfers) }
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Error fetching transfers: ${e.message}"
+                    )
                 }
+            }.map { transfers ->
+                if (query.isBlank()) {
+                    transfers
+                } else {
+                    transfers.filter { transfer ->
+                        (transfer.fromStore?.localizedName?.arName?.contains(
+                            query, ignoreCase = true
+                        ) == true) || (transfer.toStore?.localizedName?.enName?.contains(
+                            query, ignoreCase = true
+                        ) == true) || (transfer.initiatedByUserName?.contains(
+                            query, ignoreCase = true
+                        ) == true) || (SimpleDateFormat(
+                            "dd/MM/yyyy", Locale.getDefault()
+                        ).format(Date(transfer.transferDate)).contains(query))
+                    }
+                }
+            }.collect { filteredTransfers ->
+                _state.update { it.copy(loading = false, transfers = filteredTransfers) }
+            }
         }
     }
 
@@ -255,15 +241,15 @@ class StockTransferViewModel(
         }
 
         val itemEntities = currentInput.items.mapNotNull { editableItem ->
-            if (editableItem.productLocalId == null || editableItem.unitLocalId == null || editableItem.quantity.toDoubleOrNull() == null || editableItem.quantity.toDouble() <= 0) {
+            if (editableItem.product == null || editableItem.unit == null || editableItem.quantity.toDoubleOrNull() == null || editableItem.quantity.toDouble() <= 0) {
                 _state.update { it.copy(error = "All items must have a product, unit, and valid quantity.") }
                 return@mapNotNull null
             }
             StockTransferItemEntity(
                 serverId = null,
                 stockTransferLocalId = 0L,
-                productLocalId = editableItem.productLocalId!!,
-                unitLocalId = editableItem.unitLocalId!!,
+                productLocalId = editableItem.product?.localId!!,
+                unitLocalId = editableItem.unit?.localId!!,
                 quantity = editableItem.quantity.toDoubleOrNull() ?: 0.0,
                 maximumOpeningBalance = editableItem.maxOpeningBalance.toDoubleOrNull(),
                 minimumOpeningBalance = editableItem.minOpeningBalance.toDoubleOrNull(),
@@ -340,26 +326,6 @@ class StockTransferViewModel(
                 _state.update {
                     it.copy(
                         loading = false, error = "Failed to delete transfer: ${e.message}"
-                    )
-                }
-            })
-        }
-    }
-
-    private fun triggerSyncTransfers() {
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
-            val result = stockTransferRepository.syncStockTransfers()
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Sync successful (placeholder)"
-                    )
-                }
-            }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Sync failed: ${e.message}"
                     )
                 }
             })

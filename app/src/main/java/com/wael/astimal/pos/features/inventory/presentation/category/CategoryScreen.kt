@@ -15,6 +15,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
 import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
@@ -44,6 +45,7 @@ fun CategoryScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val language = LocalAppLocale.current
     SearchScreen(
         modifier = modifier,
         query = state.query,
@@ -65,7 +67,7 @@ fun CategoryScreen(
                     onEvent(CategoryScreenEvent.UpdateIsQueryActive(false))
                     onEvent(CategoryScreenEvent.SelectCategory(category))
                 },
-                labelProvider = { "${it.enName}: ${it.arName}" },
+                labelProvider = { it.localizedName.displayName(language) },
                 isSelected = { category -> category.localId == state.selectedCategory?.localId },
             )
         },

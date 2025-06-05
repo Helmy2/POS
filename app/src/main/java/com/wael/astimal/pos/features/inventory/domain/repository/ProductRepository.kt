@@ -12,5 +12,4 @@ interface ProductRepository {
     suspend fun addProduct(productEntity: ProductEntity): Result<Unit>
     suspend fun updateProduct(productEntity: ProductEntity): Result<Product>
     suspend fun deleteProduct(product: Product): Result<Unit>
-    suspend fun syncProducts(): Result<Unit>
 }

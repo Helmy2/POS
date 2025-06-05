@@ -9,7 +9,7 @@ data class StoreState(
     val selectedStore: Store? = null,
     val inputArName: String = "",
     val inputEnName: String = "",
-    val inputType: StoreType = StoreType.SUB,
+    val inputType: StoreType? = null,
     val query: String = "",
     val isQueryActive: Boolean = false,
     val error: String? = null
@@ -23,7 +23,7 @@ sealed interface StoreEvent {
     data object DeleteStore : StoreEvent
     data class UpdateInputArName(val name: String) : StoreEvent
     data class UpdateInputEnName(val name: String) : StoreEvent
-    data class UpdateInputType(val type: StoreType) : StoreEvent
+    data class UpdateInputType(val type: StoreType?) : StoreEvent
     data class UpdateQuery(val query: String) : StoreEvent
     data class UpdateIsQueryActive(val isQueryActive: Boolean) : StoreEvent
     data class Search(val query: String) : StoreEvent

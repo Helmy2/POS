@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.user.presentation.components
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions

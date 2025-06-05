@@ -11,5 +11,4 @@ interface StoreRepository {
     suspend fun addStore(arName: String?, enName: String?, type: StoreType): Result<Unit>
     suspend fun updateStore(store: Store, newArName: String?, newEnName: String?, newType: StoreType): Result<Unit>
     suspend fun deleteStore(store: Store): Result<Unit>
-    suspend fun syncStores(): Result<Unit>
 }

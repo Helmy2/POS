@@ -103,11 +103,4 @@ class StoreRepositoryImpl(
             Result.failure(e)
         }
     }
-
-
-    override suspend fun syncStores(): Result<Unit> {
-        // todo: Implement the logic to sync stores with the remote API.
-        println("StoreRepositoryImpl: syncStores() called, API service not yet integrated.")
-        return Result.success(Unit)
-    }
 }

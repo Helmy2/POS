@@ -6,25 +6,22 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
+import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
 import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
-import com.wael.astimal.pos.features.inventory.presentation.components.StringSelectionDropdown
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -52,6 +49,7 @@ fun StoreScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val language = LocalAppLocale.current
     SearchScreen(
         modifier = modifier,
         query = state.query,
@@ -73,7 +71,7 @@ fun StoreScreen(
                     onEvent(StoreEvent.UpdateIsQueryActive(false))
                     onEvent(StoreEvent.SelectStore(store))
                 },
-                labelProvider = { "${it.enName}: ${it.arName}" },
+                labelProvider = { it.localizedName.displayName(language) },
                 isSelected = { store -> store.localId == state.selectedStore?.localId },
             )
         },
@@ -98,42 +96,17 @@ fun StoreScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
 
-                StoreTypeDropdown(
-                    selectedType = state.inputType,
-                    onTypeSelected = { onEvent(StoreEvent.UpdateInputType(it)) })
-
+                CustomExposedDropdownMenu(
+                    label = stringResource(id = R.string.store_type),
+                    items = StoreType.entries,
+                    selectedItemId = state.inputType?.ordinal?.toLong(),
+                    onItemSelected = { onEvent(StoreEvent.UpdateInputType(it)) },
+                    itemToDisplayString = { it.name },
+                    itemToId = { it.ordinal.toLong() }
+                )
             }
         },
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StoreTypeDropdown(
-    selectedType: StoreType,
-    onTypeSelected: (StoreType) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier
-    ) {
-        StringSelectionDropdown(
-            currentItem = selectedType.name,
-            label = stringResource(id = R.string.store_type),
-            expanded = expanded,
-            items = StoreType.entries.map{ it.name },
-            onItemSelected = { item ->
-                onTypeSelected(StoreType.valueOf(item))
-                expanded = false
-            },
-            onClose = {
-                expanded = false
-            }
-        )
-    }
-}
 

@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.unit
 
-import com.wael.astimal.pos.features.inventory.domain.entity.UnitDetails
+import com.wael.astimal.pos.features.inventory.domain.entity.Unit
 
 sealed interface UnitEvent {
     data object CreateUnit : UnitEvent
@@ -14,13 +14,13 @@ sealed interface UnitEvent {
     data class UpdateQuery(val query: String) : UnitEvent
     data class UpdateIsQueryActive(val isQueryActive: Boolean) : UnitEvent
     data class Search(val query: String) : UnitEvent
-    data class Select(val unit: UnitDetails) : UnitEvent
+    data class Select(val unit: Unit) : UnitEvent
 }
 
 data class UnitDetailsState(
     val loading: Boolean = false,
-    val searchResults: List<UnitDetails> = emptyList(),
-    val selectedUnit: UnitDetails? = null,
+    val searchResults: List<Unit> = emptyList(),
+    val selectedUnit: Unit? = null,
     val rate: String = "1",
     val arName: String = "",
     val enName: String = "",

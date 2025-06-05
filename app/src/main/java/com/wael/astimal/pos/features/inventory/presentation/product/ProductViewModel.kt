@@ -63,7 +63,6 @@ class ProductViewModel(
             is ProductEvent.UpdateInputArName -> _state.update { it.copy(inputArName = event.name) }
             is ProductEvent.UpdateInputEnName -> _state.update { it.copy(inputEnName = event.name) }
             is ProductEvent.SelectCategoryId -> _state.update { it.copy(selectedCategoryId = event.id) }
-            is ProductEvent.SelectUnitId -> _state.update { it.copy(selectedUnitId = event.id) }
             is ProductEvent.UpdateInputAveragePrice -> _state.update {
                 it.copy(
                     inputAveragePrice = event.price
@@ -123,23 +122,19 @@ class ProductViewModel(
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
-            productRepository.getProducts(query)
-                .catch { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            error = "Error fetching products: ${e.message}"
-                        )
-                    }
+            productRepository.getProducts(query).catch { e ->
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Error fetching products: ${e.message}"
+                    )
                 }
-                .collect { products ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            searchResults = products
-                        )
-                    }
+            }.collect { products ->
+                _state.update {
+                    it.copy(
+                        loading = false, searchResults = products
+                    )
                 }
+            }
         }
     }
 
@@ -147,11 +142,18 @@ class ProductViewModel(
         if (product == null) {
             _state.update {
                 it.copy(
-                    selectedProduct = null, inputArName = "", inputEnName = "",
-                    selectedCategoryId = null, selectedUnitId = null, inputAveragePrice = "",
-                    inputSellingPrice = "", inputOpeningBalance = "", selectedStoreId = null,
-                    inputMinStockLevel = "", selectedMinStockUnitId = null,
-                    inputMaxStockLevel = "", selectedMaxStockUnitId = null,
+                    selectedProduct = null,
+                    inputArName = "",
+                    inputEnName = "",
+                    selectedCategoryId = null,
+                    inputAveragePrice = "",
+                    inputSellingPrice = "",
+                    inputOpeningBalance = "",
+                    selectedStoreId = null,
+                    inputMinStockLevel = "",
+                    selectedMinStockUnitId = null,
+                    inputMaxStockLevel = "",
+                    selectedMaxStockUnitId = null,
                     inputFirstPeriodData = ""
                 )
             }
@@ -159,16 +161,17 @@ class ProductViewModel(
             _state.update {
                 it.copy(
                     selectedProduct = product,
-                    inputArName = product.arName ?: "", inputEnName = product.enName ?: "",
-                    selectedCategoryId = product.categoryId, selectedUnitId = product.unitId,
+                    inputArName = product.localizedName.arName ?: "",
+                    inputEnName = product.localizedName.enName ?: "",
+                    selectedCategoryId = product.category?.localId,
                     inputAveragePrice = product.averagePrice?.toString() ?: "",
                     inputSellingPrice = product.sellingPrice?.toString() ?: "",
                     inputOpeningBalance = product.openingBalanceQuantity?.toString() ?: "",
-                    selectedStoreId = product.storeId,
+                    selectedStoreId = product.store?.localId,
                     inputMinStockLevel = product.minimumStockLevel?.toString() ?: "",
-                    selectedMinStockUnitId = product.minimumStockUnitId,
+                    selectedMinStockUnitId = product.minimumUnit?.localId,
                     inputMaxStockLevel = product.maximumStockLevel?.toString() ?: "",
-                    selectedMaxStockUnitId = product.maximumStockUnitId,
+                    selectedMaxStockUnitId = product.maximumUnit?.localId,
                     inputFirstPeriodData = product.firstPeriodData ?: ""
                 )
             }
@@ -188,13 +191,11 @@ class ProductViewModel(
 
             // Construct ProductEntity from current state
             val productEntity = ProductEntity(
-                localId = currentState.selectedProduct?.localId
-                    ?: 0L,
+                localId = currentState.selectedProduct?.localId ?: 0L,
                 serverId = currentState.selectedProduct?.serverId,
                 arName = currentState.inputArName,
                 enName = currentState.inputEnName,
                 categoryId = currentState.selectedCategoryId,
-                unitId = currentState.selectedUnitId,
                 averagePrice = currentState.inputAveragePrice.toDoubleOrNull(),
                 sellingPrice = currentState.inputSellingPrice.toDoubleOrNull(),
                 openingBalanceQuantity = currentState.inputOpeningBalance.toDoubleOrNull(),
@@ -209,44 +210,38 @@ class ProductViewModel(
                 isDeletedLocally = currentState.selectedProduct?.isDeletedLocally ?: false
             )
 
-            val result=
-                if (currentState.isNew || currentState.selectedProduct == null) {
-                    productRepository.addProduct(productEntity)
-                } else {
-                    productRepository.updateProduct(productEntity)
-                }
+            val result = if (currentState.isNew || currentState.selectedProduct == null) {
+                productRepository.addProduct(productEntity)
+            } else {
+                productRepository.updateProduct(productEntity)
+            }
 
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedProduct = null,
-                            inputArName = "",
-                            inputEnName = "",
-                            selectedCategoryId = null,
-                            selectedUnitId = null,
-                            inputAveragePrice = "",
-                            inputSellingPrice = "",
-                            inputOpeningBalance = "",
-                            selectedStoreId = null,
-                            inputMinStockLevel = "",
-                            selectedMinStockUnitId = null,
-                            inputMaxStockLevel = "",
-                            selectedMaxStockUnitId = null,
-                            inputFirstPeriodData = ""
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            error = "Failed to save product: ${e.message}"
-                        )
-                    }
+            result.fold(onSuccess = {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        selectedProduct = null,
+                        inputArName = "",
+                        inputEnName = "",
+                        selectedCategoryId = null,
+                        inputAveragePrice = "",
+                        inputSellingPrice = "",
+                        inputOpeningBalance = "",
+                        selectedStoreId = null,
+                        inputMinStockLevel = "",
+                        selectedMinStockUnitId = null,
+                        inputMaxStockLevel = "",
+                        selectedMaxStockUnitId = null,
+                        inputFirstPeriodData = ""
+                    )
                 }
-            )
+            }, onFailure = { e ->
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Failed to save product: ${e.message}"
+                    )
+                }
+            })
         }
     }
 
@@ -255,37 +250,32 @@ class ProductViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             val result = productRepository.deleteProduct(productToDelete)
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedProduct = null,
-                            inputArName = "",
-                            inputEnName = "",
-                            selectedCategoryId = null,
-                            selectedUnitId = null,
-                            inputAveragePrice = "",
-                            inputSellingPrice = "",
-                            inputOpeningBalance = "",
-                            selectedStoreId = null,
-                            inputMinStockLevel = "",
-                            selectedMinStockUnitId = null,
-                            inputMaxStockLevel = "",
-                            selectedMaxStockUnitId = null,
-                            inputFirstPeriodData = ""
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            error = "Failed to delete product: ${e.message}"
-                        )
-                    }
+            result.fold(onSuccess = {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        selectedProduct = null,
+                        inputArName = "",
+                        inputEnName = "",
+                        selectedCategoryId = null,
+                        inputAveragePrice = "",
+                        inputSellingPrice = "",
+                        inputOpeningBalance = "",
+                        selectedStoreId = null,
+                        inputMinStockLevel = "",
+                        selectedMinStockUnitId = null,
+                        inputMaxStockLevel = "",
+                        selectedMaxStockUnitId = null,
+                        inputFirstPeriodData = ""
+                    )
                 }
-            )
+            }, onFailure = { e ->
+                _state.update {
+                    it.copy(
+                        loading = false, error = "Failed to delete product: ${e.message}"
+                    )
+                }
+            })
         }
     }
 }
