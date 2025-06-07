@@ -2,20 +2,33 @@ package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.client_management.data.repository.ClientRepositoryImpl
+import com.wael.astimal.pos.features.client_management.data.repository.SalesOrderRepositoryImpl
+import com.wael.astimal.pos.features.client_management.data.repository.SalesReturnRepositoryImpl
 import com.wael.astimal.pos.features.client_management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.client_management.domain.repository.SalesOrderRepository
+import com.wael.astimal.pos.features.client_management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.client_management.presentaion.client.ClientViewModel
 import com.wael.astimal.pos.features.client_management.presentaion.clinet_info.ClientInfoViewModel
+import com.wael.astimal.pos.features.client_management.presentaion.sales_return.SalesReturnViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val clientModule = module {
     single { get<AppDatabase>().clientDao() }
+    single { get<AppDatabase>().supplierDao() }
+    single { get<AppDatabase>().orderReturnDao() }
 
     single<ClientRepository> {
         ClientRepositoryImpl(get())
     }
+    single<SalesOrderRepository> {
+        SalesOrderRepositoryImpl(get())
+    }
+    single<SalesReturnRepository> {
+        SalesReturnRepositoryImpl(get())
+    }
 
     viewModel { ClientViewModel() }
     viewModel { ClientInfoViewModel(get()) }
-
+    viewModel { SalesReturnViewModel(get(), get(), get(), get()) }
 }

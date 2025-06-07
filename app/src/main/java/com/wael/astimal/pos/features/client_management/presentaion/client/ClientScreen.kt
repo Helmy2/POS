@@ -21,6 +21,7 @@ import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.presentaion.clinet_info.ClientInfoRoute
 import com.wael.astimal.pos.features.client_management.presentaion.sales_order.SalesOrderRoute
+import com.wael.astimal.pos.features.client_management.presentaion.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -28,7 +29,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ClientRoute(
     navController: NavHostController,
-    snackbarHostState : SnackbarHostState,
+    snackbarHostState: SnackbarHostState,
     viewModel: ClientViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -40,15 +41,16 @@ fun ClientRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
 fun ClientScreen(
     state: ClientState,
     onEvent: (ClientEvent) -> Unit,
-    navController : NavHostController,
-    snackbarHostState :SnackbarHostState,
+    navController: NavHostController,
+    snackbarHostState: SnackbarHostState,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -81,6 +83,7 @@ fun ClientScreen(
                         when (it) {
                             ClientDestination.ClientInfo -> context.getString(R.string.client_info)
                             ClientDestination.SalesOrder -> context.getString(R.string.sales_order)
+                            ClientDestination.OrderReturn -> context.getString(R.string.order_return)
                         }
                     },
                     isSelected = { it == state.selectedDestination },
@@ -94,8 +97,16 @@ fun ClientScreen(
                     ClientDestination.ClientInfo -> {
                         ClientInfoRoute(onBack = { scope.launch { scaffoldNavigator.navigateBack() } })
                     }
+
                     ClientDestination.SalesOrder -> {
                         SalesOrderRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+
+                    ClientDestination.OrderReturn -> {
+                        SalesReturnRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                             snackbarHostState = snackbarHostState,
                         )
