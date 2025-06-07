@@ -48,7 +48,7 @@ class ProductRepositoryImpl(
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
-            productDao.insertProducts(listOf(entityToInsert))
+            productDao.insert(listOf(entityToInsert))
 
             Result.success(Unit)
         } catch (e: Exception) {

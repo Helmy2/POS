@@ -114,7 +114,7 @@ fun ClientInfoScreen(
                                 Icon(Icons.Default.Search, contentDescription = null)
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }

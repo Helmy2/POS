@@ -10,8 +10,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
+
+    @Query("SELECT COUNT(*) FROM users")
+    suspend fun getUserCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(user: UserEntity): Long
+    suspend fun insertOrUpdate(user: UserEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsers(users: List<UserEntity>)

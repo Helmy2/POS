@@ -16,6 +16,7 @@ data class UserEntity(
     val enName: String?,
     val email: String?,
     val phone: String?,
+    val isAdminFlag: Boolean = false,
     val isClientFlag: Boolean = false,
     val isEmployeeFlag: Boolean = false,
     var isSynced: Boolean = false,
@@ -33,6 +34,7 @@ fun UserEntity.toDomain(): User {
         userType = when {
             isClientFlag -> UserType.CLIENT
             isEmployeeFlag -> UserType.EMPLOYEE
+            isAdminFlag -> UserType.ADMIN
             else -> UserType.UnKNOWN
         },
         isSynced = isSynced,

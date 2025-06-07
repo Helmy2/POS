@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow

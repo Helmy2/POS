@@ -29,7 +29,7 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         StockTransferItemEntity::class,
         ClientEntity::class,
     ],
-    version = 11,
+    version = 12,
 )
 
 abstract class AppDatabase : RoomDatabase() {

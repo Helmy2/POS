@@ -46,7 +46,7 @@ class CategoryRepositoryImpl(
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
-            categoryDao.insertCategories(listOf(newCategoryEntity))
+            categoryDao.insert(listOf(newCategoryEntity))
 
             Result.success(Unit)
         } catch (e: Exception) {

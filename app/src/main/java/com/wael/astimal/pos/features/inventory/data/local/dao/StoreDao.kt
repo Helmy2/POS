@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface StoreDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertStores(stores: List<StoreEntity>)
+    suspend fun insert(stores: List<StoreEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdate(store: StoreEntity): Long
 
     @Update
     suspend fun updateStore(store: StoreEntity)

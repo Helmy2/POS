@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.core.presentation
+package com.wael.astimal.pos.core.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -24,8 +24,6 @@ import androidx.navigation.compose.rememberNavController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.TopLevelRoutes
-import com.wael.astimal.pos.core.presentation.navigation.AppNavHost
-import com.wael.astimal.pos.core.presentation.navigation.mainNavigationItems
 import com.wael.astimal.pos.core.util.Connectivity
 import org.koin.compose.koinInject
 

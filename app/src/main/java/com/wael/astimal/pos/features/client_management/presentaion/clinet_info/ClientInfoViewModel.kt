@@ -38,7 +38,10 @@ class ClientInfoViewModel(
             }
 
             is ClientInfoEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
-            is ClientInfoEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
+            is ClientInfoEvent.UpdateQuery -> {
+                _state.update { it.copy(query = event.query) }
+                searchClientsList(event.query)
+            }
             ClientInfoEvent.DetailClient -> _state.update { it.copy(showDetailDialog = false) }
             ClientInfoEvent.ShowDetailDialog -> _state.update { it.copy(showDetailDialog = true) }
         }

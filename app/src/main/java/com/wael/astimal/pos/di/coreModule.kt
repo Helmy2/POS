@@ -8,7 +8,10 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.core.util.ConnectivityImp
 import com.wael.astimal.pos.core.util.PREFERENCES_NAME
+import com.wael.astimal.pos.features.client_management.data.repository.DummyDataSeeder
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
@@ -32,5 +35,18 @@ val coreModule = module {
             dbFile.absolutePath
         ).fallbackToDestructiveMigration(true)
             .setQueryCoroutineContext(Dispatchers.IO).build()
+    }
+
+    single {
+        DummyDataSeeder(
+            userDao = get(),
+            clientDao = get(),
+            storeDao = get(),
+            unitDao = get(),
+            categoryDao = get(),
+            productDao = get(),
+            stockTransferDao = get(),
+            applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        )
     }
 }

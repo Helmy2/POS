@@ -51,7 +51,7 @@ class StoreRepositoryImpl(
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
-            storeDao.insertStores(listOf(newStoreEntity))
+            storeDao.insert(listOf(newStoreEntity))
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
