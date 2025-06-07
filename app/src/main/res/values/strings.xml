@@ -67,4 +67,6 @@
     <string name="product">Product</string>
     <string name="quantity">Quantity</string>
     <string name="stock_transfer">Stock tranfer</string>
+    <string name="clients">Client</string>
+    <string name="client_info">Client Info</string>
 </resources>

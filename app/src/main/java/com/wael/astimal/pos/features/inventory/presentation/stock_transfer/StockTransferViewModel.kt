@@ -206,7 +206,7 @@ class StockTransferViewModel(
                             query, ignoreCase = true
                         ) == true) || (transfer.toStore?.localizedName?.enName?.contains(
                             query, ignoreCase = true
-                        ) == true) || (transfer.initiatedByUserName?.contains(
+                        ) == true) || (transfer.initiatedByUser?.enName?.contains(
                             query, ignoreCase = true
                         ) == true) || (SimpleDateFormat(
                             "dd/MM/yyyy", Locale.getDefault()

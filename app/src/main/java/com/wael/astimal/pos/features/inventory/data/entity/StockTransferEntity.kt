@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import com.wael.astimal.pos.features.user.data.entity.UserEntity
 
 @Entity(
     tableName = "stock_transfers",
@@ -26,7 +27,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
         ),
         ForeignKey(
             entity = UserEntity::class,
-            parentColumns = ["id"],
+            parentColumns = ["localId"],
             childColumns = ["initiatedByUserId"],
             onDelete = ForeignKey.SET_NULL
         )
@@ -107,7 +108,7 @@ data class StockTransferWithItemsAndDetails(
 
     @Relation(
         parentColumn = "initiatedByUserId",
-        entityColumn = "id", // Corrected: UserEntity's PK is 'id'
+        entityColumn = "localId",
         entity = UserEntity::class
     )
     val initiatedByUser: UserEntity?,
@@ -144,10 +145,9 @@ fun StockTransferWithItemsAndDetails.toDomain(): StockTransfer {
     return StockTransfer(
         localId = this.transfer.localId,
         serverId = this.transfer.serverId,
-        fromStore= this.fromStore?.toDomain(),
+        fromStore = this.fromStore?.toDomain(),
         toStore = this.toStore?.toDomain(),
-        initiatedByUserId = this.transfer.initiatedByUserId ?: 0L,
-        initiatedByUserName = this.initiatedByUser?.name ,
+        initiatedByUser = this.initiatedByUser,
         transferDate = this.transfer.transferDate,
         items = this.itemsWithProducts.map { it.toDomain() },
         isSynced = this.transfer.isSynced,
