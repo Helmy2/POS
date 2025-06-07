@@ -103,7 +103,6 @@ fun StockTransferScreen(
             ItemGrid(
                 list = state.transfers,
                 onItemClick = { transfer ->
-                    onEvent(StockTransferScreenEvent.AcceptTransfer(transfer.localId))
                     onEvent(StockTransferScreenEvent.SelectTransferToView(transfer))
                 },
                 labelProvider = { "${it.localId}: ${it.transferDate}" },

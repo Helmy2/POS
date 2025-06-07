@@ -6,9 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import com.wael.astimal.pos.features.user.data.entity.toDomain
+import com.wael.astimal.pos.features.user.data.local.Crypto
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.domain.entity.User
-import com.wael.astimal.pos.features.user.domain.entity.UserSession
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +21,18 @@ class SessionManagerImpl(
     private val userDao: UserDao,
 ) : SessionManager {
 
+    override fun isUserLoggedInFlow(): Flow<Boolean> {
+        return dataStore.data.catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }.map { preferences ->
+            preferences[SessionManager.USER_ID] != null
+        }
+    }
+
     override fun getCurrentUser(): Flow<User?> {
         return dataStore.data.catch { exception ->
             if (exception is IOException) {
@@ -29,13 +41,14 @@ class SessionManagerImpl(
                 throw exception
             }
         }.map { preferences ->
-            val userId = preferences[SessionManager.USER_ID] ?: UserSession.DEFAULT_USER_ID
+            val userId = preferences[SessionManager.USER_ID]
+            userId ?: return@map null
             userDao.getUserById(userId)?.toDomain()
         }
     }
 
     override suspend fun saveSession(
-        userId: Int,
+        userId: Long,
         authToken: String,
     ): Result<Unit> {
         return withContext(Dispatchers.IO) {

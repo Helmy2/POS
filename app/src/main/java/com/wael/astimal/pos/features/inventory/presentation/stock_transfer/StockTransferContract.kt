@@ -30,7 +30,7 @@ data class EditableStockTransfer(
 
 data class EditableStockTransferItem(
     val tempEditorId: Long = 1,
-    var product: Product? =null,
+    var product: Product? = null,
     var unit: Unit? = null,
     var quantity: String = "",
     var maxOpeningBalance: String = "",
@@ -53,16 +53,13 @@ sealed interface StockTransferScreenEvent {
     data class UpdateItemProduct(val itemEditorId: Long, val product: Product?) :
         StockTransferScreenEvent
 
-    data class UpdateItemUnit(val itemEditorId: Long, val unit: Unit?) :
-        StockTransferScreenEvent
+    data class UpdateItemUnit(val itemEditorId: Long, val unit: Unit?) : StockTransferScreenEvent
 
     data class UpdateItemQuantity(val itemEditorId: Long, val quantity: String) :
         StockTransferScreenEvent
 
     data object SaveTransfer : StockTransferScreenEvent
 
-    data class AcceptTransfer(val transferLocalId: Long) : StockTransferScreenEvent
-    data class RejectTransfer(val transferLocalId: Long) : StockTransferScreenEvent
     data class DeleteTransfer(val transferLocalId: Long) : StockTransferScreenEvent
     data object ClearSnackbar : StockTransferScreenEvent
 }

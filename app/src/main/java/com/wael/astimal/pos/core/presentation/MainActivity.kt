@@ -32,8 +32,8 @@ class MainActivity : ComponentActivity() {
         val sessionManager: SessionManager by inject()
 
         lifecycleScope.launch {
-            sessionManager.getCurrentUser().collectLatest {
-                startDestination.value = if (it == null) {
+            sessionManager.isUserLoggedInFlow().collectLatest {
+                startDestination.value = if (it) {
                     Result.success(Destination.Main)
                 } else {
                     Result.success(Destination.Auth)

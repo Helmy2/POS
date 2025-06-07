@@ -1,6 +1,9 @@
 package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.features.client_management.data.repository.SalesOrderRepositoryImpl
+import com.wael.astimal.pos.features.client_management.domain.repository.SalesOrderRepository
+import com.wael.astimal.pos.features.client_management.presentaion.sales_order.SalesOrderViewModel
 import com.wael.astimal.pos.features.inventory.data.repository.CategoryRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.ProductRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.StockTransferRepositoryImpl
@@ -26,12 +29,14 @@ val inventoryModule = module {
     single { get<AppDatabase>().categoryDao() }
     single { get<AppDatabase>().productDao() }
     single { get<AppDatabase>().stockTransferDao() }
+    single { get<AppDatabase>().salesOrderDao() }
 
     single<UnitRepository> { UnitRepositoryImpl(get()) }
     single<StoreRepository> { StoreRepositoryImpl(get()) }
     single<CategoryRepository> { CategoryRepositoryImpl(get()) }
     single<ProductRepository> { ProductRepositoryImpl(get()) }
     single <StockTransferRepository>{ StockTransferRepositoryImpl(get())}
+    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get()) }
 
     viewModel { InventoryViewModel() }
     viewModel { UnitViewModel(get()) }
@@ -39,4 +44,5 @@ val inventoryModule = module {
     viewModel { CategoryViewModel(get()) }
     viewModel { ProductViewModel(get(), get(), get(), get()) }
     viewModel { StockTransferViewModel(get(), get(),get(),  get()) }
+    viewModel { SalesOrderViewModel(get(), get(),get(),  get(),get()) }
 }

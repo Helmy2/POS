@@ -62,26 +62,6 @@ class StockTransferRepositoryImpl(
         }
     }
 
-    override suspend fun updateStockTransferStatus(localId: Long, isAccepted: Boolean?): Result<StockTransfer> {
-        return try {
-            val transferEntity = stockTransferDao.getStockTransferEntityByLocalId(localId)
-                ?: return Result.failure(NoSuchElementException("Stock transfer not found with localId: $localId"))
-
-            val updatedEntity = transferEntity.copy(
-                isSynced = false,
-                lastModified = System.currentTimeMillis()
-            )
-            stockTransferDao.updateStockTransfer(updatedEntity)
-
-            val updatedTransferWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
-                ?: return Result.failure(IllegalStateException("Failed to retrieve transfer after status update"))
-
-            Result.success(updatedTransferWithDetails.toDomain())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     override suspend fun deleteStockTransfer(transferLocalId: Long): Result<Unit> {
         return try {
             val transferEntity = stockTransferDao.getStockTransferEntityByLocalId(transferLocalId)

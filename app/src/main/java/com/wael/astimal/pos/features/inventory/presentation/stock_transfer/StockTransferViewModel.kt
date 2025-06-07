@@ -159,13 +159,6 @@ class StockTransferViewModel(
             // is StockTransferScreenEvent.UpdateItemMaxOpeningBalance -> updateTransferItem(event.itemEditorId) { it.copy(maxOpeningBalance = event.balance) }
             // is StockTransferScreenEvent.UpdateItemMinOpeningBalance -> updateTransferItem(event.itemEditorId) { it.copy(minOpeningBalance = event.balance) }
             is StockTransferScreenEvent.SaveTransfer -> saveCurrentTransfer()
-            is StockTransferScreenEvent.AcceptTransfer -> updateTransferAcceptStatus(
-                event.transferLocalId, true
-            )
-
-            is StockTransferScreenEvent.RejectTransfer -> updateTransferAcceptStatus(
-                event.transferLocalId, false
-            )
 
             is StockTransferScreenEvent.DeleteTransfer -> deleteTransfer(event.transferLocalId)
             is StockTransferScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
@@ -281,28 +274,6 @@ class StockTransferViewModel(
                 _state.update {
                     it.copy(
                         loading = false, error = "Failed to save transfer: ${e.message}"
-                    )
-                }
-            })
-        }
-    }
-
-    private fun updateTransferAcceptStatus(transferLocalId: Long, isAccepted: Boolean?) {
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
-            val result =
-                stockTransferRepository.updateStockTransferStatus(transferLocalId, isAccepted)
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false, snackbarMessage = "Transfer status updated."
-                    )
-                }
-                onEvent(StockTransferScreenEvent.LoadTransfers) // Refresh list
-            }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to update status: ${e.message}"
                     )
                 }
             })

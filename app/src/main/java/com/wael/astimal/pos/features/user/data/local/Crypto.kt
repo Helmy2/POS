@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.user.data.repository
+package com.wael.astimal.pos.features.user.data.local
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -7,7 +7,6 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
-
 
 object Crypto {
     private const val KEY_ALIAS = "secret"

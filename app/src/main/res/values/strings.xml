@@ -69,4 +69,5 @@
     <string name="stock_transfer">Stock tranfer</string>
     <string name="clients">Client</string>
     <string name="client_info">Client Info</string>
+    <string name="sales_order">Sales order</string>
 </resources>

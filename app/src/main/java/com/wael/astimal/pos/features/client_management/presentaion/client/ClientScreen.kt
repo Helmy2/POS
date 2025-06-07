@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.presentaion.clinet_info.ClientInfoRoute
+import com.wael.astimal.pos.features.client_management.presentaion.sales_order.SalesOrderRoute
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -78,7 +79,8 @@ fun ClientScreen(
                     },
                     labelProvider = {
                         when (it) {
-                           ClientDestination.ClientInfo -> context.getString(R.string.client_info)
+                            ClientDestination.ClientInfo -> context.getString(R.string.client_info)
+                            ClientDestination.SalesOrder -> context.getString(R.string.sales_order)
                         }
                     },
                     isSelected = { it == state.selectedDestination },
@@ -91,6 +93,12 @@ fun ClientScreen(
                 when (scaffoldNavigator.currentDestination?.contentKey) {
                     ClientDestination.ClientInfo -> {
                         ClientInfoRoute(onBack = { scope.launch { scaffoldNavigator.navigateBack() } })
+                    }
+                    ClientDestination.SalesOrder -> {
+                        SalesOrderRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
+                        )
                     }
 
                     else -> {}

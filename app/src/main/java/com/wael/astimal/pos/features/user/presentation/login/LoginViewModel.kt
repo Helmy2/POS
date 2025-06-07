@@ -47,7 +47,7 @@ class LoginViewModel(
             _state.update { it.copy(loading = true) }
             val result = sessionManger.saveSession(
                 userId = 1,
-                authToken = ""
+                authToken = "test_auth_token" // todo replace with actual auth token
             )
             handleAuthResult(result) {
                 _effect.emit(LoginEffect.NavigateToHome)

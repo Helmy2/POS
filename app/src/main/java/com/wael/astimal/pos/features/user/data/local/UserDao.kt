@@ -24,7 +24,7 @@ interface UserDao {
     suspend fun updateUser(user: UserEntity)
 
     @Query("SELECT * FROM users WHERE id = :localId")
-    suspend fun getUserById(localId: Int): UserEntity?
+    suspend fun getUserById(localId: Long): UserEntity?
 
     @Query("SELECT * FROM users WHERE isEmployeeFlag = 1")
     fun getAllEmployeesFlow(): Flow<List<UserEntity>>

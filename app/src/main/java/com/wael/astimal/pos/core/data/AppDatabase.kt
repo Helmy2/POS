@@ -3,7 +3,10 @@ package com.wael.astimal.pos.core.data
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.wael.astimal.pos.features.client_management.data.entity.ClientEntity
+import com.wael.astimal.pos.features.client_management.data.entity.OrderEntity
+import com.wael.astimal.pos.features.client_management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.client_management.data.local.ClientDao
+import com.wael.astimal.pos.features.client_management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
@@ -28,8 +31,10 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         StockTransferEntity::class,
         StockTransferItemEntity::class,
         ClientEntity::class,
+        OrderEntity::class,
+        OrderProductEntity::class
     ],
-    version = 14,
+    version = 16,
     exportSchema = false
 )
 
@@ -41,4 +46,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun stockTransferDao(): StockTransferDao
     abstract fun clientDao(): ClientDao
+    abstract fun salesOrderDao(): SalesOrderDao
 }

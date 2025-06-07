@@ -14,6 +14,5 @@ interface StockTransferRepository {
         initiatedByUserId: Long,
         items: List<StockTransferItemEntity>
     ): Result<Unit>
-    suspend fun updateStockTransferStatus(localId: Long, isAccepted: Boolean?): Result<StockTransfer>
     suspend fun deleteStockTransfer(transferLocalId: Long): Result<Unit>
 }
