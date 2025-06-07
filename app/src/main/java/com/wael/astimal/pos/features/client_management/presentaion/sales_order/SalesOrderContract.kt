@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.client_management.presentaion.sales_order
 
+import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.client_management.domain.entity.Client
 import com.wael.astimal.pos.features.client_management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.client_management.domain.entity.SalesOrder
@@ -19,13 +20,12 @@ data class OrderScreenState(
     val availableEmployees: List<User> = emptyList(),
 
     val query: String = "",
-    val error: String? = null,
-    val snackbarMessage: String? = null,
+    @StringRes val error: Int? = null,
+    @StringRes val snackbarMessage: Int? = null,
 
     val isQueryActive: Boolean = false,
     val isDetailViewOpen: Boolean = false,
 )
-
 
 
 data class EditableOrder(
@@ -73,7 +73,6 @@ sealed interface OrderScreenEvent {
 
     data object SaveOrder : OrderScreenEvent
     data object ClearSnackbar : OrderScreenEvent
-    data object OpenNewOrderForm: OrderScreenEvent
-    data object CloseOrderForm: OrderScreenEvent
-
+    data object OpenNewOrderForm : OrderScreenEvent
+    data object CloseOrderForm : OrderScreenEvent
 }

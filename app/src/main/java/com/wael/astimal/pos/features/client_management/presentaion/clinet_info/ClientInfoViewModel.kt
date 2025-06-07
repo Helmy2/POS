@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.client_management.presentaion.clinet_info
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.domain.repository.ClientRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -59,7 +60,7 @@ class ClientInfoViewModel(
                     _state.update {
                         it.copy(
                             loading = false,
-                            error = "Error searching clients: ${e.message}"
+                            error = R.string.error_searching_clients
                         )
                     }
                 }

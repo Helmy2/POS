@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.client_management.presentaion.sales_order
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.client_management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.client_management.domain.repository.ClientRepository
@@ -119,9 +120,11 @@ class SalesOrderViewModel(
                     error = null
                 )
             }
+
             is OrderScreenEvent.DeleteOrder -> {
                 // todo: Implement delete order logic
             }
+
             OrderScreenEvent.OpenNewOrderForm -> _state.update {
                 it.copy(
                     isDetailViewOpen = false,
@@ -187,7 +190,7 @@ class SalesOrderViewModel(
             orderRepository.getOrders(query).catch { e ->
                 _state.update {
                     it.copy(
-                        loading = false, error = "Error searching orders: ${e.message}"
+                        loading = false, error = R.string.error_searching_orders
                     )
                 }
             }.collect { orders -> _state.update { it.copy(loading = false, orders = orders) } }
@@ -200,11 +203,11 @@ class SalesOrderViewModel(
         val orderInput = _state.value.currentOrderInput
         Log.d("TAG", "saveOrder: Order Input: $currentUserId")
         val loggedInEmployeeId = currentUserId ?: run {
-            _state.update { it.copy(error = "User not identified.") }
+            _state.update { it.copy(error = R.string.user_not_identified) }
             return
         }
         if (orderInput.selectedClient == null || orderInput.items.isEmpty()) {
-            _state.update { it.copy(error = "Client and at least one item are required.") }
+            _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
             return
         }
         val itemEntities = orderInput.items.mapNotNull {
@@ -224,7 +227,7 @@ class SalesOrderViewModel(
             )
         }
         if (itemEntities.size != orderInput.items.size) {
-            _state.update { it.copy(error = "One or more order items are invalid.") }
+            _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
             return
         }
         val orderEntity = OrderEntity(
@@ -245,13 +248,20 @@ class SalesOrderViewModel(
             _state.update { it.copy(loading = true) }
             orderRepository.addOrder(orderEntity, itemEntities).fold(
                 onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false, snackbarMessage = "Order Saved"
-                    )
-                }
-            },
-                onFailure = { e -> _state.update { it.copy(loading = false, error = e.message) } })
+                    _state.update {
+                        it.copy(
+                            loading = false, snackbarMessage = R.string.order_saved
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _state.update {
+                        it.copy(
+                            loading = false, error = R.string.something_went_wrong
+                        )
+                    }
+                },
+            )
         }
     }
 }

@@ -141,8 +141,7 @@ fun ClientInfoScreen(
             Dialog(
                 onDismissRequest = {
                     onEvent(ClientInfoEvent.DetailClient)
-                }
-            ) {
+                }) {
                 Card {
                     ClientDetailView(state.selectedClient!!)
                 }
@@ -160,7 +159,12 @@ fun ClientList(
         items(clients, key = { it.localId }) { client ->
             ListItem(
                 headlineContent = { Text(client.clientName.displayName(language)) },
-                supportingContent = { Text("Debt: ${client.debt ?: "N/A"} | Address: ${client.address ?: "N/A"}") },
+                supportingContent = { Text(
+                    stringResource(
+                        R.string.debt_address,
+                        client.debt ?: stringResource(R.string.n_a),
+                        client.address ?: stringResource(R.string.n_a)
+                    )) },
                 modifier = Modifier
                     .clickable { onClientClick(client) }
                     .background(if (client.localId == selectedClientId) MaterialTheme.colorScheme.inversePrimary else Color.Transparent))
@@ -174,22 +178,31 @@ fun ClientDetailView(client: Client) {
     val language = LocalAppLocale.current
 
     Column(
-        modifier = Modifier
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
             client.clientName.displayName(language), style = MaterialTheme.typography.headlineMedium
         )
-        Text("Address: ${client.address ?: "N/A"}")
-        Text("Debt: ${client.debt?.toString() ?: "N/A"}")
-        Text("Is Supplier: ${if (client.isSupplier) "Yes" else "No"}")
-        Text("Phones:")
+        Text(stringResource(R.string.address, client.address ?: stringResource(R.string.n_a)))
+        Text(stringResource(R.string.debt, client.debt?.toString() ?: stringResource(R.string.n_a)))
+        Text(
+            stringResource(
+                R.string.is_supplier,
+                if (client.isSupplier) stringResource(R.string.yes) else stringResource(
+                    R.string.no
+                )
+            )
+        )
+        Text(stringResource(R.string.phones))
         client.phones.forEach { phone ->
             Text("- $phone")
         }
         client.responsibleEmployee?.let {
-            Text("Responsible Employee: ${it.localizedName.displayName(language)}")
+            Text(
+                stringResource(
+                    R.string.responsible_employee, it.localizedName.displayName(language)
+                )
+            )
         }
     }
 }

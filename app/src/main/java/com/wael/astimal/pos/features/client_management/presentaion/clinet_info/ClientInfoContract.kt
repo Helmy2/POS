@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.client_management.presentaion.clinet_info
 
+import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.client_management.domain.entity.Client
 
 data class ClientInfoState(
@@ -7,7 +8,7 @@ data class ClientInfoState(
     val searchResults: List<Client> = emptyList(),
     val selectedClient: Client? = null,
     val query: String = "",
-    val error: String? = null,
+    @StringRes val error: Int? = null,
     val snackbarMessage: String? = null,
     val showDetailDialog: Boolean = false,
 )
@@ -17,6 +18,6 @@ sealed interface ClientInfoEvent {
     data class SelectClient(val client: Client?) : ClientInfoEvent
     data object ClearSnackbar : ClientInfoEvent
     data class UpdateQuery(val query: String) : ClientInfoEvent
-    data object DetailClient: ClientInfoEvent
+    data object DetailClient : ClientInfoEvent
     data object ShowDetailDialog : ClientInfoEvent
 }

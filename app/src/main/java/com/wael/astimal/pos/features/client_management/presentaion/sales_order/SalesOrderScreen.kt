@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,9 +66,10 @@ fun SalesOrderScreen(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
     LaunchedEffect(state.snackbarMessage) {
         state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(it)
+            snackbarHostState.showSnackbar(context.getString(it))
             onEvent(OrderScreenEvent.ClearSnackbar)
         }
     }
@@ -130,22 +132,23 @@ fun OrderForm(
     ) {
         // --- Header Section ---
         CustomExposedDropdownMenu(
-            label = "Client",
+            label = stringResource(R.string.client),
             items = state.availableClients,
             selectedItemId = orderInput.selectedClient?.localId,
             onItemSelected = { onEvent(OrderScreenEvent.SelectClient(it)) },
             itemToDisplayString = { it.clientName.displayName(currentLanguage) },
             itemToId = { it.localId })
         CustomExposedDropdownMenu(
-            label = "Main Employee (Optional)",
-            items = state.availableEmployees,
+            label = "Main Employee",
+            items = state.availableEmployees, // TODO: string res
             selectedItemId = orderInput.selectedMainEmployeeId,
             onItemSelected = { onEvent(OrderScreenEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
-            itemToId = { it.id })
+            itemToId = { it.id },
+        )
 
         // --- Items Section ---
-        Text("Items", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
         orderInput.items.forEach { item ->
             OrderItemRow(
                 item = item, state = state, onEvent = onEvent
@@ -156,16 +159,13 @@ fun OrderForm(
             onClick = { onEvent(OrderScreenEvent.AddItemToOrder) },
             modifier = Modifier.align(Alignment.End)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Item")
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text("Add Item")
+            Text(stringResource(R.string.add_item))
         }
 
-        // --- Totals & Payment Section ---
-        OrderTotalsSection(orderInput)
-
         CustomExposedDropdownMenu(
-            label = "Payment Type",
+            label = stringResource(R.string.payment_type),
             items = PaymentType.entries,
             selectedItemId = orderInput.paymentType.ordinal.toLong(),
             onItemSelected = {
@@ -181,12 +181,14 @@ fun OrderForm(
         OutlinedTextField(
             value = orderInput.amountPaid,
             onValueChange = { onEvent(OrderScreenEvent.UpdateAmountPaid(it)) },
-            label = { Text("Amount Paid") },
+            label = { Text(stringResource(R.string.amount_paid)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
             ),
             modifier = Modifier.fillMaxWidth()
         )
+
+        OrderTotalsSection(orderInput)
 
         Button(
             onClick = { onEvent(OrderScreenEvent.SaveOrder) },
@@ -194,7 +196,7 @@ fun OrderForm(
                 .fillMaxWidth()
                 .padding(top = 8.dp)
         ) {
-            Text("Save Order")
+            Text(stringResource(R.string.save_order))
         }
     }
 }
@@ -208,7 +210,7 @@ fun OrderItemRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f)) {
                 CustomExposedDropdownMenu(
-                    label = "Product",
+                    label = stringResource(R.string.product),
                     items = state.availableProducts,
                     selectedItemId = item.product?.localId,
                     onItemSelected = {
@@ -221,7 +223,7 @@ fun OrderItemRow(
                     itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId })
             }
-            IconButton(onClick = { onEvent(OrderScreenEvent.RemoveItemFromOrder(item.tempEditorId)) }) {
+            IconButton(onClick = { onEvent(OrderScreenEvent.RemoveItemFromOrder(item.tempEditorId)) }) { // TODO: string res
                 Icon(Icons.Default.Delete, "Remove Item")
             }
         }
@@ -251,7 +253,7 @@ fun OrderItemRow(
                         )
                     )
                 },
-                label = { Text("Qty") },
+                label = { Text(stringResource(R.string.qty)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.weight(1f)
             )
@@ -264,7 +266,7 @@ fun OrderItemRow(
                         )
                     )
                 },
-                label = { Text("Price") },
+                label = { Text(stringResource(R.string.price)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.weight(1f)
             )
@@ -272,7 +274,7 @@ fun OrderItemRow(
                 value = "%.2f".format(item.lineTotal),
                 onValueChange = { },
                 readOnly = true,
-                label = { Text("Total") },
+                label = { Text(stringResource(R.string.total)) },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -289,11 +291,11 @@ fun OrderTotalsSection(orderInput: EditableOrder) {
             modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Subtotal:", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.subtotal), style = MaterialTheme.typography.bodyLarge)
                 Text("%.2f".format(orderInput.subtotal), style = MaterialTheme.typography.bodyLarge)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Previous Debt:", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.previous_debt), style = MaterialTheme.typography.bodyLarge)
                 Text(
                     "%.2f".format(orderInput.selectedClient?.debt ?: 0.0),
                     style = MaterialTheme.typography.bodyLarge
@@ -301,21 +303,21 @@ fun OrderTotalsSection(orderInput: EditableOrder) {
             }
             Spacer(modifier = Modifier.padding(vertical = 4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Total Amount:", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.total_amount), style = MaterialTheme.typography.titleMedium)
                 Text(
                     "%.2f".format(orderInput.totalAmount),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Paid:", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.paid), style = MaterialTheme.typography.titleMedium)
                 Text(
                     "%.2f".format(orderInput.amountPaid.toDoubleOrNull() ?: 0.0),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Remaining:", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.remaining), style = MaterialTheme.typography.titleLarge)
                 Text(
                     "%.2f".format(orderInput.amountRemaining),
                     style = MaterialTheme.typography.titleLarge

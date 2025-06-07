@@ -80,12 +80,12 @@ fun SettingsScreen(
                         Row {
                             Text(
                                 text = state.user?.localizedName?.displayName(state.language)
-                                    ?: "N/A"
+                                    ?: stringResource(R.string.n_a)
                             )
                             Spacer(Modifier.width(8.dp))
                             Icon(
                                 imageVector = Icons.Outlined.Edit,
-                                contentDescription = "Edit Name"
+                                contentDescription = stringResource(R.string.edit_name)
                             )
                         }
                     }, onClick = { onEvent(SettingsEvent.UpdateEditeNameDialog(true)) })
