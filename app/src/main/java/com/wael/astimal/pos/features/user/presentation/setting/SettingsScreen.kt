@@ -65,46 +65,51 @@ fun SettingsScreen(
     onEvent: (SettingsEvent) -> Unit,
 ) {
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         ) {
             LabeledRow(
-                label = stringResource(R.string.name),
-                content = {
-                    ClickableText(
-                        content = {
-                            Row {
-                                Text(text = state.userSession.userName)
-                                Spacer(Modifier.width(8.dp))
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Edit Name"
-                                )
-                            }
-                        },
-                        onClick = { onEvent(SettingsEvent.UpdateEditeNameDialog(true)) }
-                    )
-                },
-                modifier = Modifier.sizeIn(maxWidth = 400.dp).fillMaxWidth()
+                label = stringResource(R.string.name), content = {
+                    ClickableText(content = {
+                        Row {
+                            Text(
+                                text = state.user?.localizedName?.displayName(state.language)
+                                    ?: "N/A"
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit Name"
+                            )
+                        }
+                    }, onClick = { onEvent(SettingsEvent.UpdateEditeNameDialog(true)) })
+                }, modifier = Modifier
+                    .sizeIn(maxWidth = 400.dp)
+                    .fillMaxWidth()
             )
             ThemeSettingsRow(
                 showDialog = state.showThemeDialog,
                 onShowDialog = { onEvent(SettingsEvent.UpdateThemeDialog(it)) },
                 themeMode = state.themeMode,
                 onThemeChange = { onEvent(SettingsEvent.UpdateThemeMode(it)) },
-                modifier = Modifier.sizeIn(maxWidth = 400.dp).fillMaxWidth()
+                modifier = Modifier
+                    .sizeIn(maxWidth = 400.dp)
+                    .fillMaxWidth()
             )
             LanguageSettingRow(
                 showDialog = state.showLanguageDialog,
                 onShowDialog = { onEvent(SettingsEvent.UpdateLanguageDialog(it)) },
                 language = state.language,
                 onLanguageChange = { onEvent(SettingsEvent.UpdateLanguage(it)) },
-                modifier = Modifier.sizeIn(maxWidth = 400.dp).fillMaxWidth()
+                modifier = Modifier
+                    .sizeIn(maxWidth = 400.dp)
+                    .fillMaxWidth()
             )
             Button(
                 onClick = { onEvent(SettingsEvent.Logout) },

@@ -27,7 +27,7 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
         ),
         ForeignKey(
             entity = UserEntity::class,
-            parentColumns = ["localId"],
+            parentColumns = ["id"],
             childColumns = ["initiatedByUserId"],
             onDelete = ForeignKey.SET_NULL
         )
@@ -108,7 +108,7 @@ data class StockTransferWithItemsAndDetails(
 
     @Relation(
         parentColumn = "initiatedByUserId",
-        entityColumn = "localId",
+        entityColumn = "id",
         entity = UserEntity::class
     )
     val initiatedByUser: UserEntity?,

@@ -30,12 +30,12 @@ class StockTransferViewModel(
     val state: StateFlow<StockTransferScreenState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
-    private var currentUserId: Int? = null
+    private var currentUserId: Long? = null
 
     init {
         viewModelScope.launch {
-            sessionManager.getCurrentSession().collect { userSession ->
-                currentUserId = userSession.userId // Get current user ID
+            sessionManager.getCurrentUser().collect { userSession ->
+                currentUserId = userSession?.id
             }
         }
         viewModelScope.launch {

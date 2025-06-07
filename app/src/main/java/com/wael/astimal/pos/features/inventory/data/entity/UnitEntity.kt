@@ -9,7 +9,6 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Unit
 data class UnitEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0L,
-
     val serverId: Int?,
     var arName: String?,
     var enName: String?,

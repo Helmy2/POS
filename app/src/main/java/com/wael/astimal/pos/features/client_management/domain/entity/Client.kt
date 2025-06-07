@@ -6,8 +6,7 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 data class Client(
     val localId: Long,
     val serverId: Int?,
-    val userLocalId: Long,
-    val userServerId: Int?,
+    val userId: Long,
     val clientName: LocalizedString,
     val phones: List<String>,
     val address: String?,

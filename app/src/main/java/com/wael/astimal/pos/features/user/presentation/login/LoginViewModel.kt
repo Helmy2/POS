@@ -3,8 +3,6 @@ package com.wael.astimal.pos.features.user.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.features.user.domain.entity.UserRole
-import com.wael.astimal.pos.features.user.domain.entity.UserSession
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -48,13 +46,8 @@ class LoginViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
             val result = sessionManger.saveSession(
-                UserSession(
-                    userId = 413, // Assuming userId is not needed for login
-                    userName = state.value.username,
-                    userEmail = "", // Assuming email is not needed for login
-                    userRole = UserRole.EMPLOYEE, // Assuming role is not needed for login
-                    authToken = "" // Assuming token is not needed for login
-                )
+                userId = 1,
+                authToken = ""
             )
             handleAuthResult(result) {
                 _effect.emit(LoginEffect.NavigateToHome)

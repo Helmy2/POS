@@ -81,9 +81,9 @@ class SettingsViewModel(
     private fun initializeUserData() {
         viewModelScope.launch {
             launch {
-                sessionManager.getCurrentSession().collectLatest { result ->
-                    if (result.isLoggedIn.not()) _effect.emit(SettingsEffect.NavigateToLogin)
-                    _state.update { it.copy(userSession = result) }
+                sessionManager.getCurrentUser().collectLatest { result ->
+                    if (result == null) _effect.emit(SettingsEffect.NavigateToLogin)
+                    _state.update { it.copy(user = result) }
                 }
             }
             launch {

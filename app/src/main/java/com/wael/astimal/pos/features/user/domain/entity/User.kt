@@ -4,8 +4,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
 
 
 data class User(
-    val localId: Long,
-    val serverId: Int?,
+    val id: Long,
     val localizedName: LocalizedString,
     val email: String,
     val phone: String,
@@ -16,18 +15,6 @@ data class User(
 )
 
 enum class UserType {
-    CLIENT, EMPLOYEE, UnKNOWN, ADMIN;
-
-    companion object {
-        fun fromString(value: String): UserType {
-            return when (value.lowercase()) {
-                "client" -> CLIENT
-                "employee" -> EMPLOYEE
-                "admin" -> ADMIN
-                "unknown" -> UnKNOWN
-                else -> throw IllegalArgumentException("Unknown user type: $value")
-            }
-        }
-    }
+    CLIENT, EMPLOYEE, UNKNOWN, ADMIN;
 }
 

@@ -23,11 +23,8 @@ interface UserDao {
     @Update
     suspend fun updateUser(user: UserEntity)
 
-    @Query("SELECT * FROM users WHERE localId = :localId")
-    suspend fun getUserById(localId: Long): UserEntity?
-
-    @Query("SELECT * FROM users WHERE serverId = :serverId")
-    suspend fun getUserByServerId(serverId: Int): UserEntity?
+    @Query("SELECT * FROM users WHERE id = :localId")
+    suspend fun getUserById(localId: Int): UserEntity?
 
     @Query("SELECT * FROM users WHERE isEmployeeFlag = 1")
     fun getAllEmployeesFlow(): Flow<List<UserEntity>>
@@ -35,7 +32,7 @@ interface UserDao {
     @Query(
         """
         SELECT u.* FROM users u
-        LEFT JOIN clients c ON u.localId = c.userLocalId
+        LEFT JOIN clients c ON u.id = c.userId
         WHERE u.isClientFlag = 1 AND c.localId IS NULL 
         AND (u.arName LIKE '%' || :query || '%' OR u.enName LIKE '%' || :query || '%')
     """
@@ -45,6 +42,6 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE isSynced = 0")
     suspend fun getUnsyncedUsers(): List<UserEntity>
 
-    @Query("DELETE FROM users WHERE localId IN (:localIds)")
+    @Query("DELETE FROM users WHERE id IN (:localIds)")
     suspend fun deleteUsersByLocalIds(localIds: List<Long>)
 }

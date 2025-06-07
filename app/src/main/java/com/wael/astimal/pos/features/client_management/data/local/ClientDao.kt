@@ -26,12 +26,14 @@ interface ClientDao {
     suspend fun getClientWithDetails(localId: Long): ClientWithDetailsEntity?
 
     @androidx.room.Transaction
-    @Query("""
-        SELECT c.* FROM clients c INNER JOIN users u ON c.userLocalId = u.localId
+    @Query(
+        """
+        SELECT c.* FROM clients c INNER JOIN users u ON c.userId = u.id
         WHERE c.isDeletedLocally = 0 
         AND (u.arName LIKE '%' || :query || '%' OR u.enName LIKE '%' || :query || '%' OR c.address LIKE '%' || :query || '%')
        
-    """)
+    """
+    )
     fun searchClientsWithDetailsFlow(query: String): Flow<List<ClientWithDetailsEntity>>
 
     @Query("SELECT * FROM clients WHERE isSynced = 0 AND NOT isDeletedLocally")

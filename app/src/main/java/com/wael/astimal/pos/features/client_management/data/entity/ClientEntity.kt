@@ -16,18 +16,18 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     tableName = "clients",
     foreignKeys = [ForeignKey(
         entity = UserEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["userLocalId"],
+        parentColumns = ["id"],
+        childColumns = ["userId"],
         onDelete = ForeignKey.CASCADE
     )],
     indices = [
-        Index(value = ["userLocalId"], unique = true),
+        Index(value = ["userId"], unique = true),
     ]
 )
 data class ClientEntity(
     @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
     val serverId: Int?,
-    val userLocalId: Long,
+    val userId: Long,
     val phone1: String?,
     val phone2: String?,
     val phone3: String?,
@@ -44,11 +44,11 @@ data class ClientWithDetailsEntity(
     @Embedded val client: ClientEntity,
 
     @Relation(
-        parentColumn = "userLocalId", entityColumn = "localId", entity = UserEntity::class
+        parentColumn = "userId", entityColumn = "id", entity = UserEntity::class
     ) val clientUser: UserEntity,
 
     @Relation(
-        parentColumn = "responsibleEmployeeLocalId", entityColumn = "localId", entity = UserEntity::class
+        parentColumn = "responsibleEmployeeLocalId", entityColumn = "id", entity = UserEntity::class
     ) val responsibleEmployeeUser: UserEntity?,
 )
 
@@ -60,8 +60,7 @@ fun ClientWithDetailsEntity.toDomain(): Client {
     return Client(
         localId = this.client.localId,
         serverId = this.client.serverId,
-        userLocalId = this.client.userLocalId,
-        userServerId = this.clientUser.serverId,
+        userId = this.client.userId,
         clientName = clientNameLocalized,
         phones = listOfNotNull(
             this.client.phone1,

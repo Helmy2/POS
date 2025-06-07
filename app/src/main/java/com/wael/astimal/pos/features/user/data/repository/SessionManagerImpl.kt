@@ -5,7 +5,9 @@ import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
-import com.wael.astimal.pos.features.user.domain.entity.UserRole
+import com.wael.astimal.pos.features.user.data.entity.toDomain
+import com.wael.astimal.pos.features.user.data.local.UserDao
+import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserSession
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +17,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class SessionManagerImpl(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val userDao: UserDao,
 ) : SessionManager {
 
-    override fun getCurrentSession(): Flow<UserSession> {
+    override fun getCurrentUser(): Flow<User?> {
         return dataStore.data.catch { exception ->
             if (exception is IOException) {
                 emit(emptyPreferences())
@@ -27,38 +30,20 @@ class SessionManagerImpl(
             }
         }.map { preferences ->
             val userId = preferences[SessionManager.USER_ID] ?: UserSession.DEFAULT_USER_ID
-            val userName = preferences[SessionManager.USER_NAME] ?: ""
-            val userEmail = preferences[SessionManager.USER_EMAIL] ?: ""
-            val roleName = preferences[SessionManager.USER_ROLE]
-            val userRole = try {
-                if (roleName != null) UserRole.valueOf(roleName) else UserRole.UNKNOWN
-            } catch (_: IllegalArgumentException) {
-                UserRole.UNKNOWN
-            }
-            val authToken = preferences[SessionManager.AUTH_TOKEN]?.let {
-                Crypto.decrypt(it)
-            }.toString()
-
-            UserSession(
-                userId = userId,
-                userName = userName,
-                userEmail = userEmail,
-                userRole = userRole,
-                authToken = authToken,
-            )
+            userDao.getUserById(userId)?.toDomain()
         }
     }
 
-    override suspend fun saveSession(session: UserSession): Result<Unit> {
+    override suspend fun saveSession(
+        userId: Int,
+        authToken: String,
+    ): Result<Unit> {
         return withContext(Dispatchers.IO) {
             runCatching {
                 dataStore.edit { preferences ->
-                    preferences[SessionManager.USER_ID] = session.userId
-                    preferences[SessionManager.USER_NAME] = session.userName
-                    preferences[SessionManager.USER_EMAIL] = session.userEmail
-                    preferences[SessionManager.USER_ROLE] = session.userRole.name
+                    preferences[SessionManager.USER_ID] = userId
                     preferences[SessionManager.AUTH_TOKEN] =
-                        Crypto.encrypt(session.authToken.toByteArray())
+                        Crypto.encrypt(authToken.toByteArray())
                 }
                 Unit
             }

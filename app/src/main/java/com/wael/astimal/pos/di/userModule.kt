@@ -17,7 +17,7 @@ val userModule = module {
         SettingsManagerImpl(get())
     }
     single<SessionManager> {
-        SessionManagerImpl(get())
+        SessionManagerImpl(get(),get())
     }
 
     viewModel { SettingsViewModel( get(),get()) }

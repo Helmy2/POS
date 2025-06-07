@@ -8,9 +8,8 @@ import com.wael.astimal.pos.features.user.domain.entity.UserType
 
 @Entity(tableName = "users")
 data class UserEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = false)
+    val id: Long,
     val name: String,
     val arName: String?,
     val enName: String?,
@@ -25,8 +24,7 @@ data class UserEntity(
 
 fun UserEntity.toDomain(): User {
     return User(
-        localId = localId,
-        serverId = serverId,
+        id = id,
         name = name,
         localizedName = LocalizedString(arName ?: "", enName ?: ""),
         email = email ?: "",
@@ -35,7 +33,7 @@ fun UserEntity.toDomain(): User {
             isClientFlag -> UserType.CLIENT
             isEmployeeFlag -> UserType.EMPLOYEE
             isAdminFlag -> UserType.ADMIN
-            else -> UserType.UnKNOWN
+            else -> UserType.UNKNOWN
         },
         isSynced = isSynced,
         lastModified = lastModified,

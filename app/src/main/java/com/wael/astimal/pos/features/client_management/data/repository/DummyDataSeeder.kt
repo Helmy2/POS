@@ -61,21 +61,21 @@ class DummyDataSeeder(
 
     private suspend fun populateDummyUsersAndEmployees(): Map<String, Long> {
         val adminUser = UserEntity(
-            serverId = 1, name = "Super Admin", arName = "مدير النظام", enName = "Super Admin",
+            id = 1, name = "Super Admin", arName = "مدير النظام", enName = "Super Admin",
             email = "super_admin@example.com", phone = "5551234567", isAdminFlag = true,
             isSynced = true
         )
         val adminLocalId = userDao.insertOrUpdate(adminUser)
 
         val emp1 = UserEntity(
-            serverId = -1001, name = "Default Employee One", arName = "موظف افتراضي ١",
+            id = 2, name = "Default Employee One", arName = "موظف افتراضي ١",
             enName = "Default Employee One", email = "employee1@example.com", phone = "555000111",
             isEmployeeFlag = true, isSynced = true
         )
         val emp1LocalId = userDao.insertOrUpdate(emp1)
 
         val emp2 = UserEntity(
-            serverId = -1002, name = "Employee Two", arName = "موظف ٢", enName = "Employee Two",
+            id = 3, name = "Employee Two", arName = "موظف ٢", enName = "Employee Two",
             email = "employee2@example.com", phone = "555000222", isEmployeeFlag = true,
             isSynced = true
         )
@@ -86,26 +86,26 @@ class DummyDataSeeder(
 
     private suspend fun populateDummyClients(employees: Map<String, Long>) {
         val userForClient1 = UserEntity(
-            serverId = -101, name = "Ahmed Mohamed", arName = "أحمد محمد", enName = "Ahmed Mohamed",
+            id = -101, name = "Ahmed Mohamed", arName = "أحمد محمد", enName = "Ahmed Mohamed",
             email = "ahmed.client@example.com", phone = "1112223330", isClientFlag = true, isSynced = true
         )
         val userClient1LocalId = userDao.insertOrUpdate(userForClient1)
 
         val userForClient2 = UserEntity(
-            serverId = -102, name = "Fatima Ali", arName = "فاطمة علي", enName = "Fatima Ali",
+            id = -102, name = "Fatima Ali", arName = "فاطمة علي", enName = "Fatima Ali",
             email = "fatima.client@example.com", phone = "7778889990", isClientFlag = true, isSynced = true
         )
         val userClient2LocalId = userDao.insertOrUpdate(userForClient2)
 
         val client1Entity = ClientEntity(
-            serverId = -201, userLocalId = userClient1LocalId, responsibleEmployeeLocalId = employees["emp1"],
+            serverId = -201, userId = userClient1LocalId, responsibleEmployeeLocalId = employees["emp1"],
             address = "123 Nile St, Cairo", debt = 250.50, isSupplier = false, isSynced = true,
             phone1 = "1112223330", phone2 = "1112223331", phone3 = null
         )
         clientDao.insertOrUpdateClient(client1Entity)
 
         val client2Entity = ClientEntity(
-            serverId = -202, userLocalId = userClient2LocalId, responsibleEmployeeLocalId = employees["emp2"],
+            serverId = -202, userId = userClient2LocalId, responsibleEmployeeLocalId = employees["emp2"],
             address = "456 Cornish Rd, Alexandria", debt = 0.0, isSupplier = true, isSynced = true,
             phone1 = "7778889990", phone2 = null, phone3 = null
         )

@@ -12,7 +12,7 @@ val clientModule = module {
     single { get<AppDatabase>().clientDao() }
 
     single<ClientRepository> {
-        ClientRepositoryImpl(get(),get())
+        ClientRepositoryImpl(get())
     }
 
     viewModel { ClientViewModel() }
