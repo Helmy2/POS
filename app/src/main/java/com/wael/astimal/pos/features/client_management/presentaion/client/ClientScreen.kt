@@ -4,7 +4,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
@@ -42,7 +44,8 @@ fun ClientRoute(
 }
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
@@ -79,12 +82,17 @@ fun ClientScreen(
                             scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, it)
                         }
                     },
-                    labelProvider = {
-                        when (it) {
-                            ClientDestination.ClientInfo -> context.getString(R.string.client_info)
-                            ClientDestination.SalesOrder -> context.getString(R.string.sales_order)
-                            ClientDestination.OrderReturn -> context.getString(R.string.order_return)
-                        }
+                    label = {
+                        Text(
+                            when (it) {
+                                ClientDestination.ClientInfo -> context.getString(R.string.client_info)
+                                ClientDestination.SalesOrder -> context.getString(R.string.sales_order)
+                                ClientDestination.OrderReturn -> context.getString(R.string.order_return)
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
+
                     },
                     isSelected = { it == state.selectedDestination },
                     modifier = Modifier.padding(8.dp)

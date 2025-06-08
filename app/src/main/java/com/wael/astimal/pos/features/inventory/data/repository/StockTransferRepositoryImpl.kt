@@ -52,15 +52,46 @@ class StockTransferRepositoryImpl(
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
-            stockTransferDao.insertStockTransfer(newTransferEntity)
+            val stockTransferId = stockTransferDao.insertStockTransfer(newTransferEntity)
 
-            stockTransferDao.insertStockTransferItems(items)
+            stockTransferDao.insertStockTransferItems(items.map { it.copy(stockTransferLocalId = stockTransferId) })
 
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    override suspend fun updateStockTransfer(
+        transferLocalId: Long,
+        fromStoreId: Long,
+        toStoreId: Long,
+        initiatedByUserId: Long,
+        items: List<StockTransferItemEntity>
+    ): Result<Unit> {
+        return try {
+            val existingTransfer = stockTransferDao.getStockTransferEntityByLocalId(transferLocalId)
+                ?: return Result.failure(NoSuchElementException("Stock transfer with localId $transferLocalId not found."))
+
+            val updatedTransferEntity = existingTransfer.copy(
+                fromStoreId = fromStoreId,
+                toStoreId = toStoreId,
+                initiatedByUserId = initiatedByUserId,
+                // Mark as unsynced because it has been modified locally
+                isSynced = false,
+                lastModified = System.currentTimeMillis()
+            )
+
+            // The list of items passed in are the *new* complete list for the transfer.
+            // We'll update the header and replace all old items with the new ones in a single transaction.
+            stockTransferDao.updateTransferWithItems(updatedTransferEntity, items)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
     override suspend fun deleteStockTransfer(transferLocalId: Long): Result<Unit> {
         return try {

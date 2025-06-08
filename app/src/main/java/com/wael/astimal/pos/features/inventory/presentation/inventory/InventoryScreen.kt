@@ -2,7 +2,9 @@ package com.wael.astimal.pos.features.inventory.presentation.inventory
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
@@ -30,11 +32,15 @@ import org.koin.androidx.compose.koinViewModel
 fun InventoryRoute(
     viewModel: InventoryViewModel = koinViewModel(),
     navController: NavHostController,
-    snackbarHostState : SnackbarHostState
+    snackbarHostState: SnackbarHostState
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    InventoryScreen(state = state, onEvent = viewModel::handleEvent,
-        navController = navController, snackbarHostState=snackbarHostState)
+    InventoryScreen(
+        state = state,
+        onEvent = viewModel::handleEvent,
+        navController = navController,
+        snackbarHostState = snackbarHostState
+    )
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -43,7 +49,7 @@ fun InventoryScreen(
     state: InventoryState,
     onEvent: (InventoryEvent) -> Unit,
     navController: NavHostController,
-    snackbarHostState :SnackbarHostState
+    snackbarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -72,14 +78,18 @@ fun InventoryScreen(
                             scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, it)
                         }
                     },
-                    labelProvider = {
-                        when (it) {
-                            InventoryDestination.UnitOfMeasures -> context.getString(R.string.unit)
-                            InventoryDestination.Stores -> context.getString(R.string.stores)
-                            InventoryDestination.Categories -> context.getString(R.string.categories)
-                            InventoryDestination.Products -> context.getString(R.string.products)
-                            InventoryDestination.StockTransfer -> context.getString(R.string.stock_transfer)
-                        }
+                    label = {
+                        Text(
+                            when (it) {
+                                InventoryDestination.UnitOfMeasures -> context.getString(R.string.unit)
+                                InventoryDestination.Stores -> context.getString(R.string.stores)
+                                InventoryDestination.Categories -> context.getString(R.string.categories)
+                                InventoryDestination.Products -> context.getString(R.string.products)
+                                InventoryDestination.StockTransfer -> context.getString(R.string.stock_transfer)
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     },
                     isSelected = { it == state.selectedDestination },
                     modifier = Modifier.padding(8.dp)

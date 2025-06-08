@@ -44,9 +44,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.client_management.domain.entity.SalesReturn
-import com.wael.astimal.pos.features.client_management.presentaion.sales_order.OrderScreenEvent
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

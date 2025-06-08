@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,7 +20,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -66,7 +67,7 @@ fun UnitScreen(
                     onEvent(UnitEvent.UpdateIsQueryActive(false))
                     onEvent(UnitEvent.Select(it))
                 },
-                labelProvider = { it.localizedName.displayName(language) },
+                label = { Text(it.localizedName.displayName(language)) },
                 isSelected = { it.localId == state.selectedUnit?.localId },
             )
         },

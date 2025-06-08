@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,7 +40,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -65,10 +66,16 @@ fun StockTransferScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
 ) {
-    LaunchedEffect(state.snackbarMessage) {
+    val language = LocalAppLocale.current
+    val context = LocalContext.current
+    LaunchedEffect(state.snackbarMessage, state.error) {
         state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(it)
+            snackbarHostState.showSnackbar(context.getString(it))
             onEvent(StockTransferScreenEvent.ClearSnackbar)
+        }
+        state.error?.let {
+            snackbarHostState.showSnackbar(context.getString(it))
+            onEvent(StockTransferScreenEvent.ClearError)
         }
     }
 
@@ -76,13 +83,13 @@ fun StockTransferScreen(
         query = state.query,
         isSearchActive = state.isQueryActive,
         loading = state.loading,
-        isNew = state.isDetailViewOpen && state.selectedTransfer == null,
+        isNew = state.isNew,
         onQueryChange = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearch = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearchActiveChange = { onEvent(StockTransferScreenEvent.UpdateIsQueryActive(it)) },
         onBack = {
-            if (state.isDetailViewOpen) {
-                onEvent(StockTransferScreenEvent.CloseTransferForm)
+            if (state.isQueryActive) {
+                onEvent(StockTransferScreenEvent.UpdateIsQueryActive(false))
             } else {
                 onBack()
             }
@@ -105,7 +112,7 @@ fun StockTransferScreen(
                 onItemClick = { transfer ->
                     onEvent(StockTransferScreenEvent.SelectTransferToView(transfer))
                 },
-                labelProvider = { "${it.localId}: ${it.transferDate}" },
+                label = { Text("${it.fromStore?.localizedName?.displayName(language)}: ${it.toStore?.localizedName?.displayName(language)}") },
                 isSelected = { product -> product.localId == state.selectedTransfer?.localId },
             )
         },
@@ -115,10 +122,10 @@ fun StockTransferScreen(
                 availableStores = state.availableStores,
                 availableProducts = state.availableProducts,
                 onEvent = onEvent,
-                isExistingTransfer = state.selectedTransfer != null,
-
-                )
-        })
+                isNewTransfer = state.isNew.not(),
+            )
+        },
+    )
 }
 
 
@@ -129,7 +136,7 @@ fun StockTransferForm(
     availableStores: List<Store>,
     availableProducts: List<Product>,
     onEvent: (StockTransferScreenEvent) -> Unit,
-    isExistingTransfer: Boolean
+    isNewTransfer: Boolean
 ) {
     val localAppLocale = LocalAppLocale.current
     Column(
@@ -139,7 +146,7 @@ fun StockTransferForm(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            if (isExistingTransfer) "Transfer Details" else "New Stock Transfer",
+            if (isNewTransfer) stringResource(R.string.new_stock_transfer) else stringResource(R.string.transfer_details),
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -161,26 +168,23 @@ fun StockTransferForm(
             itemToId = { it.localId },
         )
 
-        Text("Items", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
         editableTransfer.items.forEach { item ->
             StockTransferItemRow(
                 item = item,
                 availableProducts = availableProducts,
                 onEvent = onEvent,
                 onRemoveItem = { onEvent(StockTransferScreenEvent.RemoveItemFromTransfer(item.tempEditorId)) },
-                enabled = !isExistingTransfer
             )
         }
 
-        if (!isExistingTransfer) {
-            Button(
-                onClick = { onEvent(StockTransferScreenEvent.AddItemToTransfer) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Item")
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Add Item")
-            }
+        Button(
+            onClick = { onEvent(StockTransferScreenEvent.AddItemToTransfer) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.add_item))
         }
     }
 }
@@ -193,7 +197,7 @@ fun StockTransferItemRow(
     availableProducts: List<Product>,
     onEvent: (StockTransferScreenEvent) -> Unit,
     onRemoveItem: () -> Unit,
-    enabled: Boolean
+    enabled: Boolean = true
 ) {
     val language = LocalAppLocale.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -216,7 +220,10 @@ fun StockTransferItemRow(
             }
             if (enabled) {
                 IconButton(onClick = onRemoveItem) {
-                    Icon(Icons.Default.Delete, contentDescription = "Remove Item")
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.remove_item)
+                    )
                 }
             }
         }

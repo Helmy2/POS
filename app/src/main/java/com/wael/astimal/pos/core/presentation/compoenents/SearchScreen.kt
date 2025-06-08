@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.inventory.presentation.components
+package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.features.inventory.presentation.components.BackButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

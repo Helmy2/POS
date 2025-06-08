@@ -40,7 +40,7 @@ import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.client_management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -105,7 +105,7 @@ fun SalesOrderScreen(
                 onItemClick = {
                     onEvent(OrderScreenEvent.SelectOrderToView(it))
                 },
-                labelProvider = { "${it.invoiceNumber}: ${it.clientName}" },
+                label = { Text("${it.invoiceNumber}: ${it.clientName}") },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },
             )
         },
@@ -295,7 +295,10 @@ fun OrderTotalsSection(orderInput: EditableOrder) {
                 Text("%.2f".format(orderInput.subtotal), style = MaterialTheme.typography.bodyLarge)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.previous_debt), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    stringResource(R.string.previous_debt),
+                    style = MaterialTheme.typography.bodyLarge
+                )
                 Text(
                     "%.2f".format(orderInput.selectedClient?.debt ?: 0.0),
                     style = MaterialTheme.typography.bodyLarge
@@ -303,7 +306,10 @@ fun OrderTotalsSection(orderInput: EditableOrder) {
             }
             Spacer(modifier = Modifier.padding(vertical = 4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.total_amount), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.total_amount),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Text(
                     "%.2f".format(orderInput.totalAmount),
                     style = MaterialTheme.typography.titleMedium
@@ -317,7 +323,10 @@ fun OrderTotalsSection(orderInput: EditableOrder) {
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.remaining), style = MaterialTheme.typography.titleLarge)
+                Text(
+                    stringResource(R.string.remaining),
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Text(
                     "%.2f".format(orderInput.amountRemaining),
                     style = MaterialTheme.typography.titleLarge

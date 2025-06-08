@@ -1,25 +1,30 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import kotlin.random.Random
 
 data class StockTransferScreenState(
     val loading: Boolean = false,
+
     val transfers: List<StockTransfer> = emptyList(),
     val selectedTransfer: StockTransfer? = null,
 
+    val query: String = "",
     val isQueryActive: Boolean = false,
-    val isDetailViewOpen: Boolean = false,
+
     val currentTransferInput: EditableStockTransfer = EditableStockTransfer(),
     val availableStores: List<Store> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
 
-    val query: String = "",
-    val error: String? = null,
-    val snackbarMessage: String? = null
-)
+    @StringRes val error: Int? = null,
+    @StringRes val snackbarMessage: Int? = null
+) {
+    val isNew: Boolean get() = selectedTransfer == null
+}
 
 data class EditableStockTransfer(
     val localId: Long = 1,
@@ -29,7 +34,7 @@ data class EditableStockTransfer(
 )
 
 data class EditableStockTransferItem(
-    val tempEditorId: Long = 1,
+    val tempEditorId: Long = Random.nextLong(),
     var product: Product? = null,
     var unit: Unit? = null,
     var quantity: String = "",
@@ -43,9 +48,7 @@ sealed interface StockTransferScreenEvent {
     data class SelectTransferToView(val transfer: StockTransfer?) : StockTransferScreenEvent
     data class UpdateIsQueryActive(val isQueryActive: Boolean) : StockTransferScreenEvent
 
-
     data object OpenNewTransferForm : StockTransferScreenEvent
-    data object CloseTransferForm : StockTransferScreenEvent
     data class UpdateFromStore(val storeId: Long?) : StockTransferScreenEvent
     data class UpdateToStore(val storeId: Long?) : StockTransferScreenEvent
     data object AddItemToTransfer : StockTransferScreenEvent
@@ -62,4 +65,5 @@ sealed interface StockTransferScreenEvent {
 
     data class DeleteTransfer(val transferLocalId: Long) : StockTransferScreenEvent
     data object ClearSnackbar : StockTransferScreenEvent
+    data object ClearError : StockTransferScreenEvent
 }

@@ -21,7 +21,7 @@ import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -69,14 +69,13 @@ fun ProductScreen(
                     onEvent(ProductEvent.UpdateIsQueryActive(false))
                     onEvent(ProductEvent.SelectProduct(product))
                 },
-                labelProvider = { it.localizedName.displayName(language) },
+                label = { Text(it.localizedName.displayName(language)) },
                 isSelected = { product -> product.localId == state.selectedProduct?.localId },
             )
         },
         mainContent = {
             Column(
-                modifier = Modifier
-                    .padding(16.dp),
+                modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (state.error != null) {
@@ -103,16 +102,14 @@ fun ProductScreen(
                     selectedItemId = state.selectedCategoryId,
                     onItemSelected = { category -> onEvent(ProductEvent.SelectCategoryId(category?.localId)) },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId }
-                )
+                    itemToId = { it.localId })
 
                 LabeledTextField(
                     value = state.inputAveragePrice,
                     onValueChange = { onEvent(ProductEvent.UpdateInputAveragePrice(it)) },
                     label = stringResource(R.string.average_cost_price),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next
                     )
                 )
                 LabeledTextField(
@@ -120,8 +117,7 @@ fun ProductScreen(
                     onValueChange = { onEvent(ProductEvent.UpdateInputSellingPrice(it)) },
                     label = stringResource(R.string.selling_price),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next
                     )
                 )
                 LabeledTextField(
@@ -129,8 +125,7 @@ fun ProductScreen(
                     onValueChange = { onEvent(ProductEvent.UpdateInputOpeningBalance(it)) },
                     label = stringResource(R.string.opening_balance_qty),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next
                     )
                 )
 
@@ -141,16 +136,14 @@ fun ProductScreen(
                     selectedItemId = state.selectedStoreId,
                     onItemSelected = { store -> onEvent(ProductEvent.SelectStoreId(store?.localId)) },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId }
-                )
+                    itemToId = { it.localId })
 
                 LabeledTextField(
                     value = state.inputMinStockLevel,
                     onValueChange = { onEvent(ProductEvent.UpdateInputMinStockLevel(it)) },
                     label = stringResource(R.string.min_stock_level),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
                     )
                 )
                 CustomExposedDropdownMenu(
@@ -158,17 +151,15 @@ fun ProductScreen(
                     items = state.units,
                     selectedItemId = state.selectedMinStockUnitId,
                     onItemSelected = { unit -> onEvent(ProductEvent.SelectMinStockUnitId(unit?.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}"  },
-                    itemToId = { it.localId }
-                )
+                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
+                    itemToId = { it.localId })
 
                 LabeledTextField(
                     value = state.inputMaxStockLevel,
                     onValueChange = { onEvent(ProductEvent.UpdateInputMaxStockLevel(it)) },
                     label = stringResource(R.string.max_stock_level),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
                     )
                 )
                 CustomExposedDropdownMenu(
@@ -177,8 +168,7 @@ fun ProductScreen(
                     selectedItemId = state.selectedMaxStockUnitId,
                     onItemSelected = { unit -> onEvent(ProductEvent.SelectMaxStockUnitId(unit?.localId)) },
                     itemToDisplayString = { "${it.enName}: ${it.arName}" },
-                    itemToId = { it.localId }
-                )
+                    itemToId = { it.localId })
 
                 LabeledTextField(
                     value = state.inputFirstPeriodData,

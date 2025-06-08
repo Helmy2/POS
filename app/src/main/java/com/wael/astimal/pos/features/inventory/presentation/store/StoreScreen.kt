@@ -21,7 +21,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -71,7 +71,7 @@ fun StoreScreen(
                     onEvent(StoreEvent.UpdateIsQueryActive(false))
                     onEvent(StoreEvent.SelectStore(store))
                 },
-                labelProvider = { it.localizedName.displayName(language) },
+                label = { Text(it.localizedName.displayName(language)) },
                 isSelected = { store -> store.localId == state.selectedStore?.localId },
             )
         },

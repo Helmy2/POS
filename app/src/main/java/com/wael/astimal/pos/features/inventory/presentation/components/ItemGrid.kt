@@ -4,11 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,7 +17,7 @@ import androidx.compose.ui.unit.dp
 fun <T> ItemGrid(
     list: List<T>,
     onItemClick: (T) -> Unit,
-    labelProvider: (T) -> String,
+    label:@Composable (T) -> Unit,
     isSelected: (T) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -36,9 +34,7 @@ fun <T> ItemGrid(
                         containerColor = if (isSelected(it)) MaterialTheme.colorScheme.primaryContainer else CardDefaults.cardColors().containerColor
                     )
                 ) {
-                    Text(
-                        labelProvider(it), modifier = Modifier.padding(16.dp)
-                    )
+                    label.invoke(it)
                 }
             }
         }

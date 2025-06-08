@@ -18,7 +18,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.components.LabeledTextField
-import com.wael.astimal.pos.features.inventory.presentation.components.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -67,7 +67,7 @@ fun CategoryScreen(
                     onEvent(CategoryScreenEvent.UpdateIsQueryActive(false))
                     onEvent(CategoryScreenEvent.SelectCategory(category))
                 },
-                labelProvider = { it.localizedName.displayName(language) },
+                label = { Text(it.localizedName.displayName(language)) },
                 isSelected = { category -> category.localId == state.selectedCategory?.localId },
             )
         },

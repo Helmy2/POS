@@ -103,4 +103,17 @@
     <string name="return_saved">Return saved</string>
     <string name="amount_refunded">Amount refunded</string>
     <string name="order_return">Order return</string>
+    <string name="remove_item">Remove Item</string>
+    <string name="new_stock_transfer">New Stock Transfer</string>
+    <string name="transfer_details">Transfer Details</string>
+    <string name="error_fetching_transfers">Error fetching transfers</string>
+    <string name="from_and_to_stores_must_be_selected">From and To stores must be selected.</string>
+    <string name="from_and_to_stores_cannot_be_the_same">From and To stores cannot be the same.</string>
+    <string name="transfer_must_have_at_least_one_item">Transfer must have at least one item.</string>
+    <string name="user_not_identified_cannot_save_transfer">User not identified. Cannot save transfer.</string>
+    <string name="all_items_must_have_a_product_unit_and_valid_quantity">All items must have a product, unit, and valid quantity.</string>
+    <string name="transfer_saved_successfully">Transfer saved successfully.</string>
+    <string name="failed_to_save_transfer">Failed to save transfer</string>
+    <string name="failed_to_delete_transfer">Failed to delete transfer</string>
+    <string name="transfer_deleted_successfully">Transfer deleted successfully.</string>
 </resources>

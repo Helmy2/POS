@@ -26,9 +26,8 @@ interface StockTransferDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStockTransferItems(items: List<StockTransferItemEntity>)
 
-    @Query("DELETE FROM stock_transfer_items WHERE localId = :transferLocalId")
+    @Query("DELETE FROM stock_transfer_items WHERE stockTransferLocalId = :transferLocalId")
     suspend fun deleteItemsForTransfer(transferLocalId: Long)
-
 
     @androidx.room.Transaction
     @Query("SELECT * FROM stock_transfers WHERE localId = :localId")
@@ -45,6 +44,16 @@ interface StockTransferDao {
     @androidx.room.Transaction
     @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally ORDER BY transferDate DESC")
     fun getAllStockTransfersWithDetailsFlow(): Flow<List<StockTransferWithItemsAndDetails>>
+
+    @androidx.room.Transaction
+    suspend fun updateTransferWithItems(transfer: StockTransferEntity, items: List<StockTransferItemEntity>) {
+        updateStockTransfer(transfer)
+        deleteItemsForTransfer(transfer.localId)
+        val itemsWithCorrectId = items.map { it.copy(stockTransferLocalId = transfer.localId) }
+        if (itemsWithCorrectId.isNotEmpty()) {
+            insertStockTransferItems(itemsWithCorrectId)
+        }
+    }
 
     @androidx.room.Transaction
     @Query("SELECT * FROM stock_transfers WHERE isSynced = 0 AND NOT isDeletedLocally")

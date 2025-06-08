@@ -1,8 +1,11 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -46,12 +49,12 @@ class StockTransferViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            storeRepository.getStores("").collect { stores ->
+            storeRepository.getStores().collect { stores ->
                 _state.update { it.copy(availableStores = stores) }
             }
         }
         viewModelScope.launch {
-            productRepository.getProducts("").collect { products ->
+            productRepository.getProducts().collect { products ->
                 _state.update { it.copy(availableProducts = products) }
             }
         }
@@ -61,69 +64,22 @@ class StockTransferViewModel(
         when (event) {
             is StockTransferScreenEvent.LoadTransfers -> searchTransfers(_state.value.query)
             is StockTransferScreenEvent.SearchTransfers -> searchTransfers(event.query)
-            is StockTransferScreenEvent.SelectTransferToView -> {
-                _state.update {
-                    it.copy(
-                        selectedTransfer = event.transfer, isDetailViewOpen = event.transfer != null
-                    )
-                }
-                if (event.transfer == null) { // If deselecting, reset form
-                    _state.update { it.copy(currentTransferInput = EditableStockTransfer()) }
-                } else {
-                    // Populate form if viewing/editing existing (status update only for existing)
-                    _state.update {
-                        it.copy(
-                            currentTransferInput = EditableStockTransfer(
-                                localId = event.transfer.localId,
-                                fromStoreId = event.transfer.fromStore?.localId,
-                                toStoreId = event.transfer.toStore?.localId,
-                                items = event.transfer.items.map { item ->
-                                    EditableStockTransferItem(
-                                        tempEditorId = item.localId, // Use item's localId as editorId
-                                        product = item.product,
-                                        unit = item.unit,
-                                        quantity = item.quantity.toString(),
-                                        maxOpeningBalance = item.maximumOpeningBalance?.toString()
-                                            ?: "",
-                                        minOpeningBalance = item.minimumOpeningBalance?.toString()
-                                            ?: ""
-                                    )
-                                }.toMutableList(),
-                            )
-                        )
-                    }
-                }
-            }
+            is StockTransferScreenEvent.SelectTransferToView -> updateSelectedTransfer(event.transfer)
+            is StockTransferScreenEvent.OpenNewTransferForm -> clear()
 
-            is StockTransferScreenEvent.OpenNewTransferForm -> {
-                _state.update {
-                    it.copy(
-                        isDetailViewOpen = true,
-                        selectedTransfer = null,
-                        currentTransferInput = EditableStockTransfer()
+            is StockTransferScreenEvent.UpdateFromStore -> _state.update { currentState ->
+                currentState.copy(
+                    currentTransferInput = currentState.currentTransferInput.copy(
+                        fromStoreId = event.storeId
                     )
-                }
-            }
-
-            is StockTransferScreenEvent.CloseTransferForm -> {
-                _state.update {
-                    it.copy(
-                        isDetailViewOpen = false,
-                        selectedTransfer = null,
-                        currentTransferInput = EditableStockTransfer()
-                    )
-                }
-            }
-
-            is StockTransferScreenEvent.UpdateFromStore -> _state.update { s ->
-                s.copy(
-                    currentTransferInput = s.currentTransferInput.copy(fromStoreId = event.storeId)
                 )
             }
 
-            is StockTransferScreenEvent.UpdateToStore -> _state.update { s ->
-                s.copy(
-                    currentTransferInput = s.currentTransferInput.copy(toStoreId = event.storeId)
+            is StockTransferScreenEvent.UpdateToStore -> _state.update { currentState ->
+                currentState.copy(
+                    currentTransferInput = currentState.currentTransferInput.copy(
+                        toStoreId = event.storeId
+                    )
                 )
             }
 
@@ -131,7 +87,9 @@ class StockTransferViewModel(
                 val currentInput = _state.value.currentTransferInput
                 val newItems =
                     currentInput.items.toMutableList().apply { add(EditableStockTransferItem()) }
-                _state.update { it.copy(currentTransferInput = currentInput.copy(items = newItems)) }
+                _state.update {
+                    it.copy(currentTransferInput = currentInput.copy(items = newItems))
+                }
             }
 
             is StockTransferScreenEvent.RemoveItemFromTransfer -> {
@@ -151,18 +109,48 @@ class StockTransferViewModel(
             }
 
             is StockTransferScreenEvent.UpdateItemQuantity -> updateTransferItem(event.itemEditorId) {
-                it.copy(
-                    quantity = event.quantity
-                )
+                it.copy(quantity = event.quantity)
             }
-            // Optional item balance updates
-            // is StockTransferScreenEvent.UpdateItemMaxOpeningBalance -> updateTransferItem(event.itemEditorId) { it.copy(maxOpeningBalance = event.balance) }
-            // is StockTransferScreenEvent.UpdateItemMinOpeningBalance -> updateTransferItem(event.itemEditorId) { it.copy(minOpeningBalance = event.balance) }
+
             is StockTransferScreenEvent.SaveTransfer -> saveCurrentTransfer()
 
             is StockTransferScreenEvent.DeleteTransfer -> deleteTransfer(event.transferLocalId)
             is StockTransferScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is StockTransferScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
+            StockTransferScreenEvent.ClearError -> _state.update { it.copy(error = null) }
+        }
+    }
+
+    private fun updateSelectedTransfer(
+        transfer: StockTransfer?,
+    ) {
+        _state.update {
+            it.copy(
+                selectedTransfer = transfer, isQueryActive = false
+            )
+        }
+        if (transfer == null) {
+            _state.update { it.copy(currentTransferInput = EditableStockTransfer()) }
+        } else {
+            _state.update {
+                it.copy(
+                    currentTransferInput = EditableStockTransfer(
+                        localId = transfer.localId,
+                        fromStoreId = transfer.fromStore?.localId,
+                        toStoreId = transfer.toStore?.localId,
+                        items = transfer.items.map { item ->
+                            EditableStockTransferItem(
+                                tempEditorId = item.localId,
+                                product = item.product,
+                                unit = item.unit,
+                                quantity = item.quantity.toString(),
+                                maxOpeningBalance = item.maximumOpeningBalance?.toString() ?: "",
+                                minOpeningBalance = item.minimumOpeningBalance?.toString() ?: ""
+                            )
+                        }.toMutableList(),
+                    )
+                )
+            }
         }
     }
 
@@ -181,14 +169,10 @@ class StockTransferViewModel(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
-            // For stock transfers, query might be on store names, dates, or status.
-            // The repository's getStockTransfersWithDetails currently doesn't take a query.
-            // We'll filter client-side for now, or update repository if server-side search is needed.
-            stockTransferRepository.getStockTransfersWithDetails().catch { e ->
+
+            stockTransferRepository.getStockTransfersWithDetails().catch { exception ->
                 _state.update {
-                    it.copy(
-                        loading = false, error = "Error fetching transfers: ${e.message}"
-                    )
+                    it.copy(loading = false, error = R.string.error_fetching_transfers)
                 }
             }.map { transfers ->
                 if (query.isBlank()) {
@@ -217,25 +201,25 @@ class StockTransferViewModel(
         val loggedInUserId = currentUserId?.toLong()
 
         if (currentInput.fromStoreId == null || currentInput.toStoreId == null) {
-            _state.update { it.copy(error = "From and To stores must be selected.") }
+            _state.update { it.copy(error = R.string.from_and_to_stores_must_be_selected) }
             return
         }
         if (currentInput.fromStoreId == currentInput.toStoreId) {
-            _state.update { it.copy(error = "From and To stores cannot be the same.") }
+            _state.update { it.copy(error = R.string.from_and_to_stores_cannot_be_the_same) }
             return
         }
         if (currentInput.items.isEmpty()) {
-            _state.update { it.copy(error = "Transfer must have at least one item.") }
+            _state.update { it.copy(error = R.string.transfer_must_have_at_least_one_item) }
             return
         }
         if (loggedInUserId == null) {
-            _state.update { it.copy(error = "User not identified. Cannot save transfer.") }
+            _state.update { it.copy(error = R.string.user_not_identified_cannot_save_transfer) }
             return
         }
 
         val itemEntities = currentInput.items.mapNotNull { editableItem ->
             if (editableItem.product == null || editableItem.unit == null || editableItem.quantity.toDoubleOrNull() == null || editableItem.quantity.toDouble() <= 0) {
-                _state.update { it.copy(error = "All items must have a product, unit, and valid quantity.") }
+                _state.update { it.copy(error = R.string.all_items_must_have_a_product_unit_and_valid_quantity) }
                 return@mapNotNull null
             }
             StockTransferItemEntity(
@@ -249,31 +233,36 @@ class StockTransferViewModel(
             )
         }
 
-        if (itemEntities.size != currentInput.items.size) return // An item was invalid
+        if (itemEntities.size != currentInput.items.size) return
+
 
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
-            val result = stockTransferRepository.addStockTransfer(
-                fromStoreId = currentInput.fromStoreId!!,
-                toStoreId = currentInput.toStoreId!!,
-                initiatedByUserId = loggedInUserId,
-                items = itemEntities
-            )
+
+            val result = if (_state.value.isNew) {
+                stockTransferRepository.addStockTransfer(
+                    fromStoreId = currentInput.fromStoreId!!,
+                    toStoreId = currentInput.toStoreId!!,
+                    initiatedByUserId = loggedInUserId,
+                    items = itemEntities
+                )
+            } else {
+                stockTransferRepository.updateStockTransfer(
+                    transferLocalId = currentInput.localId,
+                    fromStoreId = currentInput.fromStoreId!!,
+                    toStoreId = currentInput.toStoreId!!,
+                    initiatedByUserId = loggedInUserId,
+                    items = itemEntities
+                )
+            }
 
             result.fold(onSuccess = {
+                clear(snackbarMessage = R.string.transfer_saved_successfully)
+                onEvent(StockTransferScreenEvent.LoadTransfers)
+            }, onFailure = { exception ->
                 _state.update {
                     it.copy(
-                        loading = false,
-                        isDetailViewOpen = false,
-                        currentTransferInput = EditableStockTransfer(),
-                        snackbarMessage = "Transfer saved successfully."
-                    )
-                }
-                onEvent(StockTransferScreenEvent.LoadTransfers) // Refresh list
-            }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to save transfer: ${e.message}"
+                        loading = false, error = R.string.failed_to_save_transfer
                     )
                 }
             })
@@ -285,21 +274,30 @@ class StockTransferViewModel(
             _state.update { it.copy(loading = true, error = null) }
             val result = stockTransferRepository.deleteStockTransfer(transferLocalId)
             result.fold(onSuccess = {
+                clear(snackbarMessage = R.string.transfer_deleted_successfully)
+                onEvent(StockTransferScreenEvent.LoadTransfers)
+            }, onFailure = { exception ->
                 _state.update {
                     it.copy(
-                        loading = false,
-                        selectedTransfer = null,
-                        snackbarMessage = "Transfer deleted."
-                    )
-                }
-                onEvent(StockTransferScreenEvent.LoadTransfers) // Refresh list
-            }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to delete transfer: ${e.message}"
+                        loading = false, error = R.string.failed_to_delete_transfer
                     )
                 }
             })
+        }
+    }
+
+    private fun clear(
+        @StringRes error: Int? = null, @StringRes snackbarMessage: Int? = null
+    ) {
+        _state.update {
+            it.copy(
+                error = error,
+                snackbarMessage = snackbarMessage,
+                loading = false,
+                isQueryActive = false,
+                selectedTransfer = null,
+                currentTransferInput = EditableStockTransfer()
+            )
         }
     }
 }
