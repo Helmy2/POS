@@ -231,7 +231,7 @@ class SalesOrderViewModel(
             return
         }
         val orderEntity = OrderEntity(
-            clientLocalId = orderInput.selectedClient.localId,
+            clientLocalId = orderInput.selectedClient.id,
             employeeLocalId = loggedInEmployeeId,
             mainEmployeeLocalId = orderInput.selectedMainEmployeeId,
             previousClientDebt = orderInput.selectedClient.debt,

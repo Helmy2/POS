@@ -4,10 +4,8 @@ import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class Client(
-    val localId: Long,
-    val serverId: Int?,
-    val userId: Long,
-    val clientName: LocalizedString,
+    val id: Long,
+    val name: LocalizedString,
     val phones: List<String>,
     val address: String?,
     val debt: Double?,

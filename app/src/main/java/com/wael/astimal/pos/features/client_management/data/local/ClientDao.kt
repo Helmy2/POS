@@ -18,17 +18,17 @@ interface ClientDao {
     suspend fun updateClient(client: ClientEntity)
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM clients WHERE localId = :localId AND isDeletedLocally = 0")
+    @Query("SELECT * FROM clients WHERE id = :localId AND isDeletedLocally = 0")
     fun getClientWithDetailsFlow(localId: Long): Flow<ClientWithDetailsEntity?>
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM clients WHERE localId = :localId AND isDeletedLocally = 0")
+    @Query("SELECT * FROM clients WHERE id = :localId AND isDeletedLocally = 0")
     suspend fun getClientWithDetails(localId: Long): ClientWithDetailsEntity?
 
     @androidx.room.Transaction
     @Query(
         """
-        SELECT c.* FROM clients c INNER JOIN users u ON c.userId = u.id
+        SELECT c.* FROM clients c INNER JOIN users u ON c.id = u.id
         WHERE c.isDeletedLocally = 0 
         AND (u.arName LIKE '%' || :query || '%' OR u.enName LIKE '%' || :query || '%' OR c.address LIKE '%' || :query || '%')
        
@@ -42,6 +42,6 @@ interface ClientDao {
     @Query("SELECT * FROM clients WHERE isSynced = 0 AND isDeletedLocally = 1")
     suspend fun getUnsyncedDeletedClients(): List<ClientEntity>
 
-    @Query("DELETE FROM clients WHERE localId IN (:localIds)")
+    @Query("DELETE FROM clients WHERE id IN (:localIds)")
     suspend fun deleteClientsByLocalIds(localIds: List<Long>)
 }

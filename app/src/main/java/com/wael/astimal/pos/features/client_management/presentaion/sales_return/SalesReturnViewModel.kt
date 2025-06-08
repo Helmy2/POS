@@ -144,7 +144,7 @@ class SalesReturnViewModel(
 
     private fun recalculateTotals() {
         val returnInput = _state.value.newReturnInput
-        var totalValue = 0.0;
+        var totalValue = 0.0
         var totalGainLoss = 0.0
         val updatedItems = returnInput.items.map { item ->
             val quantity = item.quantity.toDoubleOrNull() ?: 0.0
@@ -217,7 +217,7 @@ class SalesReturnViewModel(
             _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }; return
         }
         val returnEntity = OrderReturnEntity(
-            clientLocalId = returnInput.selectedClient.localId,
+            clientLocalId = returnInput.selectedClient.id,
             employeeLocalId = employeeId,
             previousDebt = returnInput.selectedClient.debt,
             amountPaid = returnInput.amountRefunded.toDoubleOrNull() ?: 0.0,
@@ -229,7 +229,6 @@ class SalesReturnViewModel(
             returnDate = System.currentTimeMillis(),
             serverId = null,
             invoiceNumber = null,
-            supplierLocalId = null,
         )
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }

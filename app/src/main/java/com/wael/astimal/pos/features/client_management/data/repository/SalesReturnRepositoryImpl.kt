@@ -31,47 +31,14 @@ class SalesReturnRepositoryImpl(
     override suspend fun addSalesReturn(
         returnEntity: OrderReturnEntity,
         items: List<OrderReturnProductEntity>
-    ): Result<SalesReturn> {
+    ): Result<Unit> {
         return try {
-            // This should ideally happen in a single database transaction.
-            // You can add @Transaction to the DAO method that calls these.
             val insertedReturnLocalId = orderReturnDao.insertOrUpdateOrderReturn(returnEntity)
 
             val itemsWithCorrectId = items.map { it.copy(orderReturnLocalId = insertedReturnLocalId) }
             orderReturnDao.insertOrderReturnItems(itemsWithCorrectId)
 
-            // Fetch the newly created return with all its details to return the domain object
-            // Assuming a method `getOrderReturnWithDetails(localId)` exists in the DAO
-            // For now, we'll return a manually constructed object as a placeholder.
-            // val createdReturnWithDetails = orderReturnDao.getOrderReturnWithDetails(insertedReturnLocalId)
-            //     ?: return Result.failure(IllegalStateException("Failed to retrieve sales return after insert."))
-            // Result.success(createdReturnWithDetails.toDomain(getCurrentLanguage()))
-
-            // Placeholder return until DAO has the single-item getter
-            Result.success(
-                SalesReturn(
-                    localId = insertedReturnLocalId,
-                    serverId = returnEntity.serverId,
-                    invoiceNumber = returnEntity.invoiceNumber,
-                    clientLocalId = returnEntity.clientLocalId,
-                    clientName = null, // Needs to be fetched
-                    supplierLocalId = returnEntity.supplierLocalId,
-                    supplierName = null, // Needs to be fetched
-                    employeeLocalId = returnEntity.employeeLocalId,
-                    employeeName = null, // Needs to be fetched
-                    previousDebt = returnEntity.previousDebt,
-                    amountPaid = returnEntity.amountPaid,
-                    amountRemaining = returnEntity.amountRemaining,
-                    totalReturnedValue = returnEntity.totalReturnedValue,
-                    totalGainLoss = returnEntity.totalGainLoss,
-                    paymentType = returnEntity.paymentType,
-                    returnDate = returnEntity.returnDate,
-                    items = emptyList(), // Items are saved, but not re-fetched in this simplified version
-                    isSynced = returnEntity.isSynced,
-                    lastModified = returnEntity.lastModified,
-                    isDeletedLocally = returnEntity.isDeletedLocally
-                )
-            )
+            Result.success(Unit)
 
         } catch (e: Exception) {
             Result.failure(e)

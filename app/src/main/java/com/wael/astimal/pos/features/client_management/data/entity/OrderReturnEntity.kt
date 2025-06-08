@@ -10,9 +10,11 @@ import com.wael.astimal.pos.features.client_management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.client_management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.client_management.domain.entity.SalesReturnItem
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 
 @Entity(
@@ -20,14 +22,8 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
     foreignKeys = [
         ForeignKey(
             entity = ClientEntity::class,
-            parentColumns = ["localId"],
+            parentColumns = ["id"],
             childColumns = ["clientLocalId"],
-            onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = SupplierEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["supplierLocalId"],
             onDelete = ForeignKey.RESTRICT
         ),
         ForeignKey(
@@ -39,7 +35,6 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
     ],
     indices = [
         Index(value = ["clientLocalId"]),
-        Index(value = ["supplierLocalId"]),
         Index(value = ["employeeLocalId"]),
         Index(value = ["invoiceNumber"], unique = true)
     ]
@@ -50,7 +45,6 @@ data class OrderReturnEntity(
     val serverId: Int?,
     val invoiceNumber: String?,
     val clientLocalId: Long?,
-    val supplierLocalId: Long?,
     val employeeLocalId: Long?,
     val previousDebt: Double?,
     val amountPaid: Double,
@@ -105,11 +99,8 @@ data class OrderReturnWithDetailsEntity(
     @Embedded
     val orderReturn: OrderReturnEntity,
 
-    @Relation(parentColumn = "clientLocalId", entityColumn = "localId", entity = ClientEntity::class)
+    @Relation(parentColumn = "clientLocalId", entityColumn = "id", entity = ClientEntity::class)
     val clientWithUser: ClientWithDetailsEntity?,
-
-    @Relation(parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class)
-    val supplier: SupplierEntity?,
 
     @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
     val employeeUser: UserEntity?,
@@ -127,7 +118,7 @@ data class OrderReturnItemWithDetails(
     val returnItem: OrderReturnProductEntity,
 
     @Relation(parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class)
-    val product: ProductEntity?,
+    val product: ProductWithDetailsEntity?,
 
     @Relation(parentColumn = "unitLocalId", entityColumn = "localId", entity = UnitEntity::class)
     val unit: UnitEntity?
@@ -135,24 +126,12 @@ data class OrderReturnItemWithDetails(
 
 
 fun OrderReturnWithDetailsEntity.toDomain(): SalesReturn {
-    val clientName = this.clientWithUser?.clientUser?.let {
-        LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
-    }
-
-    val employeeName = this.employeeUser?.let {
-        LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
-    } ?: LocalizedString("Unknown", "Unknown")
-
     return SalesReturn(
         localId = this.orderReturn.localId,
         serverId = this.orderReturn.serverId,
         invoiceNumber = this.orderReturn.invoiceNumber,
-        clientLocalId = this.orderReturn.clientLocalId,
-        clientName = clientName,
-        supplierLocalId = this.orderReturn.supplierLocalId,
-        supplierName = this.supplier?.name, // From the related SupplierEntity
-        employeeLocalId = this.orderReturn.employeeLocalId,
-        employeeName = employeeName,
+        client = this.clientWithUser?.toDomain(),
+        employee = this.employeeUser?.toDomain(),
         previousDebt = this.orderReturn.previousDebt,
         amountPaid = this.orderReturn.amountPaid,
         amountRemaining = this.orderReturn.amountRemaining,
@@ -172,10 +151,8 @@ fun OrderReturnItemWithDetails.toDomain(): SalesReturnItem {
         localId = this.returnItem.localId,
         serverId = this.returnItem.serverId,
         returnLocalId = this.returnItem.orderReturnLocalId,
-        productLocalId = this.returnItem.productLocalId,
-        productName = LocalizedString(arName = this.product?.arName, enName = this.product?.enName),
-        unitLocalId = this.returnItem.unitLocalId,
-        unitName = LocalizedString(arName = this.unit?.arName, enName = this.unit?.enName),
+        product = this.product?.toDomain(),
+        unit= this.unit?.toDomain(),
         quantity = this.returnItem.quantity,
         priceAtReturn = this.returnItem.priceAtReturn,
         itemTotalValue = this.returnItem.itemTotalValue,

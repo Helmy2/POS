@@ -124,7 +124,7 @@ fun SalesReturnList(
     LazyColumn {
         items(returns, key = { it.localId }) { item ->
             ListItem(
-                headlineContent = { Text("Return from: ${item.clientName?.displayName(language) ?: "N/A"}") },
+                headlineContent = { Text("Return from: ${item.client?.name?.displayName(language) ?: "N/A"}") },
                 supportingContent = { Text("Value: ${item.totalReturnedValue}") },
                 modifier = Modifier
                     .clickable { onItemClick(item) }
@@ -148,10 +148,10 @@ fun SalesReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
-            selectedItemId = returnInput.selectedClient?.localId,
+            selectedItemId = returnInput.selectedClient?.id,
             onItemSelected = { onEvent(SalesReturnScreenEvent.SelectClient(it)) },
-            itemToDisplayString = { it.clientName.displayName(currentLanguage) },
-            itemToId = { it.localId })
+            itemToDisplayString = { it.name.displayName(currentLanguage) },
+            itemToId = { it.id })
 
         Text("Returned Items", style = MaterialTheme.typography.titleMedium)
         returnInput.items.forEach { item ->

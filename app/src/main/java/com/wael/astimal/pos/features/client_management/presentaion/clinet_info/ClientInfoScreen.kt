@@ -130,7 +130,7 @@ fun ClientInfoScreen(
                     ClientList(
                         clients = state.searchResults, onClientClick = { client ->
                             onEvent(ClientInfoEvent.SelectClient(client))
-                        }, selectedClientId = state.selectedClient?.localId
+                        }, selectedClientId = state.selectedClient?.id
                     )
                 }
             }
@@ -156,9 +156,9 @@ fun ClientList(
 ) {
     val language = LocalAppLocale.current
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(clients, key = { it.localId }) { client ->
+        items(clients, key = { it.id }) { client ->
             ListItem(
-                headlineContent = { Text(client.clientName.displayName(language)) },
+                headlineContent = { Text(client.name.displayName(language)) },
                 supportingContent = { Text(
                     stringResource(
                         R.string.debt_address,
@@ -167,7 +167,7 @@ fun ClientList(
                     )) },
                 modifier = Modifier
                     .clickable { onClientClick(client) }
-                    .background(if (client.localId == selectedClientId) MaterialTheme.colorScheme.inversePrimary else Color.Transparent))
+                    .background(if (client.id == selectedClientId) MaterialTheme.colorScheme.inversePrimary else Color.Transparent))
         }
     }
 }
@@ -181,7 +181,7 @@ fun ClientDetailView(client: Client) {
         modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            client.clientName.displayName(language), style = MaterialTheme.typography.headlineMedium
+            client.name.displayName(language), style = MaterialTheme.typography.headlineMedium
         )
         Text(stringResource(R.string.address, client.address ?: stringResource(R.string.n_a)))
         Text(stringResource(R.string.debt, client.debt?.toString() ?: stringResource(R.string.n_a)))

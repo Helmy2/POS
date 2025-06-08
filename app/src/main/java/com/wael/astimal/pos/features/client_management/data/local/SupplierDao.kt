@@ -14,6 +14,6 @@ interface SupplierDao {
     suspend fun insertOrUpdateSupplier(supplier: SupplierEntity): Long
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM suppliers WHERE NOT isDeletedLocally AND name LIKE '%' || :query || '%' ORDER BY name ASC")
+    @Query("SELECT * FROM suppliers WHERE NOT isDeletedLocally AND arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%'")
     fun searchSuppliersWithDetailsFlow(query: String): Flow<List<SupplierWithDetailsEntity>>
 }

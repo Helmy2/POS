@@ -29,16 +29,6 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE isEmployeeFlag = 1")
     fun getAllEmployeesFlow(): Flow<List<UserEntity>>
 
-    @Query(
-        """
-        SELECT u.* FROM users u
-        LEFT JOIN clients c ON u.id = c.userId
-        WHERE u.isClientFlag = 1 AND c.localId IS NULL 
-        AND (u.arName LIKE '%' || :query || '%' OR u.enName LIKE '%' || :query || '%')
-    """
-    )
-    fun getPotentialUsersToBecomeClientsFlow(query: String): Flow<List<UserEntity>>
-
     @Query("SELECT * FROM users WHERE isSynced = 0")
     suspend fun getUnsyncedUsers(): List<UserEntity>
 

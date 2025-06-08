@@ -9,6 +9,7 @@ import androidx.room.Relation
 import com.wael.astimal.pos.features.client_management.domain.entity.Supplier
 import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 
 @Entity(
@@ -25,9 +26,9 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
 )
 data class SupplierEntity(
     @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: Int?,
-    val name: String,
+    val id: Long = 0L,
+    val arName: String,
+    val enName: String,
     val phone: String?,
     val address: String?,
     val indebtedness: Double?,
@@ -50,19 +51,17 @@ data class SupplierWithDetailsEntity(
 )
 
 fun SupplierWithDetailsEntity.toDomain(): Supplier {
-    val employeeName = this.responsibleEmployeeUser?.let {
-        LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
-    }
     return Supplier(
-        localId = this.supplier.localId,
-        serverId = this.supplier.serverId,
-        name = this.supplier.name,
+        id = this.supplier.id,
+        name = LocalizedString(
+            arName = this.supplier.arName,
+            enName = this.supplier.enName
+        ),
         phone = this.supplier.phone,
         address = this.supplier.address,
         indebtedness = this.supplier.indebtedness,
         isAlsoClient = this.supplier.isClient,
-        responsibleEmployeeId = this.supplier.responsibleEmployeeLocalId,
-        responsibleEmployeeName = employeeName,
+        responsibleEmployeeName = this.responsibleEmployeeUser?.toDomain(),
         isSynced = this.supplier.isSynced,
         lastModified = this.supplier.lastModified,
         isDeletedLocally = this.supplier.isDeletedLocally

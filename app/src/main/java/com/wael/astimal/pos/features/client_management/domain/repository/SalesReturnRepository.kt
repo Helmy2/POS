@@ -11,7 +11,7 @@ interface SalesReturnRepository {
     suspend fun addSalesReturn(
         returnEntity: OrderReturnEntity,
         items: List<OrderReturnProductEntity>
-    ): Result<SalesReturn>
+    ): Result<Unit>
 
     suspend fun deleteSalesReturn(returnLocalId: Long): Result<Unit>
 }

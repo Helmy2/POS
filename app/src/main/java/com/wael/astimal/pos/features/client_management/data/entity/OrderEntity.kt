@@ -16,32 +16,26 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
 
 @Entity(
     tableName = "orders",
-    foreignKeys = [
-        ForeignKey(
-            entity = ClientEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["clientLocalId"],
-            onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = UserEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["employeeLocalId"],
-            onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = UserEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["mainEmployeeLocalId"],
-            onDelete = ForeignKey.SET_NULL
-        )
-    ],
-    indices = [
-        Index(value = ["clientLocalId"]),
-        Index(value = ["employeeLocalId"]),
-        Index(value = ["mainEmployeeLocalId"]),
-        Index(value = ["invoiceNumber"], unique = true)
-    ]
+    foreignKeys = [ForeignKey(
+        entity = ClientEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["clientLocalId"],
+        onDelete = ForeignKey.RESTRICT
+    ), ForeignKey(
+        entity = UserEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["employeeLocalId"],
+        onDelete = ForeignKey.RESTRICT
+    ), ForeignKey(
+        entity = UserEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["mainEmployeeLocalId"],
+        onDelete = ForeignKey.SET_NULL
+    )],
+    indices = [Index(value = ["clientLocalId"]), Index(value = ["employeeLocalId"]), Index(value = ["mainEmployeeLocalId"]), Index(
+        value = ["invoiceNumber"],
+        unique = true
+    )]
 )
 data class OrderEntity(
     @PrimaryKey(autoGenerate = true)
@@ -69,31 +63,26 @@ data class OrderEntity(
 
 @Entity(
     tableName = "order_products",
-    foreignKeys = [
-        ForeignKey(
-            entity = OrderEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["orderLocalId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = ProductEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["productLocalId"],
-            onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = UnitEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["unitLocalId"],
-            onDelete = ForeignKey.RESTRICT
-        )
-    ],
+    foreignKeys = [ForeignKey(
+        entity = OrderEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["orderLocalId"],
+        onDelete = ForeignKey.CASCADE
+    ), ForeignKey(
+        entity = ProductEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["productLocalId"],
+        onDelete = ForeignKey.RESTRICT
+    ), ForeignKey(
+        entity = UnitEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["unitLocalId"],
+        onDelete = ForeignKey.RESTRICT
+    )],
     indices = [Index(value = ["orderLocalId"]), Index(value = ["productLocalId"]), Index(value = ["unitLocalId"])]
 )
 data class OrderProductEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
     val serverId: Int?,
     val orderLocalId: Long,
     val productLocalId: Long,
@@ -106,42 +95,44 @@ data class OrderProductEntity(
 
 
 data class OrderWithDetailsEntity(
-    @Embedded
-    val order: OrderEntity,
-
-    @Relation(parentColumn = "clientLocalId", entityColumn = "localId", entity = ClientEntity::class)
-    val clientWithUser: ClientWithDetailsEntity?,
-
-    @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
-    val employeeUser: UserEntity?,
-
-    @Relation(parentColumn = "mainEmployeeLocalId", entityColumn = "id", entity = UserEntity::class)
-    val mainEmployeeUser: UserEntity?,
+    @Embedded val order: OrderEntity,
 
     @Relation(
-        parentColumn = "localId",
-        entityColumn = "orderLocalId",
-        entity = OrderProductEntity::class
-    )
-    val itemsWithProductDetails: List<OrderProductItemWithDetails>
+        parentColumn = "clientLocalId", entityColumn = "id", entity = ClientEntity::class
+    ) val clientWithUser: ClientWithDetailsEntity?,
+
+    @Relation(
+        parentColumn = "employeeLocalId",
+        entityColumn = "id",
+        entity = UserEntity::class
+    ) val employeeUser: UserEntity?,
+
+    @Relation(
+        parentColumn = "mainEmployeeLocalId",
+        entityColumn = "id",
+        entity = UserEntity::class
+    ) val mainEmployeeUser: UserEntity?,
+
+    @Relation(
+        parentColumn = "localId", entityColumn = "orderLocalId", entity = OrderProductEntity::class
+    ) val itemsWithProductDetails: List<OrderProductItemWithDetails>
 )
 
 data class OrderProductItemWithDetails(
-    @Embedded
-    val orderItem: OrderProductEntity,
+    @Embedded val orderItem: OrderProductEntity,
 
-    @Relation(parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class)
-    val product: ProductEntity?,
+    @Relation(
+        parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class
+    ) val product: ProductEntity?,
 
-    @Relation(parentColumn = "unitLocalId", entityColumn = "localId", entity = UnitEntity::class)
-    val unit: UnitEntity?
+    @Relation(
+        parentColumn = "unitLocalId",
+        entityColumn = "localId",
+        entity = UnitEntity::class
+    ) val unit: UnitEntity?
 )
 
 fun OrderWithDetailsEntity.toDomain(): SalesOrder {
-    val clientName = this.clientWithUser?.clientUser?.let {
-        LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
-    } ?: LocalizedString("Deleted", "Deleted")
-
     val employeeName = this.employeeUser?.let {
         LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
     } ?: LocalizedString("Unknown", "Unknown")
@@ -155,7 +146,9 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
         serverId = this.order.serverId,
         invoiceNumber = this.order.invoiceNumber,
         clientLocalId = this.order.clientLocalId,
-        clientName = clientName,
+        clientName = this.clientWithUser?.client?.let {
+            LocalizedString(arName = it.arName, enName = it.enName)
+        } ?: LocalizedString("Unknown", "Unknown"),
         employeeLocalId = this.order.employeeLocalId,
         employeeName = employeeName,
         mainEmployeeLocalId = this.order.mainEmployeeLocalId,

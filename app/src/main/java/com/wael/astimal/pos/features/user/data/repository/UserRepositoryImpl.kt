@@ -17,12 +17,6 @@ class UserRepositoryImpl(
         }
     }
 
-    override fun getPotentialClientsFlow(query: String): Flow<List<User>> {
-        return userDao.getPotentialUsersToBecomeClientsFlow(query).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
-
     override suspend fun getUser(localId: Long): User? {
         return userDao.getUserById(localId)?.toDomain()
     }
