@@ -10,9 +10,12 @@ import com.wael.astimal.pos.features.client_management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.client_management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.client_management.domain.entity.SalesOrderItem
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 @Entity(
     tableName = "orders",
@@ -33,13 +36,11 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
         onDelete = ForeignKey.SET_NULL
     )],
     indices = [Index(value = ["clientLocalId"]), Index(value = ["employeeLocalId"]), Index(value = ["mainEmployeeLocalId"]), Index(
-        value = ["invoiceNumber"],
-        unique = true
+        value = ["invoiceNumber"], unique = true
     )]
 )
 data class OrderEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
     val serverId: Int?,
     var invoiceNumber: String?,
 
@@ -102,15 +103,11 @@ data class OrderWithDetailsEntity(
     ) val clientWithUser: ClientWithDetailsEntity?,
 
     @Relation(
-        parentColumn = "employeeLocalId",
-        entityColumn = "id",
-        entity = UserEntity::class
+        parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class
     ) val employeeUser: UserEntity?,
 
     @Relation(
-        parentColumn = "mainEmployeeLocalId",
-        entityColumn = "id",
-        entity = UserEntity::class
+        parentColumn = "mainEmployeeLocalId", entityColumn = "id", entity = UserEntity::class
     ) val mainEmployeeUser: UserEntity?,
 
     @Relation(
@@ -123,12 +120,10 @@ data class OrderProductItemWithDetails(
 
     @Relation(
         parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class
-    ) val product: ProductEntity?,
+    ) val product: ProductWithDetailsEntity?,
 
     @Relation(
-        parentColumn = "unitLocalId",
-        entityColumn = "localId",
-        entity = UnitEntity::class
+        parentColumn = "unitLocalId", entityColumn = "localId", entity = UnitEntity::class
     ) val unit: UnitEntity?
 )
 
@@ -145,14 +140,6 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
         localId = this.order.localId,
         serverId = this.order.serverId,
         invoiceNumber = this.order.invoiceNumber,
-        clientLocalId = this.order.clientLocalId,
-        clientName = this.clientWithUser?.client?.let {
-            LocalizedString(arName = it.arName, enName = it.enName)
-        } ?: LocalizedString("Unknown", "Unknown"),
-        employeeLocalId = this.order.employeeLocalId,
-        employeeName = employeeName,
-        mainEmployeeLocalId = this.order.mainEmployeeLocalId,
-        mainEmployeeName = mainEmployeeName,
         previousClientDebt = this.order.previousClientDebt,
         amountPaid = this.order.amountPaid,
         amountRemaining = this.order.amountRemaining,
@@ -163,7 +150,10 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
         items = this.itemsWithProductDetails.map { it.toDomain() },
         isSynced = this.order.isSynced,
         lastModified = this.order.lastModified,
-        isDeletedLocally = this.order.isDeletedLocally
+        isDeletedLocally = this.order.isDeletedLocally,
+        client = this.clientWithUser?.toDomain(),
+        employee = this.employeeUser?.toDomain(),
+        mainEmployee = this.mainEmployeeUser?.toDomain(),
     )
 }
 
@@ -172,10 +162,8 @@ fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
         localId = this.orderItem.localId,
         serverId = this.orderItem.serverId,
         orderLocalId = this.orderItem.orderLocalId,
-        productLocalId = this.orderItem.productLocalId,
-        productName = LocalizedString(arName = this.product?.arName, enName = this.product?.enName),
-        unitLocalId = this.orderItem.unitLocalId,
-        unitName = LocalizedString(arName = this.unit?.arName, enName = this.unit?.enName),
+        product = this.product?.toDomain(),
+        unit = this.unit?.toDomain(),
         quantity = this.orderItem.quantity,
         unitSellingPrice = this.orderItem.unitSellingPrice,
         itemTotalPrice = this.orderItem.itemTotalPrice,

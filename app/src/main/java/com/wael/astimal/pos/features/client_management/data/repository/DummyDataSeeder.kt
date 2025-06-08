@@ -100,30 +100,6 @@ class DummyDataSeeder(
     }
 
     private suspend fun populateDummyClients(employees: Map<String, Long>) {
-        val userForClient1 = UserEntity(
-            id = -101,
-            name = "Ahmed Mohamed",
-            arName = "أحمد محمد",
-            enName = "Ahmed Mohamed",
-            email = "ahmed.client@example.com",
-            phone = "1112223330",
-            isClientFlag = true,
-            isSynced = true
-        )
-        userDao.insertOrUpdate(userForClient1)
-
-        val userForClient2 = UserEntity(
-            id = -102,
-            name = "Fatima Ali",
-            arName = "فاطمة علي",
-            enName = "Fatima Ali",
-            email = "fatima.client@example.com",
-            phone = "7778889990",
-            isClientFlag = true,
-            isSynced = true
-        )
-        userDao.insertOrUpdate(userForClient2)
-
         val client1Entity = ClientEntity(
             id = -201,
             arName = "عميل ١",

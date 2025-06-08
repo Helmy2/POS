@@ -53,6 +53,31 @@ class SalesOrderRepositoryImpl(
         }
     }
 
+    override suspend fun updateOrder(
+        order: OrderEntity,
+        items: List<OrderProductEntity>
+    ): Result<SalesOrder> {
+        return try {
+            if (order.localId == 0L) {
+                return Result.failure(IllegalArgumentException("Order localId is missing for update operation."))
+            }
+
+            val entityToUpdate = order.copy(
+                isSynced = false,
+                lastModified = System.currentTimeMillis()
+            )
+
+            salesOrderDao.updateOrderWithItems(entityToUpdate, items)
+
+            val updatedOrderWithDetails = salesOrderDao.getOrderWithDetailsFlow(order.localId).first()
+                ?: return Result.failure(IllegalStateException("Failed to retrieve order after update."))
+
+            Result.success(updatedOrderWithDetails.toDomain())
+        } catch(e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun deleteOrder(orderLocalId: Long): Result<Unit> {
         return try {
             val orderEntity = salesOrderDao.getOrderEntityByLocalId(orderLocalId)
@@ -69,4 +94,6 @@ class SalesOrderRepositoryImpl(
             Result.failure(e)
         }
     }
+
+
 }

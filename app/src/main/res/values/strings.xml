@@ -116,4 +116,6 @@
     <string name="failed_to_save_transfer">Failed to save transfer</string>
     <string name="failed_to_delete_transfer">Failed to delete transfer</string>
     <string name="transfer_deleted_successfully">Transfer deleted successfully.</string>
+    <string name="order_deleted">Order deleted</string>
+    <string name="error_deleting_order">Error Deleting order</string>
 </resources>

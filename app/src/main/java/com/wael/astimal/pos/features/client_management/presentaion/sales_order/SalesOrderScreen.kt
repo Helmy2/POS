@@ -66,6 +66,7 @@ fun SalesOrderScreen(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
 ) {
+    val language = LocalAppLocale.current
     val context = LocalContext.current
     LaunchedEffect(state.snackbarMessage) {
         state.snackbarMessage?.let {
@@ -78,22 +79,14 @@ fun SalesOrderScreen(
         query = state.query,
         isSearchActive = state.isQueryActive,
         loading = state.loading,
-        isNew = state.isDetailViewOpen && state.selectedOrder == null,
+        isNew = state.isNew,
         onQueryChange = { onEvent(OrderScreenEvent.UpdateQuery(it)) },
         onSearch = { onEvent(OrderScreenEvent.SearchOrders(it)) },
         onSearchActiveChange = { onEvent(OrderScreenEvent.UpdateIsQueryActive(it)) },
-        onBack = {
-            if (state.isDetailViewOpen) {
-                onEvent(OrderScreenEvent.CloseOrderForm)
-            } else {
-                onBack()
-            }
-        },
+        onBack = onBack,
         onDelete = {
             state.selectedOrder?.let {
-                onEvent(
-                    OrderScreenEvent.DeleteOrder(it.localId)
-                )
+                onEvent(OrderScreenEvent.DeleteOrder(it.localId))
             }
         },
         onCreate = { onEvent(OrderScreenEvent.SaveOrder) },
@@ -105,7 +98,7 @@ fun SalesOrderScreen(
                 onItemClick = {
                     onEvent(OrderScreenEvent.SelectOrderToView(it))
                 },
-                label = { Text("${it.invoiceNumber}: ${it.clientName}") },
+                label = { Text("${it.invoiceNumber}: ${it.client?.name?.displayName(language)}") },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },
             )
         },
@@ -189,15 +182,6 @@ fun OrderForm(
         )
 
         OrderTotalsSection(orderInput)
-
-        Button(
-            onClick = { onEvent(OrderScreenEvent.SaveOrder) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            Text(stringResource(R.string.save_order))
-        }
     }
 }
 

@@ -28,9 +28,9 @@ interface ClientDao {
     @androidx.room.Transaction
     @Query(
         """
-        SELECT c.* FROM clients c INNER JOIN users u ON c.id = u.id
-        WHERE c.isDeletedLocally = 0 
-        AND (u.arName LIKE '%' || :query || '%' OR u.enName LIKE '%' || :query || '%' OR c.address LIKE '%' || :query || '%')
+        SELECT * FROM clients 
+        WHERE isDeletedLocally = 0 
+        AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%' OR address LIKE '%' || :query || '%')
        
     """
     )

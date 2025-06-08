@@ -11,6 +11,7 @@ import java.util.UUID
 
 data class OrderScreenState(
     val loading: Boolean = false,
+
     val orders: List<SalesOrder> = emptyList(),
     val selectedOrder: SalesOrder? = null,
 
@@ -24,8 +25,9 @@ data class OrderScreenState(
     @StringRes val snackbarMessage: Int? = null,
 
     val isQueryActive: Boolean = false,
-    val isDetailViewOpen: Boolean = false,
-)
+){
+    val isNew: Boolean get() = selectedOrder == null
+}
 
 
 data class EditableOrder(
@@ -74,5 +76,4 @@ sealed interface OrderScreenEvent {
     data object SaveOrder : OrderScreenEvent
     data object ClearSnackbar : OrderScreenEvent
     data object OpenNewOrderForm : OrderScreenEvent
-    data object CloseOrderForm : OrderScreenEvent
 }

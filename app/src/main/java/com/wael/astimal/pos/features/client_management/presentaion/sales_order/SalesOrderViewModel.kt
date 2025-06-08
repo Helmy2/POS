@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.client_management.data.entity.OrderProductEntity
+import com.wael.astimal.pos.features.client_management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.client_management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.client_management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
@@ -56,11 +57,11 @@ class SalesOrderViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            clientRepository.searchClients("")
+            clientRepository.searchClients()
                 .collect { result -> _state.update { it.copy(availableClients = result) } }
         }
         viewModelScope.launch {
-            productRepository.getProducts("")
+            productRepository.getProducts()
                 .collect { result -> _state.update { it.copy(availableProducts = result) } }
         }
         viewModelScope.launch {
@@ -72,9 +73,7 @@ class SalesOrderViewModel(
     fun onEvent(event: OrderScreenEvent) {
         when (event) {
             is OrderScreenEvent.SearchOrders -> searchOrders(event.query)
-            is OrderScreenEvent.SelectOrderToView -> _state.update {
-                it.copy(selectedOrder = event.order, isDetailViewOpen = true)
-            }
+            is OrderScreenEvent.SelectOrderToView -> updateSelectedOrder(event.order)
 
             is OrderScreenEvent.SelectClient -> updateOrderInput { it.copy(selectedClient = event.client) }
             is OrderScreenEvent.SelectEmployee -> updateOrderInput {
@@ -112,27 +111,74 @@ class SalesOrderViewModel(
             is OrderScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
 
             is OrderScreenEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
-            OrderScreenEvent.CloseOrderForm -> _state.update {
-                it.copy(
-                    isDetailViewOpen = false,
-                    selectedOrder = null,
-                    currentOrderInput = EditableOrder(),
-                    error = null
-                )
-            }
-
-            is OrderScreenEvent.DeleteOrder -> {
-                // todo: Implement delete order logic
-            }
+            is OrderScreenEvent.DeleteOrder -> deleteOrder(event.localId)
 
             OrderScreenEvent.OpenNewOrderForm -> _state.update {
                 it.copy(
-                    isDetailViewOpen = false,
-                    selectedOrder = null,
-                    currentOrderInput = EditableOrder(
+                    isQueryActive = false, selectedOrder = null, currentOrderInput = EditableOrder(
                         selectedEmployeeId = currentUserId ?: 0L
-                    ),
-                    error = null
+                    ), error = null
+                )
+            }
+        }
+    }
+
+    private fun deleteOrder(id: Long) {
+        viewModelScope.launch {
+          val result =   orderRepository.deleteOrder(id)
+
+            result.fold(
+                onSuccess = {
+                    _state.update {
+                        it.copy(
+                            snackbarMessage = R.string.order_deleted,
+                            selectedOrder = null,
+                            currentOrderInput = EditableOrder(),
+                            isQueryActive = false
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _state.update { it.copy(error = R.string.error_deleting_order) }
+                }
+            )
+        }
+
+    }
+
+    private fun updateSelectedOrder(order: SalesOrder?) {
+        _state.update {
+            it.copy(
+                selectedOrder = order, isQueryActive = false
+            )
+        }
+        if (order == null) {
+            _state.update { it.copy(currentOrderInput = EditableOrder()) }
+        } else {
+            _state.update {
+                it.copy(
+                    currentOrderInput = EditableOrder(
+                        selectedClient = order.client,
+                        selectedEmployeeId = order.employee?.id,
+                        selectedMainEmployeeId = order.mainEmployee?.id,
+                        paymentType = order.paymentType,
+                        items = order.items.map {
+                            EditableOrderItem(
+                                tempEditorId = it.localId.toString(),
+                                product = it.product,
+                                selectedUnit = it.unit,
+                                quantity = it.quantity.toString(),
+                                sellingPrice = it.unitSellingPrice.toString(),
+                                lineTotal = it.itemTotalPrice,
+                                lineGain = it.itemGain
+                            )
+                        },
+                        amountPaid = order.amountPaid.toString(),
+                        subtotal = order.totalPrice,
+                        totalGain = order.totalGain,
+                        totalAmount = order.totalPrice + (order.client?.debt ?: 0.0),
+                        amountRemaining = order.amountRemaining
+                    )
                 )
             }
         }
@@ -246,11 +292,19 @@ class SalesOrderViewModel(
         )
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
-            orderRepository.addOrder(orderEntity, itemEntities).fold(
+
+            val result = if (_state.value.isNew) orderRepository.addOrder(orderEntity, itemEntities)
+            else orderRepository.updateOrder(orderEntity, itemEntities)
+
+            result.fold(
                 onSuccess = {
                     _state.update {
                         it.copy(
-                            loading = false, snackbarMessage = R.string.order_saved
+                            loading = false,
+                            snackbarMessage = R.string.order_saved,
+                            isQueryActive = false,
+                            selectedOrder = null,
+                            currentOrderInput = EditableOrder(),
                         )
                     }
                 },
