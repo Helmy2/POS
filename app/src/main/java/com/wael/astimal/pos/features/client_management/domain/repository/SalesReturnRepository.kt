@@ -13,5 +13,10 @@ interface SalesReturnRepository {
         items: List<OrderReturnProductEntity>
     ): Result<Unit>
 
+    suspend fun updateSalesReturn(
+        returnEntity: OrderReturnEntity,
+        items: List<OrderReturnProductEntity>
+    ): Result<Unit>
+
     suspend fun deleteSalesReturn(returnLocalId: Long): Result<Unit>
 }

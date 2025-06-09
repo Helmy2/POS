@@ -118,4 +118,6 @@
     <string name="transfer_deleted_successfully">Transfer deleted successfully.</string>
     <string name="order_deleted">Order deleted</string>
     <string name="error_deleting_order">Error Deleting order</string>
+    <string name="return_deleted">Return deleted</string>
+    <string name="error_deleting_return">Error deleting return</string>
 </resources>

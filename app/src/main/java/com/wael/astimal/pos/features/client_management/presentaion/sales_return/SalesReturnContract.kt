@@ -14,7 +14,7 @@ data class SalesReturnScreenState(
     val returns: List<SalesReturn> = emptyList(),
     val selectedReturn: SalesReturn? = null,
 
-    val newReturnInput: EditableSalesReturn = EditableSalesReturn(),
+    val currentReturnInput: EditableSalesReturn = EditableSalesReturn(),
     val availableClients: List<Client> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
@@ -24,8 +24,9 @@ data class SalesReturnScreenState(
     @StringRes val snackbarMessage: Int? = null,
 
     val isQueryActive: Boolean = false,
-    val isDetailViewOpen: Boolean = false,
-)
+){
+    val isNew: Boolean get() = selectedReturn == null
+}
 
 data class EditableSalesReturn(
     val selectedClient: Client? = null,
@@ -55,7 +56,6 @@ sealed interface SalesReturnScreenEvent {
     data class UpdateIsQueryActive(val isActive: Boolean) : SalesReturnScreenEvent
 
     data object OpenNewReturnForm : SalesReturnScreenEvent
-    data object CloseReturnForm : SalesReturnScreenEvent
     data class SelectClient(val client: Client?) : SalesReturnScreenEvent
     data class UpdatePaymentType(val type: PaymentType) : SalesReturnScreenEvent
     data class UpdateAmountRefunded(val amount: String) : SalesReturnScreenEvent
@@ -66,6 +66,8 @@ sealed interface SalesReturnScreenEvent {
     data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) : SalesReturnScreenEvent
     data class UpdateItemPrice(val tempEditorId: String, val price: String) : SalesReturnScreenEvent
 
+    data object DeleteReturn : SalesReturnScreenEvent
     data object SaveReturn : SalesReturnScreenEvent
     data object ClearSnackbar : SalesReturnScreenEvent
+    data object ClearError : SalesReturnScreenEvent
 }

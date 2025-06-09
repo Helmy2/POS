@@ -35,7 +35,8 @@ class SalesReturnRepositoryImpl(
         return try {
             val insertedReturnLocalId = orderReturnDao.insertOrUpdateOrderReturn(returnEntity)
 
-            val itemsWithCorrectId = items.map { it.copy(orderReturnLocalId = insertedReturnLocalId) }
+            val itemsWithCorrectId =
+                items.map { it.copy(orderReturnLocalId = insertedReturnLocalId) }
             orderReturnDao.insertOrderReturnItems(itemsWithCorrectId)
 
             Result.success(Unit)
@@ -45,14 +46,45 @@ class SalesReturnRepositoryImpl(
         }
     }
 
+
+    override suspend fun updateSalesReturn(
+        returnEntity: OrderReturnEntity,
+        items: List<OrderReturnProductEntity>
+    ): Result<Unit> {
+        return try {
+            if (returnEntity.localId == 0L) {
+                return Result.failure(IllegalArgumentException("Sales Return localId is missing for update operation."))
+            }
+
+            val entityToUpdate = returnEntity.copy(
+                isSynced = false,
+                lastModified = System.currentTimeMillis()
+            )
+
+            orderReturnDao.updateSalesReturnWithItems(entityToUpdate, items)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
     override suspend fun deleteSalesReturn(returnLocalId: Long): Result<Unit> {
-        // todo
-        // Implement soft delete logic similar to OrderRepository
-        // 1. Fetch the OrderReturnEntity by localId
-        // 2. Copy it with isDeletedLocally = true and isSynced = false
-        // 3. Call insertOrUpdateOrderReturn() with the updated entity
-        println("SalesReturnRepositoryImpl: deleteSalesReturn() called. Logic to be implemented.")
-        return Result.success(Unit)
+        return try {
+            val returnEntity = orderReturnDao.getOrderReturnEntityByLocalId(returnLocalId)
+                ?: return Result.failure(NoSuchElementException("Sales Return not found with localId: $returnLocalId"))
+
+            val returnToMarkAsDeleted = returnEntity.copy(
+                isDeletedLocally = true,
+                isSynced = false,
+                lastModified = System.currentTimeMillis()
+            )
+            orderReturnDao.insertOrUpdateOrderReturn(returnToMarkAsDeleted)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
 }

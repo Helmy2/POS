@@ -71,10 +71,14 @@ fun SalesReturnScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    LaunchedEffect(state.snackbarMessage) {
+    LaunchedEffect(state.snackbarMessage, state.error) {
         state.snackbarMessage?.let {
             snackbarHostState.showSnackbar(context.getString(it))
             onEvent(SalesReturnScreenEvent.ClearSnackbar)
+        }
+        state.error?.let {
+            snackbarHostState.showSnackbar(context.getString(it))
+            onEvent(SalesReturnScreenEvent.ClearError)
         }
     }
 
@@ -82,17 +86,11 @@ fun SalesReturnScreen(
         query = state.query,
         isSearchActive = state.isQueryActive,
         loading = state.loading,
-        isNew = state.isDetailViewOpen && state.selectedReturn == null,
+        isNew = state.isNew ,
         onQueryChange = { onEvent(SalesReturnScreenEvent.UpdateQuery(it)) },
         onSearch = { onEvent(SalesReturnScreenEvent.SearchReturns(it)) },
         onSearchActiveChange = { onEvent(SalesReturnScreenEvent.UpdateIsQueryActive(it)) },
-        onBack = {
-            if (state.isDetailViewOpen) {
-                onEvent(SalesReturnScreenEvent.CloseReturnForm)
-            } else {
-                onBack()
-            }
-        },
+        onBack = onBack,
         onCreate = { onEvent(SalesReturnScreenEvent.SaveReturn) },
         onNew = { onEvent(SalesReturnScreenEvent.OpenNewReturnForm) },
         searchResults = {
@@ -103,15 +101,9 @@ fun SalesReturnScreen(
             )
         },
         mainContent = {
-            Column {
-                Text(
-                    stringResource(state.error ?: R.string.something_went_wrong),
-                )
                 SalesReturnForm(state = state, onEvent = onEvent)
-            }
-
         },
-        onDelete = {},
+        onDelete = {onEvent(SalesReturnScreenEvent.DeleteReturn) },
         onUpdate = {onEvent(SalesReturnScreenEvent.SaveReturn)},
     )
 }
@@ -138,7 +130,7 @@ fun SalesReturnForm(
     state: SalesReturnScreenState, onEvent: (SalesReturnScreenEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
-    val returnInput = state.newReturnInput
+    val returnInput = state.currentReturnInput
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -184,15 +176,6 @@ fun SalesReturnForm(
             previousDebt = returnInput.selectedClient?.debt ?: 0.0,
             newDebt = returnInput.newDebt
         )
-
-        Button(
-            onClick = { onEvent(SalesReturnScreenEvent.SaveReturn) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            Text(stringResource(R.string.save_order))
-        }
     }
 }
 
