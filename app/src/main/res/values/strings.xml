@@ -122,4 +122,10 @@
     <string name="error_deleting_return">Error deleting return</string>
     <string name="is_client">Is client</string>
     <string name="supplier_info">Supplier info</string>
+    <string name="purchase_saved">Purchase saved</string>
+    <string name="purchase_deleted">Purchase deleted</string>
+    <string name="error_deleting_purchase">Error deleting purchase</string>
+    <string name="supplier_and_at_least_one_item_are_required">supplier_and_at_least_one_item_are_required</string>
+    <string name="supplier">Supplier</string>
+    <string name="purchase_order">Purchase order</string>
 </resources>
