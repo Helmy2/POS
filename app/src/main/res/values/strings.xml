@@ -120,4 +120,6 @@
     <string name="error_deleting_order">Error Deleting order</string>
     <string name="return_deleted">Return deleted</string>
     <string name="error_deleting_return">Error deleting return</string>
+    <string name="is_client">Is client</string>
+    <string name="supplier_info">Supplier info</string>
 </resources>

@@ -57,11 +57,11 @@ fun SupplierWithDetailsEntity.toDomain(): Supplier {
             arName = this.supplier.arName,
             enName = this.supplier.enName
         ),
-        phone = this.supplier.phone,
+        phones = listOfNotNull(this.supplier.phone),
         address = this.supplier.address,
         indebtedness = this.supplier.indebtedness,
         isAlsoClient = this.supplier.isClient,
-        responsibleEmployeeName = this.responsibleEmployeeUser?.toDomain(),
+        responsibleEmployee = this.responsibleEmployeeUser?.toDomain(),
         isSynced = this.supplier.isSynced,
         lastModified = this.supplier.lastModified,
         isDeletedLocally = this.supplier.isDeletedLocally

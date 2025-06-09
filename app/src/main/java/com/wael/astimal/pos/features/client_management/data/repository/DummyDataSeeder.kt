@@ -1,7 +1,9 @@
 package com.wael.astimal.pos.features.client_management.data.repository
 
 import com.wael.astimal.pos.features.client_management.data.entity.ClientEntity
+import com.wael.astimal.pos.features.client_management.data.entity.SupplierEntity
 import com.wael.astimal.pos.features.client_management.data.local.ClientDao
+import com.wael.astimal.pos.features.client_management.data.local.SupplierDao
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
@@ -23,6 +25,7 @@ import kotlinx.coroutines.launch
 class DummyDataSeeder(
     private val userDao: UserDao,
     private val clientDao: ClientDao,
+    private val supplierDao: SupplierDao,
     private val storeDao: StoreDao,
     private val unitDao: UnitDao,
     private val categoryDao: CategoryDao,
@@ -53,10 +56,40 @@ class DummyDataSeeder(
         val stores = populateDummyStores()
         val categories = populateDummyCategories()
         populateDummyClients(employees) // Now returns void
+        populateDummySuppliers(employees) // Now returns void
         val products = populateDummyProducts(categories, units, stores)
         populateDummyStockTransfers(stores, employees, products, units)
 
         println("Dummy data population complete.")
+    }
+
+    private suspend fun populateDummySuppliers(employees: Map<String, Long>) {
+        val supplier1Entity = SupplierEntity(
+            id = -301,
+            arName = "مورد ١",
+            enName = "Supplier 1",
+            responsibleEmployeeLocalId = employees["emp1"],
+            address = "789 Supply St, Cairo",
+            isSynced = true,
+            phone = "3334445550",
+            indebtedness = 0.0,
+            isClient = true,
+            isDeletedLocally = false,
+        )
+        supplierDao.insertOrUpdateSupplier(supplier1Entity)
+        val supplier2Entity = SupplierEntity(
+            id = -302,
+            arName = "مورد ٢",
+            enName = "Supplier 2",
+            responsibleEmployeeLocalId = employees["emp2"],
+            address = "101 Supply Rd, Alexandria",
+            isSynced = true,
+            phone = "6667778880",
+            indebtedness = 150.75,
+            isClient = false,
+            isDeletedLocally = false,
+        )
+        supplierDao.insertOrUpdateSupplier(supplier2Entity)
     }
 
     private suspend fun populateDummyUsersAndEmployees(): Map<String, Long> {

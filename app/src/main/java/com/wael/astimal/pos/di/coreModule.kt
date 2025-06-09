@@ -46,6 +46,7 @@ val coreModule = module {
             categoryDao = get(),
             productDao = get(),
             stockTransferDao = get(),
+            supplierDao = get(),
             applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         )
     }

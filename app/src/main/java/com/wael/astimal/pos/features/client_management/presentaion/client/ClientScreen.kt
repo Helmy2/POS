@@ -24,6 +24,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.presentaion.clinet_info.ClientInfoRoute
 import com.wael.astimal.pos.features.client_management.presentaion.sales_order.SalesOrderRoute
 import com.wael.astimal.pos.features.client_management.presentaion.sales_return.SalesReturnRoute
+import com.wael.astimal.pos.features.client_management.presentaion.supplier_info.SupplierInfoRoute
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -88,6 +89,7 @@ fun ClientScreen(
                                 ClientDestination.ClientInfo -> context.getString(R.string.client_info)
                                 ClientDestination.SalesOrder -> context.getString(R.string.sales_order)
                                 ClientDestination.OrderReturn -> context.getString(R.string.order_return)
+                                ClientDestination.SupplierInfo -> context.getString(R.string.supplier_info)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -117,6 +119,12 @@ fun ClientScreen(
                         SalesReturnRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                             snackbarHostState = snackbarHostState,
+                        )
+                    }
+
+                    ClientDestination.SupplierInfo -> {
+                        SupplierInfoRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                         )
                     }
 
