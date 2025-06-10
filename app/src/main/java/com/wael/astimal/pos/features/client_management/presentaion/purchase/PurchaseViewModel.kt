@@ -52,7 +52,7 @@ class PurchaseViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            supplierRepository.searchSupplier("")
+            supplierRepository.getSuppliers("")
                 .collect { result -> _state.update { it.copy(availableSuppliers = result) } }
         }
         viewModelScope.launch {

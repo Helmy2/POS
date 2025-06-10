@@ -9,10 +9,13 @@ import com.wael.astimal.pos.features.client_management.data.entity.OrderReturnEn
 import com.wael.astimal.pos.features.client_management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.client_management.data.entity.PurchaseEntity
 import com.wael.astimal.pos.features.client_management.data.entity.PurchaseProductEntity
+import com.wael.astimal.pos.features.client_management.data.entity.PurchaseReturnEntity
+import com.wael.astimal.pos.features.client_management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.client_management.data.entity.SupplierEntity
 import com.wael.astimal.pos.features.client_management.data.local.ClientDao
 import com.wael.astimal.pos.features.client_management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.client_management.data.local.PurchaseDao
+import com.wael.astimal.pos.features.client_management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.client_management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.client_management.data.local.SupplierDao
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
@@ -45,7 +48,9 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         OrderReturnEntity::class,
         OrderReturnProductEntity::class,
         PurchaseEntity::class,
-        PurchaseProductEntity::class
+        PurchaseProductEntity::class,
+        PurchaseReturnEntity::class,
+        PurchaseReturnProductEntity::class
     ],
     version = 16,
     exportSchema = false
@@ -63,4 +68,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun supplierDao(): SupplierDao
     abstract fun orderReturnDao(): OrderReturnDao
     abstract fun purchaseOrderDao(): PurchaseDao
+    abstract fun purchaseReturnDao(): PurchaseReturnDao
 }

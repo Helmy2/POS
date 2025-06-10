@@ -4,5 +4,5 @@ import com.wael.astimal.pos.features.client_management.domain.entity.Supplier
 import kotlinx.coroutines.flow.Flow
 
 interface SupplierRepository {
-    fun searchSupplier(query: String=""): Flow<List<Supplier>>
+    fun getSuppliers(query: String=""): Flow<List<Supplier>>
 }

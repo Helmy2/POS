@@ -9,10 +9,10 @@ data class ClientState(
 )
 
 enum class ClientDestination {
-    ClientInfo, SalesOrder, OrderReturn, SupplierInfo, PurchaseOrder;
+    ClientInfo, SalesOrder, OrderReturn, SupplierInfo, PurchaseOrder,PurchaseReturn;
 
     companion object {
         fun getAll(): List<ClientDestination> =
-            listOf(ClientInfo,SalesOrder,OrderReturn,SupplierInfo,PurchaseOrder)
+            listOf(ClientInfo,SalesOrder,OrderReturn,SupplierInfo,PurchaseOrder,PurchaseReturn)
     }
 }

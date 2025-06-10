@@ -128,4 +128,8 @@
     <string name="supplier_and_at_least_one_item_are_required">supplier_and_at_least_one_item_are_required</string>
     <string name="supplier">Supplier</string>
     <string name="purchase_order">Purchase order</string>
+    <string name="purchase_return_saved">Purchase return saved</string>
+    <string name="purchase_return_deleted">Purchase return deleted</string>
+    <string name="error_deleting_purchase_return">Error deleting purchase return</string>
+    <string name="purchase_return">Purchase return</string>
 </resources>

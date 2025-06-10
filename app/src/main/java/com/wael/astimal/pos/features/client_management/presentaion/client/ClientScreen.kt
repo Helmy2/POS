@@ -23,6 +23,7 @@ import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.client_management.presentaion.clinet_info.ClientInfoRoute
 import com.wael.astimal.pos.features.client_management.presentaion.purchase.PurchaseRoute
+import com.wael.astimal.pos.features.client_management.presentaion.purchase_return.PurchaseReturnRoute
 import com.wael.astimal.pos.features.client_management.presentaion.sales_order.SalesOrderRoute
 import com.wael.astimal.pos.features.client_management.presentaion.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.client_management.presentaion.supplier_info.SupplierInfoRoute
@@ -92,6 +93,7 @@ fun ClientScreen(
                                 ClientDestination.OrderReturn -> context.getString(R.string.order_return)
                                 ClientDestination.SupplierInfo -> context.getString(R.string.supplier_info)
                                 ClientDestination.PurchaseOrder -> context.getString(R.string.purchase_order)
+                                ClientDestination.PurchaseReturn -> context.getString(R.string.purchase_return)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -132,6 +134,13 @@ fun ClientScreen(
 
                     ClientDestination.PurchaseOrder -> {
                         PurchaseRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+
+                    ClientDestination.PurchaseReturn -> {
+                        PurchaseReturnRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                             snackbarHostState = snackbarHostState,
                         )

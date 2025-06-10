@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.map
 
 class SupplierRepositoryImpl(private val supplierDao: SupplierDao) :
     SupplierRepository {
-    override fun searchSupplier(query: String): Flow<List<Supplier>> {
+    override fun getSuppliers(query: String): Flow<List<Supplier>> {
         return supplierDao.searchSuppliersWithDetailsFlow(query).map { list ->
             list.map { it.toDomain() }
         }

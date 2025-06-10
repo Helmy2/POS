@@ -55,7 +55,7 @@ class SupplierViewModel(
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
-            clientRepository.searchSupplier(query)
+            clientRepository.getSuppliers(query)
                 .catch { e ->
                     _state.update {
                         it.copy(
