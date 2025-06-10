@@ -2,6 +2,8 @@ package com.wael.astimal.pos.core.domain.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Person
@@ -16,7 +18,7 @@ object TopLevelRoutes {
     val routes = listOf(
         TopLevelRoute(R.string.dashboard, Destination.Main.Dashboard, Icons.Default.Dashboard),
         TopLevelRoute(R.string.inventory, Destination.Main.Inventory, Icons.Default.Inventory),
-        TopLevelRoute(R.string.clients, Destination.Main.Clients, Icons.Default.Person),
+        TopLevelRoute(R.string.management, Destination.Main.Management, Icons.Default.Analytics),
         TopLevelRoute(R.string.settings, Destination.Main.Settings, Icons.Default.Settings),
     )
 }

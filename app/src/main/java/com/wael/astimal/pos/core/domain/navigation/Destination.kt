@@ -20,7 +20,7 @@ sealed class Destination {
         data object Inventory : Destination()
 
         @Serializable
-        data object Clients : Destination()
+        data object Management : Destination()
 
         @Serializable
         data object Settings : Destination()

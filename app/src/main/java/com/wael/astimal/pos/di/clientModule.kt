@@ -1,25 +1,25 @@
 package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.data.AppDatabase
-import com.wael.astimal.pos.features.client_management.data.repository.ClientRepositoryImpl
-import com.wael.astimal.pos.features.client_management.data.repository.PurchaseRepositoryImpl
-import com.wael.astimal.pos.features.client_management.data.repository.PurchaseReturnRepositoryImpl
-import com.wael.astimal.pos.features.client_management.data.repository.SalesOrderRepositoryImpl
-import com.wael.astimal.pos.features.client_management.data.repository.SalesReturnRepositoryImpl
-import com.wael.astimal.pos.features.client_management.data.repository.SupplierRepositoryImpl
-import com.wael.astimal.pos.features.client_management.domain.repository.ClientRepository
-import com.wael.astimal.pos.features.client_management.domain.repository.PurchaseRepository
-import com.wael.astimal.pos.features.client_management.domain.repository.PurchaseReturnRepository
-import com.wael.astimal.pos.features.client_management.domain.repository.SalesOrderRepository
-import com.wael.astimal.pos.features.client_management.domain.repository.SalesReturnRepository
-import com.wael.astimal.pos.features.client_management.domain.repository.SupplierRepository
-import com.wael.astimal.pos.features.client_management.presentaion.client.ClientViewModel
-import com.wael.astimal.pos.features.client_management.presentaion.clinet_info.ClientInfoViewModel
-import com.wael.astimal.pos.features.client_management.presentaion.purchase.PurchaseViewModel
-import com.wael.astimal.pos.features.client_management.presentaion.purchase_return.PurchaseReturnViewModel
-import com.wael.astimal.pos.features.client_management.presentaion.sales_order.SalesOrderViewModel
-import com.wael.astimal.pos.features.client_management.presentaion.sales_return.SalesReturnViewModel
-import com.wael.astimal.pos.features.client_management.presentaion.supplier_info.SupplierViewModel
+import com.wael.astimal.pos.features.management.data.repository.ClientRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.PurchaseRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.PurchaseReturnRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.SalesOrderRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.SalesReturnRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.SupplierRepositoryImpl
+import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
+import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
+import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
+import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
+import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
+import com.wael.astimal.pos.features.management.presentaion.management.ManagementViewModel
+import com.wael.astimal.pos.features.management.presentaion.client_info.ClientInfoViewModel
+import com.wael.astimal.pos.features.management.presentaion.purchase.PurchaseViewModel
+import com.wael.astimal.pos.features.management.presentaion.purchase_return.PurchaseReturnViewModel
+import com.wael.astimal.pos.features.management.presentaion.sales.SalesViewModel
+import com.wael.astimal.pos.features.management.presentaion.sales_return.SalesReturnViewModel
+import com.wael.astimal.pos.features.management.presentaion.supplier_info.SupplierViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -50,11 +50,11 @@ val clientModule = module {
         PurchaseReturnRepositoryImpl(get())
     }
 
-    viewModel { ClientViewModel() }
+    viewModel { ManagementViewModel() }
 
     viewModel { ClientInfoViewModel(get()) }
     viewModel { SalesReturnViewModel(get(), get(), get(), get()) }
-    viewModel { SalesOrderViewModel(get(), get(),get(),  get(),get()) }
+    viewModel { SalesViewModel(get(), get(),get(),  get(),get()) }
 
     viewModel { SupplierViewModel(get()) }
     viewModel { PurchaseViewModel(get(), get(), get(), get()) }

@@ -2,7 +2,7 @@ package com.wael.astimal.pos.core.presentation
 
 import android.app.Application
 import com.wael.astimal.pos.di.appModule
-import com.wael.astimal.pos.features.client_management.data.repository.DummyDataSeeder
+import com.wael.astimal.pos.features.management.data.repository.DummyDataSeeder
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin

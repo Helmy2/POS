@@ -35,6 +35,7 @@
 
     <string name="dashboard">Dashboard</string>
     <string name="inventory">Inventory</string>
+    <string name="management">Manage</string>
     <string name="settings">Settings</string>
 
     <string name="no_internet">No internet connection</string>
@@ -98,6 +99,7 @@
     <string name="no">No</string>
     <string name="n_a">N/A</string>
     <string name="debt_address">Debt: %1$s | Address: %2$s</string>
+    <string name="indebtedness_address">Indebtedness: %1$s | Address: %2$s</string>
     <string name="error_searching_clients">Error searching clients</string>
     <string name="edit_name">Edit Name</string>
     <string name="return_saved">Return saved</string>

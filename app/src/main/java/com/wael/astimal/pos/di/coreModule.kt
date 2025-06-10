@@ -8,7 +8,7 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.core.util.ConnectivityImp
 import com.wael.astimal.pos.core.util.PREFERENCES_NAME
-import com.wael.astimal.pos.features.client_management.data.repository.DummyDataSeeder
+import com.wael.astimal.pos.features.management.data.repository.DummyDataSeeder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
