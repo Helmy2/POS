@@ -38,8 +38,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
-import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 

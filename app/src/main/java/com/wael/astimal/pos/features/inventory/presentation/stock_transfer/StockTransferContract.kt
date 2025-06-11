@@ -6,7 +6,9 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.Unit
 import com.wael.astimal.pos.features.user.domain.entity.User
+import java.time.LocalDate
 import kotlin.random.Random
+import kotlin.time.Clock
 
 data class StockTransferScreenState(
     val loading: Boolean = false,
@@ -33,6 +35,7 @@ data class EditableStockTransfer(
     val fromStoreId: Long? = null,
     val toStoreId: Long? = null,
     val selectedEmployeeId: Long? = null,
+    val transferDate: Long? = System.currentTimeMillis(),
     val items: MutableList<EditableStockTransferItem> = mutableListOf(),
 )
 
@@ -59,6 +62,7 @@ sealed interface StockTransferScreenEvent {
     data class SelectEmployee(val id: Long?) : StockTransferScreenEvent
     data class UpdateItemProduct(val itemEditorId: Long, val product: Product?) :
         StockTransferScreenEvent
+    data class UpdateTransferDate(val date: Long?) : StockTransferScreenEvent
 
     data class UpdateItemUnit(val itemEditorId: Long, val unit: Unit?) : StockTransferScreenEvent
 

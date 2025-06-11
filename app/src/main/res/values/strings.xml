@@ -135,4 +135,6 @@
     <string name="error_deleting_purchase_return">Error deleting purchase return</string>
     <string name="purchase_return">Purchase return</string>
     <string name="accept_transfer">Accept transfer</string>
+    <string name="select_date">Select Date</string>
+    <string name="employee">Employee</string>
 </resources>

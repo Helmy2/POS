@@ -134,6 +134,14 @@ class StockTransferViewModel(
                     )
                 }
             }
+
+            is StockTransferScreenEvent.UpdateTransferDate -> _state.update { currentState ->
+                currentState.copy(
+                    currentTransferInput = currentState.currentTransferInput.copy(
+                        transferDate = event.date
+                    )
+                )
+            }
         }
     }
 
@@ -154,6 +162,7 @@ class StockTransferViewModel(
                         localId = transfer.localId,
                         fromStoreId = transfer.fromStore?.localId,
                         toStoreId = transfer.toStore?.localId,
+                        transferDate = transfer.transferDate,
                         items = transfer.items.map { item ->
                             EditableStockTransferItem(
                                 tempEditorId = item.localId,
@@ -161,7 +170,7 @@ class StockTransferViewModel(
                                 unit = item.unit,
                                 quantity = item.quantity.toString(),
                                 maxOpeningBalance = item.maximumOpeningBalance?.toString() ?: "",
-                                minOpeningBalance = item.minimumOpeningBalance?.toString() ?: ""
+                                minOpeningBalance = item.minimumOpeningBalance?.toString() ?: "",
                             )
                         }.toMutableList(),
                     )
@@ -259,6 +268,7 @@ class StockTransferViewModel(
                 stockTransferRepository.addStockTransfer(
                     fromStoreId = currentInput.fromStoreId,
                     toStoreId = currentInput.toStoreId,
+                    transferDate = currentInput.transferDate ?: System.currentTimeMillis(),
                     initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
                         ?: loggedInUserId,
                     items = itemEntities
@@ -268,6 +278,7 @@ class StockTransferViewModel(
                     transferLocalId = currentInput.localId,
                     fromStoreId = currentInput.fromStoreId,
                     toStoreId = currentInput.toStoreId,
+                    transferDate = currentInput.transferDate ?: System.currentTimeMillis(),
                     initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
                         ?: loggedInUserId,
                     items = itemEntities

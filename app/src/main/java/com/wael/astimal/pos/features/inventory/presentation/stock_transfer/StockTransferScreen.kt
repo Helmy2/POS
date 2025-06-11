@@ -20,7 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,12 +34,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
-import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
-import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.koin.androidx.compose.koinViewModel
 
@@ -88,20 +90,10 @@ fun StockTransferScreen(
         onQueryChange = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearch = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearchActiveChange = { onEvent(StockTransferScreenEvent.UpdateIsQueryActive(it)) },
-        onBack = {
-            if (state.isQueryActive) {
-                onEvent(StockTransferScreenEvent.UpdateIsQueryActive(false))
-            } else {
-                onBack()
-            }
-        },
+        onBack = onBack,
         onDelete = {
             state.selectedTransfer?.let {
-                onEvent(
-                    StockTransferScreenEvent.DeleteTransfer(
-                        it.localId
-                    )
-                )
+                onEvent(StockTransferScreenEvent.DeleteTransfer(it.localId))
             }
         },
         onCreate = { onEvent(StockTransferScreenEvent.SaveTransfer) },
@@ -113,7 +105,13 @@ fun StockTransferScreen(
                 onItemClick = { transfer ->
                     onEvent(StockTransferScreenEvent.SelectTransferToView(transfer))
                 },
-                label = { Text("${it.fromStore?.localizedName?.displayName(language)}: ${it.toStore?.localizedName?.displayName(language)}") },
+                label = {
+                    Label(
+                        "${it.fromStore?.localizedName?.displayName(language)} : ${
+                            it.toStore?.localizedName?.displayName(language)
+                        }"
+                    )
+                },
                 isSelected = { product -> product.localId == state.selectedTransfer?.localId },
             )
         },
@@ -152,6 +150,9 @@ fun StockTransferForm(
             if (isNewTransfer) stringResource(R.string.new_stock_transfer) else stringResource(R.string.transfer_details),
             style = MaterialTheme.typography.headlineSmall
         )
+        DataPicker(
+            selectedDateMillis = editableTransfer.transferDate,
+            onDateSelected = { onEvent(StockTransferScreenEvent.UpdateTransferDate(it)) })
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.from_store),
@@ -172,7 +173,7 @@ fun StockTransferForm(
         )
 
         CustomExposedDropdownMenu(
-            label = "Employee",
+            label = stringResource(R.string.employee),
             items = availableEmployees,
             selectedItemId = editableTransfer.selectedEmployeeId,
             onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it?.id)) },
@@ -243,44 +244,36 @@ fun StockTransferItemRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(modifier = Modifier.weight(1f)) {
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.unit),
-                    items = listOf(
-                        item.product?.minimumUnit, item.product?.maximumUnit
-                    ),
-                    selectedItemId = item.unit?.localId,
-                    onItemSelected = { unit ->
-                        onEvent(
-                            StockTransferScreenEvent.UpdateItemUnit(
-                                item.tempEditorId, unit
-                            )
+            CustomExposedDropdownMenu(
+                label = stringResource(R.string.unit),
+                items = listOf(
+                    item.product?.minimumUnit, item.product?.maximumUnit
+                ),
+                selectedItemId = item.unit?.localId ?: item.product?.minimumUnit?.localId,
+                onItemSelected = { unit ->
+                    onEvent(
+                        StockTransferScreenEvent.UpdateItemUnit(item.tempEditorId, unit)
+                    )
+                },
+                itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
+                itemToId = { it?.localId ?: -1L },
+                modifier = Modifier.weight(1f)
+            )
+            TextInputField(
+                value = item.quantity,
+                onValueChange = {
+                    onEvent(
+                        StockTransferScreenEvent.UpdateItemQuantity(
+                            item.tempEditorId, it
                         )
-                    },
-                    itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
-                    itemToId = { it?.localId ?: -1L },
-                )
-            }
-            Box(modifier = Modifier.weight(1f)) {
-                OutlinedTextField(
-                    value = item.quantity,
-                    onValueChange = {
-                        onEvent(
-                            StockTransferScreenEvent.UpdateItemQuantity(
-                                item.tempEditorId, it
-                            )
-                        )
-                    },
-                    minLines = 1,
-                    maxLines = 1,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
-                    ),
-                    label = {
-                        Text(stringResource(R.string.quantity))
-                    },
-                )
-            }
+                    )
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
+                ),
+                label = stringResource(R.string.quantity),
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

@@ -27,7 +27,7 @@ import com.wael.astimal.pos.features.management.presentaion.purchase_return.Purc
 import com.wael.astimal.pos.features.management.presentaion.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentaion.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.management.presentaion.supplier_info.SupplierInfoRoute
-import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 

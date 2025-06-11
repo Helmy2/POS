@@ -38,6 +38,7 @@ class StockTransferRepositoryImpl(
     override suspend fun addStockTransfer(
         fromStoreId: Long,
         toStoreId: Long,
+        transferDate: Long?,
         initiatedByUserId: Long,
         items: List<StockTransferItemEntity>
     ): Result<StockTransfer> {
@@ -51,7 +52,7 @@ class StockTransferRepositoryImpl(
                 fromStoreId = fromStoreId,
                 toStoreId = toStoreId,
                 initiatedByUserId = initiatedByUserId,
-                transferDate = System.currentTimeMillis(),
+                transferDate = transferDate ?: System.currentTimeMillis(),
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = false
@@ -93,6 +94,7 @@ class StockTransferRepositoryImpl(
         transferLocalId: Long,
         fromStoreId: Long,
         toStoreId: Long,
+        transferDate: Long?,
         initiatedByUserId: Long,
         items: List<StockTransferItemEntity>
     ): Result<Unit> {
@@ -123,6 +125,7 @@ class StockTransferRepositoryImpl(
                     toStoreId = toStoreId,
                     initiatedByUserId = initiatedByUserId,
                     isSynced = false,
+                    transferDate = transferDate ?: System.currentTimeMillis(),
                     lastModified = System.currentTimeMillis()
                 )
                 stockTransferDao.updateTransferWithItems(updatedTransferEntity, items)

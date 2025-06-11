@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.inventory.presentation.components
+package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft

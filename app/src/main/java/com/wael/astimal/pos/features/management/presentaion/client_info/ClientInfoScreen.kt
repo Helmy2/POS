@@ -43,7 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.Client
-import com.wael.astimal.pos.features.inventory.presentation.components.BackButton
+import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
