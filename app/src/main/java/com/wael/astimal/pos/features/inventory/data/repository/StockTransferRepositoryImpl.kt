@@ -68,7 +68,7 @@ class StockTransferRepositoryImpl(
                         storeId = fromStoreId,
                         productId = item.productLocalId,
                         transactionUnitId = item.unitLocalId,
-                        transactionQuantity = -item.quantity
+                        transactionQuantity = -item.quantity,
                     )
                     // Increase stock in destination store
                     stockRepository.adjustStock(

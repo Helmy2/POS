@@ -19,13 +19,17 @@ class PurchaseRepositoryImpl(
     private val purchaseDao: PurchaseDao,
     private val employeeDao: EmployeeDao,
     private val stockRepository: StockRepository,
-    private val supplierRepository: SupplierRepository,
+    private val supplierRepository: SupplierRepository
 ) : PurchaseRepository {
 
     override fun getPurchases(): Flow<List<PurchaseOrder>> {
         return purchaseDao.getAllPurchasesWithDetailsFlow().map { list ->
             list.map { it.toDomain() }
         }
+    }
+
+    override suspend fun getPurchaseDetails(localId: Long): PurchaseOrder? {
+        return purchaseDao.getPurchaseWithDetails(localId)?.toDomain()
     }
 
     override suspend fun addPurchase(
@@ -47,20 +51,20 @@ class PurchaseRepositoryImpl(
                         storeId = employeeStoreId,
                         productId = item.productLocalId,
                         transactionUnitId = item.unitLocalId,
-                        transactionQuantity = item.quantity
+                        transactionQuantity = item.quantity // INCREASE stock for a purchase
                     )
                 }
 
                 if (purchase.supplierLocalId != null) {
                     supplierRepository.adjustSupplierIndebtedness(
                         supplierLocalId = purchase.supplierLocalId,
-                        changeInDebt = purchase.totalPrice
+                        changeInDebt = purchase.totalPrice // INCREASE indebtedness to supplier
                     )
                 }
             }
-            val createdPurchase = purchaseDao.getPurchaseWithDetails(insertedId)
+            val createdPurchase = getPurchaseDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase after insert."))
-            Result.success(createdPurchase.toDomain())
+            Result.success(createdPurchase)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -76,15 +80,13 @@ class PurchaseRepositoryImpl(
             }
 
             database.withTransaction {
-                val employeeId = purchase.employeeLocalId
-                    ?: throw Exception("Employee ID is missing on the purchase record.")
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Could not find an assigned store for the employee.")
+                val employeeId = purchase.employeeLocalId ?: throw Exception("Employee ID missing.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
 
-                val oldPurchaseWithDetails = purchaseDao.getPurchaseWithDetails(purchase.localId)
-                if (oldPurchaseWithDetails != null) {
-                    // Revert old stock and debt
-                    oldPurchaseWithDetails.itemsWithProductDetails.forEach { oldItem ->
+                val oldPurchase = purchaseDao.getPurchaseWithDetails(purchase.localId)
+                if (oldPurchase != null) {
+                    // Revert old adjustments
+                    oldPurchase.itemsWithProductDetails.forEach { oldItem ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = oldItem.purchaseItem.productLocalId,
@@ -92,10 +94,10 @@ class PurchaseRepositoryImpl(
                             transactionQuantity = -oldItem.purchaseItem.quantity // Decrease stock to revert
                         )
                     }
-                    if (oldPurchaseWithDetails.purchase.supplierLocalId != null) {
+                    if (oldPurchase.purchase.supplierLocalId != null) {
                         supplierRepository.adjustSupplierIndebtedness(
-                            supplierLocalId = oldPurchaseWithDetails.purchase.supplierLocalId,
-                            changeInDebt = -oldPurchaseWithDetails.purchase.totalPrice // Decrease debt to revert
+                            supplierLocalId = oldPurchase.purchase.supplierLocalId,
+                            changeInDebt = -oldPurchase.purchase.totalPrice // Decrease debt to revert
                         )
                     }
                 }
@@ -103,7 +105,7 @@ class PurchaseRepositoryImpl(
                 val entityToUpdate = purchase.copy(isSynced = false, lastModified = System.currentTimeMillis())
                 purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
 
-                // Apply new stock and debt
+                // Apply new adjustments
                 items.forEach { newItem ->
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
@@ -119,9 +121,9 @@ class PurchaseRepositoryImpl(
                     )
                 }
             }
-            val updatedPurchase = purchaseDao.getPurchaseWithDetails(purchase.localId)
+            val updatedPurchase = getPurchaseDetails(purchase.localId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase after update."))
-            Result.success(updatedPurchase.toDomain())
+            Result.success(updatedPurchase)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -134,12 +136,10 @@ class PurchaseRepositoryImpl(
                     ?: throw NoSuchElementException("Purchase not found with localId: $purchaseLocalId")
 
                 if (!purchaseToDelete.purchase.isDeletedLocally) {
-                    val employeeId = purchaseToDelete.purchase.employeeLocalId
-                        ?: throw Exception("Employee ID missing on purchase record.")
-                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                        ?: throw Exception("Could not find an assigned store for the employee.")
+                    val employeeId = purchaseToDelete.purchase.employeeLocalId ?: throw Exception("Employee ID missing.")
+                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
 
-                    // Revert stock and debt
+                    // Revert stock and debt adjustments
                     purchaseToDelete.itemsWithProductDetails.forEach { item ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,

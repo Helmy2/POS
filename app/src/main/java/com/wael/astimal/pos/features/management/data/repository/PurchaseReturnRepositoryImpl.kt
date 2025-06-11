@@ -6,21 +6,20 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
-import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+
 class PurchaseReturnRepositoryImpl(
     private val database: AppDatabase,
     private val purchaseReturnDao: PurchaseReturnDao,
     private val employeeDao: EmployeeDao,
     private val stockRepository: StockRepository,
-    private val supplierRepository: SupplierRepository
+    private val supplierRepository: SupplierRepository,
 ) : PurchaseReturnRepository {
 
     override fun getPurchaseReturns(): Flow<List<PurchaseReturn>> {
@@ -81,13 +80,12 @@ class PurchaseReturnRepositoryImpl(
             }
 
             database.withTransaction {
-                val employeeId = purchaseReturn.employeeLocalId
-                    ?: throw Exception("Employee ID is missing.")
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Employee's store not found.")
+                val employeeId = purchaseReturn.employeeLocalId ?: throw Exception("Employee ID is missing.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
 
                 val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(purchaseReturn.localId)
                 if (oldReturn != null) {
+                    // Revert old adjustments
                     oldReturn.itemsWithProductDetails.forEach { oldItem ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
@@ -104,12 +102,13 @@ class PurchaseReturnRepositoryImpl(
                 val entityToUpdate = purchaseReturn.copy(isSynced = false, lastModified = System.currentTimeMillis())
                 purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
 
+                // Apply new adjustments
                 items.forEach { newItem ->
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = newItem.productLocalId,
                         transactionUnitId = newItem.unitLocalId,
-                        transactionQuantity = -newItem.quantity
+                        transactionQuantity = -newItem.quantity // Decrease stock
                     )
                 }
                 if (entityToUpdate.supplierLocalId != null) {
@@ -134,18 +133,19 @@ class PurchaseReturnRepositoryImpl(
                     val employeeId = returnToDelete.purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
                     val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
 
+                    // Revert stock and debt adjustments
                     returnToDelete.itemsWithProductDetails.forEach { item ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = item.purchaseReturnItem.productLocalId,
                             transactionUnitId = item.purchaseReturnItem.unitLocalId,
-                            transactionQuantity = item.purchaseReturnItem.quantity // Add stock back
+                            transactionQuantity = item.purchaseReturnItem.quantity
                         )
                     }
                     if (returnToDelete.purchaseReturn.supplierLocalId != null) {
                         supplierRepository.adjustSupplierIndebtedness(
                             supplierLocalId = returnToDelete.purchaseReturn.supplierLocalId,
-                            changeInDebt = returnToDelete.purchaseReturn.totalPrice // Add indebtedness back
+                            changeInDebt = returnToDelete.purchaseReturn.totalPrice
                         )
                     }
 

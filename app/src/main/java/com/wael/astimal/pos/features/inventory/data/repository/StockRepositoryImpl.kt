@@ -27,11 +27,11 @@ class StockRepositoryImpl(
         val unit = unitDao.getByLocalId(transactionUnitId)
             ?: throw Exception("Unit with id $transactionUnitId not found for stock adjustment.")
 
-        // 2. Calculate the change in the BASE unit
-        val changeInBaseQuantity = transactionQuantity * unit.rate
+                // 2. Calculate the change in the BASE unit
+                val changeInBaseQuantity = transactionQuantity * unit.rate
 
-        // 3. Get current stock to see if a record exists
-        val currentStock = stockDao.getQuantity(storeId, productId)
+                // 3. Get current stock to see if a record exists
+                val currentStock = stockDao.getQuantity(storeId, productId)
 
         if (currentStock == null) {
             // No record exists, create one with the new quantity

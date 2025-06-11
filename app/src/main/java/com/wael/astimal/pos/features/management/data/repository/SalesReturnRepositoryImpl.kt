@@ -7,6 +7,7 @@ import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
@@ -15,13 +16,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class SalesReturnRepositoryImpl(
-    private val database: AppDatabase, 
+    private val database: AppDatabase, // For transactions
     private val salesReturnDao: OrderReturnDao,
     private val employeeDao: EmployeeDao,
     private val clientRepository: ClientRepository,
     private val stockRepository: StockRepository,
 ) : SalesReturnRepository {
-
+    
 
     override fun getSalesReturns(): Flow<List<SalesReturn>> {
         return salesReturnDao.getAllOrderReturnsWithDetailsFlow().map { list ->
@@ -30,8 +31,8 @@ class SalesReturnRepositoryImpl(
     }
 
     override fun getSalesReturnDetailsFlow(returnLocalId: Long): Flow<SalesReturn?> {
-        return salesReturnDao.getOrderReturnWithDetailsFlow(returnLocalId).map { entityWithDetails ->
-            entityWithDetails?.takeUnless { it.orderReturn.isDeletedLocally }?.toDomain()
+        return salesReturnDao.getOrderReturnWithDetailsFlow(returnLocalId).map { entity ->
+            entity?.takeUnless { it.orderReturn.isDeletedLocally }?.toDomain()
         }
     }
 
@@ -40,14 +41,14 @@ class SalesReturnRepositoryImpl(
         items: List<OrderReturnProductEntity>
     ): Result<SalesReturn> {
         return try {
-            var insertedReturnLocalId: Long = -1
+            var insertedId: Long = -1
             database.withTransaction {
                 val employeeId = returnEntity.employeeLocalId
                     ?: throw Exception("Employee ID is missing on the return record.")
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Could not find an assigned store for the employee.")
 
-                insertedReturnLocalId = salesReturnDao.insertSalesReturnWithItems(returnEntity, items)
+                insertedId = salesReturnDao.insertSalesReturnWithItems(returnEntity, items)
 
                 items.forEach { item ->
                     stockRepository.adjustStock(
@@ -58,14 +59,14 @@ class SalesReturnRepositoryImpl(
                     )
                 }
 
-                if (returnEntity.clientLocalId != null) {
+                if (returnEntity.clientLocalId != null && returnEntity.paymentType == PaymentType.DEFERRED) {
                     clientRepository.adjustClientDebt(
                         clientLocalId = returnEntity.clientLocalId,
                         changeInDebt = -returnEntity.totalReturnedValue // DECREASE client debt
                     )
                 }
             }
-            val createdReturn = salesReturnDao.getOrderReturnWithDetails(insertedReturnLocalId)
+            val createdReturn = salesReturnDao.getOrderReturnWithDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve sales return after insert."))
             Result.success(createdReturn.toDomain())
         } catch (e: Exception) {
@@ -79,19 +80,17 @@ class SalesReturnRepositoryImpl(
     ): Result<SalesReturn> {
         return try {
             if (returnEntity.localId == 0L) {
-                return Result.failure(IllegalArgumentException("Sales Return localId is missing for update operation."))
+                return Result.failure(IllegalArgumentException("Sales Return localId is missing for update."))
             }
 
             database.withTransaction {
-                val employeeId = returnEntity.employeeLocalId
-                    ?: throw Exception("Employee ID is missing.")
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Employee's store not found.")
+                val employeeId = returnEntity.employeeLocalId ?: throw Exception("Employee ID is missing.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
 
-                val oldReturn = salesReturnDao.getOrderReturnWithDetails(returnEntity.localId)
-                if (oldReturn != null) {
+                val oldReturnWithDetails = salesReturnDao.getOrderReturnWithDetails(returnEntity.localId)
+                if (oldReturnWithDetails != null) {
                     // Revert old adjustments
-                    oldReturn.itemsWithProductDetails.forEach { oldItem ->
+                    oldReturnWithDetails.itemsWithProductDetails.forEach { oldItem ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = oldItem.returnItem.productLocalId,
@@ -99,8 +98,8 @@ class SalesReturnRepositoryImpl(
                             transactionQuantity = -oldItem.returnItem.quantity // Decrease stock to revert
                         )
                     }
-                    if(oldReturn.orderReturn.clientLocalId != null) {
-                        clientRepository.adjustClientDebt(oldReturn.orderReturn.clientLocalId, oldReturn.orderReturn.totalReturnedValue) // Increase debt to revert
+                    if(oldReturnWithDetails.orderReturn.clientLocalId != null && oldReturnWithDetails.orderReturn.paymentType == PaymentType.DEFERRED) {
+                        clientRepository.adjustClientDebt(oldReturnWithDetails.orderReturn.clientLocalId, oldReturnWithDetails.orderReturn.totalReturnedValue) // Increase debt to revert
                     }
                 }
 
@@ -116,7 +115,7 @@ class SalesReturnRepositoryImpl(
                         transactionQuantity = newItem.quantity // Increase stock
                     )
                 }
-                if (entityToUpdate.clientLocalId != null) {
+                if (entityToUpdate.clientLocalId != null && entityToUpdate.paymentType == PaymentType.DEFERRED) {
                     clientRepository.adjustClientDebt(entityToUpdate.clientLocalId, -entityToUpdate.totalReturnedValue) // Decrease debt
                 }
             }
@@ -128,41 +127,38 @@ class SalesReturnRepositoryImpl(
         }
     }
 
-    override suspend fun deleteSalesReturn(returnLocalId: Long): Result<Unit> {
+    override suspend fun deleteSalesReturn(localId: Long): Result<Unit> {
         return try {
             database.withTransaction {
-                val returnEntity = salesReturnDao.getOrderReturnEntityByLocalId(returnLocalId)
-                    ?: throw NoSuchElementException("Sales Return not found with localId: $returnLocalId")
+                val returnToDelete = salesReturnDao.getOrderReturnWithDetails(localId)
+                    ?: throw NoSuchElementException("Sales Return not found with localId: $localId")
 
-                if (!returnEntity.isDeletedLocally) {
-                    val employeeId = returnEntity.employeeLocalId
-                        ?: throw Exception("Employee ID is missing on the return record.")
-                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                        ?: throw Exception("Could not find an assigned store for the employee.")
+                if (!returnToDelete.orderReturn.isDeletedLocally) {
+                    val employeeId = returnToDelete.orderReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
+                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
 
-                    val itemsToRevert = salesReturnDao.getItemsForReturn(returnLocalId)
-                    itemsToRevert.forEach { item ->
+                    // Revert stock and debt adjustments
+                    returnToDelete.itemsWithProductDetails.forEach { item ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
-                            productId = item.productLocalId,
-                            transactionUnitId = item.unitLocalId,
-                            transactionQuantity = -item.quantity // DECREASE stock to revert the return
+                            productId = item.returnItem.productLocalId,
+                            transactionUnitId = item.returnItem.unitLocalId,
+                            transactionQuantity = -item.returnItem.quantity // DECREASE stock to revert the return
                         )
                     }
-
-                    if (returnEntity.clientLocalId != null) {
+                    if (returnToDelete.orderReturn.clientLocalId != null && returnToDelete.orderReturn.paymentType == PaymentType.DEFERRED) {
                         clientRepository.adjustClientDebt(
-                            clientLocalId = returnEntity.clientLocalId,
-                            changeInDebt = returnEntity.totalReturnedValue // INCREASE client debt to revert
+                            clientLocalId = returnToDelete.orderReturn.clientLocalId,
+                            changeInDebt = returnToDelete.orderReturn.totalReturnedValue // INCREASE client debt to revert
                         )
                     }
 
-                    val returnToMarkAsDeleted = returnEntity.copy(
+                    val entityToMarkAsDeleted = returnToDelete.orderReturn.copy(
                         isDeletedLocally = true,
                         isSynced = false,
                         lastModified = System.currentTimeMillis()
                     )
-                    salesReturnDao.insertOrUpdateOrderReturn(returnToMarkAsDeleted)
+                    salesReturnDao.insertOrUpdateOrderReturn(entityToMarkAsDeleted)
                 }
             }
             Result.success(Unit)

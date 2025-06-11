@@ -7,6 +7,7 @@ import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-
 class SalesOrderRepositoryImpl(
     private val database: AppDatabase,
     private val salesOrderDao: SalesOrderDao,
@@ -23,7 +23,6 @@ class SalesOrderRepositoryImpl(
     private val stockRepository: StockRepository,
     private val clientRepository: ClientRepository
 ) : SalesOrderRepository {
-
     override fun getOrders(query: String): Flow<List<SalesOrder>> {
         return salesOrderDao.getAllOrdersWithDetailsFlow().map { list ->
             list.map { it.toDomain() }
@@ -50,7 +49,6 @@ class SalesOrderRepositoryImpl(
                 val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
                 salesOrderDao.insertOrderItems(itemsWithCorrectId)
 
-                // Adjust stock
                 items.forEach { item ->
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
@@ -60,9 +58,12 @@ class SalesOrderRepositoryImpl(
                     )
                 }
 
-                // Adjust client debt
-                val debtChange = order.totalPrice - order.amountPaid
-                clientRepository.adjustClientDebt(order.clientLocalId, debtChange)
+                // --- UPDATED LOGIC ---
+                // Only adjust debt if the payment type is DEFERRED (credit)
+                if (order.paymentType == PaymentType.DEFERRED) {
+                    val debtChange = order.totalPrice - order.amountPaid
+                    clientRepository.adjustClientDebt(order.clientLocalId, debtChange)
+                }
             }
 
             val createdOrderWithDetails = salesOrderDao.getOrderWithDetailsFlow(insertedOrderLocalId).first()
@@ -101,11 +102,13 @@ class SalesOrderRepositoryImpl(
                     )
                 }
 
-                // Revert old debt
-                val oldDebtChange = oldOrderEntity.totalPrice - oldOrderEntity.amountPaid
-                clientRepository.adjustClientDebt(oldOrderEntity.clientLocalId, -oldDebtChange)
+                // --- UPDATED LOGIC ---
+                // Revert old debt ONLY if the old order was DEFERRED
+                if (oldOrderEntity.paymentType == PaymentType.DEFERRED) {
+                    val oldDebtChange = oldOrderEntity.totalPrice - oldOrderEntity.amountPaid
+                    clientRepository.adjustClientDebt(oldOrderEntity.clientLocalId, -oldDebtChange)
+                }
 
-                // Update the order and its new items
                 val entityToUpdate = order.copy(isSynced = false, lastModified = System.currentTimeMillis())
                 salesOrderDao.updateOrderWithItems(entityToUpdate, items)
 
@@ -119,9 +122,12 @@ class SalesOrderRepositoryImpl(
                     )
                 }
 
-                // Apply new debt adjustment
-                val newDebtChange = entityToUpdate.totalPrice - entityToUpdate.amountPaid
-                clientRepository.adjustClientDebt(entityToUpdate.clientLocalId, newDebtChange)
+                // --- UPDATED LOGIC ---
+                // Apply new debt adjustment ONLY if the new order is DEFERRED
+                if (entityToUpdate.paymentType == PaymentType.DEFERRED) {
+                    val newDebtChange = entityToUpdate.totalPrice - entityToUpdate.amountPaid
+                    clientRepository.adjustClientDebt(entityToUpdate.clientLocalId, newDebtChange)
+                }
             }
 
             val updatedOrderWithDetails = salesOrderDao.getOrderWithDetailsFlow(order.localId).first()
@@ -154,11 +160,13 @@ class SalesOrderRepositoryImpl(
                         )
                     }
 
-                    // Revert debt
-                    val debtChange = orderEntity.totalPrice - orderEntity.amountPaid
-                    clientRepository.adjustClientDebt(orderEntity.clientLocalId, -debtChange)
+                    // --- UPDATED LOGIC ---
+                    // Revert debt ONLY if the order was DEFERRED
+                    if (orderEntity.paymentType == PaymentType.DEFERRED) {
+                        val debtChange = orderEntity.totalPrice - orderEntity.amountPaid
+                        clientRepository.adjustClientDebt(orderEntity.clientLocalId, -debtChange)
+                    }
 
-                    // Soft-delete the order
                     val orderToMarkAsDeleted = orderEntity.copy(
                         isDeletedLocally = true,
                         isSynced = false,
