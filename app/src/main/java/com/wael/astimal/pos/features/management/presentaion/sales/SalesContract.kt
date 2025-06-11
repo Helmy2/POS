@@ -33,7 +33,6 @@ data class OrderState(
 data class EditableOrder(
     val selectedClient: Client? = null,
     val selectedEmployeeId: Long? = null,
-    val selectedMainEmployeeId: Long? = null,
     val paymentType: PaymentType = PaymentType.CASH,
     val items: List<EditableOrderItem> = listOf(),
     val amountPaid: String = "0.0",
@@ -75,5 +74,6 @@ sealed interface OrderEvent {
 
     data object SaveOrder : OrderEvent
     data object ClearSnackbar : OrderEvent
+    data object ClearError : OrderEvent
     data object OpenNewOrderForm : OrderEvent
 }

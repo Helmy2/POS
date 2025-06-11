@@ -5,6 +5,7 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.user.domain.entity.User
 import java.util.UUID
 
 
@@ -14,6 +15,7 @@ data class PurchaseScreenState(
     val selectedPurchase: PurchaseOrder? = null,
     val currentPurchaseInput: EditablePurchaseOrder = EditablePurchaseOrder(),
     val availableSuppliers: List<Supplier> = emptyList(),
+    val availableEmployees: List<User> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableUnits: List<Unit> = emptyList(),
     val query: String = "",
@@ -26,7 +28,7 @@ data class PurchaseScreenState(
 
 data class EditablePurchaseOrder(
     val selectedSupplier: Supplier? = null,
-    val userLocalId: Long? = null,
+    val selectedEmployeeId: Long? = null,
     val paymentType: PaymentType = PaymentType.CASH,
     val items: List<EditablePurchaseItem> = listOf(),
     val totalPrice: Double = 0.0
@@ -48,6 +50,7 @@ sealed interface PurchaseScreenEvent {
     data class UpdateIsQueryActive(val isActive: Boolean) : PurchaseScreenEvent
     data object OpenNewPurchaseForm : PurchaseScreenEvent
     data class SelectSupplier(val supplier: Supplier?) : PurchaseScreenEvent
+    data class SelectEmployee(val employeeId: Long?) : PurchaseScreenEvent
     data class UpdatePaymentType(val type: PaymentType) : PurchaseScreenEvent
     data object AddItemToPurchase : PurchaseScreenEvent
     data class RemoveItemFromPurchase(val tempEditorId: String) : PurchaseScreenEvent

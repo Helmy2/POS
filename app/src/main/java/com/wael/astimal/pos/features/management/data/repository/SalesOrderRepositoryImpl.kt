@@ -1,20 +1,28 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import androidx.room.withTransaction
+import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
+import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
+import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 
 class SalesOrderRepositoryImpl(
+    private val database: AppDatabase,
     private val salesOrderDao: SalesOrderDao,
+    private val employeeDao: EmployeeDao,
+    private val stockRepository: StockRepository,
+    private val clientRepository: ClientRepository
 ) : SalesOrderRepository {
-
 
     override fun getOrders(query: String): Flow<List<SalesOrder>> {
         return salesOrderDao.getAllOrdersWithDetailsFlow().map { list ->
@@ -33,17 +41,30 @@ class SalesOrderRepositoryImpl(
         items: List<OrderProductEntity>
     ): Result<SalesOrder> {
         return try {
+            var insertedOrderLocalId: Long = -1
+            database.withTransaction {
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(order.employeeLocalId)
+                    ?: throw Exception("Could not find an assigned store for the employee.")
 
-            // 1. Insert the parent OrderEntity to get its auto-generated localId
-            val insertedOrderLocalId = salesOrderDao.insertOrUpdateOrder(order)
+                insertedOrderLocalId = salesOrderDao.insertOrUpdateOrder(order)
+                val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
+                salesOrderDao.insertOrderItems(itemsWithCorrectId)
 
-            // 2. Set the correct orderLocalId for each item
-            val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
+                // Adjust stock
+                items.forEach { item ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = item.productLocalId,
+                        transactionUnitId = item.unitLocalId,
+                        transactionQuantity = -item.quantity
+                    )
+                }
 
-            // 3. Insert all the items
-            salesOrderDao.insertOrderItems(itemsWithCorrectId)
+                // Adjust client debt
+                val debtChange = order.totalPrice - order.amountPaid
+                clientRepository.adjustClientDebt(order.clientLocalId, debtChange)
+            }
 
-            // 4. Fetch the newly created order with all its details to return it
             val createdOrderWithDetails = salesOrderDao.getOrderWithDetailsFlow(insertedOrderLocalId).first()
                 ?: return Result.failure(IllegalStateException("Failed to retrieve order after insert."))
 
@@ -62,12 +83,46 @@ class SalesOrderRepositoryImpl(
                 return Result.failure(IllegalArgumentException("Order localId is missing for update operation."))
             }
 
-            val entityToUpdate = order.copy(
-                isSynced = false,
-                lastModified = System.currentTimeMillis()
-            )
+            database.withTransaction {
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(order.employeeLocalId)
+                    ?: throw Exception("Could not find an assigned store for the employee.")
 
-            salesOrderDao.updateOrderWithItems(entityToUpdate, items)
+                val oldOrderEntity = salesOrderDao.getOrderEntityByLocalId(order.localId)
+                    ?: throw NoSuchElementException("Original order not found for update.")
+
+                // Revert old stock
+                val oldItems = salesOrderDao.getItemsForOrder(order.localId)
+                oldItems.forEach { oldItem ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = oldItem.productLocalId,
+                        transactionUnitId = oldItem.unitLocalId,
+                        transactionQuantity = oldItem.quantity
+                    )
+                }
+
+                // Revert old debt
+                val oldDebtChange = oldOrderEntity.totalPrice - oldOrderEntity.amountPaid
+                clientRepository.adjustClientDebt(oldOrderEntity.clientLocalId, -oldDebtChange)
+
+                // Update the order and its new items
+                val entityToUpdate = order.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                salesOrderDao.updateOrderWithItems(entityToUpdate, items)
+
+                // Apply new stock adjustments
+                items.forEach { newItem ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = newItem.productLocalId,
+                        transactionUnitId = newItem.unitLocalId,
+                        transactionQuantity = -newItem.quantity
+                    )
+                }
+
+                // Apply new debt adjustment
+                val newDebtChange = entityToUpdate.totalPrice - entityToUpdate.amountPaid
+                clientRepository.adjustClientDebt(entityToUpdate.clientLocalId, newDebtChange)
+            }
 
             val updatedOrderWithDetails = salesOrderDao.getOrderWithDetailsFlow(order.localId).first()
                 ?: return Result.failure(IllegalStateException("Failed to retrieve order after update."))
@@ -80,20 +135,41 @@ class SalesOrderRepositoryImpl(
 
     override suspend fun deleteOrder(orderLocalId: Long): Result<Unit> {
         return try {
-            val orderEntity = salesOrderDao.getOrderEntityByLocalId(orderLocalId)
-                ?: return Result.failure(NoSuchElementException("Order not found with localId: $orderLocalId"))
+            database.withTransaction {
+                val orderEntity = salesOrderDao.getOrderEntityByLocalId(orderLocalId)
+                    ?: throw NoSuchElementException("Order not found with localId: $orderLocalId")
 
-            val orderToMarkAsDeleted = orderEntity.copy(
-                isDeletedLocally = true,
-                isSynced = false,
-                lastModified = System.currentTimeMillis()
-            )
-            salesOrderDao.insertOrUpdateOrder(orderToMarkAsDeleted)
+                if (!orderEntity.isDeletedLocally) {
+                    val employeeStoreId = employeeDao.getStoreIdForEmployee(orderEntity.employeeLocalId)
+                        ?: throw Exception("Could not find an assigned store for the employee.")
+
+                    // Revert stock
+                    val itemsToRevert = salesOrderDao.getItemsForOrder(orderLocalId)
+                    itemsToRevert.forEach { item ->
+                        stockRepository.adjustStock(
+                            storeId = employeeStoreId,
+                            productId = item.productLocalId,
+                            transactionUnitId = item.unitLocalId,
+                            transactionQuantity = item.quantity
+                        )
+                    }
+
+                    // Revert debt
+                    val debtChange = orderEntity.totalPrice - orderEntity.amountPaid
+                    clientRepository.adjustClientDebt(orderEntity.clientLocalId, -debtChange)
+
+                    // Soft-delete the order
+                    val orderToMarkAsDeleted = orderEntity.copy(
+                        isDeletedLocally = true,
+                        isSynced = false,
+                        lastModified = System.currentTimeMillis()
+                    )
+                    salesOrderDao.updateOrder(orderToMarkAsDeleted)
+                }
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
-
 }

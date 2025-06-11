@@ -2,6 +2,19 @@ package com.wael.astimal.pos.core.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
+import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StoreProductStockEntity
+import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
+import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
+import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
+import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
+import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
+import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.management.data.entity.ClientEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
@@ -18,23 +31,15 @@ import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.management.data.local.SupplierDao
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
-import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
+import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.data.local.UserDao
 
 @Database(
     entities = [
         UserEntity::class,
+        EmployeeStoreEntity::class,
         UnitEntity::class,
         StoreEntity::class,
         CategoryEntity::class,
@@ -50,7 +55,8 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         PurchaseEntity::class,
         PurchaseProductEntity::class,
         PurchaseReturnEntity::class,
-        PurchaseReturnProductEntity::class
+        PurchaseReturnProductEntity::class,
+        StoreProductStockEntity::class
     ],
     version = 16,
     exportSchema = false
@@ -69,4 +75,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun orderReturnDao(): OrderReturnDao
     abstract fun purchaseOrderDao(): PurchaseDao
     abstract fun purchaseReturnDao(): PurchaseReturnDao
+    abstract fun storeProductStockDao(): StoreProductStockDao
+    abstract fun employeeDao(): EmployeeDao
 }

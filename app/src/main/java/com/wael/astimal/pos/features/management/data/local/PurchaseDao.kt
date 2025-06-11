@@ -29,10 +29,16 @@ interface PurchaseDao {
     fun getAllPurchasesWithDetailsFlow(): Flow<List<PurchaseWithDetailsEntity>>
 
     @androidx.room.Transaction
+    @Query("SELECT * FROM purchases WHERE localId = :localId")
+    suspend fun getPurchaseWithDetails(localId: Long): PurchaseWithDetailsEntity?
+
+    @androidx.room.Transaction
     suspend fun insertPurchaseWithItems(purchase: PurchaseEntity, items: List<PurchaseProductEntity>): Long {
         val purchaseId = insertOrUpdatePurchase(purchase)
         val itemsWithId = items.map { it.copy(purchaseLocalId = purchaseId) }
-        insertPurchaseItems(itemsWithId)
+        if (itemsWithId.isNotEmpty()) {
+            insertPurchaseItems(itemsWithId)
+        }
         return purchaseId
     }
 
@@ -41,9 +47,8 @@ interface PurchaseDao {
         updatePurchase(purchase)
         deleteItemsForPurchase(purchase.localId)
         val itemsWithId = items.map { it.copy(purchaseLocalId = purchase.localId) }
-        insertPurchaseItems(itemsWithId)
+        if (itemsWithId.isNotEmpty()) {
+            insertPurchaseItems(itemsWithId)
+        }
     }
-
-    @Query("SELECT * FROM purchases WHERE localId = :localId")
-    suspend fun getPurchaseEntityByLocalId(localId: Long): PurchaseEntity?
 }

@@ -17,11 +17,6 @@ class UnitRepositoryImpl(
         }
     }
 
-    override suspend fun getUnitByLocalId(localId: String): UnitEntity? {
-        val unit = unitDao.getByLocalId(localId)
-        return if (unit?.isDeletedLocally == true) null else unit
-    }
-
     override suspend fun getUnitByServerId(serverId: Int): UnitEntity? {
         val unit = unitDao.getByServerId(serverId)
         return if (unit?.isDeletedLocally == true) null else unit

@@ -1,16 +1,26 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import androidx.room.withTransaction
+import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
+import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
+import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
+import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
+import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
 class PurchaseReturnRepositoryImpl(
+    private val database: AppDatabase,
     private val purchaseReturnDao: PurchaseReturnDao,
+    private val employeeDao: EmployeeDao,
+    private val stockRepository: StockRepository,
+    private val supplierRepository: SupplierRepository
 ) : PurchaseReturnRepository {
 
     override fun getPurchaseReturns(): Flow<List<PurchaseReturn>> {
@@ -20,21 +30,42 @@ class PurchaseReturnRepositoryImpl(
     }
 
     override suspend fun getPurchaseReturnDetails(localId: Long): PurchaseReturn? {
-         val detailsEntity = purchaseReturnDao.getPurchaseReturnWithDetails(localId)
-         return detailsEntity?.toDomain()
-        return null
+        return purchaseReturnDao.getPurchaseReturnWithDetails(localId)?.toDomain()
     }
-
 
     override suspend fun addPurchaseReturn(
         purchaseReturn: PurchaseReturnEntity,
         items: List<PurchaseReturnProductEntity>
     ): Result<PurchaseReturn> {
         return try {
-            val insertedId = purchaseReturnDao.insertPurchaseReturnWithItems(purchaseReturn, items)
-            // To return the full domain object, we would need a getPurchaseReturnById method in the DAO
-            // Returning a simplified success object for now. The UI will update from the flow.
-            Result.success(purchaseReturn.toDomainPlaceholder())
+            var insertedId: Long = -1
+            database.withTransaction {
+                val employeeId = purchaseReturn.employeeLocalId
+                    ?: throw Exception("Employee ID is missing on the return record.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                    ?: throw Exception("Could not find an assigned store for the employee.")
+
+                insertedId = purchaseReturnDao.insertPurchaseReturnWithItems(purchaseReturn, items)
+
+                items.forEach { item ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = item.productLocalId,
+                        transactionUnitId = item.unitLocalId,
+                        transactionQuantity = -item.quantity // DECREASE stock for a purchase return
+                    )
+                }
+
+                if (purchaseReturn.supplierLocalId != null) {
+                    supplierRepository.adjustSupplierIndebtedness(
+                        supplierLocalId = purchaseReturn.supplierLocalId,
+                        changeInDebt = -purchaseReturn.totalPrice // DECREASE indebtedness to supplier
+                    )
+                }
+            }
+            val createdReturn = getPurchaseReturnDetails(insertedId)
+                ?: return Result.failure(IllegalStateException("Failed to retrieve purchase return after insert."))
+            Result.success(createdReturn)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -48,12 +79,46 @@ class PurchaseReturnRepositoryImpl(
             if (purchaseReturn.localId == 0L) {
                 return Result.failure(IllegalArgumentException("Purchase Return localId is missing for update."))
             }
-            val entityToUpdate = purchaseReturn.copy(
-                isSynced = false,
-                lastModified = System.currentTimeMillis()
-            )
-            purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
-            Result.success(entityToUpdate.toDomainPlaceholder())
+
+            database.withTransaction {
+                val employeeId = purchaseReturn.employeeLocalId
+                    ?: throw Exception("Employee ID is missing.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                    ?: throw Exception("Employee's store not found.")
+
+                val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(purchaseReturn.localId)
+                if (oldReturn != null) {
+                    oldReturn.itemsWithProductDetails.forEach { oldItem ->
+                        stockRepository.adjustStock(
+                            storeId = employeeStoreId,
+                            productId = oldItem.purchaseReturnItem.productLocalId,
+                            transactionUnitId = oldItem.purchaseReturnItem.unitLocalId,
+                            transactionQuantity = oldItem.purchaseReturnItem.quantity // Add stock back
+                        )
+                    }
+                    if (oldReturn.purchaseReturn.supplierLocalId != null) {
+                        supplierRepository.adjustSupplierIndebtedness(oldReturn.purchaseReturn.supplierLocalId, oldReturn.purchaseReturn.totalPrice)
+                    }
+                }
+
+                val entityToUpdate = purchaseReturn.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
+
+                items.forEach { newItem ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = newItem.productLocalId,
+                        transactionUnitId = newItem.unitLocalId,
+                        transactionQuantity = -newItem.quantity
+                    )
+                }
+                if (entityToUpdate.supplierLocalId != null) {
+                    supplierRepository.adjustSupplierIndebtedness(entityToUpdate.supplierLocalId, -entityToUpdate.totalPrice)
+                }
+            }
+            val updatedReturn = getPurchaseReturnDetails(purchaseReturn.localId)
+                ?: return Result.failure(IllegalStateException("Failed to retrieve purchase return after update."))
+            Result.success(updatedReturn)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -61,37 +126,40 @@ class PurchaseReturnRepositoryImpl(
 
     override suspend fun deletePurchaseReturn(localId: Long): Result<Unit> {
         return try {
-            val purchaseReturnEntity = purchaseReturnDao.getPurchaseReturnEntityByLocalId(localId)
-                ?: return Result.failure(NoSuchElementException("Purchase Return not found with localId: $localId"))
+            database.withTransaction {
+                val returnToDelete = purchaseReturnDao.getPurchaseReturnWithDetails(localId)
+                    ?: throw NoSuchElementException("Purchase Return not found with localId: $localId")
 
-            val purchaseReturnToMarkAsDeleted = purchaseReturnEntity.copy(
-                isDeletedLocally = true,
-                isSynced = false,
-                lastModified = System.currentTimeMillis()
-            )
-            purchaseReturnDao.insertOrUpdatePurchaseReturn(purchaseReturnToMarkAsDeleted)
+                if (!returnToDelete.purchaseReturn.isDeletedLocally) {
+                    val employeeId = returnToDelete.purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
+                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
+
+                    returnToDelete.itemsWithProductDetails.forEach { item ->
+                        stockRepository.adjustStock(
+                            storeId = employeeStoreId,
+                            productId = item.purchaseReturnItem.productLocalId,
+                            transactionUnitId = item.purchaseReturnItem.unitLocalId,
+                            transactionQuantity = item.purchaseReturnItem.quantity // Add stock back
+                        )
+                    }
+                    if (returnToDelete.purchaseReturn.supplierLocalId != null) {
+                        supplierRepository.adjustSupplierIndebtedness(
+                            supplierLocalId = returnToDelete.purchaseReturn.supplierLocalId,
+                            changeInDebt = returnToDelete.purchaseReturn.totalPrice // Add indebtedness back
+                        )
+                    }
+
+                    val entityToMarkAsDeleted = returnToDelete.purchaseReturn.copy(
+                        isDeletedLocally = true,
+                        isSynced = false,
+                        lastModified = System.currentTimeMillis()
+                    )
+                    purchaseReturnDao.updatePurchaseReturn(entityToMarkAsDeleted)
+                }
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
-}
-
-
-private fun PurchaseReturnEntity.toDomainPlaceholder(): PurchaseReturn {
-    return PurchaseReturn(
-        localId = this.localId,
-        serverId = this.serverId,
-        invoiceNumber = this.invoiceNumber,
-        supplier = null,
-        employee = null,
-        totalPrice = this.totalPrice,
-        paymentType = this.paymentType,
-        returnDate = this.returnDate,
-        items = emptyList(),
-        isSynced = this.isSynced,
-        lastModified = this.lastModified,
-        isDeletedLocally = this.isDeletedLocally
-    )
 }

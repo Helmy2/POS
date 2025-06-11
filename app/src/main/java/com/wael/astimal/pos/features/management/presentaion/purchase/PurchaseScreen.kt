@@ -112,7 +112,7 @@ fun PurchaseForm(
     state: PurchaseScreenState,
     onEvent: (PurchaseScreenEvent) -> Unit
 ) {
-    val localAppLocale = LocalAppLocale.current
+    val currentLanguage = LocalAppLocale.current
     val purchaseInput = state.currentPurchaseInput
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -123,8 +123,17 @@ fun PurchaseForm(
             items = state.availableSuppliers,
             selectedItemId = purchaseInput.selectedSupplier?.id,
             onItemSelected = { onEvent(PurchaseScreenEvent.SelectSupplier(it)) },
-            itemToDisplayString = { it.name.displayName(localAppLocale) },
+            itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id }
+        )
+
+        CustomExposedDropdownMenu(
+            label = "Employee",
+            items = state.availableEmployees,
+            selectedItemId = purchaseInput.selectedEmployeeId,
+            onItemSelected = { onEvent(PurchaseScreenEvent.SelectEmployee(it?.id)) },
+            itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
+            itemToId = { it.id },
         )
 
         Text("Items", style = MaterialTheme.typography.titleMedium)

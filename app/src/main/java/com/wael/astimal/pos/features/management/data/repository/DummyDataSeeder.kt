@@ -16,7 +16,9 @@ import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
+import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +33,7 @@ class DummyDataSeeder(
     private val categoryDao: CategoryDao,
     private val productDao: ProductDao,
     private val stockTransferDao: StockTransferDao,
+    private val employeeDao: EmployeeDao,
     private val applicationScope: CoroutineScope
 ) {
 
@@ -52,8 +55,11 @@ class DummyDataSeeder(
 
         // The order of population is important due to foreign key constraints.
         val employees = populateDummyUsersAndEmployees()
-        val units = populateDummyUnits()
         val stores = populateDummyStores()
+
+        assignEmployeesToStores(employees, stores)
+
+        val units = populateDummyUnits()
         val categories = populateDummyCategories()
         populateDummyClients(employees) // Now returns void
         populateDummySuppliers(employees) // Now returns void
@@ -61,6 +67,21 @@ class DummyDataSeeder(
         populateDummyStockTransfers(stores, employees, products, units)
 
         println("Dummy data population complete.")
+    }
+
+    private suspend fun assignEmployeesToStores(employees: Map<String, Long>, stores: Map<String, Long>) {
+        employeeDao.assignStoreToEmployee(
+            EmployeeStoreEntity(
+                employeeLocalId = employees["emp1"]!!,
+                storeLocalId = stores["storeA"]!!
+            )
+        )
+        employeeDao.assignStoreToEmployee(
+            EmployeeStoreEntity(
+                employeeLocalId = employees["emp2"]!!,
+                storeLocalId = stores["storeB"]!!
+            )
+        )
     }
 
     private suspend fun populateDummySuppliers(employees: Map<String, Long>) {

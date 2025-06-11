@@ -14,6 +14,7 @@ import org.koin.dsl.module
 
 val userModule = module {
     single { get<AppDatabase>().userDao() }
+    single { get<AppDatabase>().employeeDao() }
 
     single<SettingsManager> {
         SettingsManagerImpl(get())

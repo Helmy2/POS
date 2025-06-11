@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.presentaion.purchase
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
@@ -10,6 +11,7 @@ import com.wael.astimal.pos.features.management.domain.repository.PurchaseReposi
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,7 @@ class PurchaseViewModel(
     private val purchaseRepository: PurchaseRepository,
     private val supplierRepository: SupplierRepository,
     private val productRepository: ProductRepository,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -35,11 +38,11 @@ class PurchaseViewModel(
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { user ->
                 currentUserId = user?.id?.toLong()
-                if (_state.value.currentPurchaseInput.userLocalId == null) {
+                if (_state.value.currentPurchaseInput.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
                             currentPurchaseInput = s.currentPurchaseInput.copy(
-                                userLocalId = currentUserId
+                                selectedEmployeeId = currentUserId
                             )
                         )
                     }
@@ -59,6 +62,10 @@ class PurchaseViewModel(
             productRepository.getProducts("")
                 .collect { result -> _state.update { it.copy(availableProducts = result) } }
         }
+        viewModelScope.launch {
+            userRepository.getEmployeesFlow()
+                .collect { result -> _state.update { it.copy(availableEmployees = result) } }
+        }
     }
 
     fun onEvent(event: PurchaseScreenEvent) {
@@ -70,7 +77,7 @@ class PurchaseViewModel(
             is PurchaseScreenEvent.OpenNewPurchaseForm -> _state.update {
                 it.copy(
                     selectedPurchase = null,
-                    currentPurchaseInput = EditablePurchaseOrder(userLocalId = currentUserId)
+                    currentPurchaseInput = EditablePurchaseOrder(selectedEmployeeId = currentUserId)
                 )
             }
 
@@ -105,6 +112,7 @@ class PurchaseViewModel(
             is PurchaseScreenEvent.DeletePurchase -> deletePurchase()
             is PurchaseScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is PurchaseScreenEvent.ClearError -> _state.update { it.copy(error = null) }
+            is PurchaseScreenEvent.SelectEmployee -> updatePurchaseInput { it.copy(selectedEmployeeId = event.employeeId) }
         }
     }
 
@@ -113,10 +121,10 @@ class PurchaseViewModel(
             it.copy(
                 selectedPurchase = order,
                 isQueryActive = false,
-                currentPurchaseInput = if (order == null) EditablePurchaseOrder(userLocalId = currentUserId)
+                currentPurchaseInput = if (order == null) EditablePurchaseOrder(selectedEmployeeId = currentUserId)
                 else EditablePurchaseOrder(
                     selectedSupplier = order.supplier,
-                    userLocalId = order.user?.id?.toLong(),
+                    selectedEmployeeId = order.user?.id?.toLong(),
                     paymentType = order.paymentType,
                     items = order.items.map {
                         EditablePurchaseItem(
@@ -125,7 +133,7 @@ class PurchaseViewModel(
                             selectedUnit = it.unit,
                             quantity = it.quantity.toString(),
                             purchasePrice = it.purchasePrice.toString(),
-                            lineTotal = it.itemTotalPrice
+                            lineTotal = it.itemTotalPrice,
                         )
                     },
                     totalPrice = order.totalPrice
@@ -193,7 +201,7 @@ class PurchaseViewModel(
 
     private fun savePurchase() {
         val purchaseInput = _state.value.currentPurchaseInput
-        val employeeId = currentUserId ?: run {
+        val currentUserID = currentUserId ?: run {
             _state.update { it.copy(error = R.string.user_not_identified) }; return
         }
         if (purchaseInput.selectedSupplier == null || purchaseInput.items.isEmpty()) {
@@ -218,7 +226,8 @@ class PurchaseViewModel(
         }
         val purchaseEntity = PurchaseEntity(
             localId = _state.value.selectedPurchase?.localId ?: 0L,
-            supplierLocalId = purchaseInput.selectedSupplier.id, userLocalId = employeeId,
+            supplierLocalId = purchaseInput.selectedSupplier.id,
+            employeeLocalId = purchaseInput.selectedEmployeeId?.toLong() ?: currentUserID,
             totalPrice = purchaseInput.totalPrice, paymentType = purchaseInput.paymentType,
             purchaseDate = System.currentTimeMillis(),
             serverId = null,
@@ -242,6 +251,7 @@ class PurchaseViewModel(
                     )
                 }
             }, onFailure = { e ->
+                Log.d("TAG", "savePurchase: $e")
                 _state.update {
                     it.copy(
                         loading = false, error = R.string.something_went_wrong

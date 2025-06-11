@@ -7,12 +7,21 @@ import com.wael.astimal.pos.features.management.domain.repository.SupplierReposi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class SupplierRepositoryImpl(private val supplierDao: SupplierDao) :
-    SupplierRepository {
+class SupplierRepositoryImpl(
+    private val supplierDao: SupplierDao
+) : SupplierRepository {
+
     override fun getSuppliers(query: String): Flow<List<Supplier>> {
-        return supplierDao.searchSuppliersWithDetailsFlow(query).map { list ->
+        return supplierDao.searchSuppliersFlow(query).map { list ->
             list.map { it.toDomain() }
         }
     }
-}
 
+    override suspend fun getSupplier(localId: Long): Supplier? {
+        return supplierDao.getSupplierById(localId)?.toDomain()
+    }
+
+    override suspend fun adjustSupplierIndebtedness(supplierLocalId: Long, changeInDebt: Double) {
+        supplierDao.adjustIndebtedness(supplierLocalId, changeInDebt)
+    }
+}

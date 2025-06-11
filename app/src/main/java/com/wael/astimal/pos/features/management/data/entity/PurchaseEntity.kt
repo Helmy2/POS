@@ -28,13 +28,13 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
         ForeignKey(
             entity = UserEntity::class,
             parentColumns = ["id"],
-            childColumns = ["userLocalId"],
+            childColumns = ["employeeLocalId"],
             onDelete = ForeignKey.RESTRICT
         )
     ],
     indices = [
         Index(value = ["supplierLocalId"]),
-        Index(value = ["userLocalId"]),
+        Index(value = ["employeeLocalId"]),
         Index(value = ["invoiceNumber"], unique = true)
     ]
 )
@@ -45,7 +45,7 @@ data class PurchaseEntity(
     var invoiceNumber: String?,
 
     val supplierLocalId: Long?,
-    val userLocalId: Long?,
+    val employeeLocalId: Long?,
 
     val totalPrice: Double,
     val paymentType: PaymentType,
@@ -100,7 +100,7 @@ data class PurchaseWithDetailsEntity(
     @Relation(parentColumn = "supplierLocalId", entityColumn = "id", entity = SupplierEntity::class)
     val supplier: SupplierWithDetailsEntity?,
 
-    @Relation(parentColumn = "userLocalId", entityColumn = "id", entity = UserEntity::class)
+    @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
     val user: UserEntity?,
 
     @Relation(
@@ -153,22 +153,5 @@ fun PurchaseProductItemWithDetails.toDomain(): PurchaseOrderItem {
         quantity = this.purchaseItem.quantity,
         purchasePrice = this.purchaseItem.purchasePrice,
         itemTotalPrice = this.purchaseItem.itemTotalPrice
-    )
-}
-
-fun PurchaseEntity.toDomainPlaceholder(): PurchaseOrder {
-    return PurchaseOrder(
-        localId = this.localId,
-        serverId = this.serverId,
-        invoiceNumber = this.invoiceNumber,
-        supplier = null,
-        user = null,
-        totalPrice = this.totalPrice,
-        paymentType = this.paymentType,
-        purchaseDate = this.purchaseDate,
-        items = emptyList(), // Items are saved, but not re-fetched in this simple placeholder
-        isSynced = this.isSynced,
-        lastModified = this.lastModified,
-        isDeletedLocally = this.isDeletedLocally
     )
 }

@@ -53,6 +53,7 @@ sealed interface SalesReturnScreenEvent {
     data class SearchReturns(val query: String) : SalesReturnScreenEvent
     data class SelectReturnToView(val salesReturn: SalesReturn?) : SalesReturnScreenEvent
     data class UpdateQuery(val query: String) : SalesReturnScreenEvent
+    data class UpdateSelectEmployee(val id: Long?) : SalesReturnScreenEvent
     data class UpdateIsQueryActive(val isActive: Boolean) : SalesReturnScreenEvent
 
     data object OpenNewReturnForm : SalesReturnScreenEvent

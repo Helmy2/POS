@@ -34,30 +34,30 @@ val clientModule = module {
         ClientRepositoryImpl(get())
     }
     single<SalesOrderRepository> {
-        SalesOrderRepositoryImpl(get())
+        SalesOrderRepositoryImpl(get(),get(),get(),get(),get())
     }
     single<SalesReturnRepository> {
-        SalesReturnRepositoryImpl(get())
+        SalesReturnRepositoryImpl(get(),get(),get(),get(),get())
     }
 
     single<SupplierRepository> {
         SupplierRepositoryImpl(get())
     }
     single<PurchaseRepository> {
-        PurchaseRepositoryImpl(get())
+        PurchaseRepositoryImpl(get(),get(),get(),get(),get())
     }
     single<PurchaseReturnRepository> {
-        PurchaseReturnRepositoryImpl(get())
+        PurchaseReturnRepositoryImpl(get(),get(),get(),get(),get())
     }
 
     viewModel { ManagementViewModel() }
 
     viewModel { ClientInfoViewModel(get()) }
-    viewModel { SalesReturnViewModel(get(), get(), get(), get()) }
+    viewModel { SalesReturnViewModel(get(), get(), get(), get(),get()) }
     viewModel { SalesViewModel(get(), get(),get(),  get(),get()) }
 
     viewModel { SupplierViewModel(get()) }
-    viewModel { PurchaseViewModel(get(), get(), get(), get()) }
-    viewModel { PurchaseReturnViewModel(get(), get(), get(), get()) }
+    viewModel { PurchaseViewModel(get(), get(), get(), get(), get()) }
+    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(),get()) }
 
 }

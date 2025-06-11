@@ -77,7 +77,7 @@ class SalesViewModel(
 
             is OrderEvent.SelectClient -> updateOrderInput { it.copy(selectedClient = event.client) }
             is OrderEvent.SelectEmployee -> updateOrderInput {
-                it.copy(selectedMainEmployeeId = event.employeeId)
+                it.copy(selectedEmployeeId = event.employeeId)
             }
 
             is OrderEvent.UpdatePaymentType -> updateOrderInput { it.copy(paymentType = event.type) }
@@ -120,12 +120,16 @@ class SalesViewModel(
                     ), error = null
                 )
             }
+
+            OrderEvent.ClearError -> _state.update {
+                it.copy(error = null)
+            }
         }
     }
 
     private fun deleteOrder(id: Long) {
         viewModelScope.launch {
-          val result =   orderRepository.deleteOrder(id)
+            val result = orderRepository.deleteOrder(id)
 
             result.fold(
                 onSuccess = {
@@ -160,7 +164,6 @@ class SalesViewModel(
                     currentOrderInput = EditableOrder(
                         selectedClient = order.client,
                         selectedEmployeeId = order.employee?.id,
-                        selectedMainEmployeeId = order.mainEmployee?.id,
                         paymentType = order.paymentType,
                         items = order.items.map {
                             EditableOrderItem(
@@ -267,7 +270,6 @@ class SalesViewModel(
                 unitSellingPrice = it.sellingPrice.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,
                 itemGain = it.lineGain,
-                localId = 0L,
                 serverId = null,
                 orderLocalId = 0L
             )
@@ -278,8 +280,7 @@ class SalesViewModel(
         }
         val orderEntity = OrderEntity(
             clientLocalId = orderInput.selectedClient.id,
-            employeeLocalId = loggedInEmployeeId,
-            mainEmployeeLocalId = orderInput.selectedMainEmployeeId,
+            employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
             previousClientDebt = orderInput.selectedClient.debt,
             amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = orderInput.amountRemaining,
@@ -288,6 +289,7 @@ class SalesViewModel(
             paymentType = orderInput.paymentType,
             orderDate = System.currentTimeMillis(),
             serverId = null,
+            localId = state.value.selectedOrder?.localId ?: 0L,
             invoiceNumber = null,
         )
         viewModelScope.launch {
@@ -309,6 +311,7 @@ class SalesViewModel(
                     }
                 },
                 onFailure = { e ->
+                    Log.d("TAG", "saveOrder: $e")
                     _state.update {
                         it.copy(
                             loading = false, error = R.string.something_went_wrong

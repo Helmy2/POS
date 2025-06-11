@@ -68,10 +68,14 @@ fun SalesScreen(
 ) {
     val language = LocalAppLocale.current
     val context = LocalContext.current
-    LaunchedEffect(state.snackbarMessage) {
+    LaunchedEffect(state.snackbarMessage, state.error) {
         state.snackbarMessage?.let {
             snackbarHostState.showSnackbar(context.getString(it))
             onEvent(OrderEvent.ClearSnackbar)
+        }
+        state.error?.let {
+            snackbarHostState.showSnackbar(context.getString(it))
+            onEvent(OrderEvent.ClearError)
         }
     }
 
@@ -98,7 +102,13 @@ fun SalesScreen(
                 onItemClick = {
                     onEvent(OrderEvent.SelectOrderToView(it))
                 },
-                label = { Text("${it.invoiceNumber}: ${it.client?.name?.displayName(language)}") },
+                label = {
+                    Text(
+                        "${it.invoiceNumber}: ${it.client?.name?.displayName(language)}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },
             )
         },
@@ -132,9 +142,9 @@ fun OrderForm(
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id })
         CustomExposedDropdownMenu(
-            label = "Main Employee",
-            items = state.availableEmployees, // TODO: string res
-            selectedItemId = orderInput.selectedMainEmployeeId,
+            label = "Employee",
+            items = state.availableEmployees,
+            selectedItemId = orderInput.selectedEmployeeId,
             onItemSelected = { onEvent(OrderEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
@@ -308,8 +318,7 @@ fun OrderTotalsSection(orderInput: EditableOrder) {
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    stringResource(R.string.remaining),
-                    style = MaterialTheme.typography.titleLarge
+                    stringResource(R.string.remaining), style = MaterialTheme.typography.titleLarge
                 )
                 Text(
                     "%.2f".format(orderInput.amountRemaining),

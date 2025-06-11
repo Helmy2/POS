@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.management.domain.repository.ClientReposito
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ class SalesReturnViewModel(
     private val salesReturnRepository: SalesReturnRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -59,6 +61,10 @@ class SalesReturnViewModel(
         viewModelScope.launch {
             productRepository.getProducts("")
                 .collect { result -> _state.update { it.copy(availableProducts = result) } }
+        }
+        viewModelScope.launch {
+            userRepository.getEmployeesFlow()
+                .collect { result -> _state.update { it.copy(availableEmployees = result) } }
         }
     }
 
@@ -106,6 +112,9 @@ class SalesReturnViewModel(
             is SalesReturnScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             SalesReturnScreenEvent.ClearError -> _state.update { it.copy(error = null) }
             SalesReturnScreenEvent.DeleteReturn -> deleteReturn()
+            is SalesReturnScreenEvent.UpdateSelectEmployee -> _state.update {
+                it.copy(currentReturnInput = it.currentReturnInput.copy(selectedEmployeeId = event.id))
+            }
         }
     }
 
@@ -261,7 +270,7 @@ class SalesReturnViewModel(
         val returnEntity = OrderReturnEntity(
             localId = _state.value.selectedReturn?.localId ?: 0L,
             clientLocalId = returnInput.selectedClient.id,
-            employeeLocalId = employeeId,
+            employeeLocalId = returnInput.selectedEmployeeId ?: employeeId,
             previousDebt = returnInput.selectedClient.debt,
             amountPaid = returnInput.amountRefunded.toDoubleOrNull() ?: 0.0,
             amountRemaining = returnInput.newDebt - (returnInput.amountRefunded.toDoubleOrNull()

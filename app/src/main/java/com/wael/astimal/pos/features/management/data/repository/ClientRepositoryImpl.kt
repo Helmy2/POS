@@ -14,5 +14,9 @@ class ClientRepositoryImpl(private val clientDao: ClientDao) :
             list.map { it.toDomain() }
         }
     }
+
+    override suspend fun adjustClientDebt(clientLocalId: Long, changeInDebt: Double) {
+        clientDao.adjustDebt(clientLocalId, changeInDebt)
+    }
 }
 

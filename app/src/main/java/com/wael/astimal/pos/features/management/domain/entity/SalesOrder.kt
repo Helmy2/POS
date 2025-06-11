@@ -10,7 +10,6 @@ data class SalesOrder(
     val invoiceNumber: String?,
     val client: Client?,
     val employee: User?,
-    val mainEmployee: User?,
     val previousClientDebt: Double?,
     val amountPaid: Double,
     val amountRemaining: Double,

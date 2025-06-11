@@ -5,11 +5,13 @@ import com.wael.astimal.pos.features.management.data.repository.SalesOrderReposi
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.inventory.data.repository.CategoryRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.ProductRepositoryImpl
+import com.wael.astimal.pos.features.inventory.data.repository.StockRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.StockTransferRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.StoreRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.UnitRepositoryImpl
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
@@ -29,13 +31,14 @@ val inventoryModule = module {
     single { get<AppDatabase>().productDao() }
     single { get<AppDatabase>().stockTransferDao() }
     single { get<AppDatabase>().salesOrderDao() }
+    single { get<AppDatabase>().storeProductStockDao() }
 
     single<UnitRepository> { UnitRepositoryImpl(get()) }
     single<StoreRepository> { StoreRepositoryImpl(get()) }
     single<CategoryRepository> { CategoryRepositoryImpl(get()) }
     single<ProductRepository> { ProductRepositoryImpl(get()) }
     single <StockTransferRepository>{ StockTransferRepositoryImpl(get())}
-    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get()) }
+    single<StockRepository> { StockRepositoryImpl(get(),get()) }
 
     viewModel { InventoryViewModel() }
     viewModel { UnitViewModel(get()) }

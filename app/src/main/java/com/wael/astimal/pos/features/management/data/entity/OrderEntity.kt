@@ -6,14 +6,13 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
-import com.wael.astimal.pos.features.management.domain.entity.SalesOrderItem
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
+import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
+import com.wael.astimal.pos.features.management.domain.entity.SalesOrderItem
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
 
@@ -29,13 +28,8 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
         parentColumns = ["id"],
         childColumns = ["employeeLocalId"],
         onDelete = ForeignKey.RESTRICT
-    ), ForeignKey(
-        entity = UserEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["mainEmployeeLocalId"],
-        onDelete = ForeignKey.SET_NULL
     )],
-    indices = [Index(value = ["clientLocalId"]), Index(value = ["employeeLocalId"]), Index(value = ["mainEmployeeLocalId"]), Index(
+    indices = [Index(value = ["clientLocalId"]), Index(value = ["employeeLocalId"]), Index(
         value = ["invoiceNumber"], unique = true
     )]
 )
@@ -46,7 +40,6 @@ data class OrderEntity(
 
     val clientLocalId: Long,
     val employeeLocalId: Long,
-    val mainEmployeeLocalId: Long?,
 
     val previousClientDebt: Double?,
     val amountPaid: Double = 0.0,
@@ -107,10 +100,6 @@ data class OrderWithDetailsEntity(
     ) val employeeUser: UserEntity?,
 
     @Relation(
-        parentColumn = "mainEmployeeLocalId", entityColumn = "id", entity = UserEntity::class
-    ) val mainEmployeeUser: UserEntity?,
-
-    @Relation(
         parentColumn = "localId", entityColumn = "orderLocalId", entity = OrderProductEntity::class
     ) val itemsWithProductDetails: List<OrderProductItemWithDetails>
 )
@@ -128,14 +117,6 @@ data class OrderProductItemWithDetails(
 )
 
 fun OrderWithDetailsEntity.toDomain(): SalesOrder {
-    val employeeName = this.employeeUser?.let {
-        LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
-    } ?: LocalizedString("Unknown", "Unknown")
-
-    val mainEmployeeName = this.mainEmployeeUser?.let {
-        LocalizedString(arName = it.arName, enName = it.enName ?: it.name)
-    }
-
     return SalesOrder(
         localId = this.order.localId,
         serverId = this.order.serverId,
@@ -153,7 +134,6 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
         isDeletedLocally = this.order.isDeletedLocally,
         client = this.clientWithUser?.toDomain(),
         employee = this.employeeUser?.toDomain(),
-        mainEmployee = this.mainEmployeeUser?.toDomain(),
     )
 }
 

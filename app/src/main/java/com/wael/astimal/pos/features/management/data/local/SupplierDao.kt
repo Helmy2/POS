@@ -13,7 +13,12 @@ interface SupplierDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateSupplier(supplier: SupplierEntity): Long
 
-    @androidx.room.Transaction
-    @Query("SELECT * FROM suppliers WHERE NOT isDeletedLocally AND arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%'")
-    fun searchSuppliersWithDetailsFlow(query: String): Flow<List<SupplierWithDetailsEntity>>
+    @Query("SELECT * FROM suppliers WHERE id = :id")
+    suspend fun getSupplierById(id: Long): SupplierWithDetailsEntity?
+
+    @Query("SELECT * FROM suppliers WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY enName ASC")
+    fun searchSuppliersFlow(query: String): Flow<List<SupplierWithDetailsEntity>>
+
+    @Query("UPDATE suppliers SET indebtedness = indebtedness + :change WHERE id = :supplierId")
+    suspend fun adjustIndebtedness(supplierId: Long, change: Double)
 }

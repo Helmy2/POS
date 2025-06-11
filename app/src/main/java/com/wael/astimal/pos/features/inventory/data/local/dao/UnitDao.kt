@@ -19,10 +19,7 @@ interface UnitDao {
     fun getAll(query: String): Flow<List<UnitEntity>>
 
     @Query("SELECT * FROM units WHERE localId = :localId")
-    suspend fun getByCode(localId: String): UnitEntity?
-
-    @Query("SELECT * FROM units WHERE localId = :localId")
-    suspend fun getByLocalId(localId: String): UnitEntity?
+    suspend fun getByLocalId(localId: Long): UnitEntity?
 
     @Query("SELECT * FROM units WHERE serverId = :serverId")
     suspend fun getByServerId(serverId: Int): UnitEntity?

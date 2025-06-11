@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ class PurchaseReturnViewModel(
     private val purchaseReturnRepository: PurchaseReturnRepository,
     private val supplierRepository: SupplierRepository,
     private val productRepository: ProductRepository,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -36,11 +38,11 @@ class PurchaseReturnViewModel(
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { user ->
                 currentUserId = user?.id?.toLong()
-                if (_state.value.newReturnInput.employeeLocalId == null) {
+                if (_state.value.newReturnInput.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
                             newReturnInput = s.newReturnInput.copy(
-                                employeeLocalId = currentUserId
+                                selectedEmployeeId = currentUserId
                             )
                         )
                     }
@@ -60,6 +62,10 @@ class PurchaseReturnViewModel(
             productRepository.getProducts("")
                 .collect { result -> _state.update { it.copy(availableProducts = result) } }
         }
+        viewModelScope.launch {
+            userRepository.getEmployeesFlow()
+                .collect { result -> _state.update { it.copy(availableEmployees = result) } }
+        }
     }
 
     fun onEvent(event: PurchaseReturnScreenEvent) {
@@ -77,7 +83,7 @@ class PurchaseReturnViewModel(
                 it.copy(
                     isQueryActive = false,
                     selectedReturn = null,
-                    newReturnInput = EditablePurchaseReturn(employeeLocalId = currentUserId)
+                    newReturnInput = EditablePurchaseReturn(selectedEmployeeId = currentUserId)
                 )
             }
 
@@ -123,19 +129,25 @@ class PurchaseReturnViewModel(
             is PurchaseReturnScreenEvent.DeleteReturn -> deleteReturn()
             is PurchaseReturnScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is PurchaseReturnScreenEvent.ClearError -> _state.update { it.copy(error = null) }
+            is PurchaseReturnScreenEvent.SelectEmployee ->
+                updateReturnInput {
+                    it.copy(
+                        selectedEmployeeId = event.id ?: currentUserId
+                    )
+                }
         }
     }
 
     private fun selectReturn(purchaseReturn: PurchaseReturn?) {
         _state.update { it.copy(selectedReturn = purchaseReturn, isQueryActive = false) }
         if (purchaseReturn == null) {
-            _state.update { it.copy(newReturnInput = EditablePurchaseReturn(employeeLocalId = currentUserId)) }
+            _state.update { it.copy(newReturnInput = EditablePurchaseReturn(selectedEmployeeId = currentUserId)) }
         } else {
             _state.update {
                 it.copy(
                     newReturnInput = EditablePurchaseReturn(
                         selectedSupplier = purchaseReturn.supplier,
-                        employeeLocalId = purchaseReturn.employee?.id?.toLong(),
+                        selectedEmployeeId = purchaseReturn.employee?.id?.toLong(),
                         paymentType = purchaseReturn.paymentType,
                         items = purchaseReturn.items.map {
                             EditablePurchaseReturnItem(
@@ -238,7 +250,8 @@ class PurchaseReturnViewModel(
         }
         val returnEntity = PurchaseReturnEntity(
             localId = _state.value.selectedReturn?.localId ?: 0L,
-            supplierLocalId = returnInput.selectedSupplier.id, employeeLocalId = employeeId,
+            supplierLocalId = returnInput.selectedSupplier.id,
+            employeeLocalId = returnInput.selectedEmployeeId ?: employeeId,
             totalPrice = returnInput.totalReturnedValue, paymentType = returnInput.paymentType,
             returnDate = System.currentTimeMillis(),
             serverId = null,

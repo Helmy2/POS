@@ -5,6 +5,7 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.user.domain.entity.User
 import java.util.UUID
 
 data class PurchaseReturnScreenState(
@@ -14,6 +15,7 @@ data class PurchaseReturnScreenState(
     val newReturnInput: EditablePurchaseReturn = EditablePurchaseReturn(),
     val availableSuppliers: List<Supplier> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
+    val availableEmployees: List<User> = emptyList(),
     val availableUnits: List<Unit> = emptyList(),
     val query: String = "",
     @StringRes val error: Int? = null,
@@ -25,7 +27,7 @@ data class PurchaseReturnScreenState(
 
 data class EditablePurchaseReturn(
     val selectedSupplier: Supplier? = null,
-    val employeeLocalId: Long? = null,
+    val selectedEmployeeId: Long? = null,
     val paymentType: PaymentType = PaymentType.CASH,
     val items: List<EditablePurchaseReturnItem> = listOf(),
     val totalReturnedValue: Double = 0.0
@@ -47,6 +49,7 @@ sealed interface PurchaseReturnScreenEvent {
     data class UpdateIsQueryActive(val isActive: Boolean) : PurchaseReturnScreenEvent
     data object OpenNewReturnForm : PurchaseReturnScreenEvent
     data class SelectSupplier(val supplier: Supplier?) : PurchaseReturnScreenEvent
+    data class SelectEmployee(val id: Long?) : PurchaseReturnScreenEvent
     data class UpdatePaymentType(val type: PaymentType) : PurchaseReturnScreenEvent
     data object AddItemToReturn : PurchaseReturnScreenEvent
     data class RemoveItemFromReturn(val tempEditorId: String) : PurchaseReturnScreenEvent

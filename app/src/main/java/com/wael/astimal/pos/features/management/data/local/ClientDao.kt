@@ -36,6 +36,10 @@ interface ClientDao {
     )
     fun searchClientsWithDetailsFlow(query: String): Flow<List<ClientWithDetailsEntity>>
 
+    @Query("UPDATE clients SET debt = debt + :change WHERE id = :clientLocalId")
+    suspend fun adjustDebt(clientLocalId: Long, change: Double)
+
+
     @Query("SELECT * FROM clients WHERE isSynced = 0 AND NOT isDeletedLocally")
     suspend fun getUnsyncedCreatedOrUpdatedClients(): List<ClientEntity>
 

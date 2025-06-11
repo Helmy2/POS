@@ -38,6 +38,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
+import com.wael.astimal.pos.features.management.presentaion.purchase.PurchaseScreenEvent
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -131,6 +132,15 @@ fun PurchaseReturnForm(
             onItemSelected = { onEvent(PurchaseReturnScreenEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.id }
+        )
+
+        CustomExposedDropdownMenu(
+            label = "Main Employee",
+            items = state.availableEmployees,
+            selectedItemId = returnInput.selectedEmployeeId,
+            onItemSelected = { onEvent(PurchaseReturnScreenEvent.SelectEmployee(it?.id)) },
+            itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
+            itemToId = { it.id },
         )
 
         Text("Items to Return", style = MaterialTheme.typography.titleMedium)
