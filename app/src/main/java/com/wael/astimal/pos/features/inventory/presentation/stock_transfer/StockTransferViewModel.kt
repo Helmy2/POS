@@ -10,6 +10,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.ProductReposito
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,7 @@ class StockTransferViewModel(
     private val stockTransferRepository: StockTransferRepository,
     private val storeRepository: StoreRepository,
     private val productRepository: ProductRepository,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -56,6 +58,11 @@ class StockTransferViewModel(
         viewModelScope.launch {
             productRepository.getProducts().collect { products ->
                 _state.update { it.copy(availableProducts = products) }
+            }
+        }
+        viewModelScope.launch {
+            userRepository.getEmployeesFlow().collect { employees ->
+                _state.update { it.copy(availableEmployees = employees) }
             }
         }
     }
@@ -118,6 +125,15 @@ class StockTransferViewModel(
             is StockTransferScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is StockTransferScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
             StockTransferScreenEvent.ClearError -> _state.update { it.copy(error = null) }
+            is StockTransferScreenEvent.SelectEmployee -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        currentTransferInput = currentState.currentTransferInput.copy(
+                            selectedEmployeeId = event.id
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -225,8 +241,8 @@ class StockTransferViewModel(
             StockTransferItemEntity(
                 serverId = null,
                 stockTransferLocalId = 0L,
-                productLocalId = editableItem.product?.localId!!,
-                unitLocalId = editableItem.unit?.localId!!,
+                productLocalId = editableItem.product.localId,
+                unitLocalId = editableItem.unit.localId,
                 quantity = editableItem.quantity.toDoubleOrNull() ?: 0.0,
                 maximumOpeningBalance = editableItem.maxOpeningBalance.toDoubleOrNull(),
                 minimumOpeningBalance = editableItem.minOpeningBalance.toDoubleOrNull(),
@@ -241,17 +257,19 @@ class StockTransferViewModel(
 
             val result = if (_state.value.isNew) {
                 stockTransferRepository.addStockTransfer(
-                    fromStoreId = currentInput.fromStoreId!!,
-                    toStoreId = currentInput.toStoreId!!,
-                    initiatedByUserId = loggedInUserId,
+                    fromStoreId = currentInput.fromStoreId,
+                    toStoreId = currentInput.toStoreId,
+                    initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
+                        ?: loggedInUserId,
                     items = itemEntities
                 )
             } else {
                 stockTransferRepository.updateStockTransfer(
                     transferLocalId = currentInput.localId,
-                    fromStoreId = currentInput.fromStoreId!!,
-                    toStoreId = currentInput.toStoreId!!,
-                    initiatedByUserId = loggedInUserId,
+                    fromStoreId = currentInput.fromStoreId,
+                    toStoreId = currentInput.toStoreId,
+                    initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
+                        ?: loggedInUserId,
                     items = itemEntities
                 )
             }

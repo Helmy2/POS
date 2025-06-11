@@ -13,7 +13,7 @@ data class StockTransfer(
     val items: List<StockTransferItem>,
     var isSynced: Boolean,
     var lastModified: Long,
-    var isDeletedLocally: Boolean
+    var isDeletedLocally: Boolean,
 )
 
 data class StockTransferItem(

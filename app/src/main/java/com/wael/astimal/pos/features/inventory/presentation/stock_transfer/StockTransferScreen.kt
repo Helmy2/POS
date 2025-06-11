@@ -35,12 +35,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.presentation.components.CustomExposedDropdownMenu
 import com.wael.astimal.pos.features.inventory.presentation.components.ItemGrid
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.features.user.domain.entity.User
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -121,6 +122,7 @@ fun StockTransferScreen(
                 editableTransfer = state.currentTransferInput,
                 availableStores = state.availableStores,
                 availableProducts = state.availableProducts,
+                availableEmployees = state.availableEmployees,
                 onEvent = onEvent,
                 isNewTransfer = state.isNew.not(),
             )
@@ -135,6 +137,7 @@ fun StockTransferForm(
     editableTransfer: EditableStockTransfer,
     availableStores: List<Store>,
     availableProducts: List<Product>,
+    availableEmployees: List<User>,
     onEvent: (StockTransferScreenEvent) -> Unit,
     isNewTransfer: Boolean
 ) {
@@ -166,6 +169,15 @@ fun StockTransferForm(
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store?.localId)) },
             itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
             itemToId = { it.localId },
+        )
+
+        CustomExposedDropdownMenu(
+            label = "Employee",
+            items = availableEmployees,
+            selectedItemId = editableTransfer.selectedEmployeeId,
+            onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it?.id)) },
+            itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
+            itemToId = { it.id },
         )
 
         Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)

@@ -5,6 +5,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlin.random.Random
 
 data class StockTransferScreenState(
@@ -18,6 +19,7 @@ data class StockTransferScreenState(
 
     val currentTransferInput: EditableStockTransfer = EditableStockTransfer(),
     val availableStores: List<Store> = emptyList(),
+    val availableEmployees: List<User> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
 
     @StringRes val error: Int? = null,
@@ -28,18 +30,19 @@ data class StockTransferScreenState(
 
 data class EditableStockTransfer(
     val localId: Long = 1,
-    var fromStoreId: Long? = null,
-    var toStoreId: Long? = null,
+    val fromStoreId: Long? = null,
+    val toStoreId: Long? = null,
+    val selectedEmployeeId: Long? = null,
     val items: MutableList<EditableStockTransferItem> = mutableListOf(),
 )
 
 data class EditableStockTransferItem(
     val tempEditorId: Long = Random.nextLong(),
-    var product: Product? = null,
-    var unit: Unit? = null,
-    var quantity: String = "",
-    var maxOpeningBalance: String = "",
-    var minOpeningBalance: String = "",
+    val product: Product? = null,
+    val unit: Unit? = null,
+    val quantity: String = "",
+    val maxOpeningBalance: String = "",
+    val minOpeningBalance: String = "",
 )
 
 sealed interface StockTransferScreenEvent {
@@ -53,6 +56,7 @@ sealed interface StockTransferScreenEvent {
     data class UpdateToStore(val storeId: Long?) : StockTransferScreenEvent
     data object AddItemToTransfer : StockTransferScreenEvent
     data class RemoveItemFromTransfer(val itemEditorId: Long) : StockTransferScreenEvent
+    data class SelectEmployee(val id: Long?) : StockTransferScreenEvent
     data class UpdateItemProduct(val itemEditorId: Long, val product: Product?) :
         StockTransferScreenEvent
 

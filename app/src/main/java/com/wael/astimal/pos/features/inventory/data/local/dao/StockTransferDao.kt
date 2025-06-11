@@ -10,10 +10,8 @@ import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEnti
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferWithItemsAndDetails
 import kotlinx.coroutines.flow.Flow
 
-
 @Dao
 interface StockTransferDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStockTransfer(transfer: StockTransferEntity): Long
 
@@ -30,22 +28,6 @@ interface StockTransferDao {
     suspend fun deleteItemsForTransfer(transferLocalId: Long)
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE localId = :localId")
-    fun getStockTransferWithDetailsFlow(localId: Long): Flow<StockTransferWithItemsAndDetails?>
-
-    @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE localId = :localId")
-    suspend fun getStockTransferWithDetails(localId: Long): StockTransferWithItemsAndDetails?
-
-    @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE serverId = :serverId")
-    suspend fun getStockTransferWithDetailsByServerId(serverId: Int): StockTransferWithItemsAndDetails?
-
-    @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally ORDER BY transferDate DESC")
-    fun getAllStockTransfersWithDetailsFlow(): Flow<List<StockTransferWithItemsAndDetails>>
-
-    @androidx.room.Transaction
     suspend fun updateTransferWithItems(transfer: StockTransferEntity, items: List<StockTransferItemEntity>) {
         updateStockTransfer(transfer)
         deleteItemsForTransfer(transfer.localId)
@@ -56,12 +38,26 @@ interface StockTransferDao {
     }
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE isSynced = 0 AND NOT isDeletedLocally")
-    suspend fun getUnsyncedCreatedOrUpdatedStockTransfers(): List<StockTransferWithItemsAndDetails>
+    suspend fun insertTransferWithItems(transfer: StockTransferEntity, items: List<StockTransferItemEntity>): Long {
+        val transferId = insertStockTransfer(transfer)
+        val itemsWithCorrectId = items.map { it.copy(stockTransferLocalId = transferId) }
+        if (itemsWithCorrectId.isNotEmpty()) {
+            insertStockTransferItems(itemsWithCorrectId)
+        }
+        return transferId
+    }
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE isSynced = 0 AND isDeletedLocally = 1")
-    suspend fun getUnsyncedDeletedStockTransfers(): List<StockTransferWithItemsAndDetails>
+    @Query("SELECT * FROM stock_transfers WHERE localId = :localId")
+    fun getStockTransferWithDetailsFlow(localId: Long): Flow<StockTransferWithItemsAndDetails?>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM stock_transfers WHERE localId = :localId")
+    suspend fun getStockTransferWithDetails(localId: Long): StockTransferWithItemsAndDetails?
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally ORDER BY transferDate DESC")
+    fun getAllStockTransfersWithDetailsFlow(): Flow<List<StockTransferWithItemsAndDetails>>
 
     @Query("DELETE FROM stock_transfers WHERE localId IN (:localIds)")
     suspend fun deleteStockTransfersByLocalIds(localIds: List<Long>)
