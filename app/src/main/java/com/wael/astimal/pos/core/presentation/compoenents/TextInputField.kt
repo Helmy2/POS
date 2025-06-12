@@ -18,6 +18,7 @@ fun TextInputField(
     numberOfLines: Int = 1,
     readOnly: Boolean = false,
     label: String? = null,
+    enabled:Boolean = true,
     trailingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Companion.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Companion.Default,
@@ -26,6 +27,7 @@ fun TextInputField(
     OutlinedTextField(
         modifier = modifier,
         value = value,
+        enabled=enabled,
         onValueChange = onValueChange,
         minLines = numberOfLines,
         maxLines = numberOfLines,

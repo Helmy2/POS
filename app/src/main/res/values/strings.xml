@@ -152,4 +152,10 @@
     <string name="advance">Advance</string>
     <string name="bonus">Bonus</string>
     <string name="difference">Difference</string>
+    <string name="error_loading_employees">Error loading employees</string>
+    <string name="error_fetching_account_details">Error fetching account details</string>
+    <string name="account_summary">Account summary</string>
+    <string name="current_balance">Current balance</string>
+    <string name="transaction_history">Transaction history</string>
+    <string name="employee_account">Employee account</string>
 </resources>

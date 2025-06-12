@@ -26,6 +26,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE id = :localId")
     suspend fun getUserById(localId: Long): UserEntity?
 
+    @Query("SELECT * FROM users WHERE id = :localId")
+    fun getUserFLowById(localId: Long): Flow<UserEntity?>
+
     @Query("SELECT * FROM users WHERE isEmployeeFlag = 1")
     fun getAllEmployeesFlow(): Flow<List<UserEntity>>
 

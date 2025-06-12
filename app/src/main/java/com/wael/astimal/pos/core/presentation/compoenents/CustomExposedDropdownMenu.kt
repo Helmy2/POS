@@ -6,7 +6,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,15 +37,15 @@ fun <T> CustomExposedDropdownMenu(
         onExpandedChange = { expanded = !expanded },
         modifier = modifier.fillMaxWidth()
     ) {
-        OutlinedTextField(
+        TextInputField(
             value = currentSelectionString,
             onValueChange = {},
             readOnly = true,
-            label = { Text(label) },
+            label = label,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.Companion.PrimaryEditable),
-            enabled = enabled
+            enabled = enabled,
         )
         ExposedDropdownMenu(
             expanded = expanded && enabled,

@@ -1,9 +1,7 @@
 package com.wael.astimal.pos.features.management.presentaion.management
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -21,13 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.features.management.presentaion.client_info.ClientInfoRoute
+import com.wael.astimal.pos.features.management.presentaion.employee_account.EmployeeAccountRoute
 import com.wael.astimal.pos.features.management.presentaion.purchase.PurchaseRoute
 import com.wael.astimal.pos.features.management.presentaion.purchase_return.PurchaseReturnRoute
 import com.wael.astimal.pos.features.management.presentaion.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentaion.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.management.presentaion.supplier_info.SupplierInfoRoute
-import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -47,8 +46,6 @@ fun ManagementRoute(
 }
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
@@ -94,6 +91,7 @@ fun ManagementScreen(
                                 ManagementDestination.SupplierInfo -> context.getString(R.string.supplier_info)
                                 ManagementDestination.PurchaseOrder -> context.getString(R.string.purchase_order)
                                 ManagementDestination.PurchaseReturn -> context.getString(R.string.purchase_return)
+                                ManagementDestination.EmployeeAccount -> context.getString(R.string.employee_account)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -141,6 +139,13 @@ fun ManagementScreen(
 
                     ManagementDestination.PurchaseReturn -> {
                         PurchaseReturnRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+
+                    ManagementDestination.EmployeeAccount -> {
+                        EmployeeAccountRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                             snackbarHostState = snackbarHostState,
                         )

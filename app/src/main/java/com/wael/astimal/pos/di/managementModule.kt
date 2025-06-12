@@ -4,12 +4,14 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.data.logic.ReturnAmountLogic
 import com.wael.astimal.pos.features.management.data.repository.ClientRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.EmployeeAccountRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PurchaseRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PurchaseReturnRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesOrderRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesReturnRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SupplierRepositoryImpl
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
@@ -17,6 +19,7 @@ import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRep
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.management.presentaion.management.ManagementViewModel
 import com.wael.astimal.pos.features.management.presentaion.client_info.ClientInfoViewModel
+import com.wael.astimal.pos.features.management.presentaion.employee_account.EmployeeAccountViewModel
 import com.wael.astimal.pos.features.management.presentaion.purchase.PurchaseViewModel
 import com.wael.astimal.pos.features.management.presentaion.purchase_return.PurchaseReturnViewModel
 import com.wael.astimal.pos.features.management.presentaion.sales.SalesViewModel
@@ -33,23 +36,29 @@ val managementModule = module {
     single { get<AppDatabase>().purchaseReturnDao() }
     single { get<AppDatabase>().employeeFinancesDao() }
 
-    single { OrderAmountLogic(get(),get (),get(),get()) }
-    single { ReturnAmountLogic(get(),get(),get(),get()) }
+    single { OrderAmountLogic(get(), get(), get(), get()) }
+    single { ReturnAmountLogic(get(), get(), get(), get()) }
 
     single<ClientRepository> { ClientRepositoryImpl(get()) }
-    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get(),get(),get(),get()) }
-    single<SalesReturnRepository> { SalesReturnRepositoryImpl(get(),get(),get(),get()) }
+    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get(), get(), get(), get()) }
+    single<SalesReturnRepository> { SalesReturnRepositoryImpl(get(), get(), get(), get()) }
     single<SupplierRepository> { SupplierRepositoryImpl(get()) }
-    single<PurchaseRepository> { PurchaseRepositoryImpl(get(),get(),get(),get(),get()) }
-    single<PurchaseReturnRepository> { PurchaseReturnRepositoryImpl(get(),get(),get(),get(),get()) }
+    single<PurchaseRepository> { PurchaseRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<PurchaseReturnRepository> {
+        PurchaseReturnRepositoryImpl(
+            get(), get(), get(), get(), get()
+        )
+    }
+    single<EmployeeAccountRepository> { EmployeeAccountRepositoryImpl(get(), get()) }
 
     viewModel { ManagementViewModel() }
 
     viewModel { ClientInfoViewModel(get()) }
-    viewModel { SalesReturnViewModel(get(), get(), get(), get(),get()) }
-    viewModel { SalesViewModel(get(), get(),get(),  get(),get()) }
+    viewModel { SalesReturnViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SalesViewModel(get(), get(), get(), get(), get()) }
     viewModel { SupplierViewModel(get()) }
     viewModel { PurchaseViewModel(get(), get(), get(), get(), get()) }
-    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(),get()) }
+    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get()) }
+    viewModel { EmployeeAccountViewModel(get(), get()) }
 
 }
