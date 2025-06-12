@@ -16,5 +16,5 @@ interface EmployeeDao {
         WHERE employeeLocalId = :employeeId
         LIMIT 1
     """)
-    suspend fun getStoreIdForEmployee(employeeId: Long): Long?
+    suspend fun getStoreIdForEmployee(employeeId: Long?): Long?
 }

@@ -1,8 +1,6 @@
 package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.data.AppDatabase
-import com.wael.astimal.pos.features.management.data.repository.SalesOrderRepositoryImpl
-import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.inventory.data.repository.CategoryRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.ProductRepositoryImpl
 import com.wael.astimal.pos.features.inventory.data.repository.StockRepositoryImpl

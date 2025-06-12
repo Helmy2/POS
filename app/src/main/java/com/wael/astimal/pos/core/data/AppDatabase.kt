@@ -2,6 +2,9 @@ package com.wael.astimal.pos.core.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
+import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
@@ -56,7 +59,9 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         PurchaseProductEntity::class,
         PurchaseReturnEntity::class,
         PurchaseReturnProductEntity::class,
-        StoreProductStockEntity::class
+        StoreProductStockEntity::class,
+        SaleCommissionEntity::class,
+        EmployeeAccountTransactionEntity::class,
     ],
     version = 16,
     exportSchema = false
@@ -77,4 +82,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun purchaseReturnDao(): PurchaseReturnDao
     abstract fun storeProductStockDao(): StoreProductStockDao
     abstract fun employeeDao(): EmployeeDao
+    abstract fun employeeFinancesDao(): EmployeeFinancesDao
 }

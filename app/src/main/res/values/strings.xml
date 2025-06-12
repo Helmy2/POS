@@ -146,4 +146,10 @@
     <string name="payment_type_transfer">Transfer</string>
     <string name="payment_type_wallet">Wallet</string>
     <string name="payment_type_deferred">Deferred</string>
+    <string name="commission">Commission</string>
+    <string name="salary">Salary</string>
+    <string name="deduction">Deduction</string>
+    <string name="advance">Advance</string>
+    <string name="bonus">Bonus</string>
+    <string name="difference">Difference</string>
 </resources>

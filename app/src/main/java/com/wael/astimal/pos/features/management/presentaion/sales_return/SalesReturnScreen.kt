@@ -43,8 +43,8 @@ fun SalesReturnRoute(
 
 @Composable
 fun SalesReturnScreen(
-    state: SalesReturnScreenState,
-    onEvent: (SalesReturnScreenEvent) -> Unit,
+    state: SalesReturnState,
+    onEvent: (SalesReturnEvent) -> Unit,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
 ) {
@@ -52,11 +52,11 @@ fun SalesReturnScreen(
     LaunchedEffect(state.snackbarMessage, state.error) {
         state.snackbarMessage?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(SalesReturnScreenEvent.ClearSnackbar)
+            onEvent(SalesReturnEvent.ClearSnackbar)
         }
         state.error?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(SalesReturnScreenEvent.ClearError)
+            onEvent(SalesReturnEvent.ClearError)
         }
     }
 
@@ -66,17 +66,17 @@ fun SalesReturnScreen(
         loading = state.loading,
         isNew = state.isNew,
         canEdit = state.canEdit,
-        onQueryChange = { onEvent(SalesReturnScreenEvent.UpdateQuery(it)) },
-        onSearch = { onEvent(SalesReturnScreenEvent.SearchReturns(it)) },
-        onSearchActiveChange = { onEvent(SalesReturnScreenEvent.UpdateIsQueryActive(it)) },
+        onQueryChange = { onEvent(SalesReturnEvent.UpdateQuery(it)) },
+        onSearch = { onEvent(SalesReturnEvent.SearchReturns(it)) },
+        onSearchActiveChange = { onEvent(SalesReturnEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
         lastModifiedDate = state.selectedReturn?.lastModified,
-        onCreate = { onEvent(SalesReturnScreenEvent.SaveReturn) },
-        onNew = { onEvent(SalesReturnScreenEvent.OpenNewReturnForm) },
+        onCreate = { onEvent(SalesReturnEvent.SaveReturn) },
+        onNew = { onEvent(SalesReturnEvent.OpenNewReturnForm) },
         searchResults = {
             ItemGrid(
                 list = state.returns,
-                onItemClick = { onEvent(SalesReturnScreenEvent.SelectReturnToView(it)) },
+                onItemClick = { onEvent(SalesReturnEvent.SelectReturnToView(it)) },
                 label = {
                     Text(
                         "Return to ${it.client?.name?.displayName(LocalAppLocale.current)}",
@@ -92,18 +92,18 @@ fun SalesReturnScreen(
         mainContent = {
             SalesReturnForm(state = state, onEvent = onEvent)
         },
-        onDelete = { onEvent(SalesReturnScreenEvent.DeleteReturn) },
-        onUpdate = { onEvent(SalesReturnScreenEvent.SaveReturn) },
+        onDelete = { onEvent(SalesReturnEvent.DeleteReturn) },
+        onUpdate = { onEvent(SalesReturnEvent.SaveReturn) },
     )
 }
 
 
 @Composable
 fun SalesReturnForm(
-    state: SalesReturnScreenState, onEvent: (SalesReturnScreenEvent) -> Unit
+    state: SalesReturnState, onEvent: (SalesReturnEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
-    val returnInput = state.input
+    val returnInput = state.currentReturnInput
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -111,15 +111,15 @@ fun SalesReturnForm(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         DataPicker(
-            selectedDateMillis = state.input.date,
-            onDateSelected = { onEvent(SalesReturnScreenEvent.UpdateItemDate(it)) },
+            selectedDateMillis = returnInput.date,
+            onDateSelected = { onEvent(SalesReturnEvent.UpdateReturnDate(it)) },
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
             selectedItemId = state.selectedClient?.id,
-            onItemSelected = { onEvent(SalesReturnScreenEvent.SelectClient(it)) },
+            onItemSelected = { onEvent(SalesReturnEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id })
 
@@ -127,34 +127,34 @@ fun SalesReturnForm(
             label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = returnInput.selectedEmployeeId,
-            onItemSelected = { onEvent(SalesReturnScreenEvent.UpdateSelectEmployee(it?.id)) },
+            onItemSelected = { onEvent(SalesReturnEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false
         )
 
         OrderInputFields(
-            itemList = state.input.items,
-            selectedPaymentType = state.input.paymentType,
-            amountPaid = state.input.amountPaid,
-            onUpdateAmountPaid = { onEvent(SalesReturnScreenEvent.UpdateAmountRefunded(it)) },
-            onAddNewItemToOrder = { onEvent(SalesReturnScreenEvent.AddItemToReturn) },
+            itemList = returnInput.items,
+            selectedPaymentType = returnInput.paymentType,
+            amountPaid = returnInput.amountPaid,
+            onUpdateAmountPaid = { onEvent(SalesReturnEvent.UpdateAmountPaid(it)) },
+            onAddNewItemToOrder = { onEvent(SalesReturnEvent.AddItemToReturn) },
             availableProducts = state.availableProducts,
-            onSelectPaymentType = { onEvent(SalesReturnScreenEvent.UpdatePaymentType(it)) },
+            onSelectPaymentType = { onEvent(SalesReturnEvent.UpdatePaymentType(it)) },
             onItemSelected = { tempEditorId, product ->
-                onEvent(SalesReturnScreenEvent.UpdateItemProduct(tempEditorId, product))
+                onEvent(SalesReturnEvent.UpdateItemProduct(tempEditorId, product))
             },
             onRemoveItemFromOrder = { tempEditorId ->
-                onEvent(SalesReturnScreenEvent.RemoveItemFromReturn(tempEditorId))
+                onEvent(SalesReturnEvent.RemoveItemFromReturn(tempEditorId))
             },
             onUpdateItemQuantity = { tempEditorId, quantity ->
-                onEvent(SalesReturnScreenEvent.UpdateItemQuantity(tempEditorId, quantity))
+                onEvent(SalesReturnEvent.UpdateItemQuantity(tempEditorId, quantity))
             },
             onUpdateItemUnit = { tempEditorId, unit ->
-                onEvent(SalesReturnScreenEvent.UpdateItemUnit(tempEditorId, unit))
+                onEvent(SalesReturnEvent.UpdateItemUnit(tempEditorId, unit))
             },
             onUpdateItemPrice = { tempEditorId, price ->
-                onEvent(SalesReturnScreenEvent.UpdateItemPrice(tempEditorId, price))
+                onEvent(SalesReturnEvent.UpdateItemPrice(tempEditorId, price))
             },
         )
 

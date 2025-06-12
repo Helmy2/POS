@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.management.data.repository
+package com.wael.astimal.pos.core.data
 
 import com.wael.astimal.pos.features.management.data.entity.ClientEntity
 import com.wael.astimal.pos.features.management.data.entity.SupplierEntity

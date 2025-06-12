@@ -4,56 +4,52 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
+import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnWithDetailsEntity
 import kotlinx.coroutines.flow.Flow
+
+
 @Dao
 interface OrderReturnDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdateOrderReturn(orderReturn: OrderReturnEntity): Long
+    suspend fun insertOrUpdateReturn(orderReturn: OrderReturnEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrderReturnItems(items: List<OrderReturnProductEntity>)
-
-    @Query("DELETE FROM order_return_products WHERE orderReturnLocalId = :returnLocalId")
-    suspend fun deleteItemsForReturn(returnLocalId: Long)
+    suspend fun insertReturnItems(items: List<OrderProductEntity>)
 
     @Query("SELECT * FROM order_returns WHERE localId = :localId")
-    suspend fun getOrderReturnEntityByLocalId(localId: Long): OrderReturnEntity?
+    suspend fun getReturnEntityByLocalId(localId: Long): OrderReturnEntity?
 
-    @Query("SELECT * FROM order_return_products WHERE orderReturnLocalId = :returnLocalId")
-    suspend fun getItemsForReturn(returnLocalId: Long): List<OrderReturnProductEntity>
+    @Update
+    suspend fun updateReturn(orderReturn: OrderReturnEntity)
 
-    @androidx.room.Transaction
-    suspend fun insertSalesReturnWithItems(returnEntity: OrderReturnEntity, items: List<OrderReturnProductEntity>): Long {
-        val returnId = insertOrUpdateOrderReturn(returnEntity)
-        val itemsWithCorrectId = items.map { it.copy(orderReturnLocalId = returnId) }
+    @Transaction
+    suspend fun updateReturnWithItems(
+        orderReturn: OrderReturnEntity,
+        items: List<OrderProductEntity>
+    ) {
+        updateReturn(orderReturn)
+        deleteItemsForReturn(orderReturn.localId)
+        val itemsWithCorrectId = items.map { it.copy(orderLocalId = orderReturn.localId) }
         if (itemsWithCorrectId.isNotEmpty()) {
-            insertOrderReturnItems(itemsWithCorrectId)
-        }
-        return returnId
-    }
-
-    @androidx.room.Transaction
-    suspend fun updateSalesReturnWithItems(returnEntity: OrderReturnEntity, items: List<OrderReturnProductEntity>) {
-        insertOrUpdateOrderReturn(returnEntity) // Use insertOrUpdate to handle saving the updated header
-        deleteItemsForReturn(returnEntity.localId)
-        val itemsWithCorrectId = items.map { it.copy(orderReturnLocalId = returnEntity.localId) }
-        if (itemsWithCorrectId.isNotEmpty()) {
-            insertOrderReturnItems(itemsWithCorrectId)
+            insertReturnItems(itemsWithCorrectId)
         }
     }
 
-    @androidx.room.Transaction
-    @Query("SELECT * FROM order_returns WHERE localId = :localId")
-    suspend fun getOrderReturnWithDetails(localId: Long): OrderReturnWithDetailsEntity?
+    @Query("DELETE FROM order_products WHERE orderLocalId = :orderReturnLocalId")
+    suspend fun deleteItemsForReturn(orderReturnLocalId: Long)
 
-    @androidx.room.Transaction
+    @Transaction
     @Query("SELECT * FROM order_returns WHERE localId = :localId")
-    fun getOrderReturnWithDetailsFlow(localId: Long): Flow<OrderReturnWithDetailsEntity?>
+    fun getReturnWithDetailsFlow(localId: Long): Flow<OrderReturnWithDetailsEntity?>
 
-    @androidx.room.Transaction
+    @Transaction
     @Query("SELECT * FROM order_returns WHERE NOT isDeletedLocally ORDER BY returnDate DESC")
-    fun getAllOrderReturnsWithDetailsFlow(): Flow<List<OrderReturnWithDetailsEntity>>
+    fun getAllReturnsWithDetailsFlow(): Flow<List<OrderReturnWithDetailsEntity>>
+
+    @Query("SELECT * FROM order_products WHERE orderLocalId = :orderReturnLocalId")
+    suspend fun getItemsForReturn(orderReturnLocalId: Long): List<OrderProductEntity>
 }

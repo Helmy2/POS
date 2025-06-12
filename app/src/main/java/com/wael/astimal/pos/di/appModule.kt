@@ -7,5 +7,5 @@ val appModule = module {
     includes(coreModule)
     includes(userModule)
     includes(inventoryModule)
-    includes(clientModule)
+    includes(managementModule)
 }
