@@ -85,7 +85,7 @@ fun SalesScreen(
                 },
                 label = {
                     Label(
-                        "${it.invoiceNumber}: ${it.client?.name?.displayName(language)}",
+                        "Order to ${it.client?.name?.displayName(language)}",
                     )
                 },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },

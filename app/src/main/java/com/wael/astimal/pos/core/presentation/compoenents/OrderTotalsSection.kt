@@ -63,6 +63,7 @@ fun OrderTotalsSection(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
+
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
                     stringResource(R.string.remaining), style = MaterialTheme.typography.titleLarge

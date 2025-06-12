@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.EditableItemList
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
@@ -88,7 +89,7 @@ class SalesViewModel(
             is OrderEvent.RemoveItemFromOrder -> updateOrderInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             is OrderEvent.UpdateItemProduct -> updateOrderItem(event.tempEditorId) {
                 val price = event.product?.sellingPrice?.toString() ?: "0.0"
-                it.copy(product = event.product, sellingPrice = price)
+                it.copy(product = event.product, price = price)
             }
 
             is OrderEvent.UpdateItemUnit -> updateOrderItem(event.tempEditorId) {
@@ -104,7 +105,7 @@ class SalesViewModel(
             }
 
             is OrderEvent.UpdateItemPrice -> updateOrderItem(event.tempEditorId) {
-                it.copy(sellingPrice = event.price)
+                it.copy(price = event.price)
             }
 
             is OrderEvent.SaveOrder -> saveOrder()
@@ -117,7 +118,7 @@ class SalesViewModel(
 
             OrderEvent.OpenNewOrderForm -> _state.update {
                 it.copy(
-                    isQueryActive = false, selectedOrder = null, currentOrderInput = EditableOrder(
+                    isQueryActive = false, selectedOrder = null, currentOrderInput = EditableItemList(
                         selectedEmployeeId = currentUserId ?: 0L
                     ), error = null
                 )
@@ -143,7 +144,7 @@ class SalesViewModel(
                         it.copy(
                             snackbarMessage = R.string.order_deleted,
                             selectedOrder = null,
-                            currentOrderInput = EditableOrder(),
+                            currentOrderInput = EditableItemList(),
                             isQueryActive = false
                         )
                     }
@@ -163,11 +164,11 @@ class SalesViewModel(
             )
         }
         if (order == null) {
-            _state.update { it.copy(currentOrderInput = EditableOrder()) }
+            _state.update { it.copy(currentOrderInput = EditableItemList()) }
         } else {
             _state.update {
                 it.copy(
-                    currentOrderInput = EditableOrder(
+                    currentOrderInput = EditableItemList(
                         selectedClient = order.client,
                         selectedEmployeeId = order.employee?.id,
                         paymentType = order.paymentType,
@@ -178,7 +179,7 @@ class SalesViewModel(
                                 product = it.product,
                                 selectedProductUnit = it.productUnit,
                                 quantity = it.quantity.toString(),
-                                sellingPrice = it.unitSellingPrice.toString(),
+                                price = it.unitSellingPrice.toString(),
                                 lineTotal = it.itemTotalPrice,
                                 lineGain = it.itemGain
                             )
@@ -194,7 +195,7 @@ class SalesViewModel(
         }
     }
 
-    private fun updateOrderInput(action: (EditableOrder) -> EditableOrder) {
+    private fun updateOrderInput(action: (EditableItemList) -> EditableItemList) {
         _state.update { it.copy(currentOrderInput = action(it.currentOrderInput)) }
         recalculateTotals()
     }
@@ -214,7 +215,7 @@ class SalesViewModel(
         var totalGain = 0.0
         val updatedItems = orderInput.items.map { item ->
             val quantity = item.quantity.toDoubleOrNull() ?: 0.0
-            val price = item.sellingPrice.toDoubleOrNull() ?: 0.0
+            val price = item.price.toDoubleOrNull() ?: 0.0
             val cost = item.product?.averagePrice ?: 0.0
             val lineTotal = quantity * price
             val lineGain = if (price > cost) (price - cost) * quantity else 0.0
@@ -274,7 +275,7 @@ class SalesViewModel(
                 productLocalId = it.product.localId,
                 unitLocalId = it.selectedProductUnit.localId,
                 quantity = it.quantity.toDouble(),
-                unitSellingPrice = it.sellingPrice.toDoubleOrNull() ?: 0.0,
+                unitSellingPrice = it.price.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,
                 itemGain = it.lineGain,
                 serverId = null,
@@ -313,7 +314,7 @@ class SalesViewModel(
                             snackbarMessage = R.string.order_saved,
                             isQueryActive = false,
                             selectedOrder = null,
-                            currentOrderInput = EditableOrder(),
+                            currentOrderInput = EditableItemList(),
                         )
                     }
                 },

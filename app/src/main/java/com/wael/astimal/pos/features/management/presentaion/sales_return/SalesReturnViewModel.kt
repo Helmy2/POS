@@ -4,12 +4,15 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.EditableItemList
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
@@ -38,10 +41,10 @@ class SalesReturnViewModel(
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { user ->
                 currentUserId = user?.id
-                if (_state.value.currentReturnInput.selectedEmployeeId == null) {
+                if (_state.value.input.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
-                            currentReturnInput = s.currentReturnInput.copy(
+                            input = s.input.copy(
                                 selectedEmployeeId = currentUserId
                             )
                         )
@@ -79,21 +82,26 @@ class SalesReturnViewModel(
                 it.copy(
                     isQueryActive = false,
                     selectedReturn = null,
-                    currentReturnInput = EditableSalesReturn(selectedEmployeeId = currentUserId)
+                    input = EditableItemList(selectedEmployeeId = currentUserId)
                 )
             }
 
             is SalesReturnScreenEvent.SelectClient -> updateReturnInput { it.copy(selectedClient = event.client) }
-            is SalesReturnScreenEvent.UpdatePaymentType -> updateReturnInput { it.copy(paymentType = event.type) }
-            is SalesReturnScreenEvent.UpdateAmountRefunded -> updateReturnInput {
-                it.copy(amountRefunded = event.amount)
+            is SalesReturnScreenEvent.UpdatePaymentType -> updateReturnInput {
+                it.copy(
+                    paymentType = event.type ?: PaymentType.CASH
+                )
             }
 
-            is SalesReturnScreenEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableReturnItem()) }
+            is SalesReturnScreenEvent.UpdateAmountRefunded -> updateReturnInput {
+                it.copy(amountPaid = event.amount)
+            }
+
+            is SalesReturnScreenEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableItem()) }
             is SalesReturnScreenEvent.RemoveItemFromReturn -> updateReturnInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             is SalesReturnScreenEvent.UpdateItemProduct -> updateReturnItem(event.tempEditorId) {
                 val price = event.product?.sellingPrice?.toString() ?: "0.0"
-                it.copy(product = event.product, priceAtReturn = price)
+                it.copy(product = event.product, price = price)
             }
 
             is SalesReturnScreenEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
@@ -105,7 +113,7 @@ class SalesReturnViewModel(
             }
 
             is SalesReturnScreenEvent.UpdateItemPrice -> updateReturnItem(event.tempEditorId) {
-                it.copy(priceAtReturn = event.price)
+                it.copy(price = event.price)
             }
 
             is SalesReturnScreenEvent.SaveReturn -> saveReturn()
@@ -113,7 +121,11 @@ class SalesReturnViewModel(
             SalesReturnScreenEvent.ClearError -> _state.update { it.copy(error = null) }
             SalesReturnScreenEvent.DeleteReturn -> deleteReturn()
             is SalesReturnScreenEvent.UpdateSelectEmployee -> _state.update {
-                it.copy(currentReturnInput = it.currentReturnInput.copy(selectedEmployeeId = event.id))
+                it.copy(input = it.input.copy(selectedEmployeeId = event.id))
+            }
+
+            is SalesReturnScreenEvent.UpdateItemDate -> _state.update {
+                it.copy(input = it.input.copy(date = event.date ?: System.currentTimeMillis()))
             }
         }
     }
@@ -129,27 +141,32 @@ class SalesReturnViewModel(
                             loading = false,
                             snackbarMessage = R.string.return_deleted,
                             selectedReturn = null,
-                            currentReturnInput = EditableSalesReturn()
+                            input = EditableItemList()
                         )
                     }
                 },
                 onFailure = { e ->
                     Log.e("SalesReturnViewModel", "Error deleting return: $e")
-                    _state.update { it.copy(loading = false, error = R.string.error_deleting_return) }
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            error = R.string.error_deleting_return
+                        )
+                    }
                 }
             )
         }
     }
 
-    private fun updateReturnInput(action: (EditableSalesReturn) -> EditableSalesReturn) {
-        _state.update { it.copy(currentReturnInput = action(it.currentReturnInput)) }
+    private fun updateReturnInput(action: (EditableItemList) -> EditableItemList) {
+        _state.update { it.copy(input = action(it.input)) }
         recalculateTotals()
     }
 
     private fun updateReturnItem(
-        tempId: String, action: (EditableReturnItem) -> EditableReturnItem
+        tempId: String, action: (EditableItem) -> EditableItem
     ) {
-        val currentItems = _state.value.currentReturnInput.items.toMutableList()
+        val currentItems = _state.value.input.items.toMutableList()
         val index = currentItems.indexOfFirst { it.tempEditorId == tempId }
         if (index != -1) {
             currentItems[index] = action(currentItems[index])
@@ -158,27 +175,30 @@ class SalesReturnViewModel(
     }
 
     private fun recalculateTotals() {
-        val returnInput = _state.value.currentReturnInput
-        var totalValue = 0.0
-        var totalGainLoss = 0.0
-        val updatedItems = returnInput.items.map { item ->
+        val orderInput = _state.value.input
+        var subtotal = 0.0
+        var totalGain = 0.0
+        val updatedItems = orderInput.items.map { item ->
             val quantity = item.quantity.toDoubleOrNull() ?: 0.0
-            val price = item.priceAtReturn.toDoubleOrNull() ?: 0.0
+            val price = item.price.toDoubleOrNull() ?: 0.0
             val cost = item.product?.averagePrice ?: 0.0
             val lineTotal = quantity * price
-            val lineGainLoss = (price - cost) * quantity
-            totalValue += lineTotal; totalGainLoss += lineGainLoss
-            item.copy(lineTotal = lineTotal, lineGainLoss = lineGainLoss)
+            val lineGain = if (price > cost) (price - cost) * quantity else 0.0
+            subtotal += lineTotal; totalGain += lineGain
+            item.copy(lineTotal = lineTotal, lineGain = lineGain)
         }
-        val previousDebt = returnInput.selectedClient?.debt ?: 0.0
-        val newDebt = previousDebt - totalValue
+        val previousDebt = orderInput.selectedClient?.debt ?: 0.0
+        val totalAmount = subtotal + previousDebt
+        val amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0
+        val amountRemaining = totalAmount - amountPaid
         _state.update { s ->
             s.copy(
-                currentReturnInput = s.currentReturnInput.copy(
+                input = s.input.copy(
                     items = updatedItems,
-                    totalReturnValue = totalValue,
-                    totalGainLoss = totalGainLoss,
-                    newDebt = newDebt
+                    subtotal = subtotal,
+                    totalGain = totalGain,
+                    totalAmount = totalAmount,
+                    amountRemaining = amountRemaining
                 )
             )
         }
@@ -191,28 +211,29 @@ class SalesReturnViewModel(
             )
         }
         if (salesReturn == null) {
-            _state.update { it.copy(currentReturnInput = EditableSalesReturn()) }
+            _state.update { it.copy(input = EditableItemList()) }
         } else {
             _state.update {
                 it.copy(
-                    currentReturnInput = EditableSalesReturn(
+                    input = EditableItemList(
                         selectedClient = salesReturn.client,
                         selectedEmployeeId = salesReturn.employee?.id,
                         paymentType = salesReturn.paymentType,
-                        items = salesReturn.items.map {
-                            EditableReturnItem(
-                                product = it.product,
-                                selectedProductUnit = it.productUnit,
-                                quantity = it.quantity.toString(),
-                                priceAtReturn = it.priceAtReturn.toString(),
-                                lineTotal = it.itemTotalValue,
-                                lineGainLoss = it.itemGainLoss
+                        date = salesReturn.returnDate,
+                        items = salesReturn.items.map { item ->
+                            EditableItem(
+                                product = item.product,
+                                selectedProductUnit = item.productUnit,
+                                quantity = item.quantity.toString(),
+                                price = item.priceAtReturn.toString(),
+                                lineTotal = item.itemTotalValue,
+                                lineGain = item.itemGainLoss
                             )
                         },
-                        amountRefunded = salesReturn.amountPaid.toString(),
-                        totalReturnValue = salesReturn.totalReturnedValue,
-                        totalGainLoss = salesReturn.totalGainLoss,
-                        newDebt = salesReturn.amountRemaining + salesReturn.amountPaid,
+                        amountPaid = salesReturn.amountPaid.toString(),
+                        totalAmount = salesReturn.totalReturnedValue,
+                        totalGain = -salesReturn.totalGainLoss,
+                        amountRemaining = salesReturn.amountRemaining + salesReturn.amountPaid,
                     )
                 )
             }
@@ -225,7 +246,7 @@ class SalesReturnViewModel(
         searchJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, query = query) }
             delay(300)
-            salesReturnRepository.getSalesReturns().catch { e ->
+            salesReturnRepository.getSalesReturns().catch { _ ->
                 _state.update {
                     it.copy(
                         loading = false, error = R.string.error_searching_orders
@@ -242,7 +263,7 @@ class SalesReturnViewModel(
     }
 
     private fun saveReturn() {
-        val returnInput = _state.value.currentReturnInput
+        val returnInput = _state.value.input
         val employeeId = currentUserId ?: run {
             _state.update { it.copy(error = R.string.user_not_identified) }; return
         }
@@ -257,9 +278,9 @@ class SalesReturnViewModel(
                 productLocalId = it.product.localId,
                 unitLocalId = it.selectedProductUnit.localId,
                 quantity = it.quantity.toDouble(),
-                priceAtReturn = it.priceAtReturn.toDoubleOrNull() ?: 0.0,
+                priceAtReturn = it.price.toDoubleOrNull() ?: 0.0,
                 itemTotalValue = it.lineTotal,
-                itemGainLoss = it.lineGainLoss,
+                itemGainLoss = it.lineGain,
                 serverId = null,
                 orderReturnLocalId = 1,
             )
@@ -272,13 +293,13 @@ class SalesReturnViewModel(
             clientLocalId = returnInput.selectedClient.id,
             employeeLocalId = returnInput.selectedEmployeeId ?: employeeId,
             previousDebt = returnInput.selectedClient.debt,
-            amountPaid = returnInput.amountRefunded.toDoubleOrNull() ?: 0.0,
-            amountRemaining = returnInput.newDebt - (returnInput.amountRefunded.toDoubleOrNull()
+            amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
+            amountRemaining = returnInput.amountRemaining - (returnInput.amountPaid.toDoubleOrNull()
                 ?: 0.0),
-            totalReturnedValue = returnInput.totalReturnValue,
-            totalGainLoss = returnInput.totalGainLoss,
+            totalReturnedValue = returnInput.totalAmount,
+            totalGainLoss = -returnInput.totalGain,
             paymentType = returnInput.paymentType,
-            returnDate = System.currentTimeMillis(),
+            returnDate = returnInput.date,
             serverId = null,
             invoiceNumber = null,
         )
@@ -298,11 +319,10 @@ class SalesReturnViewModel(
                         isQueryActive = false,
                         snackbarMessage = R.string.return_saved,
                         selectedReturn = null,
-                        currentReturnInput = EditableSalesReturn()
+                        input = EditableItemList()
                     )
                 }
-            }, onFailure = { e ->
-                Log.d("TAG", "saveReturn: $e")
+            }, onFailure = { _ ->
                 _state.update {
                     it.copy(
                         loading = false, error = R.string.something_went_wrong

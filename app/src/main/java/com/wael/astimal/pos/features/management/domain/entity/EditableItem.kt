@@ -9,7 +9,7 @@ data class EditableItem(
     val product: Product? = null,
     val selectedProductUnit: ProductUnit? = null,
     val quantity: String = "1",
-    val sellingPrice: String = "0.0",
+    val price: String = "0.0",
     val lineTotal: Double = 0.0,
     val lineGain: Double = 0.0
 )

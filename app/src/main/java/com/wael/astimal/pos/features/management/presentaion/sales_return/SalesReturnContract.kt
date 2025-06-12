@@ -1,20 +1,20 @@
 package com.wael.astimal.pos.features.management.presentaion.sales_return
 
 import androidx.annotation.StringRes
+import com.wael.astimal.pos.core.presentation.compoenents.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
-import java.util.UUID
 
 data class SalesReturnScreenState(
     val loading: Boolean = false,
     val returns: List<SalesReturn> = emptyList(),
     val selectedReturn: SalesReturn? = null,
 
-    val currentReturnInput: EditableSalesReturn = EditableSalesReturn(),
+    val input: EditableItemList = EditableItemList(),
     val availableClients: List<Client> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
@@ -28,27 +28,6 @@ data class SalesReturnScreenState(
     val isNew: Boolean get() = selectedReturn == null
 }
 
-data class EditableSalesReturn(
-    val selectedClient: Client? = null,
-    val selectedEmployeeId: Long? = null,
-    val paymentType: PaymentType = PaymentType.CASH,
-    val items: List<EditableReturnItem> = listOf(),
-    val amountRefunded: String = "0.0",
-    val totalReturnValue: Double = 0.0,
-    val totalGainLoss: Double = 0.0,
-    val newDebt: Double = 0.0
-)
-
-data class EditableReturnItem(
-    val tempEditorId: String = UUID.randomUUID().toString(),
-    val product: Product? = null,
-    val selectedProductUnit: ProductUnit? = null,
-    val quantity: String = "1",
-    val priceAtReturn: String = "0.0",
-    val lineTotal: Double = 0.0,
-    val lineGainLoss: Double = 0.0
-)
-
 sealed interface SalesReturnScreenEvent {
     data class SearchReturns(val query: String) : SalesReturnScreenEvent
     data class SelectReturnToView(val salesReturn: SalesReturn?) : SalesReturnScreenEvent
@@ -56,9 +35,11 @@ sealed interface SalesReturnScreenEvent {
     data class UpdateSelectEmployee(val id: Long?) : SalesReturnScreenEvent
     data class UpdateIsQueryActive(val isActive: Boolean) : SalesReturnScreenEvent
 
+    data class UpdateItemDate(val date: Long?) : SalesReturnScreenEvent
+
     data object OpenNewReturnForm : SalesReturnScreenEvent
     data class SelectClient(val client: Client?) : SalesReturnScreenEvent
-    data class UpdatePaymentType(val type: PaymentType) : SalesReturnScreenEvent
+    data class UpdatePaymentType(val type: PaymentType?) : SalesReturnScreenEvent
     data class UpdateAmountRefunded(val amount: String) : SalesReturnScreenEvent
     data object AddItemToReturn : SalesReturnScreenEvent
     data class RemoveItemFromReturn(val tempEditorId: String) : SalesReturnScreenEvent

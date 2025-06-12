@@ -1,12 +1,12 @@
 package com.wael.astimal.pos.features.management.presentaion.sales
 
 import androidx.annotation.StringRes
+import com.wael.astimal.pos.core.presentation.compoenents.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
-import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class OrderState(
@@ -15,7 +15,7 @@ data class OrderState(
     val orders: List<SalesOrder> = emptyList(),
     val selectedOrder: SalesOrder? = null,
 
-    val currentOrderInput: EditableOrder = EditableOrder(),
+    val currentOrderInput: EditableItemList = EditableItemList(),
     val availableClients: List<Client> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
@@ -29,19 +29,6 @@ data class OrderState(
     val isNew: Boolean get() = selectedOrder == null
 }
 
-
-data class EditableOrder(
-    val selectedClient: Client? = null,
-    val selectedEmployeeId: Long? = null,
-    val paymentType: PaymentType = PaymentType.CASH,
-    val date: Long = System.currentTimeMillis(),
-    val items: List<EditableItem> = listOf(),
-    val amountPaid: String = "0.0",
-    val subtotal: Double = 0.0,
-    val totalGain: Double = 0.0,
-    val totalAmount: Double = 0.0,
-    val amountRemaining: Double = 0.0
-)
 
 sealed interface OrderEvent {
     data class SearchOrders(val query: String) : OrderEvent

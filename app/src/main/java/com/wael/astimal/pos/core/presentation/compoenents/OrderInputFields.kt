@@ -144,7 +144,7 @@ private fun OrderItemRow(
                 modifier = Modifier.weight(1f)
             )
             TextInputField(
-                value = item.sellingPrice,
+                value = item.price,
                 onValueChange = { onUpdateItemPrice(item.tempEditorId, it) },
                 label = stringResource(R.string.price),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
