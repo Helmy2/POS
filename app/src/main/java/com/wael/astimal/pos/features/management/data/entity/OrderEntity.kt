@@ -45,7 +45,6 @@ data class OrderEntity(
     val amountPaid: Double = 0.0,
     val amountRemaining: Double = 0.0,
     val totalPrice: Double = 0.0,
-    val totalGain: Double = 0.0,
 
     val paymentType: PaymentType,
     val orderDate: Long,
@@ -84,7 +83,6 @@ data class OrderProductEntity(
     val quantity: Double,
     val unitSellingPrice: Double,
     val itemTotalPrice: Double,
-    val itemGain: Double
 )
 
 
@@ -125,7 +123,6 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
         amountPaid = this.order.amountPaid,
         amountRemaining = this.order.amountRemaining,
         totalPrice = this.order.totalPrice,
-        totalGain = this.order.totalGain,
         paymentType = this.order.paymentType,
         orderDate = this.order.orderDate,
         items = this.itemsWithProductDetails.map { it.toDomain() },
@@ -147,6 +144,5 @@ fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
         quantity = this.orderItem.quantity,
         unitSellingPrice = this.orderItem.unitSellingPrice,
         itemTotalPrice = this.orderItem.itemTotalPrice,
-        itemGain = this.orderItem.itemGain
     )
 }

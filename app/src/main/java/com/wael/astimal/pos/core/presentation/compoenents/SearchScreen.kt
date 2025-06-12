@@ -51,6 +51,7 @@ fun SearchScreen(
     onUpdate: () -> Unit,
     onNew: () -> Unit,
     modifier: Modifier = Modifier,
+    canEdit: Boolean= true,
     searchResults: @Composable () -> Unit,
     mainContent: @Composable () -> Unit,
 ) {
@@ -141,7 +142,7 @@ fun SearchScreen(
                 ) {
                     ElevatedButton(
                         onClick = { onDelete() },
-                        enabled = !isNew && !loading,
+                        enabled = !isNew && !loading && canEdit,
                     ) {
                         Text(stringResource(R.string.delete))
                     }
@@ -153,7 +154,7 @@ fun SearchScreen(
                                 onUpdate()
                             }
                         },
-                        enabled = !loading,
+                        enabled = !loading && canEdit,
                     ) {
                         Text(
                             stringResource(

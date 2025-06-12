@@ -13,19 +13,20 @@ data class SalesReturnScreenState(
     val loading: Boolean = false,
     val returns: List<SalesReturn> = emptyList(),
     val selectedReturn: SalesReturn? = null,
-
     val input: EditableItemList = EditableItemList(),
     val availableClients: List<Client> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
-
     val query: String = "",
     @StringRes val error: Int? = null,
     @StringRes val snackbarMessage: Int? = null,
-
     val isQueryActive: Boolean = false,
-){
+    val currentUser: User? = null,
+) {
     val isNew: Boolean get() = selectedReturn == null
+    val canEdit: Boolean
+        get() = currentUser?.isAdmin == true ||
+            (input.selectedEmployeeId == currentUser?.id && currentUser?.isEmployee == true)
 }
 
 sealed interface SalesReturnScreenEvent {

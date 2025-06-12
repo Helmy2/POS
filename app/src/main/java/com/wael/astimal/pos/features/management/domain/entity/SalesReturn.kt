@@ -15,7 +15,6 @@ data class SalesReturn(
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalReturnedValue: Double,
-    val totalGainLoss: Double,
     val paymentType: PaymentType,
     val returnDate: Long,
     val items: List<SalesReturnItem>,
@@ -33,5 +32,4 @@ data class SalesReturnItem(
     val quantity: Double,
     val priceAtReturn: Double,
     val itemTotalValue: Double,
-    val itemGainLoss: Double
 )

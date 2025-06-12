@@ -11,8 +11,10 @@ data class EditableItemList(
     val date: Long = System.currentTimeMillis(),
     val items: List<EditableItem> = listOf(),
     val amountPaid: String = "0.0",
-    val subtotal: Double = 0.0,
-    val totalGain: Double = 0.0,
-    val totalAmount: Double = 0.0,
-    val amountRemaining: Double = 0.0
-)
+) {
+    val totalAmount: Double get() = items.sumOf { it.lineTotal }
+    val amountRemaining: Double get() {
+        val paidAmount = amountPaid.toDoubleOrNull() ?: 0.0
+        return totalAmount - paidAmount
+    }
+}

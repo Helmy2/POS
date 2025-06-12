@@ -26,7 +26,8 @@ fun <T> CustomExposedDropdownMenu(
     onItemSelected: (T?) -> Unit,
     itemToDisplayString: (T) -> String,
     itemToId: (T) -> Long,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedItem = items.find { itemToId(it) == selectedItemId }
@@ -43,11 +44,12 @@ fun <T> CustomExposedDropdownMenu(
             readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.Companion
-                .menuAnchor(MenuAnchorType.Companion.PrimaryNotEditable)
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.Companion.PrimaryEditable),
+            enabled = enabled
         )
         ExposedDropdownMenu(
-            expanded = expanded,
+            expanded = expanded && enabled,
             onDismissRequest = { expanded = false }
         ) {
             items.forEach { item ->

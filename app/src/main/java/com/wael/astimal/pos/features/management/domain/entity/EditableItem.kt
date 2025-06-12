@@ -10,6 +10,11 @@ data class EditableItem(
     val selectedProductUnit: ProductUnit? = null,
     val quantity: String = "1",
     val price: String = "0.0",
-    val lineTotal: Double = 0.0,
-    val lineGain: Double = 0.0
-)
+) {
+    val lineTotal: Double
+        get() {
+            val quantity = this.quantity.toDoubleOrNull() ?: 0.0
+            val price = this.price.toDoubleOrNull() ?: 0.0
+            return quantity * price
+        }
+}

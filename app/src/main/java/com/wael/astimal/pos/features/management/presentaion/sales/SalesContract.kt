@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class OrderState(
     val loading: Boolean = false,
+    var currentUser: User? = null,
 
     val orders: List<SalesOrder> = emptyList(),
     val selectedOrder: SalesOrder? = null,
@@ -27,6 +28,10 @@ data class OrderState(
     val isQueryActive: Boolean = false,
 ) {
     val isNew: Boolean get() = selectedOrder == null
+    val canEdit: Boolean
+        get() {
+            return currentUser?.isAdmin == true || (currentOrderInput.selectedEmployeeId == currentUser?.id && currentUser?.isEmployee == true)
+        }
 }
 
 

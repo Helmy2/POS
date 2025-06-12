@@ -18,8 +18,6 @@ import com.wael.astimal.pos.R
 
 @Composable
 fun OrderTotalsSection(
-    subtotal: Double,
-    debt: Double,
     totalAmount: Double,
     amountPaid: Double,
     amountRemaining: Double,
@@ -31,20 +29,6 @@ fun OrderTotalsSection(
         Column(
             modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.subtotal), style = MaterialTheme.typography.bodyLarge)
-                Text("%.2f".format(subtotal), style = MaterialTheme.typography.bodyLarge)
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.previous_debt),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    "%.2f".format(debt),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
             Spacer(modifier = Modifier.padding(vertical = 4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(

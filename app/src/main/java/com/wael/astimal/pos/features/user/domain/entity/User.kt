@@ -12,7 +12,10 @@ data class User(
     val isSynced: Boolean = false,
     val lastModified: Long,
     val name: String,
-)
+){
+    val isEmployee: Boolean get() = userType == UserType.EMPLOYEE
+    val isAdmin: Boolean get() = userType == UserType.ADMIN
+}
 
 enum class UserType {
     CLIENT, EMPLOYEE, UNKNOWN, ADMIN;

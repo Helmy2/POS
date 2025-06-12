@@ -127,8 +127,7 @@ private fun OrderItemRow(
             items = listOf(
                 item.product?.minimumProductUnit, item.product?.maximumProductUnit
             ),
-            selectedItemId = item.selectedProductUnit?.localId
-                ?: item.product?.minimumProductUnit?.localId,
+            selectedItemId = item.selectedProductUnit?.localId,
             onItemSelected = { unit -> onUpdateItemUnit(item.tempEditorId, unit) },
             itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
             itemToId = { it?.localId ?: -1L },

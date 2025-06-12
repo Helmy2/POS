@@ -50,7 +50,6 @@ data class OrderReturnEntity(
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalReturnedValue: Double,
-    val totalGainLoss: Double,
     val paymentType: PaymentType,
     val returnDate: Long,
     var isSynced: Boolean = false,
@@ -92,7 +91,6 @@ data class OrderReturnProductEntity(
     val quantity: Double,
     val priceAtReturn: Double,
     val itemTotalValue: Double,
-    val itemGainLoss: Double
 )
 
 data class OrderReturnWithDetailsEntity(
@@ -136,7 +134,6 @@ fun OrderReturnWithDetailsEntity.toDomain(): SalesReturn {
         amountPaid = this.orderReturn.amountPaid,
         amountRemaining = this.orderReturn.amountRemaining,
         totalReturnedValue = this.orderReturn.totalReturnedValue,
-        totalGainLoss = this.orderReturn.totalGainLoss,
         paymentType = this.orderReturn.paymentType,
         returnDate = this.orderReturn.returnDate,
         items = this.itemsWithProductDetails.map { it.toDomain() },
@@ -156,6 +153,5 @@ fun OrderReturnItemWithDetails.toDomain(): SalesReturnItem {
         quantity = this.returnItem.quantity,
         priceAtReturn = this.returnItem.priceAtReturn,
         itemTotalValue = this.returnItem.itemTotalValue,
-        itemGainLoss = this.returnItem.itemGainLoss
     )
 }

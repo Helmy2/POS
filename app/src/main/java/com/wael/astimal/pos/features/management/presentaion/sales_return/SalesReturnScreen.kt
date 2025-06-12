@@ -65,6 +65,7 @@ fun SalesReturnScreen(
         isSearchActive = state.isQueryActive,
         loading = state.loading,
         isNew = state.isNew,
+        canEdit = state.canEdit,
         onQueryChange = { onEvent(SalesReturnScreenEvent.UpdateQuery(it)) },
         onSearch = { onEvent(SalesReturnScreenEvent.SearchReturns(it)) },
         onSearchActiveChange = { onEvent(SalesReturnScreenEvent.UpdateIsQueryActive(it)) },
@@ -129,6 +130,7 @@ fun SalesReturnForm(
             onItemSelected = { onEvent(SalesReturnScreenEvent.UpdateSelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
+            enabled = state.currentUser?.isAdmin ?: false
         )
 
         OrderInputFields(
@@ -157,8 +159,6 @@ fun SalesReturnForm(
         )
 
         OrderTotalsSection(
-            subtotal = returnInput.subtotal,
-            debt = returnInput.selectedClient?.debt ?: 0.0,
             totalAmount = returnInput.totalAmount,
             amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = returnInput.amountRemaining

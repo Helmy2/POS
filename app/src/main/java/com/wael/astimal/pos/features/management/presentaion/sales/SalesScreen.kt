@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
@@ -22,6 +21,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
 import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -64,15 +64,14 @@ fun SalesScreen(
         isSearchActive = state.isQueryActive,
         loading = state.loading,
         isNew = state.isNew,
+        canEdit = state.canEdit,
         onQueryChange = { onEvent(OrderEvent.UpdateQuery(it)) },
         onSearch = { onEvent(OrderEvent.SearchOrders(it)) },
         onSearchActiveChange = { onEvent(OrderEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
         lastModifiedDate = state.selectedOrder?.lastModified,
         onDelete = {
-            state.selectedOrder?.let {
-                onEvent(OrderEvent.DeleteOrder(it.localId))
-            }
+            state.selectedOrder?.let { onEvent(OrderEvent.DeleteOrder(it.localId)) }
         },
         onCreate = { onEvent(OrderEvent.SaveOrder) },
         onUpdate = { onEvent(OrderEvent.SaveOrder) },
@@ -80,21 +79,15 @@ fun SalesScreen(
         searchResults = {
             ItemGrid(
                 list = state.orders,
-                onItemClick = {
-                    onEvent(OrderEvent.SelectOrderToView(it))
-                },
+                onItemClick = { onEvent(OrderEvent.SelectOrderToView(it)) },
                 label = {
-                    Label(
-                        "Order to ${it.client?.name?.displayName(language)}",
-                    )
+                    Label("Order to ${it.client?.name?.displayName(language)}")
                 },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },
             )
         },
         mainContent = {
-            OrderForm(
-                state = state, onEvent = onEvent
-            )
+            OrderForm(state = state, onEvent = onEvent)
         },
     )
 }
@@ -132,6 +125,7 @@ fun OrderForm(
             onItemSelected = { onEvent(OrderEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
+            enabled = state.currentUser?.isAdmin ?: false
         )
 
         OrderInputFields(
@@ -160,8 +154,6 @@ fun OrderForm(
         )
 
         OrderTotalsSection(
-            subtotal = orderInput.subtotal,
-            debt = orderInput.selectedClient?.debt ?: 0.0,
             totalAmount = orderInput.totalAmount,
             amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = orderInput.amountRemaining

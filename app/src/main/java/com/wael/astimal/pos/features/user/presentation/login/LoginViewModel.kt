@@ -46,7 +46,7 @@ class LoginViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
             val result = sessionManger.saveSession(
-                userId = 1,
+                userId = 3L,
                 authToken = "test_auth_token" // todo replace with actual auth token
             )
             handleAuthResult(result) {
