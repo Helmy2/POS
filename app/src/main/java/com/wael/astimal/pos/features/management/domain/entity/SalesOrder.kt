@@ -1,7 +1,8 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
+import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class SalesOrder(
@@ -27,13 +28,26 @@ data class SalesOrderItem(
     val localId: Long,
     val serverId: Int?,
     val orderLocalId: Long,
-    val product:Product?,
-    val unit: Unit?,
+    val product: Product?,
+    val productUnit: ProductUnit?,
     val quantity: Double,
     val unitSellingPrice: Double,
     val itemTotalPrice: Double,
     val itemGain: Double
 )
 
-enum class PaymentType { CASH, TRANSFER, WALLET, DEFERRED }
+enum class PaymentType {
+    CASH, TRANSFER, WALLET, DEFERRED;
+
+    fun stringResource(type: PaymentType = this): Int {
+        return when (type) {
+            CASH -> R.string.payment_type_cash
+            TRANSFER -> R.string.payment_type_transfer
+            WALLET -> R.string.payment_type_wallet
+            DEFERRED -> R.string.payment_type_deferred
+        }
+    }
+
+
+}
 

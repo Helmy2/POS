@@ -56,6 +56,7 @@ fun UnitScreen(
         onSearch = { onEvent(UnitEvent.Search(it)) },
         onSearchActiveChange = { onEvent(UnitEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedProductUnit?.lastModified,
         onDelete = { onEvent(UnitEvent.DeleteUnit) },
         onCreate = { onEvent(UnitEvent.CreateUnit) },
         onUpdate = { onEvent(UnitEvent.UpdateUnit) },
@@ -68,7 +69,7 @@ fun UnitScreen(
                     onEvent(UnitEvent.Select(it))
                 },
                 label = { Text(it.localizedName.displayName(language)) },
-                isSelected = { it.localId == state.selectedUnit?.localId },
+                isSelected = { it.localId == state.selectedProductUnit?.localId },
             )
         },
         mainContent = {

@@ -37,7 +37,7 @@ class PurchaseReturnViewModel(
     init {
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { user ->
-                currentUserId = user?.id?.toLong()
+                currentUserId = user?.id
                 if (_state.value.newReturnInput.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
@@ -109,7 +109,7 @@ class PurchaseReturnViewModel(
 
             is PurchaseReturnScreenEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
                 it.copy(
-                    selectedUnit = event.unit
+                    selectedProductUnit = event.productUnit
                 )
             }
 
@@ -147,16 +147,16 @@ class PurchaseReturnViewModel(
                 it.copy(
                     newReturnInput = EditablePurchaseReturn(
                         selectedSupplier = purchaseReturn.supplier,
-                        selectedEmployeeId = purchaseReturn.employee?.id?.toLong(),
+                        selectedEmployeeId = purchaseReturn.employee?.id,
                         paymentType = purchaseReturn.paymentType,
-                        items = purchaseReturn.items.map {
+                        items = purchaseReturn.items.map { item ->
                             EditablePurchaseReturnItem(
-                                tempEditorId = it.localId.toString(),
-                                product = it.product,
-                                selectedUnit = it.unit,
-                                quantity = it.quantity.toString(),
-                                purchasePrice = it.purchasePrice.toString(),
-                                lineTotal = it.itemTotalPrice
+                                tempEditorId = item.localId.toString(),
+                                product = item.product,
+                                selectedProductUnit = item.productUnit,
+                                quantity = item.quantity.toString(),
+                                purchasePrice = item.purchasePrice.toString(),
+                                lineTotal = item.itemTotalPrice
                             )
                         },
                         totalReturnedValue = purchaseReturn.totalPrice
@@ -232,12 +232,12 @@ class PurchaseReturnViewModel(
             _state.update { it.copy(error = R.string.supplier_and_at_least_one_item_are_required) }; return
         }
         val itemEntities = returnInput.items.mapNotNull {
-            if (it.product == null || it.selectedUnit == null || (it.quantity.toDoubleOrNull()
+            if (it.product == null || it.selectedProductUnit == null || (it.quantity.toDoubleOrNull()
                     ?: 0.0) <= 0
             ) return@mapNotNull null
             PurchaseReturnProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedUnit.localId,
+                unitLocalId = it.selectedProductUnit.localId,
                 quantity = it.quantity.toDouble(),
                 purchasePrice = it.purchasePrice.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,

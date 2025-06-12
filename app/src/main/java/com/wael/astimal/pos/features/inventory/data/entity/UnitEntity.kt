@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.inventory.data.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 
 @Entity(tableName = "units")
 data class UnitEntity(
@@ -19,8 +19,8 @@ data class UnitEntity(
     var isDeletedLocally: Boolean = false
 )
 
-fun UnitEntity.toDomain(): Unit {
-    return Unit(
+fun UnitEntity.toDomain(): ProductUnit {
+    return ProductUnit(
         localId = this.localId,
         serverId = this.serverId,
         localizedName = LocalizedString(

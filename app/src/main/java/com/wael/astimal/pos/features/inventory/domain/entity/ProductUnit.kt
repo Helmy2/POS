@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
 
-data class Unit(
+data class ProductUnit(
     val localId: Long,
     val serverId: Int?,
     val localizedName: LocalizedString,

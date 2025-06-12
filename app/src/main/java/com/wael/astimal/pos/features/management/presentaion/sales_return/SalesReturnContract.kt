@@ -5,7 +5,7 @@ import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
 import java.util.UUID
 
@@ -42,7 +42,7 @@ data class EditableSalesReturn(
 data class EditableReturnItem(
     val tempEditorId: String = UUID.randomUUID().toString(),
     val product: Product? = null,
-    val selectedUnit: com.wael.astimal.pos.features.inventory.domain.entity.Unit? = null,
+    val selectedProductUnit: ProductUnit? = null,
     val quantity: String = "1",
     val priceAtReturn: String = "0.0",
     val lineTotal: Double = 0.0,
@@ -63,7 +63,7 @@ sealed interface SalesReturnScreenEvent {
     data object AddItemToReturn : SalesReturnScreenEvent
     data class RemoveItemFromReturn(val tempEditorId: String) : SalesReturnScreenEvent
     data class UpdateItemProduct(val tempEditorId: String, val product: Product?) : SalesReturnScreenEvent
-    data class UpdateItemUnit(val tempEditorId: String, val unit: Unit?) : SalesReturnScreenEvent
+    data class UpdateItemUnit(val tempEditorId: String, val productUnit: ProductUnit?) : SalesReturnScreenEvent
     data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) : SalesReturnScreenEvent
     data class UpdateItemPrice(val tempEditorId: String, val price: String) : SalesReturnScreenEvent
 

@@ -37,7 +37,7 @@ class PurchaseViewModel(
     init {
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { user ->
-                currentUserId = user?.id?.toLong()
+                currentUserId = user?.id
                 if (_state.value.currentPurchaseInput.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
@@ -92,7 +92,7 @@ class PurchaseViewModel(
 
             is PurchaseScreenEvent.UpdateItemUnit -> updatePurchaseItem(event.tempEditorId) {
                 it.copy(
-                    selectedUnit = event.unit
+                    selectedProductUnit = event.productUnit
                 )
             }
 
@@ -124,16 +124,16 @@ class PurchaseViewModel(
                 currentPurchaseInput = if (order == null) EditablePurchaseOrder(selectedEmployeeId = currentUserId)
                 else EditablePurchaseOrder(
                     selectedSupplier = order.supplier,
-                    selectedEmployeeId = order.user?.id?.toLong(),
+                    selectedEmployeeId = order.user?.id,
                     paymentType = order.paymentType,
-                    items = order.items.map {
+                    items = order.items.map { item ->
                         EditablePurchaseItem(
-                            tempEditorId = it.localId.toString(),
-                            product = it.product,
-                            selectedUnit = it.unit,
-                            quantity = it.quantity.toString(),
-                            purchasePrice = it.purchasePrice.toString(),
-                            lineTotal = it.itemTotalPrice,
+                            tempEditorId = item.localId.toString(),
+                            product = item.product,
+                            selectedProductUnit = item.productUnit,
+                            quantity = item.quantity.toString(),
+                            purchasePrice = item.purchasePrice.toString(),
+                            lineTotal = item.itemTotalPrice,
                         )
                     },
                     totalPrice = order.totalPrice
@@ -182,7 +182,7 @@ class PurchaseViewModel(
         searchJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, query = query) }
             delay(300)
-            purchaseRepository.getPurchases() // Assuming repository handles query
+            purchaseRepository.getPurchases()
                 .catch { e ->
                     _state.update {
                         it.copy(
@@ -208,12 +208,12 @@ class PurchaseViewModel(
             _state.update { it.copy(error = R.string.supplier_and_at_least_one_item_are_required) }; return
         }
         val itemEntities = purchaseInput.items.mapNotNull {
-            if (it.product == null || it.selectedUnit == null || (it.quantity.toDoubleOrNull()
+            if (it.product == null || it.selectedProductUnit == null || (it.quantity.toDoubleOrNull()
                     ?: 0.0) <= 0
             ) return@mapNotNull null
             PurchaseProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedUnit.localId,
+                unitLocalId = it.selectedProductUnit.localId,
                 quantity = it.quantity.toDouble(),
                 purchasePrice = it.purchasePrice.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,
@@ -227,7 +227,7 @@ class PurchaseViewModel(
         val purchaseEntity = PurchaseEntity(
             localId = _state.value.selectedPurchase?.localId ?: 0L,
             supplierLocalId = purchaseInput.selectedSupplier.id,
-            employeeLocalId = purchaseInput.selectedEmployeeId?.toLong() ?: currentUserID,
+            employeeLocalId = purchaseInput.selectedEmployeeId ?: currentUserID,
             totalPrice = purchaseInput.totalPrice, paymentType = purchaseInput.paymentType,
             purchaseDate = System.currentTimeMillis(),
             serverId = null,

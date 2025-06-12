@@ -137,4 +137,13 @@
     <string name="accept_transfer">Accept transfer</string>
     <string name="select_date">Select Date</string>
     <string name="employee">Employee</string>
+    <string name="admin">Admin</string>
+    <string name="unknown">Unknown</string>
+    <string name="creation_date_unknown">Creation date unknown</string>
+    <string name="last_modified_date_not_available">Last modified date not available</string>
+    <string name="last_modification_date">Last modification date</string>
+    <string name="payment_type_cash">Cash</string>
+    <string name="payment_type_transfer">Transfer</string>
+    <string name="payment_type_wallet">Wallet</string>
+    <string name="payment_type_deferred">Deferred</string>
 </resources>

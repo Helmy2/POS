@@ -83,6 +83,7 @@ fun PurchaseScreen(
         onSearch = { onEvent(PurchaseScreenEvent.SearchPurchases(it)) },
         onSearchActiveChange = { onEvent(PurchaseScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedPurchase?.lastModified,
         onDelete = { onEvent(PurchaseScreenEvent.DeletePurchase) },
         onCreate = { onEvent(PurchaseScreenEvent.SavePurchase) },
         onUpdate = { onEvent(PurchaseScreenEvent.SavePurchase) }, // Update logic can be added later
@@ -212,9 +213,9 @@ fun PurchaseItemRow(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.unit),
             items = listOf(
-                item.product?.minimumUnit, item.product?.maximumUnit
+                item.product?.minimumProductUnit, item.product?.maximumProductUnit
             ),
-            selectedItemId = item.selectedUnit?.localId,
+            selectedItemId = item.selectedProductUnit?.localId,
             onItemSelected = { unit ->
                 onEvent(
                     PurchaseScreenEvent.UpdateItemUnit(

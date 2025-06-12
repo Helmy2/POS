@@ -85,6 +85,7 @@ fun PurchaseReturnScreen(
         onBack = onBack,
         onCreate = { onEvent(PurchaseReturnScreenEvent.SaveReturn) },
         onNew = { onEvent(PurchaseReturnScreenEvent.OpenNewReturnForm) },
+        lastModifiedDate = state.selectedReturn?.lastModified,
         searchResults = {
             ItemGrid(
                 list = state.returns,
@@ -202,9 +203,9 @@ fun PurchaseReturnItemRow(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.unit),
             items = listOf(
-                item.product?.minimumUnit, item.product?.maximumUnit
+                item.product?.minimumProductUnit, item.product?.maximumProductUnit
             ),
-            selectedItemId = item.selectedUnit?.localId,
+            selectedItemId = item.selectedProductUnit?.localId,
             onItemSelected = { unit ->
                 onEvent(
                     PurchaseReturnScreenEvent.UpdateItemUnit(

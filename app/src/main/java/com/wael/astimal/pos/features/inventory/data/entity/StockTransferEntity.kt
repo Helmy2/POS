@@ -165,6 +165,6 @@ fun StockTransferItemWithProductDetails.toDomain(): StockTransferItem {
         maximumOpeningBalance = this.item.maximumOpeningBalance,
         minimumOpeningBalance = this.item.minimumOpeningBalance,
         product = this.product?.toDomain(),
-        unit = this.unit?.toDomain(),
+        productUnit = this.unit?.toDomain(),
     )
 }

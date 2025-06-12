@@ -98,7 +98,7 @@ fun ProductWithDetailsEntity.toDomain(): Product {
         isDeletedLocally = product.isDeletedLocally,
         category = category?.toDomain(),
         store = store?.toDomain(),
-        minimumUnit = minimumStockUnit?.toDomain(),
-        maximumUnit = maximumStockUnit?.toDomain(),
+        minimumProductUnit = minimumStockUnit?.toDomain(),
+        maximumProductUnit = maximumStockUnit?.toDomain(),
     )
 }

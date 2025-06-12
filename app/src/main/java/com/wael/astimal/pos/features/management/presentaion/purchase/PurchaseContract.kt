@@ -37,7 +37,7 @@ data class EditablePurchaseOrder(
 data class EditablePurchaseItem(
     val tempEditorId: String = UUID.randomUUID().toString(),
     val product: Product? = null,
-    val selectedUnit: com.wael.astimal.pos.features.inventory.domain.entity.Unit? = null,
+    val selectedProductUnit: com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit? = null,
     val quantity: String = "1",
     val purchasePrice: String = "0.0",
     val lineTotal: Double = 0.0
@@ -55,7 +55,7 @@ sealed interface PurchaseScreenEvent {
     data object AddItemToPurchase : PurchaseScreenEvent
     data class RemoveItemFromPurchase(val tempEditorId: String) : PurchaseScreenEvent
     data class UpdateItemProduct(val tempEditorId: String, val product: Product?) : PurchaseScreenEvent
-    data class UpdateItemUnit(val tempEditorId: String, val unit: com.wael.astimal.pos.features.inventory.domain.entity.Unit?) : PurchaseScreenEvent
+    data class UpdateItemUnit(val tempEditorId: String, val productUnit: com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit?) : PurchaseScreenEvent
     data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) : PurchaseScreenEvent
     data class UpdateItemPrice(val tempEditorId: String, val price: String) : PurchaseScreenEvent
     data object SavePurchase : PurchaseScreenEvent

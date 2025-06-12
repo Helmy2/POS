@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.util.convertToString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,7 @@ fun SearchScreen(
     isSearchActive: Boolean,
     loading: Boolean,
     isNew: Boolean,
+    lastModifiedDate: Long?,
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     onSearchActiveChange: (Boolean) -> Unit,
@@ -57,10 +59,14 @@ fun SearchScreen(
         else onBack()
     }
     Box(
-        modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp).fillMaxSize()
+        modifier
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            .fillMaxSize()
             .semantics { isTraversalGroup = true }) {
         DockedSearchBar(
-            modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
                 .semantics { traversalIndex = 0f },
             inputField = {
                 Row(
@@ -91,7 +97,7 @@ fun SearchScreen(
             expanded = isSearchActive,
             onExpandedChange = onSearchActiveChange,
         ) {
-            AnimatedContent(loading, modifier= Modifier.padding(8.dp)) { it ->
+            AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
                 if (it) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -105,19 +111,24 @@ fun SearchScreen(
             }
         }
         Column(
-            modifier = Modifier.padding(top = 64.dp).fillMaxSize()
+            modifier = Modifier
+                .padding(top = 64.dp)
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             mainContent()
             Column(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AnimatedVisibility(visible = !isNew && !loading) {
-                    ElevatedButton(onClick = { onNew() },
+                    ElevatedButton(
+                        onClick = { onNew() },
                     ) {
                         Text(stringResource(R.string.new_))
                     }
@@ -152,8 +163,19 @@ fun SearchScreen(
                         )
                     }
                 }
+                AnimatedVisibility(visible = !isNew && !loading) {
+                    Row {
+                        Text(
+                            text = stringResource(R.string.last_modification_date),
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = lastModifiedDate?.convertToString()
+                                ?: stringResource(R.string.last_modified_date_not_available),
+                        )
+                    }
+                }
             }
-
         }
     }
 }

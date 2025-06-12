@@ -60,6 +60,7 @@ fun StoreScreen(
         onSearch = { onEvent(StoreEvent.Search(it)) },
         onSearchActiveChange = { onEvent(StoreEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedStore?.lastModified,
         onDelete = { onEvent(StoreEvent.DeleteStore) },
         onCreate = { onEvent(StoreEvent.CreateStore) },
         onUpdate = { onEvent(StoreEvent.UpdateStore) },

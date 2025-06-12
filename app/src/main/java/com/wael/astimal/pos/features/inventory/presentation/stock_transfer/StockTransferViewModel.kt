@@ -112,7 +112,7 @@ class StockTransferViewModel(
             }
 
             is StockTransferScreenEvent.UpdateItemUnit -> updateTransferItem(event.itemEditorId) {
-                it.copy(unit = event.unit)
+                it.copy(productUnit = event.productUnit)
             }
 
             is StockTransferScreenEvent.UpdateItemQuantity -> updateTransferItem(event.itemEditorId) {
@@ -167,7 +167,7 @@ class StockTransferViewModel(
                             EditableStockTransferItem(
                                 tempEditorId = item.localId,
                                 product = item.product,
-                                unit = item.unit,
+                                productUnit = item.productUnit,
                                 quantity = item.quantity.toString(),
                                 maxOpeningBalance = item.maximumOpeningBalance?.toString() ?: "",
                                 minOpeningBalance = item.minimumOpeningBalance?.toString() ?: "",
@@ -195,7 +195,7 @@ class StockTransferViewModel(
         searchJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
 
-            stockTransferRepository.getStockTransfersWithDetails().catch { exception ->
+            stockTransferRepository.getStockTransfersWithDetails().catch {
                 _state.update {
                     it.copy(loading = false, error = R.string.error_fetching_transfers)
                 }
@@ -223,7 +223,7 @@ class StockTransferViewModel(
 
     private fun saveCurrentTransfer() {
         val currentInput = _state.value.currentTransferInput
-        val loggedInUserId = currentUserId?.toLong()
+        val loggedInUserId = currentUserId
 
         if (currentInput.fromStoreId == null || currentInput.toStoreId == null) {
             _state.update { it.copy(error = R.string.from_and_to_stores_must_be_selected) }
@@ -243,7 +243,7 @@ class StockTransferViewModel(
         }
 
         val itemEntities = currentInput.items.mapNotNull { editableItem ->
-            if (editableItem.product == null || editableItem.unit == null || editableItem.quantity.toDoubleOrNull() == null || editableItem.quantity.toDouble() <= 0) {
+            if (editableItem.product == null || editableItem.productUnit == null || editableItem.quantity.toDoubleOrNull() == null || editableItem.quantity.toDouble() <= 0) {
                 _state.update { it.copy(error = R.string.all_items_must_have_a_product_unit_and_valid_quantity) }
                 return@mapNotNull null
             }
@@ -251,7 +251,7 @@ class StockTransferViewModel(
                 serverId = null,
                 stockTransferLocalId = 0L,
                 productLocalId = editableItem.product.localId,
-                unitLocalId = editableItem.unit.localId,
+                unitLocalId = editableItem.productUnit.localId,
                 quantity = editableItem.quantity.toDoubleOrNull() ?: 0.0,
                 maximumOpeningBalance = editableItem.maxOpeningBalance.toDoubleOrNull(),
                 minimumOpeningBalance = editableItem.minOpeningBalance.toDoubleOrNull(),
@@ -288,7 +288,7 @@ class StockTransferViewModel(
             result.fold(onSuccess = {
                 clear(snackbarMessage = R.string.transfer_saved_successfully)
                 onEvent(StockTransferScreenEvent.LoadTransfers)
-            }, onFailure = { exception ->
+            }, onFailure = { _ ->
                 _state.update {
                     it.copy(
                         loading = false, error = R.string.failed_to_save_transfer
@@ -305,7 +305,7 @@ class StockTransferViewModel(
             result.fold(onSuccess = {
                 clear(snackbarMessage = R.string.transfer_deleted_successfully)
                 onEvent(StockTransferScreenEvent.LoadTransfers)
-            }, onFailure = { exception ->
+            }, onFailure = {
                 _state.update {
                     it.copy(
                         loading = false, error = R.string.failed_to_delete_transfer

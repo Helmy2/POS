@@ -127,11 +127,11 @@ class SalesReturnRepositoryImpl(
         }
     }
 
-    override suspend fun deleteSalesReturn(localId: Long): Result<Unit> {
+    override suspend fun deleteSalesReturn(returnLocalId: Long): Result<Unit> {
         return try {
             database.withTransaction {
-                val returnToDelete = salesReturnDao.getOrderReturnWithDetails(localId)
-                    ?: throw NoSuchElementException("Sales Return not found with localId: $localId")
+                val returnToDelete = salesReturnDao.getOrderReturnWithDetails(returnLocalId)
+                    ?: throw NoSuchElementException("Sales Return not found with localId: $returnLocalId")
 
                 if (!returnToDelete.orderReturn.isDeletedLocally) {
                     val employeeId = returnToDelete.orderReturn.employeeLocalId ?: throw Exception("Employee ID missing.")

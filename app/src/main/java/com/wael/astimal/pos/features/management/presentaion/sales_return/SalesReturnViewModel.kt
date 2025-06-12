@@ -37,7 +37,7 @@ class SalesReturnViewModel(
     init {
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { user ->
-                currentUserId = user?.id?.toLong()
+                currentUserId = user?.id
                 if (_state.value.currentReturnInput.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
@@ -97,7 +97,7 @@ class SalesReturnViewModel(
             }
 
             is SalesReturnScreenEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
-                it.copy(selectedUnit = event.unit)
+                it.copy(selectedProductUnit = event.productUnit)
             }
 
             is SalesReturnScreenEvent.UpdateItemQuantity -> updateReturnItem(event.tempEditorId) {
@@ -202,7 +202,7 @@ class SalesReturnViewModel(
                         items = salesReturn.items.map {
                             EditableReturnItem(
                                 product = it.product,
-                                selectedUnit = it.unit,
+                                selectedProductUnit = it.productUnit,
                                 quantity = it.quantity.toString(),
                                 priceAtReturn = it.priceAtReturn.toString(),
                                 lineTotal = it.itemTotalValue,
@@ -250,12 +250,12 @@ class SalesReturnViewModel(
             _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }; return
         }
         val itemEntities = returnInput.items.mapNotNull {
-            if (it.product == null || it.selectedUnit == null || (it.quantity.toDoubleOrNull()
+            if (it.product == null || it.selectedProductUnit == null || (it.quantity.toDoubleOrNull()
                     ?: 0.0) <= 0
             ) return@mapNotNull null
             OrderReturnProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedUnit.localId,
+                unitLocalId = it.selectedProductUnit.localId,
                 quantity = it.quantity.toDouble(),
                 priceAtReturn = it.priceAtReturn.toDoubleOrNull() ?: 0.0,
                 itemTotalValue = it.lineTotal,

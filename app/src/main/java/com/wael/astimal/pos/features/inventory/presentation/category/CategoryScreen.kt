@@ -56,6 +56,7 @@ fun CategoryScreen(
         onSearch = { onEvent(CategoryScreenEvent.Search(it)) },
         onSearchActiveChange = { onEvent(CategoryScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedCategory?.lastModified,
         onDelete = { onEvent(CategoryScreenEvent.DeleteCategory) },
         onCreate = { onEvent(CategoryScreenEvent.CreateCategory) },
         onUpdate = { onEvent(CategoryScreenEvent.UpdateCategory) },

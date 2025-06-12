@@ -1,45 +1,26 @@
 package com.wael.astimal.pos.features.management.presentaion.sales
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.Label
+import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
+import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import org.koin.androidx.compose.koinViewModel
 
@@ -58,7 +39,6 @@ fun SalesRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesScreen(
     state: OrderState,
@@ -88,6 +68,7 @@ fun SalesScreen(
         onSearch = { onEvent(OrderEvent.SearchOrders(it)) },
         onSearchActiveChange = { onEvent(OrderEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedOrder?.lastModified,
         onDelete = {
             state.selectedOrder?.let {
                 onEvent(OrderEvent.DeleteOrder(it.localId))
@@ -103,10 +84,8 @@ fun SalesScreen(
                     onEvent(OrderEvent.SelectOrderToView(it))
                 },
                 label = {
-                    Text(
+                    Label(
                         "${it.invoiceNumber}: ${it.client?.name?.displayName(language)}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp)
                     )
                 },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },
@@ -120,7 +99,6 @@ fun SalesScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderForm(
     modifier: Modifier = Modifier, state: OrderState, onEvent: (OrderEvent) -> Unit
@@ -133,7 +111,12 @@ fun OrderForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // --- Header Section ---
+
+        DataPicker(
+            selectedDateMillis = orderInput.date,
+            onDateSelected = { onEvent(OrderEvent.UpdateTransferDate(it)) },
+        )
+
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
@@ -141,8 +124,9 @@ fun OrderForm(
             onItemSelected = { onEvent(OrderEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id })
+
         CustomExposedDropdownMenu(
-            label = "Employee",
+            label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = orderInput.selectedEmployeeId,
             onItemSelected = { onEvent(OrderEvent.SelectEmployee(it?.id)) },
@@ -150,181 +134,37 @@ fun OrderForm(
             itemToId = { it.id },
         )
 
-        // --- Items Section ---
-        Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
-        orderInput.items.forEach { item ->
-            OrderItemRow(
-                item = item, state = state, onEvent = onEvent
-            )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
-        }
-        Button(
-            onClick = { onEvent(OrderEvent.AddItemToOrder) },
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
-            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(stringResource(R.string.add_item))
-        }
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.payment_type),
-            items = PaymentType.entries,
-            selectedItemId = orderInput.paymentType.ordinal.toLong(),
-            onItemSelected = {
-                onEvent(
-                    OrderEvent.UpdatePaymentType(
-                        it ?: PaymentType.CASH
-                    )
-                )
+        OrderInputFields(
+            itemList = orderInput.items,
+            selectedPaymentType = orderInput.paymentType,
+            amountPaid = orderInput.amountPaid,
+            onUpdateAmountPaid = { onEvent(OrderEvent.UpdateAmountPaid(it)) },
+            onAddNewItemToOrder = { onEvent(OrderEvent.AddItemToOrder) },
+            availableProducts = state.availableProducts,
+            onSelectPaymentType = { onEvent(OrderEvent.UpdatePaymentType(it)) },
+            onItemSelected = { tempEditorId, product ->
+                onEvent(OrderEvent.UpdateItemProduct(tempEditorId, product))
             },
-            itemToDisplayString = { it.name },
-            itemToId = { it.ordinal.toLong() })
-
-        OutlinedTextField(
-            value = orderInput.amountPaid,
-            onValueChange = { onEvent(OrderEvent.UpdateAmountPaid(it)) },
-            label = { Text(stringResource(R.string.amount_paid)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
-            ),
-            modifier = Modifier.fillMaxWidth()
+            onRemoveItemFromOrder = { tempEditorId ->
+                onEvent(OrderEvent.RemoveItemFromOrder(tempEditorId))
+            },
+            onUpdateItemQuantity = { tempEditorId, quantity ->
+                onEvent(OrderEvent.UpdateItemQuantity(tempEditorId, quantity))
+            },
+            onUpdateItemUnit = { tempEditorId, unit ->
+                onEvent(OrderEvent.UpdateItemUnit(tempEditorId, unit))
+            },
+            onUpdateItemPrice = { tempEditorId, price ->
+                onEvent(OrderEvent.UpdateItemPrice(tempEditorId, price))
+            },
         )
 
-        OrderTotalsSection(orderInput)
-    }
-}
-
-@Composable
-fun OrderItemRow(
-    item: EditableOrderItem, state: OrderState, onEvent: (OrderEvent) -> Unit
-) {
-    val language = LocalAppLocale.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.weight(1f)) {
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.product),
-                    items = state.availableProducts,
-                    selectedItemId = item.product?.localId,
-                    onItemSelected = {
-                        onEvent(
-                            OrderEvent.UpdateItemProduct(
-                                item.tempEditorId, it
-                            )
-                        )
-                    },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId })
-            }
-            IconButton(onClick = { onEvent(OrderEvent.RemoveItemFromOrder(item.tempEditorId)) }) {
-                Icon(Icons.Default.Delete, stringResource(R.string.remove_item))
-            }
-        }
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.unit),
-            items = listOf(
-                item.product?.minimumUnit, item.product?.maximumUnit
-            ),
-            selectedItemId = item.selectedUnit?.localId,
-            onItemSelected = { unit ->
-                onEvent(
-                    OrderEvent.UpdateItemUnit(
-                        item.tempEditorId, unit
-                    )
-                )
-            },
-            itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
-            itemToId = { it?.localId ?: -1L },
+        OrderTotalsSection(
+            subtotal = orderInput.subtotal,
+            debt = orderInput.selectedClient?.debt ?: 0.0,
+            totalAmount = orderInput.totalAmount,
+            amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
+            amountRemaining = orderInput.amountRemaining
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = item.quantity,
-                onValueChange = {
-                    onEvent(
-                        OrderEvent.UpdateItemQuantity(
-                            item.tempEditorId, it
-                        )
-                    )
-                },
-                label = { Text(stringResource(R.string.qty)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = item.sellingPrice,
-                onValueChange = {
-                    onEvent(
-                        OrderEvent.UpdateItemPrice(
-                            item.tempEditorId, it
-                        )
-                    )
-                },
-                label = { Text(stringResource(R.string.price)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = "%.2f".format(item.lineTotal),
-                onValueChange = { },
-                readOnly = true,
-                label = { Text(stringResource(R.string.total)) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-fun OrderTotalsSection(orderInput: EditableOrder) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.subtotal), style = MaterialTheme.typography.bodyLarge)
-                Text("%.2f".format(orderInput.subtotal), style = MaterialTheme.typography.bodyLarge)
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.previous_debt),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    "%.2f".format(orderInput.selectedClient?.debt ?: 0.0),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-            Spacer(modifier = Modifier.padding(vertical = 4.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.total_amount),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    "%.2f".format(orderInput.totalAmount),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.paid), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "%.2f".format(orderInput.amountPaid.toDoubleOrNull() ?: 0.0),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.remaining), style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    "%.2f".format(orderInput.amountRemaining),
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-        }
     }
 }

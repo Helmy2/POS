@@ -36,7 +36,7 @@ data class EditablePurchaseReturn(
 data class EditablePurchaseReturnItem(
     val tempEditorId: String = UUID.randomUUID().toString(),
     val product: Product? = null,
-    val selectedUnit: com.wael.astimal.pos.features.inventory.domain.entity.Unit? = null,
+    val selectedProductUnit: com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit? = null,
     val quantity: String = "1",
     val purchasePrice: String = "0.0",
     val lineTotal: Double = 0.0
@@ -56,7 +56,7 @@ sealed interface PurchaseReturnScreenEvent {
     data class UpdateItemProduct(val tempEditorId: String, val product: Product?) :
         PurchaseReturnScreenEvent
 
-    data class UpdateItemUnit(val tempEditorId: String, val unit: com.wael.astimal.pos.features.inventory.domain.entity.Unit?) : PurchaseReturnScreenEvent
+    data class UpdateItemUnit(val tempEditorId: String, val productUnit: com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit?) : PurchaseReturnScreenEvent
     data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) :
         PurchaseReturnScreenEvent
 

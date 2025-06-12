@@ -4,11 +4,9 @@ import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
-import java.time.LocalDate
 import kotlin.random.Random
-import kotlin.time.Clock
 
 data class StockTransferScreenState(
     val loading: Boolean = false,
@@ -42,7 +40,7 @@ data class EditableStockTransfer(
 data class EditableStockTransferItem(
     val tempEditorId: Long = Random.nextLong(),
     val product: Product? = null,
-    val unit: Unit? = null,
+    val productUnit: ProductUnit? = null,
     val quantity: String = "",
     val maxOpeningBalance: String = "",
     val minOpeningBalance: String = "",
@@ -64,7 +62,7 @@ sealed interface StockTransferScreenEvent {
         StockTransferScreenEvent
     data class UpdateTransferDate(val date: Long?) : StockTransferScreenEvent
 
-    data class UpdateItemUnit(val itemEditorId: Long, val unit: Unit?) : StockTransferScreenEvent
+    data class UpdateItemUnit(val itemEditorId: Long, val productUnit: ProductUnit?) : StockTransferScreenEvent
 
     data class UpdateItemQuantity(val itemEditorId: Long, val quantity: String) :
         StockTransferScreenEvent

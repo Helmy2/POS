@@ -152,7 +152,7 @@ fun OrderReturnItemWithDetails.toDomain(): SalesReturnItem {
         serverId = this.returnItem.serverId,
         returnLocalId = this.returnItem.orderReturnLocalId,
         product = this.product?.toDomain(),
-        unit= this.unit?.toDomain(),
+        productUnit= this.unit?.toDomain(),
         quantity = this.returnItem.quantity,
         priceAtReturn = this.returnItem.priceAtReturn,
         itemTotalValue = this.returnItem.itemTotalValue,

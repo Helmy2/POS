@@ -16,5 +16,14 @@ data class User(
 
 enum class UserType {
     CLIENT, EMPLOYEE, UNKNOWN, ADMIN;
+
+    fun stringResource(type: UserType = this): Int {
+        return when (type) {
+            CLIENT -> com.wael.astimal.pos.R.string.client
+            EMPLOYEE -> com.wael.astimal.pos.R.string.employee
+            ADMIN -> com.wael.astimal.pos.R.string.admin
+            UNKNOWN -> com.wael.astimal.pos.R.string.unknown
+        }
+    }
 }
 

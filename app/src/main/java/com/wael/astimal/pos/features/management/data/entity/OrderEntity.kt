@@ -143,7 +143,7 @@ fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
         serverId = this.orderItem.serverId,
         orderLocalId = this.orderItem.orderLocalId,
         product = this.product?.toDomain(),
-        unit = this.unit?.toDomain(),
+        productUnit = this.unit?.toDomain(),
         quantity = this.orderItem.quantity,
         unitSellingPrice = this.orderItem.unitSellingPrice,
         itemTotalPrice = this.orderItem.itemTotalPrice,

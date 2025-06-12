@@ -91,6 +91,7 @@ fun StockTransferScreen(
         onSearch = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearchActiveChange = { onEvent(StockTransferScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedTransfer?.lastModified,
         onDelete = {
             state.selectedTransfer?.let {
                 onEvent(StockTransferScreenEvent.DeleteTransfer(it.localId))
@@ -247,9 +248,9 @@ fun StockTransferItemRow(
             CustomExposedDropdownMenu(
                 label = stringResource(R.string.unit),
                 items = listOf(
-                    item.product?.minimumUnit, item.product?.maximumUnit
+                    item.product?.minimumProductUnit, item.product?.maximumProductUnit
                 ),
-                selectedItemId = item.unit?.localId ?: item.product?.minimumUnit?.localId,
+                selectedItemId = item.productUnit?.localId ?: item.product?.minimumProductUnit?.localId,
                 onItemSelected = { unit ->
                     onEvent(
                         StockTransferScreenEvent.UpdateItemUnit(item.tempEditorId, unit)

@@ -30,6 +30,7 @@ fun LabeledTextField(
             numberOfLines = numberOfLines,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
+            modifier = modifier
         )
     }
 }

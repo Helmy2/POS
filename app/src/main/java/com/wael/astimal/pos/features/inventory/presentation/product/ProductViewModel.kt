@@ -169,9 +169,9 @@ class ProductViewModel(
                     inputOpeningBalance = product.openingBalanceQuantity?.toString() ?: "",
                     selectedStoreId = product.store?.localId,
                     inputMinStockLevel = product.minimumStockLevel?.toString() ?: "",
-                    selectedMinStockUnitId = product.minimumUnit?.localId,
+                    selectedMinStockUnitId = product.minimumProductUnit?.localId,
                     inputMaxStockLevel = product.maximumStockLevel?.toString() ?: "",
-                    selectedMaxStockUnitId = product.maximumUnit?.localId,
+                    selectedMaxStockUnitId = product.maximumProductUnit?.localId,
                     inputFirstPeriodData = product.firstPeriodData ?: ""
                 )
             }

@@ -5,9 +5,9 @@ import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
+import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.user.domain.entity.User
-import java.util.UUID
 
 data class OrderState(
     val loading: Boolean = false,
@@ -25,7 +25,7 @@ data class OrderState(
     @StringRes val snackbarMessage: Int? = null,
 
     val isQueryActive: Boolean = false,
-){
+) {
     val isNew: Boolean get() = selectedOrder == null
 }
 
@@ -34,22 +34,13 @@ data class EditableOrder(
     val selectedClient: Client? = null,
     val selectedEmployeeId: Long? = null,
     val paymentType: PaymentType = PaymentType.CASH,
-    val items: List<EditableOrderItem> = listOf(),
+    val date: Long = System.currentTimeMillis(),
+    val items: List<EditableItem> = listOf(),
     val amountPaid: String = "0.0",
     val subtotal: Double = 0.0,
     val totalGain: Double = 0.0,
     val totalAmount: Double = 0.0,
     val amountRemaining: Double = 0.0
-)
-
-data class EditableOrderItem(
-    val tempEditorId: String = UUID.randomUUID().toString(),
-    val product: Product? = null,
-    val selectedUnit: Unit? = null,
-    val quantity: String = "1",
-    val sellingPrice: String = "0.0",
-    val lineTotal: Double = 0.0,
-    val lineGain: Double = 0.0
 )
 
 sealed interface OrderEvent {
@@ -65,10 +56,11 @@ sealed interface OrderEvent {
     data object AddItemToOrder : OrderEvent
     data class RemoveItemFromOrder(val tempEditorId: String) : OrderEvent
 
-    data class UpdatePaymentType(val type: PaymentType) : OrderEvent
+    data class UpdatePaymentType(val type: PaymentType?) : OrderEvent
+    data class UpdateTransferDate(val date: Long?) : OrderEvent
     data class UpdateAmountPaid(val amount: String) : OrderEvent
     data class UpdateItemProduct(val tempEditorId: String, val product: Product?) : OrderEvent
-    data class UpdateItemUnit(val tempEditorId: String, val unit: Unit?) : OrderEvent
+    data class UpdateItemUnit(val tempEditorId: String, val productUnit: ProductUnit?) : OrderEvent
     data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) : OrderEvent
     data class UpdateItemPrice(val tempEditorId: String, val price: String) : OrderEvent
 

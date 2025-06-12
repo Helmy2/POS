@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,7 +36,7 @@ class UnitViewModel(
             is UnitEvent.DeleteUnit -> deleteSelectedUnit()
             is UnitEvent.NewUnit -> handleSelectUnit(null)
             is UnitEvent.Search -> searchUnits(event.query)
-            is UnitEvent.Select -> handleSelectUnit(event.unit)
+            is UnitEvent.Select -> handleSelectUnit(event.productUnit)
             is UnitEvent.UpdateQuery -> {
                 _state.update { it.copy(query = event.query) }
                 searchUnits(event.query)
@@ -69,20 +69,20 @@ class UnitViewModel(
         }
     }
 
-    private fun handleSelectUnit(unit: Unit?) {
-        if (unit == null) {
+    private fun handleSelectUnit(productUnit: ProductUnit?) {
+        if (productUnit == null) {
             _state.update {
                 it.copy(
-                    selectedUnit = null, arName = "", enName = "", rate = "1"
+                    selectedProductUnit = null, arName = "", enName = "", rate = "1"
                 )
             }
         } else {
             _state.update {
                 it.copy(
-                    selectedUnit = unit,
-                    arName = unit.localizedName.arName ?: "",
-                    enName = unit.localizedName.enName ?: "",
-                    rate = unit.rate.toString()
+                    selectedProductUnit = productUnit,
+                    arName = productUnit.localizedName.arName ?: "",
+                    enName = productUnit.localizedName.enName ?: "",
+                    rate = productUnit.rate.toString()
                 )
             }
         }
@@ -129,7 +129,7 @@ class UnitViewModel(
 
     private fun updateUnitFromState() {
         val currentState = _state.value
-        val unitToUpdate = currentState.selectedUnit
+        val unitToUpdate = currentState.selectedProductUnit
         if (unitToUpdate == null) {
             _state.update { it.copy(error = "No unit selected for update.") }
             return
@@ -160,7 +160,7 @@ class UnitViewModel(
                 _state.update {
                     it.copy(
                         loading = false,
-                        selectedUnit = null,
+                        selectedProductUnit = null,
                         arName = "",
                         enName = "",
                         rate = "1"
@@ -177,7 +177,7 @@ class UnitViewModel(
     }
 
     private fun deleteSelectedUnit() {
-        val unitToDeleteDetails = _state.value.selectedUnit
+        val unitToDeleteDetails = _state.value.selectedProductUnit
         if (unitToDeleteDetails == null) {
             _state.update { it.copy(error = "No unit selected for deletion.") }
             return
@@ -198,7 +198,7 @@ class UnitViewModel(
                 _state.update {
                     it.copy(
                         loading = false,
-                        selectedUnit = null,
+                        selectedProductUnit = null,
                         arName = "",
                         enName = "",
                         rate = "1"

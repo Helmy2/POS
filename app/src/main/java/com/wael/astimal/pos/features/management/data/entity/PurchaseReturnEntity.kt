@@ -137,7 +137,7 @@ fun PurchaseReturnItemWithDetails.toDomain(): PurchaseReturnItem {
         serverId = this.purchaseReturnItem.serverId,
         purchaseReturnLocalId = this.purchaseReturnItem.purchaseReturnLocalId,
         product = this.product?.toDomain(),
-        unit = this.unit?.toDomain(),
+        productUnit = this.unit?.toDomain(),
         quantity = this.purchaseReturnItem.quantity,
         purchasePrice = this.purchaseReturnItem.purchasePrice,
         itemTotalPrice = this.purchaseReturnItem.itemTotalPrice

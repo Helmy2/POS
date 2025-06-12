@@ -20,7 +20,7 @@ data class StockTransferItem(
     val localId: Long,
     val serverId: Int?,
     val product: Product?,
-    val unit: Unit?,
+    val productUnit: ProductUnit?,
     val quantity: Double,
     val maximumOpeningBalance: Double?,
     val minimumOpeningBalance: Double?

@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.Unit
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class PurchaseOrder(
@@ -24,7 +24,7 @@ data class PurchaseOrderItem(
     val serverId: Int?,
     val purchaseLocalId: Long,
     val product: Product?,
-    val unit: Unit?,
+    val productUnit: ProductUnit?,
     val quantity: Double,
     val purchasePrice: Double,
     val itemTotalPrice: Double

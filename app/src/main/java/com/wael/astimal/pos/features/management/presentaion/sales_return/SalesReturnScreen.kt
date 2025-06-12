@@ -91,6 +91,7 @@ fun SalesReturnScreen(
         onSearch = { onEvent(SalesReturnScreenEvent.SearchReturns(it)) },
         onSearchActiveChange = { onEvent(SalesReturnScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedReturn?.lastModified,
         onCreate = { onEvent(SalesReturnScreenEvent.SaveReturn) },
         onNew = { onEvent(SalesReturnScreenEvent.OpenNewReturnForm) },
         searchResults = {
@@ -219,9 +220,9 @@ fun ReturnItemRow(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.unit),
             items = listOf(
-                item.product?.minimumUnit, item.product?.maximumUnit
+                item.product?.minimumProductUnit, item.product?.maximumProductUnit
             ),
-            selectedItemId = item.selectedUnit?.localId,
+            selectedItemId = item.selectedProductUnit?.localId,
             onItemSelected = { unit ->
                 onEvent(
                     SalesReturnScreenEvent.UpdateItemUnit(

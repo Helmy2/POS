@@ -58,6 +58,7 @@ fun ProductScreen(
         onSearch = { onEvent(ProductEvent.Search(it)) },
         onSearchActiveChange = { onEvent(ProductEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
+        lastModifiedDate = state.selectedProduct?.lastModified,
         onDelete = { onEvent(ProductEvent.DeleteProduct) },
         onCreate = { onEvent(ProductEvent.SaveProduct) },
         onUpdate = { onEvent(ProductEvent.SaveProduct) },

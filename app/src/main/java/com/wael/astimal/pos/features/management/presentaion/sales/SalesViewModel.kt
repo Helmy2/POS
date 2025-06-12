@@ -10,6 +10,8 @@ import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
@@ -37,7 +39,7 @@ class SalesViewModel(
     init {
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect {
-                currentUserId = it?.id?.toLong()
+                currentUserId = it?.id
                 if (_state.value.currentOrderInput.selectedEmployeeId == null) {
                     _state.update { s ->
                         s.copy(
@@ -80,9 +82,9 @@ class SalesViewModel(
                 it.copy(selectedEmployeeId = event.employeeId)
             }
 
-            is OrderEvent.UpdatePaymentType -> updateOrderInput { it.copy(paymentType = event.type) }
+            is OrderEvent.UpdatePaymentType -> updateOrderInput { it.copy(paymentType = event.type ?: PaymentType.CASH) }
             is OrderEvent.UpdateAmountPaid -> updateOrderInput { it.copy(amountPaid = event.amount) }
-            is OrderEvent.AddItemToOrder -> updateOrderInput { it.copy(items = it.items + EditableOrderItem()) }
+            is OrderEvent.AddItemToOrder -> updateOrderInput { it.copy(items = it.items + EditableItem()) }
             is OrderEvent.RemoveItemFromOrder -> updateOrderInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             is OrderEvent.UpdateItemProduct -> updateOrderItem(event.tempEditorId) {
                 val price = event.product?.sellingPrice?.toString() ?: "0.0"
@@ -91,7 +93,7 @@ class SalesViewModel(
 
             is OrderEvent.UpdateItemUnit -> updateOrderItem(event.tempEditorId) {
                 it.copy(
-                    selectedUnit = event.unit
+                    selectedProductUnit = event.productUnit
                 )
             }
 
@@ -123,6 +125,10 @@ class SalesViewModel(
 
             OrderEvent.ClearError -> _state.update {
                 it.copy(error = null)
+            }
+
+            is OrderEvent.UpdateTransferDate -> updateOrderInput {
+                it.copy(date = event.date ?: System.currentTimeMillis())
             }
         }
     }
@@ -165,11 +171,12 @@ class SalesViewModel(
                         selectedClient = order.client,
                         selectedEmployeeId = order.employee?.id,
                         paymentType = order.paymentType,
+                        date = order.orderDate,
                         items = order.items.map {
-                            EditableOrderItem(
+                            EditableItem(
                                 tempEditorId = it.localId.toString(),
                                 product = it.product,
-                                selectedUnit = it.unit,
+                                selectedProductUnit = it.productUnit,
                                 quantity = it.quantity.toString(),
                                 sellingPrice = it.unitSellingPrice.toString(),
                                 lineTotal = it.itemTotalPrice,
@@ -192,7 +199,7 @@ class SalesViewModel(
         recalculateTotals()
     }
 
-    private fun updateOrderItem(tempId: String, action: (EditableOrderItem) -> EditableOrderItem) {
+    private fun updateOrderItem(tempId: String, action: (EditableItem) -> EditableItem) {
         val currentItems = _state.value.currentOrderInput.items.toMutableList()
         val index = currentItems.indexOfFirst { it.tempEditorId == tempId }
         if (index != -1) {
@@ -260,12 +267,12 @@ class SalesViewModel(
             return
         }
         val itemEntities = orderInput.items.mapNotNull {
-            if (it.product == null || it.selectedUnit == null || (it.quantity.toDoubleOrNull()
+            if (it.product == null || it.selectedProductUnit == null || (it.quantity.toDoubleOrNull()
                     ?: 0.0) <= 0
             ) return@mapNotNull null
             OrderProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedUnit.localId,
+                unitLocalId = it.selectedProductUnit.localId,
                 quantity = it.quantity.toDouble(),
                 unitSellingPrice = it.sellingPrice.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,
@@ -287,7 +294,7 @@ class SalesViewModel(
             totalPrice = orderInput.subtotal,
             totalGain = orderInput.totalGain,
             paymentType = orderInput.paymentType,
-            orderDate = System.currentTimeMillis(),
+            orderDate = orderInput.date,
             serverId = null,
             localId = state.value.selectedOrder?.localId ?: 0L,
             invoiceNumber = null,

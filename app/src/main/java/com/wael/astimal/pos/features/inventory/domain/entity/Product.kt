@@ -13,8 +13,8 @@ data class Product(
 
     val category: Category?,
     val store: Store?,
-    val minimumUnit: Unit?,
-    val maximumUnit: Unit?,
+    val minimumProductUnit: ProductUnit?,
+    val maximumProductUnit: ProductUnit?,
 
     val minimumStockLevel: Int?,
     val maximumStockLevel: Int?,

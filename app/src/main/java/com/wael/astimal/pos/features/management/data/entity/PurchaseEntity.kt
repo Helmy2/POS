@@ -149,7 +149,7 @@ fun PurchaseProductItemWithDetails.toDomain(): PurchaseOrderItem {
         serverId = this.purchaseItem.serverId,
         purchaseLocalId = this.purchaseItem.purchaseLocalId,
         product = this.product?.toDomain(),
-        unit = this.unit?.toDomain(),
+        productUnit = this.unit?.toDomain(),
         quantity = this.purchaseItem.quantity,
         purchasePrice = this.purchaseItem.purchasePrice,
         itemTotalPrice = this.purchaseItem.itemTotalPrice
