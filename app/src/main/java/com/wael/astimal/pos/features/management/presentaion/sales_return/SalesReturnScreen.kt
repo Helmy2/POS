@@ -118,7 +118,7 @@ fun SalesReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
-            selectedItemId = returnInput.selectedClient?.id,
+            selectedItemId = state.selectedClient?.id,
             onItemSelected = { onEvent(SalesReturnScreenEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id })

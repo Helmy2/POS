@@ -48,15 +48,15 @@ class SalesReturnViewModel(
     private fun loadDropdownData() {
         viewModelScope.launch {
             clientRepository.searchClients("")
-                .collect { _state.update { it.copy(availableClients = it.availableClients + it.availableClients) } }
+                .collect { result -> _state.update { it.copy(availableClients = result) } }
         }
         viewModelScope.launch {
             productRepository.getProducts("")
-                .collect { _state.update { it.copy(availableProducts = it.availableProducts + it.availableProducts) } }
+                .collect { result -> _state.update { it.copy(availableProducts = result) } }
         }
         viewModelScope.launch {
             userRepository.getEmployeesFlow()
-                .collect { _state.update { it.copy(availableEmployees = it.availableEmployees + it.availableEmployees) } }
+                .collect { result -> _state.update { it.copy(availableEmployees = result) } }
         }
     }
 
@@ -83,7 +83,7 @@ class SalesReturnViewModel(
                 _state.update { SalesReturnScreenState(currentUser = state.value.currentUser) }
                 updateCurrentUser(state.value.currentUser)
             }
-            is SalesReturnScreenEvent.SelectClient -> updateReturnInput { it.copy(selectedClient = event.client) }
+            is SalesReturnScreenEvent.SelectClient -> _state.update { it.copy(selectedClient = event.client) }
             is SalesReturnScreenEvent.UpdatePaymentType -> updateReturnInput { it.copy(paymentType = event.type ?: PaymentType.CASH) }
             is SalesReturnScreenEvent.UpdateAmountRefunded -> updateReturnInput { it.copy(amountPaid = event.amount) }
             is SalesReturnScreenEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableItem()) }
@@ -154,12 +154,12 @@ class SalesReturnViewModel(
     private fun updateSelectReturn(salesReturn: SalesReturn?) {
         _state.update {
             if (salesReturn == null) {
-                it.copy(input = EditableItemList(), selectedReturn = null, isQueryActive = false)
+                it.copy(input = EditableItemList(), selectedReturn = null, selectedClient = null, isQueryActive = false)
             } else {
                 it.copy(
                     selectedReturn = salesReturn,
+                    selectedClient = salesReturn.client,
                     input = EditableItemList(
-                        selectedClient = salesReturn.client,
                         selectedEmployeeId = salesReturn.employee?.id,
                         paymentType = salesReturn.paymentType,
                         date = salesReturn.returnDate,
@@ -193,12 +193,13 @@ class SalesReturnViewModel(
 
     private fun saveReturn() {
         val returnInput = _state.value.input
+        val selectedClient = _state.value.selectedClient
         val employeeId = _state.value.currentUser?.id
         if (employeeId == null) {
             _state.update { it.copy(error = R.string.user_not_identified) }
             return
         }
-        if (returnInput.selectedClient == null || returnInput.items.isEmpty()) {
+        if (selectedClient == null || returnInput.items.isEmpty()) {
             _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
             return
         }
@@ -221,9 +222,9 @@ class SalesReturnViewModel(
         }
         val returnEntity = OrderReturnEntity(
             localId = _state.value.selectedReturn?.localId ?: 0L,
-            clientLocalId = returnInput.selectedClient.id,
+            clientLocalId = selectedClient.id,
             employeeLocalId = returnInput.selectedEmployeeId ?: employeeId,
-            previousDebt = returnInput.selectedClient.debt,
+            previousDebt = selectedClient.debt,
             amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = returnInput.amountRemaining,
             totalReturnedValue = returnInput.totalAmount,
@@ -244,6 +245,7 @@ class SalesReturnViewModel(
                             isQueryActive = false,
                             snackbarMessage = R.string.return_saved,
                             selectedReturn = null,
+                            selectedClient = null,
                             input = EditableItemList()
                         )
                     }

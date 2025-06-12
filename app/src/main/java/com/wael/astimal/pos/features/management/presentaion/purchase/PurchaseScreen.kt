@@ -1,43 +1,27 @@
 package com.wael.astimal.pos.features.management.presentaion.purchase
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.Label
+import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
+import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
-import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -70,7 +54,7 @@ fun PurchaseScreen(
         }
         state.error?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseScreenEvent.ClearSnackbar)
+            onEvent(PurchaseScreenEvent.ClearError)
         }
     }
 
@@ -79,6 +63,7 @@ fun PurchaseScreen(
         isSearchActive = state.isQueryActive,
         loading = state.loading,
         isNew = state.isNew,
+        canEdit = state.canEdit,
         onQueryChange = { onEvent(PurchaseScreenEvent.UpdateQuery(it)) },
         onSearch = { onEvent(PurchaseScreenEvent.SearchPurchases(it)) },
         onSearchActiveChange = { onEvent(PurchaseScreenEvent.UpdateIsQueryActive(it)) },
@@ -86,18 +71,14 @@ fun PurchaseScreen(
         lastModifiedDate = state.selectedPurchase?.lastModified,
         onDelete = { onEvent(PurchaseScreenEvent.DeletePurchase) },
         onCreate = { onEvent(PurchaseScreenEvent.SavePurchase) },
-        onUpdate = { onEvent(PurchaseScreenEvent.SavePurchase) }, // Update logic can be added later
+        onUpdate = { onEvent(PurchaseScreenEvent.SavePurchase) },
         onNew = { onEvent(PurchaseScreenEvent.OpenNewPurchaseForm) },
         searchResults = {
             ItemGrid(
                 list = state.purchases,
                 onItemClick = { onEvent(PurchaseScreenEvent.SelectPurchaseToView(it)) },
                 label = {
-                    Text(
-                        "Purchase from ${it.supplier?.name?.displayName(LocalAppLocale.current)}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    Label("Purchase from ${it.supplier?.name?.displayName(LocalAppLocale.current)}")
                 },
                 isSelected = { purchase -> purchase.localId == state.selectedPurchase?.localId },
             )
@@ -119,148 +100,59 @@ fun PurchaseForm(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        DataPicker(
+            selectedDateMillis = purchaseInput.date,
+            onDateSelected = { onEvent(PurchaseScreenEvent.UpdateTransferDate(it)) },
+        )
+
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
-            selectedItemId = purchaseInput.selectedSupplier?.id,
+            selectedItemId = state.selectedSupplier?.id,
             onItemSelected = { onEvent(PurchaseScreenEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id }
         )
 
         CustomExposedDropdownMenu(
-            label = "Employee",
+            label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = purchaseInput.selectedEmployeeId,
             onItemSelected = { onEvent(PurchaseScreenEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
+            enabled = state.currentUser?.isAdmin ?: false
         )
 
-        Text("Items", style = MaterialTheme.typography.titleMedium)
-        purchaseInput.items.forEach { item ->
-            PurchaseItemRow(item = item, state = state, onEvent = onEvent)
-        }
-        Button(
-            onClick = { onEvent(PurchaseScreenEvent.AddItemToPurchase) },
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
-            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text(stringResource(R.string.add_item))
-        }
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.payment_type),
-            items = PaymentType.entries,
-            selectedItemId = purchaseInput.paymentType.ordinal.toLong(),
-            onItemSelected = {
-                onEvent(
-                    PurchaseScreenEvent.UpdatePaymentType(
-                        it ?: PaymentType.CASH
-                    )
-                )
+        OrderInputFields(
+            itemList = purchaseInput.items,
+            selectedPaymentType = purchaseInput.paymentType,
+            amountPaid = purchaseInput.amountPaid,
+            onUpdateAmountPaid = { onEvent(PurchaseScreenEvent.UpdateAmountPaid(it)) },
+            onAddNewItemToOrder = { onEvent(PurchaseScreenEvent.AddItemToPurchase) },
+            availableProducts = state.availableProducts,
+            onSelectPaymentType = { onEvent(PurchaseScreenEvent.UpdatePaymentType(it)) },
+            onItemSelected = { tempEditorId, product ->
+                onEvent(PurchaseScreenEvent.UpdateItemProduct(tempEditorId, product))
             },
-            itemToDisplayString = { it.name },
-            itemToId = { it.ordinal.toLong() }
-        )
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Total Price:", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "%.2f".format(purchaseInput.totalPrice),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PurchaseItemRow(
-    item: EditablePurchaseItem,
-    state: PurchaseScreenState,
-    onEvent: (PurchaseScreenEvent) -> Unit
-) {
-    val language = LocalAppLocale.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.weight(1f)) {
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.product),
-                    items = state.availableProducts,
-                    selectedItemId = item.product?.localId,
-                    onItemSelected = { product ->
-                        onEvent(
-                            PurchaseScreenEvent.UpdateItemProduct(
-                                item.tempEditorId,
-                                product
-                            )
-                        )
-                    },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId }
-                )
-            }
-            IconButton(onClick = { onEvent(PurchaseScreenEvent.RemoveItemFromPurchase(item.tempEditorId)) }) {
-                Icon(Icons.Default.Delete, "Remove Item")
-            }
-        }
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.unit),
-            items = listOf(
-                item.product?.minimumProductUnit, item.product?.maximumProductUnit
-            ),
-            selectedItemId = item.selectedProductUnit?.localId,
-            onItemSelected = { unit ->
-                onEvent(
-                    PurchaseScreenEvent.UpdateItemUnit(
-                        item.tempEditorId, unit
-                    )
-                )
+            onRemoveItemFromOrder = { tempEditorId ->
+                onEvent(PurchaseScreenEvent.RemoveItemFromPurchase(tempEditorId))
             },
-            itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
-            itemToId = { it?.localId ?: -1L },
+            onUpdateItemQuantity = { tempEditorId, quantity ->
+                onEvent(PurchaseScreenEvent.UpdateItemQuantity(tempEditorId, quantity))
+            },
+            onUpdateItemUnit = { tempEditorId, unit ->
+                onEvent(PurchaseScreenEvent.UpdateItemUnit(tempEditorId, unit))
+            },
+            onUpdateItemPrice = { tempEditorId, price ->
+                onEvent(PurchaseScreenEvent.UpdateItemPrice(tempEditorId, price))
+            },
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = item.quantity,
-                onValueChange = {
-                    onEvent(
-                        PurchaseScreenEvent.UpdateItemQuantity(
-                            item.tempEditorId,
-                            it
-                        )
-                    )
-                },
-                label = { Text(stringResource(R.string.qty)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = item.purchasePrice,
-                onValueChange = {
-                    onEvent(
-                        PurchaseScreenEvent.UpdateItemPrice(
-                            item.tempEditorId,
-                            it
-                        )
-                    )
-                },
-                label = { Text(stringResource(R.string.price)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = "%.2f".format(item.lineTotal),
-                onValueChange = {}, readOnly = true,
-                label = { Text(stringResource(R.string.total)) },
-                modifier = Modifier.weight(1f)
-            )
-        }
+
+        OrderTotalsSection(
+            totalAmount = purchaseInput.totalAmount,
+            amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
+            amountRemaining = purchaseInput.amountRemaining
+        )
     }
 }

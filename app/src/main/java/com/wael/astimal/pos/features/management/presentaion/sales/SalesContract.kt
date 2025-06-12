@@ -16,6 +16,7 @@ data class OrderState(
     val orders: List<SalesOrder> = emptyList(),
     val selectedOrder: SalesOrder? = null,
 
+    val selectedClient: Client? = null,
     val currentOrderInput: EditableItemList = EditableItemList(),
     val availableClients: List<Client> = emptyList(),
     val availableProducts: List<Product> = emptyList(),

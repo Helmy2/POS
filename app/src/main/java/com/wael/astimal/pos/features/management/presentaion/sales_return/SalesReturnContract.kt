@@ -13,6 +13,7 @@ data class SalesReturnScreenState(
     val loading: Boolean = false,
     val returns: List<SalesReturn> = emptyList(),
     val selectedReturn: SalesReturn? = null,
+    val selectedClient: Client? = null,
     val input: EditableItemList = EditableItemList(),
     val availableClients: List<Client> = emptyList(),
     val availableProducts: List<Product> = emptyList(),

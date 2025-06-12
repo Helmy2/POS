@@ -48,14 +48,15 @@ class SalesViewModel(
     private fun loadDropdownData() {
         viewModelScope.launch {
             clientRepository.searchClients()
-                .collect { _state.update { it.copy(availableClients = it.availableClients + it.availableClients) } }
+                .collect { result -> _state.update { it.copy(availableClients = result) } }
         }
         viewModelScope.launch {
             productRepository.getProducts()
-                .collect { _state.update { it.copy(availableProducts = it.availableProducts + it.availableProducts) } }
+                .collect { result -> _state.update { it.copy(availableProducts = result) } }
         }
         viewModelScope.launch {
-            userRepository.getEmployeesFlow().collect { _state.update { it.copy(availableEmployees = it.availableEmployees + it.availableEmployees) } }
+            userRepository.getEmployeesFlow()
+                .collect { result -> _state.update { it.copy(availableEmployees = result) } }
         }
     }
 
@@ -76,7 +77,7 @@ class SalesViewModel(
         when (event) {
             is OrderEvent.SearchOrders -> searchOrders(event.query)
             is OrderEvent.SelectOrderToView -> updateSelectedOrder(event.order)
-            is OrderEvent.SelectClient -> updateOrderInput { it.copy(selectedClient = event.client) }
+            is OrderEvent.SelectClient -> _state.update { it.copy(selectedClient = event.client) }
             is OrderEvent.SelectEmployee -> updateOrderInput { it.copy(selectedEmployeeId = event.employeeId) }
             is OrderEvent.UpdatePaymentType -> updateOrderInput { it.copy(paymentType = event.type ?: PaymentType.CASH) }
             is OrderEvent.UpdateAmountPaid -> updateOrderInput { it.copy(amountPaid = event.amount) }
@@ -120,12 +121,16 @@ class SalesViewModel(
     private fun updateSelectedOrder(order: SalesOrder?) {
         _state.update {
             if (order == null) {
-                it.copy(currentOrderInput = EditableItemList(), isQueryActive = false)
+                it.copy(
+                    currentOrderInput = EditableItemList(),
+                    selectedClient = null,
+                    isQueryActive = false
+                )
             } else {
                 it.copy(
                     selectedOrder = order,
+                    selectedClient = order.client,
                     currentOrderInput = EditableItemList(
-                        selectedClient = order.client,
                         selectedEmployeeId = order.employee?.id,
                         paymentType = order.paymentType,
                         date = order.orderDate,
@@ -171,12 +176,13 @@ class SalesViewModel(
 
     private fun saveOrder() {
         val orderInput = _state.value.currentOrderInput
+        val selectedClient = _state.value.selectedClient
         val loggedInEmployeeId = _state.value.currentUser?.id
         if (loggedInEmployeeId == null) {
             _state.update { it.copy(error = R.string.user_not_identified) }
             return
         }
-        if (orderInput.selectedClient == null || orderInput.items.isEmpty()) {
+        if (selectedClient == null || orderInput.items.isEmpty()) {
             _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
             return
         }
@@ -201,9 +207,9 @@ class SalesViewModel(
         }
 
         val orderEntity = OrderEntity(
-            clientLocalId = orderInput.selectedClient.id,
+            clientLocalId = selectedClient.id,
             employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
-            previousClientDebt = orderInput.selectedClient.debt,
+            previousClientDebt = selectedClient.debt,
             amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = orderInput.amountRemaining,
             totalPrice = orderInput.totalAmount,
@@ -227,6 +233,7 @@ class SalesViewModel(
                             snackbarMessage = R.string.order_saved,
                             isQueryActive = false,
                             selectedOrder = null,
+                            selectedClient = null,
                             currentOrderInput = EditableItemList(),
                         )
                     }

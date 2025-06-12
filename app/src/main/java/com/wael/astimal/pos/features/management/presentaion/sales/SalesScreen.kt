@@ -113,7 +113,7 @@ fun OrderForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
-            selectedItemId = orderInput.selectedClient?.id,
+            selectedItemId = state.selectedClient?.id,
             onItemSelected = { onEvent(OrderEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id })
