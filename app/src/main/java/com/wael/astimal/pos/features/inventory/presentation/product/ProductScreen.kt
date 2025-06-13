@@ -139,14 +139,6 @@ fun ProductScreen(
                     itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.localId })
 
-                LabeledTextField(
-                    value = state.inputMinStockLevel,
-                    onValueChange = { onEvent(ProductEvent.UpdateInputMinStockLevel(it)) },
-                    label = stringResource(R.string.min_stock_level),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
-                    )
-                )
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.min_stock_unit),
                     items = state.units,
@@ -156,13 +148,18 @@ fun ProductScreen(
                     itemToId = { it.localId })
 
                 LabeledTextField(
-                    value = state.inputMaxStockLevel,
-                    onValueChange = { onEvent(ProductEvent.UpdateInputMaxStockLevel(it)) },
-                    label = stringResource(R.string.max_stock_level),
+                    value = state.subUnitsPerMainUnit,
+                    onValueChange = {value->
+                        value.toDoubleOrNull()?.let {
+                            onEvent(ProductEvent.UpdateSubUnitsPerMainUnit(value))
+                        }
+                    },
+                    label = "Min unit per Max unit",
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
                     )
                 )
+
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.max_stock_unit),
                     items = state.units,
@@ -170,13 +167,6 @@ fun ProductScreen(
                     onItemSelected = { unit -> onEvent(ProductEvent.SelectMaxStockUnitId(unit?.localId)) },
                     itemToDisplayString = { "${it.enName}: ${it.arName}" },
                     itemToId = { it.localId })
-
-                LabeledTextField(
-                    value = state.inputFirstPeriodData,
-                    onValueChange = { onEvent(ProductEvent.UpdateInputFirstPeriodData(it)) },
-                    label = stringResource(R.string.first_period_data),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                )
             }
         },
     )

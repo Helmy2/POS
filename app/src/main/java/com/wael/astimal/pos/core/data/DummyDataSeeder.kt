@@ -188,17 +188,17 @@ class DummyDataSeeder(
     private suspend fun populateDummyUnits(): Map<String, Long> {
         val pieceId = unitDao.insertOrUpdate(
             UnitEntity(
-                serverId = -1, arName = "قطعة", enName = "Piece", rate = 1.0f, isSynced = true
+                serverId = -1, arName = "قطعة", enName = "Piece", isSynced = true
             )
         )
         val dozenId = unitDao.insertOrUpdate(
             UnitEntity(
-                serverId = -2, arName = "دستة", enName = "Dozen", rate = 12.0f, isSynced = true
+                serverId = -2, arName = "دستة", enName = "Dozen", isSynced = true
             )
         )
         val boxId = unitDao.insertOrUpdate(
             UnitEntity(
-                serverId = -3, arName = "علبة", enName = "Box", rate = 24.0f, isSynced = true
+                serverId = -3, arName = "علبة", enName = "Box", isSynced = true
             )
         )
         return mapOf("piece" to pieceId, "dozen" to dozenId, "box" to boxId)
@@ -269,11 +269,9 @@ class DummyDataSeeder(
             openingBalanceQuantity = 50.0,
             storeId = stores["main"],
             isSynced = true,
-            minimumStockUnitId = units["box"],
-            maximumStockUnitId = units["box"],
-            minimumStockLevel = 10,
-            maximumStockLevel = 100,
-            firstPeriodData = null
+            minimumUnitId = null,
+            maximumUnitId = units["box"],
+            subUnitsPerMainUnit = 1.0,
         )
         val prod1Id = productDao.insertOrUpdate(product1)
 
@@ -287,11 +285,9 @@ class DummyDataSeeder(
             openingBalanceQuantity = 100.0,
             storeId = stores["main"],
             isSynced = true,
-            minimumStockUnitId = units["piece"],
-            maximumStockUnitId = units["piece"],
-            minimumStockLevel = 20,
-            maximumStockLevel = 200,
-            firstPeriodData = "Initial Stock"
+            minimumUnitId = null,
+            maximumUnitId = units["piece"],
+            subUnitsPerMainUnit = 1.0,
         )
         val prod2Id = productDao.insertOrUpdate(product2)
 
@@ -305,11 +301,9 @@ class DummyDataSeeder(
             openingBalanceQuantity = 200.0,
             storeId = stores["main"],
             isSynced = true,
-            minimumStockUnitId = units["piece"],
-            maximumStockUnitId = units["dozen"],
-            minimumStockLevel = 50,
-            maximumStockLevel = 500,
-            firstPeriodData = null
+            minimumUnitId = units["piece"],
+            maximumUnitId = units["dozen"],
+            subUnitsPerMainUnit = 12.0,
         )
         val prod3Id = productDao.insertOrUpdate(product3)
         return mapOf("desio" to prod1Id, "optiFree" to prod2Id, "lensCase" to prod3Id)

@@ -45,7 +45,6 @@ class UnitViewModel(
             is UnitEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
             is UnitEvent.UpdateArName -> _state.update { it.copy(arName = event.name) }
             is UnitEvent.UpdateEnName -> _state.update { it.copy(enName = event.name) }
-            is UnitEvent.UpdateRate -> _state.update { it.copy(rate = event.rate) }
         }
     }
 
@@ -73,7 +72,7 @@ class UnitViewModel(
         if (productUnit == null) {
             _state.update {
                 it.copy(
-                    selectedProductUnit = null, arName = "", enName = "", rate = "1"
+                    selectedProductUnit = null, arName = "", enName = "",
                 )
             }
         } else {
@@ -82,7 +81,6 @@ class UnitViewModel(
                     selectedProductUnit = productUnit,
                     arName = productUnit.localizedName.arName ?: "",
                     enName = productUnit.localizedName.enName ?: "",
-                    rate = productUnit.rate.toString()
                 )
             }
         }
@@ -94,10 +92,6 @@ class UnitViewModel(
             _state.update { it.copy(error = "At least one name (Arabic or English) is required.") }
             return
         }
-        if (currentState.rate.isBlank()) {
-            _state.update { it.copy(error = "Rate is required.") }
-            return
-        }
 
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
@@ -105,7 +99,6 @@ class UnitViewModel(
                 serverId = null,
                 arName = currentState.arName,
                 enName = currentState.enName,
-                rate = currentState.rate.toFloatOrNull() ?: 1f,
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = false
@@ -114,7 +107,7 @@ class UnitViewModel(
             result.fold(onSuccess = {
                 _state.update {
                     it.copy(
-                        loading = false, arName = "", enName = "", rate = "1"
+                        loading = false, arName = "", enName = ""
                     )
                 }
             }, onFailure = { e ->
@@ -138,10 +131,6 @@ class UnitViewModel(
             _state.update { it.copy(error = "At least one name (Arabic or English) is required.") }
             return
         }
-        if (currentState.rate.isBlank()) {
-            _state.update { it.copy(error = "Rate is required.") }
-            return
-        }
 
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
@@ -150,7 +139,6 @@ class UnitViewModel(
                 serverId = unitToUpdate.serverId,
                 arName = currentState.arName,
                 enName = currentState.enName,
-                rate = currentState.rate.toFloatOrNull() ?: 1f,
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
                 isDeletedLocally = unitToUpdate.isDeletedLocally
@@ -163,7 +151,6 @@ class UnitViewModel(
                         selectedProductUnit = null,
                         arName = "",
                         enName = "",
-                        rate = "1"
                     )
                 }
             }, onFailure = { e ->
@@ -190,7 +177,6 @@ class UnitViewModel(
                 serverId = unitToDeleteDetails.serverId,
                 arName = unitToDeleteDetails.localizedName.arName,
                 enName = unitToDeleteDetails.localizedName.enName,
-                rate = unitToDeleteDetails.rate
             )
 
             val result = unitRepository.deleteUnit(unitEntityToDelete)
@@ -201,7 +187,6 @@ class UnitViewModel(
                         selectedProductUnit = null,
                         arName = "",
                         enName = "",
-                        rate = "1"
                     )
                 }
             }, onFailure = { e ->

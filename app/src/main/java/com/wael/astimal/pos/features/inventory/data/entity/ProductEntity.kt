@@ -1,56 +1,62 @@
 package com.wael.astimal.pos.features.inventory.data.entity
 
-import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 
 @Entity(
-    tableName = "products", foreignKeys = [ForeignKey(
-        entity = CategoryEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["categoryId"],
-        onDelete = ForeignKey.SET_NULL
-    ), ForeignKey(
-        entity = StoreEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["storeId"],
-        onDelete = ForeignKey.SET_NULL
-    ), ForeignKey(
-        entity = UnitEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["minimumStockUnitId"],
-        onDelete = ForeignKey.SET_NULL
-    ), ForeignKey(
-        entity = UnitEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["maximumStockUnitId"],
-        onDelete = ForeignKey.SET_NULL
-    )]
+    tableName = "products",
+    foreignKeys = [
+        ForeignKey(
+            entity = CategoryEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = StoreEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["storeId"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = UnitEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["minimumUnitId"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = UnitEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["maximumUnitId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [
+        Index("categoryId"),
+        Index("storeId"),
+        Index("minimumUnitId"),
+        Index("maximumUnitId")
+    ]
 )
 data class ProductEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true) val localId: Long = 0,
     val serverId: Int?,
-    val arName: String?,
-    val enName: String?,
-
-    @ColumnInfo(index = true) val categoryId: Long?,
-
-    val averagePrice: Double?,
-    val sellingPrice: Double?,
-
-    val openingBalanceQuantity: Double?,
-    @ColumnInfo(index = true) val storeId: Long?,
-
-    val minimumStockLevel: Int?,
-    @ColumnInfo(index = true) val minimumStockUnitId: Long?,
-    val maximumStockLevel: Int?,
-    @ColumnInfo(index = true) val maximumStockUnitId: Long?,
-    val firstPeriodData: String?,
+    val arName: String,
+    val enName: String,
+    val categoryId: Long?,
+    val storeId: Long?,
+    val openingBalanceQuantity: Double? = null,
+    val averagePrice: Double = 0.0,
+    val sellingPrice: Double = 0.0,
+    val minimumUnitId: Long?,
+    val maximumUnitId: Long?,
+    val subUnitsPerMainUnit: Double,
 
     var isSynced: Boolean = false,
     var lastModified: Long = System.currentTimeMillis(),
@@ -58,47 +64,48 @@ data class ProductEntity(
 )
 
 data class ProductWithDetailsEntity(
-    @Embedded val product: ProductEntity,
-
+    @Embedded
+    val product: ProductEntity,
     @Relation(
-        parentColumn = "categoryId", entityColumn = "localId", entity = CategoryEntity::class
-    ) val category: CategoryEntity?,
-
+        parentColumn = "categoryId",
+        entityColumn = "localId"
+    )
+    val category: CategoryEntity?,
     @Relation(
-        parentColumn = "storeId", entityColumn = "localId", entity = StoreEntity::class
-    ) val store: StoreEntity?,
-
-
+        parentColumn = "storeId",
+        entityColumn = "localId"
+    )
+    val store: StoreEntity?,
     @Relation(
-        parentColumn = "minimumStockUnitId", entityColumn = "localId", entity = UnitEntity::class
-    ) val minimumStockUnit: UnitEntity?,
-
+        parentColumn = "minimumUnitId",
+        entityColumn = "localId"
+    )
+    val minimumUnit: UnitEntity?,
     @Relation(
-        parentColumn = "maximumStockUnitId", entityColumn = "localId", entity = UnitEntity::class
-    ) val maximumStockUnit: UnitEntity?
+        parentColumn = "maximumUnitId",
+        entityColumn = "localId"
+    )
+    val maximumUnit: UnitEntity?
 )
-
 
 fun ProductWithDetailsEntity.toDomain(): Product {
     return Product(
-        localId = product.localId,
-        serverId = product.serverId,
+        localId = this.product.localId,
+        serverId = this.product.serverId,
         localizedName = LocalizedString(
-            arName = product.arName,
-            enName = product.enName
+            arName = this.product.arName,
+            enName = this.product.enName
         ),
-        averagePrice = product.averagePrice,
-        sellingPrice = product.sellingPrice,
-        openingBalanceQuantity = product.openingBalanceQuantity,
-        minimumStockLevel = product.minimumStockLevel,
-        maximumStockLevel = product.maximumStockLevel,
-        firstPeriodData = product.firstPeriodData,
-        isSynced = product.isSynced,
-        lastModified = product.lastModified,
-        isDeletedLocally = product.isDeletedLocally,
-        category = category?.toDomain(),
-        store = store?.toDomain(),
-        minimumProductUnit = minimumStockUnit?.toDomain(),
-        maximumProductUnit = maximumStockUnit?.toDomain(),
+        category = this.category?.toDomain(),
+        store = this.store?.toDomain(),
+        averagePrice = this.product.averagePrice,
+        sellingPrice = this.product.sellingPrice,
+        minimumProductUnit = this.minimumUnit?.toDomain(),
+        maximumProductUnit = this.maximumUnit?.toDomain()
+            ?: throw IllegalStateException("Maximum unit cannot be null"),
+        subUnitsPerMainUnit = this.product.subUnitsPerMainUnit,
+        isSynced = this.product.isSynced,
+        openingBalanceQuantity = this.product.openingBalanceQuantity,
+        lastModified = this.product.lastModified,
     )
 }

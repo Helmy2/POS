@@ -8,7 +8,6 @@ import com.wael.astimal.pos.features.inventory.data.entity.StoreProductStockEnti
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -21,7 +20,6 @@ class StockRepositoryImpl(
     private val database: AppDatabase,
     private val stockDao: StoreProductStockDao,
     private val stockAdjustmentDao: StockAdjustmentDao,
-    private val unitDao: UnitDao
 ) : StockRepository {
 
     override fun getStoreStocks(query: String, selectedStoreId: Long?): Flow<List<StoreStock>> {
@@ -47,13 +45,10 @@ class StockRepositoryImpl(
     override suspend fun adjustStock(
         storeId: Long, productId: Long, transactionUnitId: Long, transactionQuantity: Double
     ) {
-        val conversionRate = unitDao.getConversionRate(transactionUnitId) ?: 1.0
-        val baseQuantityAdjustment = transactionQuantity * conversionRate
-
         val currentStock =
             stockDao.getStockByStoreAndProduct(storeId, productId).map { it?.quantity ?: 0.0 }
                 .first()
-        val newQuantity = currentStock + baseQuantityAdjustment
+        val newQuantity = currentStock + transactionQuantity
 
         stockDao.insertOrUpdateStock(
             StoreProductStockEntity(

@@ -13,14 +13,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -91,18 +90,6 @@ fun UnitScreen(
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                 }
-                LabeledTextField(
-                    value = state.rate,
-                    onValueChange = {
-                        if (it.toFloatOrNull() != null || it.isBlank())
-                            onEvent(UnitEvent.UpdateRate(it))
-                    },
-                    label = stringResource(R.string.rate),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Number
-                    )
-                )
             }
         },
     )

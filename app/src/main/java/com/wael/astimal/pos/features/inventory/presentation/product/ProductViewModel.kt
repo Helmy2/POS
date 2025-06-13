@@ -64,54 +64,30 @@ class ProductViewModel(
             is ProductEvent.UpdateInputEnName -> _state.update { it.copy(inputEnName = event.name) }
             is ProductEvent.SelectCategoryId -> _state.update { it.copy(selectedCategoryId = event.id) }
             is ProductEvent.UpdateInputAveragePrice -> _state.update {
-                it.copy(
-                    inputAveragePrice = event.price
-                )
+                it.copy(inputAveragePrice = event.price)
             }
 
             is ProductEvent.UpdateInputSellingPrice -> _state.update {
-                it.copy(
-                    inputSellingPrice = event.price
-                )
+                it.copy(inputSellingPrice = event.price)
             }
 
             is ProductEvent.UpdateInputOpeningBalance -> _state.update {
-                it.copy(
-                    inputOpeningBalance = event.qty
-                )
+                it.copy(inputOpeningBalance = event.qty)
             }
 
             is ProductEvent.SelectStoreId -> _state.update { it.copy(selectedStoreId = event.id) }
-            is ProductEvent.UpdateInputMinStockLevel -> _state.update {
-                it.copy(
-                    inputMinStockLevel = event.level
-                )
-            }
 
             is ProductEvent.SelectMinStockUnitId -> _state.update {
-                it.copy(
-                    selectedMinStockUnitId = event.id
-                )
-            }
-
-            is ProductEvent.UpdateInputMaxStockLevel -> _state.update {
-                it.copy(
-                    inputMaxStockLevel = event.level
-                )
+                it.copy(selectedMinStockUnitId = event.id)
             }
 
             is ProductEvent.SelectMaxStockUnitId -> _state.update {
-                it.copy(
-                    selectedMaxStockUnitId = event.id
-                )
+                it.copy(selectedMaxStockUnitId = event.id)
             }
 
-            is ProductEvent.UpdateInputFirstPeriodData -> _state.update {
-                it.copy(
-                    inputFirstPeriodData = event.data
-                )
+            is ProductEvent.UpdateSubUnitsPerMainUnit -> _state.update {
+                it.copy(subUnitsPerMainUnit = event.value)
             }
-
         }
     }
 
@@ -150,11 +126,8 @@ class ProductViewModel(
                     inputSellingPrice = "",
                     inputOpeningBalance = "",
                     selectedStoreId = null,
-                    inputMinStockLevel = "",
                     selectedMinStockUnitId = null,
-                    inputMaxStockLevel = "",
                     selectedMaxStockUnitId = null,
-                    inputFirstPeriodData = ""
                 )
             }
         } else {
@@ -164,15 +137,12 @@ class ProductViewModel(
                     inputArName = product.localizedName.arName ?: "",
                     inputEnName = product.localizedName.enName ?: "",
                     selectedCategoryId = product.category?.localId,
-                    inputAveragePrice = product.averagePrice?.toString() ?: "",
-                    inputSellingPrice = product.sellingPrice?.toString() ?: "",
+                    inputAveragePrice = product.averagePrice.toString(),
+                    inputSellingPrice = product.sellingPrice.toString(),
                     inputOpeningBalance = product.openingBalanceQuantity?.toString() ?: "",
                     selectedStoreId = product.store?.localId,
-                    inputMinStockLevel = product.minimumStockLevel?.toString() ?: "",
                     selectedMinStockUnitId = product.minimumProductUnit?.localId,
-                    inputMaxStockLevel = product.maximumStockLevel?.toString() ?: "",
-                    selectedMaxStockUnitId = product.maximumProductUnit?.localId,
-                    inputFirstPeriodData = product.firstPeriodData ?: ""
+                    selectedMaxStockUnitId = product.maximumProductUnit.localId,
                 )
             }
         }
@@ -196,18 +166,15 @@ class ProductViewModel(
                 arName = currentState.inputArName,
                 enName = currentState.inputEnName,
                 categoryId = currentState.selectedCategoryId,
-                averagePrice = currentState.inputAveragePrice.toDoubleOrNull(),
-                sellingPrice = currentState.inputSellingPrice.toDoubleOrNull(),
+                averagePrice = currentState.inputAveragePrice.toDoubleOrNull() ?: 0.0,
+                sellingPrice = currentState.inputSellingPrice.toDoubleOrNull()?: 0.0,
                 openingBalanceQuantity = currentState.inputOpeningBalance.toDoubleOrNull(),
                 storeId = currentState.selectedStoreId,
-                minimumStockLevel = currentState.inputMinStockLevel.toIntOrNull(),
-                minimumStockUnitId = currentState.selectedMinStockUnitId,
-                maximumStockLevel = currentState.inputMaxStockLevel.toIntOrNull(),
-                maximumStockUnitId = currentState.selectedMaxStockUnitId,
-                firstPeriodData = currentState.inputFirstPeriodData,
+                minimumUnitId = currentState.selectedMinStockUnitId,
+                maximumUnitId = currentState.selectedMaxStockUnitId,
                 isSynced = false,
                 lastModified = System.currentTimeMillis(),
-                isDeletedLocally = currentState.selectedProduct?.isDeletedLocally ?: false
+                subUnitsPerMainUnit = currentState.subUnitsPerMainUnit.toDoubleOrNull() ?: 1.0,
             )
 
             val result = if (currentState.isNew || currentState.selectedProduct == null) {
@@ -228,11 +195,8 @@ class ProductViewModel(
                         inputSellingPrice = "",
                         inputOpeningBalance = "",
                         selectedStoreId = null,
-                        inputMinStockLevel = "",
                         selectedMinStockUnitId = null,
-                        inputMaxStockLevel = "",
                         selectedMaxStockUnitId = null,
-                        inputFirstPeriodData = ""
                     )
                 }
             }, onFailure = { e ->
@@ -262,11 +226,8 @@ class ProductViewModel(
                         inputSellingPrice = "",
                         inputOpeningBalance = "",
                         selectedStoreId = null,
-                        inputMinStockLevel = "",
                         selectedMinStockUnitId = null,
-                        inputMaxStockLevel = "",
                         selectedMaxStockUnitId = null,
-                        inputFirstPeriodData = ""
                     )
                 }
             }, onFailure = { e ->

@@ -18,11 +18,9 @@ data class ProductState(
     val inputSellingPrice: String = "",
     val inputOpeningBalance: String = "",
     val selectedStoreId: Long? = null,
-    val inputMinStockLevel: String = "",
     val selectedMinStockUnitId: Long? = null,
-    val inputMaxStockLevel: String = "",
     val selectedMaxStockUnitId: Long? = null,
-    val inputFirstPeriodData: String = "",
+    val subUnitsPerMainUnit: String = "1.0",
 
     // Lists for dropdowns/pickers
     val categories: List<Category> = emptyList(),
@@ -46,13 +44,11 @@ sealed interface ProductEvent {
     data class UpdateInputSellingPrice(val price: String) : ProductEvent
     data class UpdateInputOpeningBalance(val qty: String) : ProductEvent
     data class SelectStoreId(val id: Long?) : ProductEvent
-    data class UpdateInputMinStockLevel(val level: String) : ProductEvent
     data class SelectMinStockUnitId(val id: Long?) : ProductEvent
-    data class UpdateInputMaxStockLevel(val level: String) : ProductEvent
     data class SelectMaxStockUnitId(val id: Long?) : ProductEvent
-    data class UpdateInputFirstPeriodData(val data: String) : ProductEvent
     data class UpdateQuery(val query: String) : ProductEvent
     data class UpdateIsQueryActive(val isQueryActive: Boolean) : ProductEvent
     data class Search(val query: String) : ProductEvent
     data class SelectProduct(val product: Product?) : ProductEvent
+    data class UpdateSubUnitsPerMainUnit(val value: String) : ProductEvent
 }

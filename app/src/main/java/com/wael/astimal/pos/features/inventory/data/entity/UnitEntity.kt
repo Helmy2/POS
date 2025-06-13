@@ -12,7 +12,6 @@ data class UnitEntity(
     val serverId: Int?,
     var arName: String?,
     var enName: String?,
-    var rate: Float,
 
     var isSynced: Boolean = false,
     var lastModified: Long = System.currentTimeMillis(),
@@ -27,7 +26,6 @@ fun UnitEntity.toDomain(): ProductUnit {
             arName = this.arName,
             enName = this.enName
         ),
-        rate = this.rate,
         isSynced = this.isSynced,
         lastModified = this.lastModified,
         isDeletedLocally = this.isDeletedLocally
