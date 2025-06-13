@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.wael.astimal.pos.features.management.data.entity.DailySaleData
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderWithDetailsEntity
@@ -48,4 +49,15 @@ interface SalesOrderDao {
 
     @Query("SELECT * FROM order_products WHERE orderLocalId = :orderLocalId")
     suspend fun getItemsForOrder(orderLocalId: Long): List<OrderProductEntity>
+
+    @Query("""
+        SELECT 
+            date(orderDate / 1000, 'unixepoch') as saleDate,
+            SUM(totalPrice) as totalRevenue,
+            COUNT(localId) as numberOfSales
+        FROM orders 
+        WHERE NOT isDeletedLocally AND orderDate BETWEEN :startDate AND :endDate
+        GROUP BY saleDate
+    """)
+    fun getDailySales(startDate: Long, endDate: Long): Flow<List<DailySaleData>>
 }

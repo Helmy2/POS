@@ -77,5 +77,7 @@ dependencies {
     ksp(libs.androidx.room.room.compiler)
     implementation(libs.androidx.room.ktx)
 
+    implementation(libs.vico.compose.m3)
+
     debugImplementation(libs.androidx.ui.tooling)
 }

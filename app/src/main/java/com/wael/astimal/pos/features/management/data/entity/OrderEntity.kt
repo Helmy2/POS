@@ -146,3 +146,9 @@ fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
         itemTotalPrice = this.orderItem.itemTotalPrice,
     )
 }
+
+data class DailySaleData(
+    val saleDate: String,
+    val totalRevenue: Double,
+    val numberOfSales: Int
+)

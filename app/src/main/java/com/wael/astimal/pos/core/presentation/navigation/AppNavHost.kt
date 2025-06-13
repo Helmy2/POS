@@ -1,15 +1,15 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.wael.astimal.pos.core.domain.navigation.Destination
-import com.wael.astimal.pos.features.management.presentaion.management.ManagementRoute
+import com.wael.astimal.pos.features.dashboard.presentation.DashboardRoute
 import com.wael.astimal.pos.features.inventory.presentation.inventory.InventoryRoute
+import com.wael.astimal.pos.features.management.presentaion.management.ManagementRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 
@@ -27,7 +27,7 @@ fun AppNavHost(
             startDestination = Destination.Main.Dashboard
         ) {
             composable<Destination.Main.Dashboard> {
-                Text("Dashboard")
+                DashboardRoute(snackbarHostState = snackbarState)
             }
             composable<Destination.Main.Inventory> {
                 InventoryRoute(navController = navController, snackbarHostState = snackbarState)

@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
@@ -13,6 +14,8 @@ import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 class SalesOrderRepositoryImpl(
@@ -113,6 +116,19 @@ class SalesOrderRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override fun getDailySales(startDate: Long, endDate: Long): Flow<List<DailySale>> {
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+        return salesOrderDao.getDailySales(startDate, endDate).map { dailyDataList ->
+            dailyDataList.map { dailyData ->
+                DailySale(
+                    date = LocalDate.parse(dailyData.saleDate, formatter),
+                    totalRevenue = dailyData.totalRevenue,
+                    numberOfSales = dailyData.numberOfSales
+                )
+            }
         }
     }
 }

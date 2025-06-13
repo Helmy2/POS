@@ -180,4 +180,11 @@
     <string name="stock_adjustment_reason_damaged_goods">stock adjustment reason damaged goods</string>
     <string name="stock_adjustment_reason_theft">stock adjustment reason theft</string>
     <string name="stock_adjustment_reason_other">stock adjustment reason other</string>
+    <string name="error_loading_dashboard_data">Error loading dashboard data</string>
+    <string name="total_revenue">Total revenue</string>
+    <string name="todays_sales">Todays sales</string>
+    <string name="sales_analytics">Sales analytics</string>
+    <string name="today">Today</string>
+    <string name="weekly">Weekly</string>
+    <string name="monthly">Monthly</string>
 </resources>
