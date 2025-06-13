@@ -9,7 +9,7 @@ import androidx.navigation.compose.navigation
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.dashboard.presentation.DashboardRoute
 import com.wael.astimal.pos.features.inventory.presentation.inventory.InventoryRoute
-import com.wael.astimal.pos.features.management.presentaion.management.ManagementRoute
+import com.wael.astimal.pos.features.management.presentation.management.ManagementRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 

@@ -187,4 +187,15 @@
     <string name="today">Today</string>
     <string name="weekly">Weekly</string>
     <string name="monthly">Monthly</string>
+    <string name="error_loading_data">error loading data</string>
+    <string name="invalid_amount">invalid amount</string>
+    <string name="please_select_a_party">please select a party</string>
+    <string name="voucher_saved_successfully">voucher saved successfully</string>
+    <string name="error_saving_voucher">error saving voucher</string>
+    <string name="receive_pay_vouchers">receive pay vouchers</string>
+    <string name="amount">amount</string>
+    <string name="save_voucher">save voucher</string>
+    <string name="receive_from_client">receive from client</string>
+    <string name="pay_to_supplier">pay to supplier</string>
+    <string name="receive_pay_voucher">Receive pay voucher</string>
 </resources>

@@ -29,11 +29,13 @@ import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
+import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
 import com.wael.astimal.pos.features.management.data.local.ClientDao
 import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
+import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
@@ -64,7 +66,8 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         StoreProductStockEntity::class,
         SaleCommissionEntity::class,
         EmployeeAccountTransactionEntity::class,
-        StockAdjustmentEntity::class
+        StockAdjustmentEntity::class,
+        ReceivePayVoucherEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -87,4 +90,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun employeeDao(): EmployeeDao
     abstract fun employeeFinancesDao(): EmployeeFinancesDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
+    abstract fun receivePayVoucherDao(): ReceivePayVoucherDao
 }
