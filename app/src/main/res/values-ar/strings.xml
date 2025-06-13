@@ -110,8 +110,8 @@
     <string name="new_stock_transfer">تحويل مخزون جديد</string>
     <string name="transfer_details">تفاصيل التحويل</string>
     <string name="error_fetching_transfers">خطأ في جلب التحويلات</string>
-    <string name="from_and_to_stores_must_be_selected">يجب اختيار متجر \'\'\'من''' ومتجر '''إلى'''.</string>
-    <string name="from_and_to_stores_cannot_be_the_same">لا يمكن أن يكون متجر \'\'\'من''' و '''إلى''' متطابقين.</string>
+    <string name="from_and_to_stores_must_be_selected">يجب اختيار متجر \'من\' ومتجر \'إلى\'.</string>
+    <string name="from_and_to_stores_cannot_be_the_same">لا يمكن أن يكون متجر \'من\' و \'إلى\' متطابقين.</string>
     <string name="transfer_must_have_at_least_one_item">يجب أن يحتوي التحويل على صنف واحد على الأقل.</string>
     <string name="user_not_identified_cannot_save_transfer">لم يتم تحديد المستخدم. لا يمكن حفظ التحويل.</string>
     <string name="all_items_must_have_a_product_unit_and_valid_quantity">يجب أن تحتوي جميع الأصناف على منتج ووحدة وكمية صالحة.</string>

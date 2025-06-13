@@ -1,7 +1,4 @@
-package com.wael.astimal.pos.core.presentation.compoenents
-
-import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
+package com.wael.astimal.pos.features.management.domain.entity
 
 data class EditableItemList(
     val selectedEmployeeId: Long? = null,

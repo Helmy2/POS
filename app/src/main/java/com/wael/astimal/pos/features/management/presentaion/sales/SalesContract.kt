@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.presentaion.sales
 
 import androidx.annotation.StringRes
-import com.wael.astimal.pos.core.presentation.compoenents.EditableItemList
+import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder

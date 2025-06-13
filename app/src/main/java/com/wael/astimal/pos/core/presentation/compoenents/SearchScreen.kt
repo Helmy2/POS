@@ -6,10 +6,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,15 +26,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.util.convertToString
 
@@ -175,6 +183,78 @@ fun SearchScreen(
                                 ?: stringResource(R.string.last_modified_date_not_available),
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun SearchScreen(
+    query: String,
+    loading: Boolean,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    mainContent: @Composable () -> Unit,
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val isKeyboardVisible = WindowInsets.isImeVisible
+    Box(
+        modifier
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            .fillMaxSize()
+    ) {
+        Column {
+            Surface(
+                shape = SearchBarDefaults.dockedShape,
+                color = SearchBarDefaults.colors().containerColor,
+                contentColor = contentColorFor(SearchBarDefaults.colors().containerColor),
+                tonalElevation = SearchBarDefaults.TonalElevation,
+                shadowElevation = SearchBarDefaults.ShadowElevation,
+                modifier = modifier
+                    .zIndex(1f)
+                    .width(360.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BackButton(
+                        onClick = {
+                            if (isKeyboardVisible) keyboard?.hide()
+                            else onBack()
+                        },
+                    )
+                    SearchBarDefaults.InputField(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        onSearch = onSearch,
+                        expanded = true,
+                        onExpandedChange = {},
+                        placeholder = { Text(stringResource(R.string.search)) },
+                        trailingIcon = {
+                            IconButton(onClick = { onQueryChange(query) }) {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
+                if (it) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    mainContent()
                 }
             }
         }

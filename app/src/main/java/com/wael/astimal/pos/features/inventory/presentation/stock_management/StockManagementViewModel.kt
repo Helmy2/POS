@@ -93,12 +93,12 @@ class StockManagementViewModel(
             selectedStoreId = _state.value.selectedStore?.localId
         )
             .onEach { stocks ->
-                _state.update { it.copy(stocks = stocks, isLoading = false) }
+                _state.update { it.copy(stocks = stocks, loading = false) }
             }
             .catch {
                 _state.update {
                     it.copy(
-                        isLoading = false,
+                        loading = false,
                         error = R.string.error_loading_stock
                     )
                 }

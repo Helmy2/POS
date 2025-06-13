@@ -7,7 +7,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
 
 
 data class StockManagementState(
-    val isLoading: Boolean = false,
+    val loading: Boolean = false,
     val stores: List<Store> = emptyList(),
     val stocks: List<StoreStock> = emptyList(),
     val query: String = "",
