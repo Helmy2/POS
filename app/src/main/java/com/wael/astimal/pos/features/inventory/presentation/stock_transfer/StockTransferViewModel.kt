@@ -35,12 +35,12 @@ class StockTransferViewModel(
     val state: StateFlow<StockTransferScreenState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
-    private var currentUserId: Long? = null
 
     init {
         viewModelScope.launch {
             sessionManager.getCurrentUser().collect { userSession ->
-                currentUserId = userSession?.id
+                // Set currentUser in state
+                _state.update { it.copy(currentUser = userSession) }
             }
         }
         viewModelScope.launch {
@@ -150,32 +150,28 @@ class StockTransferViewModel(
     ) {
         _state.update {
             it.copy(
-                selectedTransfer = transfer, isQueryActive = false
-            )
-        }
-        if (transfer == null) {
-            _state.update { it.copy(currentTransferInput = EditableStockTransfer()) }
-        } else {
-            _state.update {
-                it.copy(
-                    currentTransferInput = EditableStockTransfer(
-                        localId = transfer.localId,
-                        fromStoreId = transfer.fromStore?.localId,
-                        toStoreId = transfer.toStore?.localId,
-                        transferDate = transfer.transferDate,
-                        items = transfer.items.map { item ->
-                            EditableStockTransferItem(
-                                tempEditorId = item.localId,
-                                product = item.product,
-                                productUnit = item.productUnit,
-                                quantity = item.quantity.toString(),
-                                maxOpeningBalance = item.maximumOpeningBalance?.toString() ?: "",
-                                minOpeningBalance = item.minimumOpeningBalance?.toString() ?: "",
-                            )
-                        }.toMutableList(),
-                    )
+                selectedTransfer = transfer, isQueryActive = false,
+                // Set selectedEmployeeId from transfer.initiatedByUser if available
+                currentTransferInput = if (transfer == null) EditableStockTransfer(
+                    selectedEmployeeId = it.currentUser?.id
+                ) else EditableStockTransfer(
+                    localId = transfer.localId,
+                    fromStoreId = transfer.fromStore?.localId,
+                    toStoreId = transfer.toStore?.localId,
+                    transferDate = transfer.transferDate,
+                    selectedEmployeeId = transfer.initiatedByUser?.id,
+                    items = transfer.items.map { item ->
+                        EditableStockTransferItem(
+                            tempEditorId = item.localId,
+                            product = item.product,
+                            productUnit = item.productUnit,
+                            quantity = item.quantity.toString(),
+                            maxOpeningBalance = item.maximumOpeningBalance?.toString() ?: "",
+                            minOpeningBalance = item.minimumOpeningBalance?.toString() ?: "",
+                        )
+                    }.toMutableList(),
                 )
-            }
+            )
         }
     }
 
@@ -223,7 +219,7 @@ class StockTransferViewModel(
 
     private fun saveCurrentTransfer() {
         val currentInput = _state.value.currentTransferInput
-        val loggedInUserId = currentUserId
+        val loggedInUserId = _state.value.currentUser?.id
 
         if (currentInput.fromStoreId == null || currentInput.toStoreId == null) {
             _state.update { it.copy(error = R.string.from_and_to_stores_must_be_selected) }
@@ -325,7 +321,9 @@ class StockTransferViewModel(
                 loading = false,
                 isQueryActive = false,
                 selectedTransfer = null,
-                currentTransferInput = EditableStockTransfer()
+                currentTransferInput = EditableStockTransfer(
+                    selectedEmployeeId = it.currentUser?.id
+                )
             )
         }
     }

@@ -31,7 +31,9 @@ import com.wael.astimal.pos.core.util.convertToString
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataPicker(
-    selectedDateMillis: Long?, onDateSelected: (Long?) -> Unit
+    selectedDateMillis: Long?,
+    onDateSelected: (Long?) -> Unit,
+    enabled: Boolean = true
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
@@ -55,9 +57,10 @@ fun DataPicker(
             modifier = Modifier.clickable {
                 showDatePicker = !showDatePicker
             },
+            enabled = enabled
         )
 
-        AnimatedVisibility(showDatePicker) {
+        AnimatedVisibility(showDatePicker && enabled) {
             Dialog(onDismissRequest = { showDatePicker = false }) {
                 Card {
                     Column {

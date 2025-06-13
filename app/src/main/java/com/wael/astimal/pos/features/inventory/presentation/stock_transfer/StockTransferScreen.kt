@@ -87,6 +87,7 @@ fun StockTransferScreen(
         isSearchActive = state.isQueryActive,
         loading = state.loading,
         isNew = state.isNew,
+        canEdit = state.canEdit,
         onQueryChange = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearch = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearchActiveChange = { onEvent(StockTransferScreenEvent.UpdateIsQueryActive(it)) },
@@ -124,6 +125,7 @@ fun StockTransferScreen(
                 availableEmployees = state.availableEmployees,
                 onEvent = onEvent,
                 isNewTransfer = state.isNew.not(),
+                enabled = state.canEdit
             )
         },
     )
@@ -138,7 +140,8 @@ fun StockTransferForm(
     availableProducts: List<Product>,
     availableEmployees: List<User>,
     onEvent: (StockTransferScreenEvent) -> Unit,
-    isNewTransfer: Boolean
+    isNewTransfer: Boolean,
+    enabled: Boolean = true
 ) {
     val localAppLocale = LocalAppLocale.current
     Column(
@@ -153,7 +156,9 @@ fun StockTransferForm(
         )
         DataPicker(
             selectedDateMillis = editableTransfer.transferDate,
-            onDateSelected = { onEvent(StockTransferScreenEvent.UpdateTransferDate(it)) })
+            onDateSelected = { onEvent(StockTransferScreenEvent.UpdateTransferDate(it)) },
+            enabled = enabled
+        )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.from_store),
@@ -162,6 +167,7 @@ fun StockTransferForm(
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store?.localId)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
+            enabled = enabled
         )
 
         CustomExposedDropdownMenu(
@@ -171,6 +177,7 @@ fun StockTransferForm(
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store?.localId)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
+            enabled = enabled
         )
 
         CustomExposedDropdownMenu(
@@ -180,6 +187,7 @@ fun StockTransferForm(
             onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
             itemToId = { it.id },
+            enabled = enabled
         )
 
         Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
@@ -189,12 +197,14 @@ fun StockTransferForm(
                 availableProducts = availableProducts,
                 onEvent = onEvent,
                 onRemoveItem = { onEvent(StockTransferScreenEvent.RemoveItemFromTransfer(item.tempEditorId)) },
+                enabled = enabled
             )
         }
 
         Button(
             onClick = { onEvent(StockTransferScreenEvent.AddItemToTransfer) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled
         ) {
             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -230,15 +240,14 @@ fun StockTransferItemRow(
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId },
+                    enabled = enabled,
                 )
             }
-            if (enabled) {
-                IconButton(onClick = onRemoveItem) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.remove_item)
-                    )
-                }
+            IconButton(onClick = onRemoveItem, enabled = enabled) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.remove_item)
+                )
             }
         }
         Row(
@@ -250,7 +259,8 @@ fun StockTransferItemRow(
                 items = listOf(
                     item.product?.minimumProductUnit, item.product?.maximumProductUnit
                 ),
-                selectedItemId = item.productUnit?.localId ?: item.product?.minimumProductUnit?.localId,
+                selectedItemId = item.productUnit?.localId
+                    ?: item.product?.minimumProductUnit?.localId,
                 onItemSelected = { unit ->
                     onEvent(
                         StockTransferScreenEvent.UpdateItemUnit(item.tempEditorId, unit)
@@ -258,7 +268,8 @@ fun StockTransferItemRow(
                 },
                 itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
                 itemToId = { it?.localId ?: -1L },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                enabled = enabled
             )
             TextInputField(
                 value = item.quantity,
@@ -273,7 +284,8 @@ fun StockTransferItemRow(
                     keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
                 ),
                 label = stringResource(R.string.quantity),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                enabled = enabled
             )
         }
     }

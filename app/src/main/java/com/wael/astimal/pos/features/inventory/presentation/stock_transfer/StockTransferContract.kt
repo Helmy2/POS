@@ -22,10 +22,12 @@ data class StockTransferScreenState(
     val availableEmployees: List<User> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
 
+    val currentUser: User? = null,
     @StringRes val error: Int? = null,
     @StringRes val snackbarMessage: Int? = null
 ) {
     val isNew: Boolean get() = selectedTransfer == null
+    val canEdit: Boolean get() = currentUser?.isAdmin == true
 }
 
 data class EditableStockTransfer(
