@@ -119,12 +119,7 @@ class SalesReturnViewModel(
             is SalesReturnEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
             is SalesReturnEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
             is SalesReturnEvent.DeleteReturn -> deleteReturn()
-            is SalesReturnEvent.OpenNewReturnForm -> {
-                _state.update {
-                    SalesReturnState(currentUser = state.value.currentUser)
-                }
-                updateCurrentUser(state.value.currentUser)
-            }
+            is SalesReturnEvent.OpenNewReturnForm -> clearState()
 
             is SalesReturnEvent.ClearError -> _state.update { it.copy(error = null) }
             is SalesReturnEvent.UpdateReturnDate -> updateReturnInput {
@@ -137,9 +132,7 @@ class SalesReturnViewModel(
         viewModelScope.launch {
             salesReturnRepository.deleteReturn(_state.value.selectedReturn?.localId ?: 0L)
                 .fold(onSuccess = {
-                    _state.update {
-                        SalesReturnState(currentUser = state.value.currentUser)
-                    }
+                    clearState(snackbarMessage = R.string.return_deleted)
                 }, onFailure = {
                     _state.update {
                         it.copy(error = R.string.error_deleting_return)
@@ -150,35 +143,28 @@ class SalesReturnViewModel(
 
     private fun updateSelectedReturn(salesReturn: SalesReturn?) {
         _state.update {
-            if (salesReturn == null) {
-                it.copy(
-                    currentReturnInput = EditableItemList(),
-                    selectedReturn = null,
-                    selectedClient = null,
-                    isQueryActive = false
-                )
-            } else {
-                it.copy(
-                    selectedReturn = salesReturn,
-                    selectedClient = salesReturn.client,
-                    currentReturnInput = EditableItemList(
-                        selectedEmployeeId = salesReturn.employee?.id,
-                        paymentType = salesReturn.paymentType,
-                        date = salesReturn.returnDate,
-                        items = salesReturn.items.map { item ->
-                            EditableItem(
-                                tempEditorId = item.localId.toString(),
-                                product = item.product,
-                                selectedProductUnit = item.productUnit,
-                                quantity = item.quantity.toString(),
-                                price = item.priceAtReturn.toString(),
-                            )
-                        },
-                        amountPaid = salesReturn.amountPaid.toString(),
-                    ),
-                    isQueryActive = false
-                )
-            }
+            it.copy(
+                selectedReturn = salesReturn,
+                selectedClient = salesReturn?.client,
+                currentReturnInput = if (salesReturn == null) EditableItemList(
+                    selectedEmployeeId = _state.value.currentUser?.id
+                ) else EditableItemList(
+                    selectedEmployeeId = salesReturn.employee?.id,
+                    paymentType = salesReturn.paymentType,
+                    date = salesReturn.returnDate,
+                    items = salesReturn.items.map { item ->
+                        EditableItem(
+                            tempEditorId = item.localId.toString(),
+                            product = item.product,
+                            selectedProductUnit = item.productUnit,
+                            quantity = item.quantity.toString(),
+                            price = item.priceAtReturn.toString(),
+                        )
+                    },
+                    amountPaid = salesReturn.amountPaid.toString(),
+                ),
+                isQueryActive = false
+            )
         }
     }
 
@@ -201,18 +187,18 @@ class SalesReturnViewModel(
             _state.update { it.copy(loading = true, error = null, query = query) }
             delay(300)
             salesReturnRepository.getReturns(query).catch {
-                    _state.update {
-                        it.copy(
-                            loading = false, error = R.string.error_searching_orders
-                        )
-                    }
-                }.collect { returns ->
-                    _state.update {
-                        it.copy(
-                            loading = false, returns = returns
-                        )
-                    }
+                _state.update {
+                    it.copy(
+                        loading = false, error = R.string.error_searching_orders
+                    )
                 }
+            }.collect { returns ->
+                _state.update {
+                    it.copy(
+                        loading = false, returns = returns
+                    )
+                }
+            }
         }
     }
 
@@ -271,16 +257,7 @@ class SalesReturnViewModel(
                 else salesReturnRepository.updateReturn(returnEntity, itemEntities)
 
             result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        isQueryActive = false,
-                        snackbarMessage = R.string.return_saved,
-                        selectedReturn = null,
-                        selectedClient = null,
-                        currentReturnInput = EditableItemList()
-                    )
-                }
+                clearState(snackbarMessage = R.string.return_saved)
             }, onFailure = {
                 _state.update {
                     it.copy(
@@ -289,5 +266,19 @@ class SalesReturnViewModel(
                 }
             })
         }
+    }
+
+    private fun clearState(snackbarMessage: Int? = null) {
+        _state.update {
+            it.copy(
+                loading = false,
+                isQueryActive = false,
+                snackbarMessage = snackbarMessage,
+                selectedReturn = null,
+                selectedClient = null,
+                currentReturnInput = EditableItemList()
+            )
+        }
+        updateCurrentUser(state.value.currentUser)
     }
 }

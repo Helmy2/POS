@@ -79,7 +79,10 @@ class SalesViewModel(
             is OrderEvent.SelectOrderToView -> updateSelectedOrder(event.order)
             is OrderEvent.SelectClient -> _state.update { it.copy(selectedClient = event.client) }
             is OrderEvent.SelectEmployee -> updateOrderInput { it.copy(selectedEmployeeId = event.employeeId) }
-            is OrderEvent.UpdatePaymentType -> updateOrderInput { it.copy(paymentType = event.type ?: PaymentType.CASH) }
+            is OrderEvent.UpdatePaymentType -> updateOrderInput {
+                it.copy(paymentType = event.type ?: PaymentType.CASH)
+            }
+
             is OrderEvent.UpdateAmountPaid -> updateOrderInput { it.copy(amountPaid = event.amount) }
             is OrderEvent.AddItemToOrder -> updateOrderInput { it.copy(items = it.items + EditableItem()) }
             is OrderEvent.RemoveItemFromOrder -> updateOrderInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
@@ -90,18 +93,22 @@ class SalesViewModel(
                     selectedProductUnit = event.product?.minimumProductUnit
                 )
             }
-            is OrderEvent.UpdateItemUnit -> updateOrderItem(event.tempEditorId) { it.copy(selectedProductUnit = event.productUnit) }
-            is OrderEvent.UpdateItemQuantity -> updateOrderItem(event.tempEditorId) { it.copy(quantity = event.quantity) }
+
+            is OrderEvent.UpdateItemUnit -> updateOrderItem(event.tempEditorId) {
+                it.copy(selectedProductUnit = event.productUnit)
+            }
+
+            is OrderEvent.UpdateItemQuantity -> updateOrderItem(event.tempEditorId) {
+                it.copy(quantity = event.quantity)
+            }
+
             is OrderEvent.UpdateItemPrice -> updateOrderItem(event.tempEditorId) { it.copy(price = event.price) }
             is OrderEvent.SaveOrder -> saveOrder()
             is OrderEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is OrderEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
             is OrderEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
             is OrderEvent.DeleteOrder -> deleteOrder(event.localId)
-            OrderEvent.OpenNewOrderForm -> {
-                _state.update { OrderState(currentUser = state.value.currentUser) }
-                updateCurrentUser(state.value.currentUser)
-            }
+            OrderEvent.OpenNewOrderForm -> clearState()
             OrderEvent.ClearError -> _state.update { it.copy(error = null) }
             is OrderEvent.UpdateTransferDate -> updateOrderInput {
                 it.copy(date = event.date ?: System.currentTimeMillis())
@@ -111,42 +118,36 @@ class SalesViewModel(
 
     private fun deleteOrder(id: Long) {
         viewModelScope.launch {
-            orderRepository.deleteOrder(id).fold(
-                onSuccess = { _state.update { OrderState(currentUser = state.value.currentUser) } },
-                onFailure = { _state.update { it.copy(error = R.string.error_deleting_order) } }
-            )
+            orderRepository.deleteOrder(id).fold(onSuccess = {
+                clearState()
+            }, onFailure = { _state.update { it.copy(error = R.string.error_deleting_order) } })
         }
     }
 
     private fun updateSelectedOrder(order: SalesOrder?) {
         _state.update {
-            if (order == null) {
-                it.copy(
-                    currentOrderInput = EditableItemList(),
-                    selectedClient = null,
-                    isQueryActive = false
+            it.copy(
+                isQueryActive = false,
+                selectedOrder = order,
+                selectedClient = order?.client,
+                currentOrderInput = if (order == null) EditableItemList(
+                    selectedEmployeeId = it.currentUser?.id,
+                ) else EditableItemList(
+                    selectedEmployeeId = order.employee?.id,
+                    paymentType = order.paymentType,
+                    date = order.orderDate,
+                    items = order.items.map { item ->
+                        EditableItem(
+                            tempEditorId = item.localId.toString(),
+                            product = item.product,
+                            selectedProductUnit = item.productUnit,
+                            quantity = item.quantity.toString(),
+                            price = item.unitSellingPrice.toString(),
+                        )
+                    },
+                    amountPaid = order.amountPaid.toString(),
                 )
-            } else {
-                it.copy(
-                    selectedOrder = order,
-                    selectedClient = order.client,
-                    currentOrderInput = EditableItemList(
-                        selectedEmployeeId = order.employee?.id,
-                        paymentType = order.paymentType,
-                        date = order.orderDate,
-                        items = order.items.map { item ->
-                            EditableItem(
-                                tempEditorId = item.localId.toString(),
-                                product = item.product,
-                                selectedProductUnit = item.productUnit,
-                                quantity = item.quantity.toString(),
-                                price = item.unitSellingPrice.toString(),
-                            )
-                        },
-                        amountPaid = order.amountPaid.toString(),
-                    )
-                )
-            }
+            )
         }
     }
 
@@ -168,9 +169,11 @@ class SalesViewModel(
         searchJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, query = query) }
             delay(300)
-            orderRepository.getOrders(query)
-                .catch { _state.update { it.copy(loading = false, error = R.string.error_searching_orders) } }
-                .collect { orders -> _state.update { it.copy(loading = false, orders = orders) } }
+            orderRepository.getOrders(query).catch {
+                _state.update {
+                    it.copy(loading = false, error = R.string.error_searching_orders)
+                }
+            }.collect { orders -> _state.update { it.copy(loading = false, orders = orders) } }
         }
     }
 
@@ -225,21 +228,28 @@ class SalesViewModel(
             val result = if (_state.value.isNew) orderRepository.addOrder(orderEntity, itemEntities)
             else orderRepository.updateOrder(orderEntity, itemEntities)
 
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            snackbarMessage = R.string.order_saved,
-                            isQueryActive = false,
-                            selectedOrder = null,
-                            selectedClient = null,
-                            currentOrderInput = EditableItemList(),
-                        )
-                    }
-                },
-                onFailure = { _state.update { it.copy(loading = false, error = R.string.something_went_wrong) } }
+            result.fold(onSuccess = {
+                clearState(snackbarMessage = R.string.order_saved)
+            }, onFailure = {
+                _state.update {
+                    it.copy(
+                        loading = false, error = R.string.something_went_wrong
+                    )
+                }
+            })
+        }
+    }
+
+    private fun clearState(snackbarMessage: Int? = null) {
+        _state.update {
+            it.copy(
+                selectedOrder = null,
+                selectedClient = null,
+                currentOrderInput = EditableItemList(),
+                isQueryActive = false,
+                snackbarMessage = snackbarMessage,
             )
         }
+        updateCurrentUser(state.value.currentUser)
     }
 }

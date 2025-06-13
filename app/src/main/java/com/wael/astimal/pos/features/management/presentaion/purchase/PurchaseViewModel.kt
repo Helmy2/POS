@@ -12,6 +12,7 @@ import com.wael.astimal.pos.features.management.domain.repository.PurchaseReposi
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
+import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
@@ -45,7 +46,7 @@ class PurchaseViewModel(
         loadDropdownData()
     }
 
-    private fun updateCurrentUser(user: com.wael.astimal.pos.features.user.domain.entity.User?) {
+    private fun updateCurrentUser(user: User?) {
         _state.update {
             when {
                 user == null -> it
@@ -60,11 +61,11 @@ class PurchaseViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            supplierRepository.getSuppliers("")
+            supplierRepository.getSuppliers()
                 .collect { result -> _state.update { it.copy(availableSuppliers = result) } }
         }
         viewModelScope.launch {
-            productRepository.getProducts("")
+            productRepository.getProducts()
                 .collect { result -> _state.update { it.copy(availableProducts = result) } }
         }
         viewModelScope.launch {
@@ -79,10 +80,7 @@ class PurchaseViewModel(
             is PurchaseScreenEvent.SelectPurchaseToView -> selectPurchaseToView(event.purchase)
             is PurchaseScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
             is PurchaseScreenEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
-            is PurchaseScreenEvent.OpenNewPurchaseForm -> {
-                _state.update { PurchaseScreenState(currentUser = state.value.currentUser) }
-                updateCurrentUser(state.value.currentUser)
-            }
+            is PurchaseScreenEvent.OpenNewPurchaseForm -> clearState()
             is PurchaseScreenEvent.SelectSupplier -> _state.update { it.copy(selectedSupplier = event.supplier) }
             is PurchaseScreenEvent.SelectEmployee -> updatePurchaseInput { it.copy(selectedEmployeeId = event.employeeId) }
             is PurchaseScreenEvent.UpdatePaymentType -> updatePurchaseInput { it.copy(paymentType = event.type ?: PaymentType.CASH) }
@@ -113,7 +111,7 @@ class PurchaseViewModel(
                 selectedPurchase = order,
                 isQueryActive = false,
                 selectedSupplier = order?.supplier,
-                currentPurchaseInput = if (order == null) EditableItemList(selectedEmployeeId = currentUserId)
+                currentPurchaseInput = if (order == null) EditableItemList(selectedEmployeeId = _state.value.currentUser?.id)
                 else EditableItemList(
                     selectedEmployeeId = order.user?.id,
                     paymentType = order.paymentType,
@@ -161,7 +159,7 @@ class PurchaseViewModel(
     private fun savePurchase() {
         val purchaseInput = _state.value.currentPurchaseInput
         val selectedSupplier = _state.value.selectedSupplier
-        val currentUserID = currentUserId ?: run {
+        val currentUserID = _state.value.currentUser?.id ?: run {
             _state.update { it.copy(error = R.string.user_not_identified) }; return
         }
         if (selectedSupplier == null || purchaseInput.items.isEmpty()) {
@@ -202,14 +200,7 @@ class PurchaseViewModel(
             )
 
             result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        snackbarMessage = R.string.purchase_saved,
-                        selectedPurchase = null,
-                        currentPurchaseInput = EditableItemList(),
-                    )
-                }
+                clearState(R.string.purchase_saved)
             }, onFailure = { _state.update { it.copy(loading = false, error = R.string.something_went_wrong) } })
         }
     }
@@ -219,14 +210,7 @@ class PurchaseViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
             purchaseRepository.deletePurchase(purchaseToDelete.localId).fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        selectedPurchase = null,
-                        snackbarMessage = R.string.purchase_deleted,
-                        currentPurchaseInput = EditableItemList(),
-                    )
-                }
+                clearState(R.string.purchase_deleted)
             }, onFailure = {
                 _state.update {
                     it.copy(
@@ -238,6 +222,15 @@ class PurchaseViewModel(
         }
     }
 
-    private val currentUserId: Long?
-        get() = _state.value.currentUser?.id
+    private fun clearState(snackbarMessage: Int? = null) {
+        _state.update {
+            it.copy(
+                loading = false,
+                isQueryActive = false,
+                snackbarMessage = snackbarMessage,
+                currentPurchaseInput = EditableItemList(),
+            )
+        }
+        updateCurrentUser(state.value.currentUser)
+    }
 }

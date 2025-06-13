@@ -12,6 +12,7 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
+import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
@@ -45,7 +46,7 @@ class PurchaseReturnViewModel(
         loadDropdownData()
     }
 
-    private fun updateCurrentUser(user: com.wael.astimal.pos.features.user.domain.entity.User?) {
+    private fun updateCurrentUser(user: User?) {
         _state.update {
             when {
                 user == null -> it
@@ -113,7 +114,7 @@ class PurchaseReturnViewModel(
                 selectedReturn = purchaseReturn,
                 isQueryActive = false,
                 selectedSupplier = purchaseReturn?.supplier,
-                input = if (purchaseReturn == null) EditableItemList(selectedEmployeeId = currentUserId)
+                input = if (purchaseReturn == null) EditableItemList(selectedEmployeeId = _state.value.currentUser?.id)
                 else EditableItemList(
                     selectedEmployeeId = purchaseReturn.employee?.id,
                     paymentType = purchaseReturn.paymentType,
@@ -210,16 +211,7 @@ class PurchaseReturnViewModel(
             )
 
             result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        isQueryActive = false,
-                        snackbarMessage = R.string.purchase_return_saved,
-                        selectedReturn = null,
-                        selectedSupplier = null,
-                        input = EditableItemList()
-                    )
-                }
+                clearState(R.string.purchase_return_saved)
             }, onFailure = { _state.update { it.copy(loading = false, error = R.string.something_went_wrong) } })
         }
     }
@@ -230,14 +222,7 @@ class PurchaseReturnViewModel(
             _state.update { it.copy(loading = true) }
             purchaseReturnRepository.deletePurchaseReturn(purchaseToDelete.localId).fold(
                 onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedReturn = null,
-                            snackbarMessage = R.string.purchase_return_deleted,
-                            input = EditableItemList()
-                        )
-                    }
+                    clearState( R.string.purchase_return_deleted)
                 },
                 onFailure = {
                     _state.update {
@@ -251,6 +236,15 @@ class PurchaseReturnViewModel(
         }
     }
 
-    private val currentUserId: Long?
-        get() = _state.value.currentUser?.id
+    private fun clearState(snackbarMessage: Int? = null) {
+        _state.update {
+            it.copy(
+                loading = false,
+                isQueryActive = false,
+                snackbarMessage = snackbarMessage,
+                input = EditableItemList()
+            )
+        }
+        updateCurrentUser(state.value.currentUser)
+    }
 }
