@@ -58,7 +58,7 @@ class PurchaseRepositoryImpl(
                 if (purchase.supplierLocalId != null) {
                     supplierRepository.adjustSupplierIndebtedness(
                         supplierLocalId = purchase.supplierLocalId,
-                        changeInDebt = purchase.totalPrice // INCREASE indebtedness to supplier
+                        changeInDebt = purchase.amountRemaining // INCREASE indebtedness to supplier
                     )
                 }
             }
@@ -97,7 +97,7 @@ class PurchaseRepositoryImpl(
                     if (oldPurchase.purchase.supplierLocalId != null) {
                         supplierRepository.adjustSupplierIndebtedness(
                             supplierLocalId = oldPurchase.purchase.supplierLocalId,
-                            changeInDebt = -oldPurchase.purchase.totalPrice // Decrease debt to revert
+                            changeInDebt = -oldPurchase.purchase.amountRemaining // Decrease debt to revert
                         )
                     }
                 }
@@ -117,7 +117,7 @@ class PurchaseRepositoryImpl(
                 if (entityToUpdate.supplierLocalId != null) {
                     supplierRepository.adjustSupplierIndebtedness(
                         supplierLocalId = entityToUpdate.supplierLocalId,
-                        changeInDebt = entityToUpdate.totalPrice // Increase debt
+                        changeInDebt = entityToUpdate.amountRemaining // Increase debt
                     )
                 }
             }
@@ -151,7 +151,7 @@ class PurchaseRepositoryImpl(
                     if (purchaseToDelete.purchase.supplierLocalId != null) {
                         supplierRepository.adjustSupplierIndebtedness(
                             supplierLocalId = purchaseToDelete.purchase.supplierLocalId,
-                            changeInDebt = -purchaseToDelete.purchase.totalPrice // DECREASE indebtedness to revert
+                            changeInDebt = -purchaseToDelete.purchase.amountRemaining // DECREASE indebtedness to revert
                         )
                     }
 

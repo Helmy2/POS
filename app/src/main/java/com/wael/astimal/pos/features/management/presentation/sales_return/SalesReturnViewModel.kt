@@ -151,7 +151,7 @@ class SalesReturnViewModel(
                 ) else EditableItemList(
                     selectedEmployeeId = salesReturn.employee?.id,
                     paymentType = salesReturn.paymentType,
-                    date = salesReturn.returnDate,
+                    date = salesReturn.data,
                     items = salesReturn.items.map { item ->
                         EditableItem(
                             tempEditorId = item.localId.toString(),

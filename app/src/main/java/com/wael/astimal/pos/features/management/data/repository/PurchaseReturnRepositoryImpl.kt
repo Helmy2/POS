@@ -58,7 +58,7 @@ class PurchaseReturnRepositoryImpl(
                 if (purchaseReturn.supplierLocalId != null) {
                     supplierRepository.adjustSupplierIndebtedness(
                         supplierLocalId = purchaseReturn.supplierLocalId,
-                        changeInDebt = -purchaseReturn.totalPrice // DECREASE indebtedness to supplier
+                        changeInDebt = -purchaseReturn.amountRemaining // DECREASE indebtedness to supplier
                     )
                 }
             }
@@ -95,7 +95,7 @@ class PurchaseReturnRepositoryImpl(
                         )
                     }
                     if (oldReturn.purchaseReturn.supplierLocalId != null) {
-                        supplierRepository.adjustSupplierIndebtedness(oldReturn.purchaseReturn.supplierLocalId, oldReturn.purchaseReturn.totalPrice)
+                        supplierRepository.adjustSupplierIndebtedness(oldReturn.purchaseReturn.supplierLocalId, oldReturn.purchaseReturn.amountRemaining)
                     }
                 }
 
@@ -112,7 +112,7 @@ class PurchaseReturnRepositoryImpl(
                     )
                 }
                 if (entityToUpdate.supplierLocalId != null) {
-                    supplierRepository.adjustSupplierIndebtedness(entityToUpdate.supplierLocalId, -entityToUpdate.totalPrice)
+                    supplierRepository.adjustSupplierIndebtedness(entityToUpdate.supplierLocalId, -entityToUpdate.amountRemaining)
                 }
             }
             val updatedReturn = getPurchaseReturnDetails(purchaseReturn.localId)
@@ -145,7 +145,7 @@ class PurchaseReturnRepositoryImpl(
                     if (returnToDelete.purchaseReturn.supplierLocalId != null) {
                         supplierRepository.adjustSupplierIndebtedness(
                             supplierLocalId = returnToDelete.purchaseReturn.supplierLocalId,
-                            changeInDebt = returnToDelete.purchaseReturn.totalPrice
+                            changeInDebt = returnToDelete.purchaseReturn.amountRemaining
                         )
                     }
 

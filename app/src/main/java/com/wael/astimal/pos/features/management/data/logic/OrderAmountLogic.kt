@@ -8,7 +8,6 @@ import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
@@ -21,7 +20,11 @@ class OrderAmountLogic(
     private val employeeDao: EmployeeDao
 ) {
 
-    suspend fun processNewOrder(order: OrderEntity, items: List<OrderProductEntity>, orderId: Long) {
+    suspend fun processNewOrder(
+        order: OrderEntity,
+        items: List<OrderProductEntity>,
+        orderId: Long
+    ) {
         val employeeStoreId = employeeDao.getStoreIdForEmployee(order.employeeLocalId)
             ?: throw Exception("Could not find an assigned store for the employee.")
 
@@ -34,15 +37,17 @@ class OrderAmountLogic(
             )
         }
 
-        if (order.paymentType == PaymentType.DEFERRED) {
-            val debtChange = order.totalPrice - order.amountPaid
-            clientRepository.adjustClientDebt(order.clientLocalId, debtChange)
-        }
+        val debtChange = order.totalAmount - order.amountPaid
+        clientRepository.adjustClientDebt(order.clientLocalId, debtChange)
 
         handleCommissions(order, orderId)
     }
 
-    suspend fun revertOrder(order: OrderEntity, items: List<OrderProductEntity>, currentUserId: Long) {
+    suspend fun revertOrder(
+        order: OrderEntity,
+        items: List<OrderProductEntity>,
+        currentUserId: Long
+    ) {
         val employeeStoreId = employeeDao.getStoreIdForEmployee(order.employeeLocalId)
             ?: throw Exception("Could not find an assigned store for the employee.")
 
@@ -55,12 +60,12 @@ class OrderAmountLogic(
             )
         }
 
-        if (order.paymentType == PaymentType.DEFERRED) {
-            val debtChange = order.totalPrice - order.amountPaid
-            clientRepository.adjustClientDebt(order.clientLocalId, -debtChange)
-        }
 
-        val oldCommissions = employeeFinancesDao.getAllCommissionsBySource(order.localId, SourceTransactionType.SALE)
+        val debtChange = order.totalAmount - order.amountPaid
+        clientRepository.adjustClientDebt(order.clientLocalId, -debtChange)
+
+        val oldCommissions =
+            employeeFinancesDao.getAllCommissionsBySource(order.localId, SourceTransactionType.SALE)
         oldCommissions.forEach { commission ->
             employeeFinancesDao.insertEmployeeTransaction(
                 EmployeeAccountTransactionEntity(
@@ -83,7 +88,7 @@ class OrderAmountLogic(
         val responsibleEmployeeId = client?.responsibleEmployee?.id
         val sellingEmployeeId = order.employeeLocalId
 
-        val commissionAmount = order.totalPrice * ORDER_COMMISSION_PERCENTAGE
+        val commissionAmount = order.totalAmount * ORDER_COMMISSION_PERCENTAGE
 
         createCommission(
             employeeId = sellingEmployeeId,
@@ -104,7 +109,13 @@ class OrderAmountLogic(
         }
     }
 
-    private suspend fun createCommission(employeeId: Long, orderId: Long, commissionAmount: Double, isMain: Boolean, createdByEmployeeId: Long) {
+    private suspend fun createCommission(
+        employeeId: Long,
+        orderId: Long,
+        commissionAmount: Double,
+        isMain: Boolean,
+        createdByEmployeeId: Long
+    ) {
         val commissionEntity = SaleCommissionEntity(
             serverId = null,
             employeeId = employeeId,

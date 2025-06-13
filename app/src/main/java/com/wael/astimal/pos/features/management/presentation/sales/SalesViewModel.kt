@@ -135,7 +135,7 @@ class SalesViewModel(
                 ) else EditableItemList(
                     selectedEmployeeId = order.employee?.id,
                     paymentType = order.paymentType,
-                    date = order.orderDate,
+                    date = order.data,
                     items = order.items.map { item ->
                         EditableItem(
                             tempEditorId = item.localId.toString(),
@@ -212,10 +212,9 @@ class SalesViewModel(
         val orderEntity = OrderEntity(
             clientLocalId = selectedClient.id,
             employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
-            previousClientDebt = selectedClient.debt,
             amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = orderInput.amountRemaining,
-            totalPrice = orderInput.totalAmount,
+            totalAmount = orderInput.totalAmount,
             paymentType = orderInput.paymentType,
             orderDate = orderInput.date,
             serverId = null,

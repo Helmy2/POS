@@ -50,14 +50,16 @@ interface SalesOrderDao {
     @Query("SELECT * FROM order_products WHERE orderLocalId = :orderLocalId")
     suspend fun getItemsForOrder(orderLocalId: Long): List<OrderProductEntity>
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             date(orderDate / 1000, 'unixepoch') as saleDate,
-            SUM(totalPrice) as totalRevenue,
+            SUM(totalAmount) as totalRevenue,
             COUNT(localId) as numberOfSales
         FROM orders 
         WHERE NOT isDeletedLocally AND orderDate BETWEEN :startDate AND :endDate
         GROUP BY saleDate
-    """)
+    """
+    )
     fun getDailySales(startDate: Long, endDate: Long): Flow<List<DailySaleData>>
 }

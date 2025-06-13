@@ -118,7 +118,7 @@ class PurchaseReturnViewModel(
                 else EditableItemList(
                     selectedEmployeeId = purchaseReturn.employee?.id,
                     paymentType = purchaseReturn.paymentType,
-                    date = purchaseReturn.returnDate,
+                    date = purchaseReturn.data,
                     items = purchaseReturn.items.map { item ->
                         EditableItem(
                             tempEditorId = item.localId.toString(),
@@ -195,7 +195,9 @@ class PurchaseReturnViewModel(
             localId = _state.value.selectedReturn?.localId ?: 0L,
             supplierLocalId = selectedSupplier.id,
             employeeLocalId = returnInput.selectedEmployeeId ?: employeeId,
-            totalPrice = returnInput.totalAmount,
+            amountRemaining = returnInput.amountRemaining,
+            amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
+            totalAmount = returnInput.totalAmount,
             paymentType = returnInput.paymentType,
             returnDate = System.currentTimeMillis(),
             serverId = null,

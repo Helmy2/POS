@@ -82,8 +82,18 @@ class PurchaseViewModel(
             is PurchaseScreenEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
             is PurchaseScreenEvent.OpenNewPurchaseForm -> clearState()
             is PurchaseScreenEvent.SelectSupplier -> _state.update { it.copy(selectedSupplier = event.supplier) }
-            is PurchaseScreenEvent.SelectEmployee -> updatePurchaseInput { it.copy(selectedEmployeeId = event.employeeId) }
-            is PurchaseScreenEvent.UpdatePaymentType -> updatePurchaseInput { it.copy(paymentType = event.type ?: PaymentType.CASH) }
+            is PurchaseScreenEvent.SelectEmployee -> updatePurchaseInput {
+                it.copy(
+                    selectedEmployeeId = event.employeeId
+                )
+            }
+
+            is PurchaseScreenEvent.UpdatePaymentType -> updatePurchaseInput {
+                it.copy(
+                    paymentType = event.type ?: PaymentType.CASH
+                )
+            }
+
             is PurchaseScreenEvent.AddItemToPurchase -> updatePurchaseInput { it.copy(items = it.items + EditableItem()) }
             is PurchaseScreenEvent.RemoveItemFromPurchase -> updatePurchaseInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             is PurchaseScreenEvent.UpdateItemProduct -> updatePurchaseItem(event.tempEditorId) {
@@ -93,15 +103,35 @@ class PurchaseViewModel(
                     selectedProductUnit = event.product?.minimumProductUnit
                 )
             }
-            is PurchaseScreenEvent.UpdateItemUnit -> updatePurchaseItem(event.tempEditorId) { it.copy(selectedProductUnit = event.productUnit) }
-            is PurchaseScreenEvent.UpdateItemQuantity -> updatePurchaseItem(event.tempEditorId) { it.copy(quantity = event.quantity) }
-            is PurchaseScreenEvent.UpdateItemPrice -> updatePurchaseItem(event.tempEditorId) { it.copy(price = event.price) }
+
+            is PurchaseScreenEvent.UpdateItemUnit -> updatePurchaseItem(event.tempEditorId) {
+                it.copy(
+                    selectedProductUnit = event.productUnit
+                )
+            }
+
+            is PurchaseScreenEvent.UpdateItemQuantity -> updatePurchaseItem(event.tempEditorId) {
+                it.copy(
+                    quantity = event.quantity
+                )
+            }
+
+            is PurchaseScreenEvent.UpdateItemPrice -> updatePurchaseItem(event.tempEditorId) {
+                it.copy(
+                    price = event.price
+                )
+            }
+
             is PurchaseScreenEvent.SavePurchase -> savePurchase()
             is PurchaseScreenEvent.DeletePurchase -> deletePurchase()
             is PurchaseScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is PurchaseScreenEvent.ClearError -> _state.update { it.copy(error = null) }
             is PurchaseScreenEvent.UpdateAmountPaid -> updatePurchaseInput { it.copy(amountPaid = event.amountPaid) }
-            is PurchaseScreenEvent.UpdateTransferDate -> updatePurchaseInput { it.copy(date = event.date ?: System.currentTimeMillis()) }
+            is PurchaseScreenEvent.UpdateTransferDate -> updatePurchaseInput {
+                it.copy(
+                    date = event.date ?: System.currentTimeMillis()
+                )
+            }
         }
     }
 
@@ -115,7 +145,7 @@ class PurchaseViewModel(
                 else EditableItemList(
                     selectedEmployeeId = order.user?.id,
                     paymentType = order.paymentType,
-                    date = order.purchaseDate,
+                    date = order.data,
                     items = order.items.map { item ->
                         EditableItem(
                             tempEditorId = item.localId.toString(),
@@ -151,8 +181,22 @@ class PurchaseViewModel(
             _state.update { it.copy(loading = true, error = null, query = query) }
             delay(300)
             purchaseRepository.getPurchases()
-                .catch { _state.update { it.copy(loading = false, error = R.string.error_searching_orders) } }
-                .collect { purchases -> _state.update { it.copy(loading = false, purchases = purchases) } }
+                .catch {
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            error = R.string.error_searching_orders
+                        )
+                    }
+                }
+                .collect { purchases ->
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            purchases = purchases
+                        )
+                    }
+                }
         }
     }
 
@@ -185,7 +229,9 @@ class PurchaseViewModel(
             localId = _state.value.selectedPurchase?.localId ?: 0L,
             supplierLocalId = selectedSupplier.id,
             employeeLocalId = purchaseInput.selectedEmployeeId ?: currentUserID,
-            totalPrice = purchaseInput.totalAmount,
+            amountRemaining = purchaseInput.amountRemaining,
+            totalAmount = purchaseInput.totalAmount,
+            amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
             paymentType = purchaseInput.paymentType,
             purchaseDate = System.currentTimeMillis(),
             serverId = null,
@@ -199,9 +245,18 @@ class PurchaseViewModel(
                 purchaseEntity, itemEntities
             )
 
-            result.fold(onSuccess = {
-                clearState(R.string.purchase_saved)
-            }, onFailure = { _state.update { it.copy(loading = false, error = R.string.something_went_wrong) } })
+            result.fold(
+                onSuccess = {
+                    clearState(R.string.purchase_saved)
+                },
+                onFailure = {
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            error = R.string.something_went_wrong
+                        )
+                    }
+                })
         }
     }
 

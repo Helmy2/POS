@@ -8,7 +8,6 @@ import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
@@ -21,7 +20,11 @@ class ReturnAmountLogic(
     private val employeeDao: EmployeeDao
 ) {
 
-    suspend fun processNewReturn(returnEntity: OrderReturnEntity, items: List<OrderProductEntity>, returnId: Long) {
+    suspend fun processNewReturn(
+        returnEntity: OrderReturnEntity,
+        items: List<OrderProductEntity>,
+        returnId: Long
+    ) {
         val employeeStoreId = employeeDao.getStoreIdForEmployee(returnEntity.employeeLocalId)
             ?: throw Exception("Could not find an assigned store for the employee.")
 
@@ -34,15 +37,17 @@ class ReturnAmountLogic(
             )
         }
 
-        if (returnEntity.paymentType == PaymentType.DEFERRED) {
-            val debtChange = returnEntity.totalAmount - returnEntity.amountPaid
-            clientRepository.adjustClientDebt(returnEntity.clientLocalId, -debtChange)
-        }
+        val debtChange = returnEntity.totalAmount - returnEntity.amountPaid
+        clientRepository.adjustClientDebt(returnEntity.clientLocalId, -debtChange)
 
         handleCommissions(returnEntity, returnId)
     }
 
-    suspend fun revertReturn(returnEntity: OrderReturnEntity, items: List<OrderProductEntity>, currentUserId: Long) {
+    suspend fun revertReturn(
+        returnEntity: OrderReturnEntity,
+        items: List<OrderProductEntity>,
+        currentUserId: Long
+    ) {
         val employeeStoreId = employeeDao.getStoreIdForEmployee(returnEntity.employeeLocalId)
             ?: throw Exception("Could not find an assigned store for the employee.")
 
@@ -55,12 +60,14 @@ class ReturnAmountLogic(
             )
         }
 
-        if (returnEntity.paymentType == PaymentType.DEFERRED) {
-            val debtChange = returnEntity.totalAmount - returnEntity.amountPaid
-            clientRepository.adjustClientDebt(returnEntity.clientLocalId, debtChange)
-        }
+        val debtChange = returnEntity.totalAmount - returnEntity.amountPaid
+        clientRepository.adjustClientDebt(returnEntity.clientLocalId, debtChange)
 
-        val oldCommissions = employeeFinancesDao.getAllCommissionsBySource(returnEntity.localId, SourceTransactionType.SALE_RETURN)
+
+        val oldCommissions = employeeFinancesDao.getAllCommissionsBySource(
+            returnEntity.localId,
+            SourceTransactionType.SALE_RETURN
+        )
         oldCommissions.forEach { commission ->
             employeeFinancesDao.insertEmployeeTransaction(
                 EmployeeAccountTransactionEntity(
@@ -75,7 +82,10 @@ class ReturnAmountLogic(
                 )
             )
         }
-        employeeFinancesDao.deleteAllCommissionsBySource(returnEntity.localId, SourceTransactionType.SALE_RETURN)
+        employeeFinancesDao.deleteAllCommissionsBySource(
+            returnEntity.localId,
+            SourceTransactionType.SALE_RETURN
+        )
     }
 
     private suspend fun handleCommissions(returnEntity: OrderReturnEntity, returnId: Long) {
@@ -104,7 +114,13 @@ class ReturnAmountLogic(
         }
     }
 
-    private suspend fun createCommission(employeeId: Long, returnId: Long, commissionAmount: Double, isMain: Boolean, createdByEmployeeId: Long) {
+    private suspend fun createCommission(
+        employeeId: Long,
+        returnId: Long,
+        commissionAmount: Double,
+        isMain: Boolean,
+        createdByEmployeeId: Long
+    ) {
         val commissionEntity = SaleCommissionEntity(
             serverId = null,
             employeeId = employeeId,
