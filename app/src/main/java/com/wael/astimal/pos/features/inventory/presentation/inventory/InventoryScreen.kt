@@ -22,6 +22,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.presentation.category.CategoryRoute
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.features.inventory.presentation.product.ProductRoute
+import com.wael.astimal.pos.features.inventory.presentation.stock_management.StockManagementRoute
 import com.wael.astimal.pos.features.inventory.presentation.stock_transfer.StockTransferRoute
 import com.wael.astimal.pos.features.inventory.presentation.store.StoreRoute
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
@@ -86,6 +87,7 @@ fun InventoryScreen(
                                 InventoryDestination.Categories -> context.getString(R.string.categories)
                                 InventoryDestination.Products -> context.getString(R.string.products)
                                 InventoryDestination.StockTransfer -> context.getString(R.string.stock_transfer)
+                                InventoryDestination.StockManagement -> context.getString(R.string.stock_management)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -123,6 +125,13 @@ fun InventoryScreen(
 
                     InventoryDestination.StockTransfer -> {
                         StockTransferRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+
+                    InventoryDestination.StockManagement -> {
+                        StockManagementRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                             snackbarHostState = snackbarHostState,
                         )

@@ -10,10 +10,10 @@ data class InventoryState(
 )
 
 enum class InventoryDestination {
-    UnitOfMeasures, Stores, Categories, Products,StockTransfer;
+    UnitOfMeasures, Stores, Categories, Products, StockTransfer, StockManagement;
 
     companion object {
         fun getAll(): List<InventoryDestination> =
-            listOf(Stores, UnitOfMeasures, Categories, Products,StockTransfer)
+            listOf(Stores, UnitOfMeasures, Categories, Products, StockTransfer, StockManagement)
     }
 }

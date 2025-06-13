@@ -76,8 +76,8 @@ class StoreViewModel(
             _state.update {
                 it.copy(
                     selectedStore = store,
-                    inputArName = store.localizedName.arName ?: "",
-                    inputEnName = store.localizedName.enName ?: "",
+                    inputArName = store.name.arName ?: "",
+                    inputEnName = store.name.enName ?: "",
                     inputType = store.type
                 )
             }

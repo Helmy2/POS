@@ -108,8 +108,8 @@ fun StockTransferScreen(
                 },
                 label = {
                     Label(
-                        "${it.fromStore?.localizedName?.displayName(language)} : ${
-                            it.toStore?.localizedName?.displayName(language)
+                        "${it.fromStore?.name?.displayName(language)} : ${
+                            it.toStore?.name?.displayName(language)
                         }"
                     )
                 },
@@ -160,7 +160,7 @@ fun StockTransferForm(
             items = availableStores,
             selectedItemId = editableTransfer.fromStoreId,
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store?.localId)) },
-            itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
+            itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
         )
 
@@ -169,7 +169,7 @@ fun StockTransferForm(
             items = availableStores.filter { it.localId != editableTransfer.fromStoreId },
             selectedItemId = editableTransfer.toStoreId,
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store?.localId)) },
-            itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
+            itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
         )
 

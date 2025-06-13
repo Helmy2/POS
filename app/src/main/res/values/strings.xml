@@ -158,4 +158,26 @@
     <string name="current_balance">Current balance</string>
     <string name="transaction_history">Transaction history</string>
     <string name="employee_account">Employee account</string>
+    <string name="error_loading_stores">Error loading stores</string>
+    <string name="error_loading_stock">Error loading stock</string>
+    <string name="invalid_quantity">Invalid quantity</string>
+    <string name="stock_updated_successfully">Stock updated successfully</string>
+    <string name="error_updating_stock">Error updating stock</string>
+    <string name="search_products">Search products</string>
+    <string name="filter_by_store">filter by store</string>
+    <string name="stock_management">Stock management</string>
+    <string name="error_missing_data">Error missing data</string>
+    <string name="store">Store</string>
+    <string name="current_quantity">Current quantity</string>
+    <string name="adjust">Adjust</string>
+    <string name="adjust_stock">Adjust stock</string>
+    <string name="quantity_change_by">Quantity chang by</string>
+    <string name="reason">Reason</string>
+    <string name="notes_optional">Notes optional</string>
+    <string name="save">Save</string>
+    <string name="stock_adjustment_reason_initial_count">Stock adjustment reason initial count</string>
+    <string name="stock_adjustment_reason_recount">stock adjustment reason recount</string>
+    <string name="stock_adjustment_reason_damaged_goods">stock adjustment reason damaged goods</string>
+    <string name="stock_adjustment_reason_theft">stock adjustment reason theft</string>
+    <string name="stock_adjustment_reason_other">stock adjustment reason other</string>
 </resources>

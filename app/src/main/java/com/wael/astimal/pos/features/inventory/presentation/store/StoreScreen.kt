@@ -72,7 +72,7 @@ fun StoreScreen(
                     onEvent(StoreEvent.UpdateIsQueryActive(false))
                     onEvent(StoreEvent.SelectStore(store))
                 },
-                label = { Text(it.localizedName.displayName(language)) },
+                label = { Text(it.name.displayName(language)) },
                 isSelected = { store -> store.localId == state.selectedStore?.localId },
             )
         },

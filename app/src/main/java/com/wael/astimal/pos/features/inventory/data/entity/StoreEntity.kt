@@ -25,7 +25,7 @@ fun StoreEntity.toDomain() : Store {
     return Store(
         localId = this.localId,
         serverId = this.serverId,
-        localizedName = LocalizedString(
+        name = LocalizedString(
             arName = this.arName ?: "",
             enName = this.enName ?: ""
         ),

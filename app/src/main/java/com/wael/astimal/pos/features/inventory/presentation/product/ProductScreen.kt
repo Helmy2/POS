@@ -136,7 +136,7 @@ fun ProductScreen(
                     items = state.stores,
                     selectedItemId = state.selectedStoreId,
                     onItemSelected = { store -> onEvent(ProductEvent.SelectStoreId(store?.localId)) },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.localId })
 
                 LabeledTextField(

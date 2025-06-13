@@ -7,6 +7,7 @@ import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
@@ -14,6 +15,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.StoreProductStockEnti
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
+import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
@@ -62,8 +64,9 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         StoreProductStockEntity::class,
         SaleCommissionEntity::class,
         EmployeeAccountTransactionEntity::class,
+        StockAdjustmentEntity::class
     ],
-    version = 16,
+    version = 1,
     exportSchema = false
 )
 
@@ -83,4 +86,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun storeProductStockDao(): StoreProductStockDao
     abstract fun employeeDao(): EmployeeDao
     abstract fun employeeFinancesDao(): EmployeeFinancesDao
+    abstract fun stockAdjustmentDao(): StockAdjustmentDao
 }

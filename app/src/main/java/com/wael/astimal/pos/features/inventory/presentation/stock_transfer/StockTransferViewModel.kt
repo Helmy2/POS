@@ -204,9 +204,9 @@ class StockTransferViewModel(
                     transfers
                 } else {
                     transfers.filter { transfer ->
-                        (transfer.fromStore?.localizedName?.arName?.contains(
+                        (transfer.fromStore?.name?.arName?.contains(
                             query, ignoreCase = true
-                        ) == true) || (transfer.toStore?.localizedName?.enName?.contains(
+                        ) == true) || (transfer.toStore?.name?.enName?.contains(
                             query, ignoreCase = true
                         ) == true) || (transfer.initiatedByUser?.enName?.contains(
                             query, ignoreCase = true

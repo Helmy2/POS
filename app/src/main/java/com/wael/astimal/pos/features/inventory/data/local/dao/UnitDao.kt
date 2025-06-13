@@ -23,4 +23,7 @@ interface UnitDao {
 
     @Query("SELECT * FROM units WHERE serverId = :serverId")
     suspend fun getByServerId(serverId: Int): UnitEntity?
+
+    @Query("SELECT rate FROM units WHERE localId = :unitId")
+    suspend fun getConversionRate(unitId: Long): Double?
 }
