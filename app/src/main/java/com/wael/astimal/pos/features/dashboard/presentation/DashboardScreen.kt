@@ -30,10 +30,14 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.vicoTheme
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.wael.astimal.pos.R
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
@@ -133,7 +137,13 @@ fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit
             Spacer(modifier = Modifier.height(16.dp))
             CartesianChartHost(
                 chart = rememberCartesianChart(
-                    rememberColumnCartesianLayer(),
+                    rememberColumnCartesianLayer(
+                        ColumnCartesianLayer.ColumnProvider.series(
+                            vicoTheme.columnCartesianLayerColors.map { color ->
+                                rememberLineComponent(fill(MaterialTheme.colorScheme.primary))
+                            }
+                        )
+                    ),
                     startAxis = VerticalAxis.rememberStart(),
                     bottomAxis = HorizontalAxis.rememberBottom(
                         valueFormatter = { _, value, _ ->

@@ -201,4 +201,5 @@
     <string name="max_price">Max unit price</string>
     <string name="min_price">Min unit price</string>
     <string name="error_searching_purchases">Error searching purchases</string>
+    <string name="ok">OK</string>
 </resources>
