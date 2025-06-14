@@ -84,8 +84,6 @@ data class StockTransferItemEntity(
     @ColumnInfo(index = true)
     val unitLocalId: Long,
     val quantity: Double,
-    val maximumOpeningBalance: Double?,
-    val minimumOpeningBalance: Double?
 )
 
 data class StockTransferWithItemsAndDetails(
@@ -162,8 +160,6 @@ fun StockTransferItemWithProductDetails.toDomain(): StockTransferItem {
         localId = this.item.localId,
         serverId = this.item.serverId,
         quantity = this.item.quantity,
-        maximumOpeningBalance = this.item.maximumOpeningBalance,
-        minimumOpeningBalance = this.item.minimumOpeningBalance,
         product = this.product?.toDomain(),
         productUnit = this.unit?.toDomain(),
     )

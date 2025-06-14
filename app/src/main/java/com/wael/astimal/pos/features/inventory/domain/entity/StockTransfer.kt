@@ -22,7 +22,5 @@ data class StockTransferItem(
     val product: Product?,
     val productUnit: ProductUnit?,
     val quantity: Double,
-    val maximumOpeningBalance: Double?,
-    val minimumOpeningBalance: Double?
 )
 

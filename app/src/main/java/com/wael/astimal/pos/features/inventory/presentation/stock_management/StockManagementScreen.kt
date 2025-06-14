@@ -2,7 +2,6 @@ package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -87,6 +86,7 @@ fun StockManagementScreen(
                     onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.localId },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             items(
@@ -101,7 +101,12 @@ fun StockManagementScreen(
 @Composable
 fun StockItemCard(stockItem: StoreStock, onEvent: (StockManagementEvent) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             Text(
                 text = stockItem.product.localizedName.displayName(LocalAppLocale.current),
                 style = MaterialTheme.typography.titleMedium
@@ -114,18 +119,12 @@ fun StockItemCard(stockItem: StoreStock, onEvent: (StockManagementEvent) -> Unit
                 }",
                 style = MaterialTheme.typography.bodySmall
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.current_quantity) + ": ${stockItem.quantity}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Button(onClick = { onEvent(StockManagementEvent.ShowAdjustmentDialog(stockItem)) }) {
-                    Text(stringResource(R.string.adjust))
-                }
+            Text(
+                text = stringResource(R.string.current_quantity) + ": ${stockItem.quantity}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Button(onClick = { onEvent(StockManagementEvent.ShowAdjustmentDialog(stockItem)) }) {
+                Text(stringResource(R.string.adjust))
             }
         }
     }

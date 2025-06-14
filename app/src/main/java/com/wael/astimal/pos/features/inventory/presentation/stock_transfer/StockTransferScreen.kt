@@ -1,9 +1,9 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,34 +51,32 @@ fun StockTransferRoute(
     viewModel: StockTransferViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(state.snackbarMessage, state.error) {
+        state.snackbarMessage?.let {
+            snackbarHostState.showSnackbar(context.getString(it))
+            viewModel.onEvent(StockTransferScreenEvent.ClearSnackbar)
+        }
+        state.error?.let {
+            snackbarHostState.showSnackbar(context.getString(it))
+            viewModel.onEvent(StockTransferScreenEvent.ClearError)
+        }
+    }
+
     StockTransferScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onBack = onBack,
-        snackbarHostState = snackbarHostState,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun StockTransferScreen(
     state: StockTransferScreenState,
     onEvent: (StockTransferScreenEvent) -> Unit,
     onBack: () -> Unit,
-    snackbarHostState: SnackbarHostState,
 ) {
     val language = LocalAppLocale.current
-    val context = LocalContext.current
-    LaunchedEffect(state.snackbarMessage, state.error) {
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(StockTransferScreenEvent.ClearSnackbar)
-        }
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(StockTransferScreenEvent.ClearError)
-        }
-    }
 
     SearchScreen(
         query = state.query,
@@ -92,7 +88,7 @@ fun StockTransferScreen(
         onSearch = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearchActiveChange = { onEvent(StockTransferScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedTransfer?.lastModified,
+        lastModifiedDate = state.selectedTransfer?.transferDate,
         onDelete = {
             state.selectedTransfer?.let {
                 onEvent(StockTransferScreenEvent.DeleteTransfer(it.localId))
@@ -109,7 +105,7 @@ fun StockTransferScreen(
                 },
                 label = {
                     Label(
-                        "${it.fromStore?.name?.displayName(language)} : ${
+                        "${it.fromStore?.name?.displayName(language)} -> ${
                             it.toStore?.name?.displayName(language)
                         }"
                     )
@@ -125,14 +121,14 @@ fun StockTransferScreen(
                 availableEmployees = state.availableEmployees,
                 onEvent = onEvent,
                 isNewTransfer = state.isNew.not(),
-                enabled = state.canEdit
+                canEditEmployee = state.canEditEmployee,
+                canEditTheRest = state.canEdit
             )
         },
     )
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockTransferForm(
     editableTransfer: EditableStockTransfer,
@@ -141,7 +137,8 @@ fun StockTransferForm(
     availableEmployees: List<User>,
     onEvent: (StockTransferScreenEvent) -> Unit,
     isNewTransfer: Boolean,
-    enabled: Boolean = true
+    canEditEmployee: Boolean = true,
+    canEditTheRest: Boolean = true
 ) {
     val localAppLocale = LocalAppLocale.current
     Column(
@@ -155,29 +152,28 @@ fun StockTransferForm(
             style = MaterialTheme.typography.headlineSmall
         )
         DataPicker(
-            selectedDateMillis = editableTransfer.transferDate,
+            selectedDateMillis = editableTransfer.transferDate ?: System.currentTimeMillis(),
             onDateSelected = { onEvent(StockTransferScreenEvent.UpdateTransferDate(it)) },
-            enabled = enabled
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.from_store),
             items = availableStores,
             selectedItemId = editableTransfer.fromStoreId,
-            onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store?.localId)) },
+            onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
-            enabled = enabled
+            enabled = canEditTheRest
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.to_store),
             items = availableStores.filter { it.localId != editableTransfer.fromStoreId },
             selectedItemId = editableTransfer.toStoreId,
-            onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store?.localId)) },
+            onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
-            enabled = enabled
+            enabled = canEditTheRest
         )
 
         CustomExposedDropdownMenu(
@@ -187,7 +183,7 @@ fun StockTransferForm(
             onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
             itemToId = { it.id },
-            enabled = enabled
+            enabled = canEditEmployee
         )
 
         Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
@@ -197,14 +193,14 @@ fun StockTransferForm(
                 availableProducts = availableProducts,
                 onEvent = onEvent,
                 onRemoveItem = { onEvent(StockTransferScreenEvent.RemoveItemFromTransfer(item.tempEditorId)) },
-                enabled = enabled
+                enabled = canEditTheRest
             )
         }
 
         Button(
             onClick = { onEvent(StockTransferScreenEvent.AddItemToTransfer) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = enabled
+            enabled = canEditTheRest
         ) {
             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -214,7 +210,6 @@ fun StockTransferForm(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockTransferItemRow(
     item: EditableStockTransferItem,
@@ -250,43 +245,94 @@ fun StockTransferItemRow(
                 )
             }
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            CustomExposedDropdownMenu(
-                label = stringResource(R.string.unit),
-                items = listOf(
-                    item.product?.minimumProductUnit, item.product?.maximumProductUnit
-                ),
-                selectedItemId = item.productUnit?.localId
-                    ?: item.product?.minimumProductUnit?.localId,
-                onItemSelected = { unit ->
-                    onEvent(
-                        StockTransferScreenEvent.UpdateItemUnit(item.tempEditorId, unit)
-                    )
-                },
-                itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
-                itemToId = { it?.localId ?: -1L },
-                modifier = Modifier.weight(1f),
-                enabled = enabled
-            )
-            TextInputField(
-                value = item.quantity,
-                onValueChange = {
-                    onEvent(
-                        StockTransferScreenEvent.UpdateItemQuantity(
-                            item.tempEditorId, it
+
+        Text(
+            text = "${stringResource(R.string.in_stock)}: ${item.currentStock}",
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        AnimatedVisibility(item.product?.minimumProductUnit != null) {
+            Column {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.unit),
+                    items = listOfNotNull(
+                        item.product?.minimumProductUnit, item.product?.maximumProductUnit
+                    ),
+                    selectedItemId = if (item.isSelectedUnitIsMax) {
+                        item.product?.maximumProductUnit?.localId
+                    } else {
+                        item.product?.minimumProductUnit?.localId
+                    },
+                    onItemSelected = { unit ->
+                        onEvent(
+                            StockTransferScreenEvent.UpdateItemUnit(
+                                item.tempEditorId,
+                                unit?.localId == item.product?.maximumProductUnit?.localId
+                            )
                         )
+                    },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToId = { it.localId },
+                    enabled = enabled
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Label(
+                        item.product?.minimumProductUnit?.localizedName?.displayName(language)
+                            ?: "", modifier = Modifier.align(Alignment.CenterVertically)
                     )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
-                ),
-                label = stringResource(R.string.quantity),
-                modifier = Modifier.weight(1f),
-                enabled = enabled
-            )
+                    TextInputField(
+                        value = item.minUnitQuantity,
+                        onValueChange = {
+                            onEvent(
+                                StockTransferScreenEvent.UpdateItemMinUnitQuantity(
+                                    item.tempEditorId,
+                                    it
+                                )
+                            )
+                        },
+                        label = stringResource(R.string.qty),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        enabled = !item.isSelectedUnitIsMax && enabled
+                    )
+                }
+            }
+        }
+        AnimatedVisibility(item.product?.maximumProductUnit != null) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Label(
+                        item.product?.maximumProductUnit?.localizedName?.displayName(language) ?: ""
+                    )
+                    TextInputField(
+                        value = item.maxUnitQuantity,
+                        onValueChange = {
+                            onEvent(
+                                StockTransferScreenEvent.UpdateItemMaxUnitQuantity(
+                                    item.tempEditorId,
+                                    it
+                                )
+                            )
+                        },
+                        label = stringResource(R.string.qty),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        enabled = item.isSelectedUnitIsMax && enabled
+                    )
+                }
+            }
         }
     }
 }
