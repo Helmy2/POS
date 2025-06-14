@@ -87,7 +87,7 @@ class DummyDataSeeder(
 
     private suspend fun populateDummySuppliers(employees: Map<String, Long>) {
         val supplier1Entity = SupplierEntity(
-            id = -301,
+            localId = -301,
             arName = "مورد ١",
             enName = "Supplier 1",
             responsibleEmployeeLocalId = employees["emp1"],
@@ -100,7 +100,7 @@ class DummyDataSeeder(
         )
         supplierDao.insertOrUpdateSupplier(supplier1Entity)
         val supplier2Entity = SupplierEntity(
-            id = -302,
+            localId = -302,
             arName = "مورد ٢",
             enName = "Supplier 2",
             responsibleEmployeeLocalId = employees["emp2"],
@@ -156,7 +156,7 @@ class DummyDataSeeder(
 
     private suspend fun populateDummyClients(employees: Map<String, Long>) {
         val client1Entity = ClientEntity(
-            id = -201,
+            localId = -201,
             arName = "عميل ١",
             enName = "Client 1",
             responsibleEmployeeLocalId = employees["emp1"],
@@ -171,7 +171,7 @@ class DummyDataSeeder(
         clientDao.insertOrUpdateClient(client1Entity)
 
         val client2Entity = ClientEntity(
-            id = -202,
+            localId = -202,
             arName = "عميل ٢",
             enName = "Client 2",
             responsibleEmployeeLocalId = employees["emp2"],

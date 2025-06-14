@@ -22,7 +22,7 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     foreignKeys = [
         ForeignKey(
             entity = ClientEntity::class,
-            parentColumns = ["id"],
+            parentColumns = ["localId"],
             childColumns = ["clientLocalId"],
             onDelete = ForeignKey.RESTRICT
         ),
@@ -97,7 +97,7 @@ data class OrderReturnWithDetailsEntity(
     @Embedded
     val orderReturn: OrderReturnEntity,
 
-    @Relation(parentColumn = "clientLocalId", entityColumn = "id", entity = ClientEntity::class)
+    @Relation(parentColumn = "clientLocalId", entityColumn = "localId", entity = ClientEntity::class)
     val clientWithUser: ClientWithDetailsEntity?,
 
     @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)

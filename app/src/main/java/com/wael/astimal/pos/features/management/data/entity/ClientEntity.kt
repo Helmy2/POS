@@ -2,6 +2,8 @@ package com.wael.astimal.pos.features.management.data.entity
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.features.management.domain.entity.Client
@@ -12,10 +14,20 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 @Entity(
     tableName = "clients",
+    foreignKeys = [
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["responsibleEmployeeLocalId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
 data class ClientEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L,
+    val localId: Long = 0L,
+    val serverId: Int? = null,
     val arName: String,
     val enName: String,
     val phone1: String?,
@@ -40,7 +52,7 @@ data class ClientWithDetailsEntity(
 
 fun ClientWithDetailsEntity.toDomain(): Client {
     return Client(
-        id = this.client.id,
+        id = this.client.localId,
         name = LocalizedString(
             arName = this.client.arName,
             enName = this.client.enName

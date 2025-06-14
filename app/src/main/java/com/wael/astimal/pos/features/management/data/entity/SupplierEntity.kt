@@ -26,7 +26,8 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 )
 data class SupplierEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L,
+    val localId: Long = 0L,
+    val serverId: Int? = null,
     val arName: String,
     val enName: String,
     val phone: String?,
@@ -52,7 +53,7 @@ data class SupplierWithDetailsEntity(
 
 fun SupplierWithDetailsEntity.toDomain(): Supplier {
     return Supplier(
-        id = this.supplier.id,
+        id = this.supplier.localId,
         name = LocalizedString(
             arName = this.supplier.arName,
             enName = this.supplier.enName

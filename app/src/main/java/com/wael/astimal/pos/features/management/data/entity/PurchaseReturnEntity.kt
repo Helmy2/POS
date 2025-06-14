@@ -21,7 +21,7 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     foreignKeys = [
         ForeignKey(
             entity = SupplierEntity::class,
-            parentColumns = ["id"],
+            parentColumns = ["localId"],
             childColumns = ["supplierLocalId"],
             onDelete = ForeignKey.RESTRICT
         ),
@@ -95,7 +95,7 @@ data class PurchaseReturnProductEntity(
 data class PurchaseReturnWithDetailsEntity(
     @Embedded
     val purchaseReturn: PurchaseReturnEntity,
-    @Relation(parentColumn = "supplierLocalId", entityColumn = "id", entity = SupplierEntity::class)
+    @Relation(parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class)
     val supplier: SupplierWithDetailsEntity?,
     @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
     val employee: UserEntity?,

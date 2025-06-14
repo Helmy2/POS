@@ -17,13 +17,13 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     foreignKeys = [
         ForeignKey(
             entity = ClientEntity::class,
-            parentColumns = ["id"],
+            parentColumns = ["localId"],
             childColumns = ["clientLocalId"],
             onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = SupplierEntity::class,
-            parentColumns = ["id"],
+            parentColumns = ["localId"],
             childColumns = ["supplierLocalId"],
             onDelete = ForeignKey.SET_NULL
         ),
@@ -58,14 +58,14 @@ data class ReceivePayVoucherWithDetails(
 
     @Relation(
         parentColumn = "clientLocalId",
-        entityColumn = "id",
+        entityColumn = "localId",
         entity = ClientEntity::class
     )
     val client: ClientWithDetailsEntity?,
 
     @Relation(
         parentColumn = "supplierLocalId",
-        entityColumn = "id",
+        entityColumn = "localId",
         entity = SupplierEntity::class
     )
     val supplier: SupplierWithDetailsEntity?,
