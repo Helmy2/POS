@@ -8,7 +8,6 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
@@ -65,20 +64,14 @@ data class OrderEntity(
         parentColumns = ["localId"],
         childColumns = ["productLocalId"],
         onDelete = ForeignKey.RESTRICT
-    ), ForeignKey(
-        entity = UnitEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["unitLocalId"],
-        onDelete = ForeignKey.RESTRICT
     )],
-    indices = [Index(value = ["orderLocalId"]), Index(value = ["productLocalId"]), Index(value = ["unitLocalId"])]
+    indices = [Index(value = ["orderLocalId"]), Index(value = ["productLocalId"])]
 )
 data class OrderProductEntity(
     @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
     val serverId: Int?,
     val orderLocalId: Long,
     val productLocalId: Long,
-    val unitLocalId: Long,
     val quantity: Double,
     val unitSellingPrice: Double,
     val itemTotalPrice: Double,
@@ -107,10 +100,6 @@ data class OrderProductItemWithDetails(
     @Relation(
         parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class
     ) val product: ProductWithDetailsEntity?,
-
-    @Relation(
-        parentColumn = "unitLocalId", entityColumn = "localId", entity = UnitEntity::class
-    ) val unit: UnitEntity?
 )
 
 fun OrderWithDetailsEntity.toDomain(): SalesOrder {
@@ -138,7 +127,6 @@ fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
         serverId = this.orderItem.serverId,
         orderLocalId = this.orderItem.orderLocalId,
         product = this.product?.toDomain(),
-        productUnit = this.unit?.toDomain(),
         quantity = this.orderItem.quantity,
         unitSellingPrice = this.orderItem.unitSellingPrice,
         itemTotalPrice = this.orderItem.itemTotalPrice,

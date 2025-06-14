@@ -43,7 +43,7 @@ class StockRepositoryImpl(
     }
 
     override suspend fun adjustStock(
-        storeId: Long, productId: Long, transactionUnitId: Long, transactionQuantity: Double
+        storeId: Long, productId: Long, transactionQuantity: Double
     ) {
         val currentStock =
             stockDao.getStockByStoreAndProduct(storeId, productId).map { it?.quantity ?: 0.0 }

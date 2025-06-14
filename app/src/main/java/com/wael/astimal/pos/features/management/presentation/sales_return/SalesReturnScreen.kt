@@ -147,15 +147,21 @@ fun SalesReturnForm(
             onRemoveItemFromOrder = { tempEditorId ->
                 onEvent(SalesReturnEvent.RemoveItemFromReturn(tempEditorId))
             },
-            onUpdateItemQuantity = { tempEditorId, quantity ->
-                onEvent(SalesReturnEvent.UpdateItemQuantity(tempEditorId, quantity))
+            onUpdateItemUnit = { tempEditorId, isMaxUnitSelected ->
+                onEvent(SalesReturnEvent.UpdateItemUnit(tempEditorId, isMaxUnitSelected))
             },
-            onUpdateItemUnit = { tempEditorId, unit ->
-                onEvent(SalesReturnEvent.UpdateItemUnit(tempEditorId, unit))
+            onUpdateItemMaxUnitPrice = { tempEditorId, maxUnitPrice ->
+                onEvent(SalesReturnEvent.UpdateItemMaxUnitPrice(tempEditorId, maxUnitPrice))
             },
-            onUpdateItemPrice = { tempEditorId, price ->
-                onEvent(SalesReturnEvent.UpdateItemPrice(tempEditorId, price))
+            onUpdateItemMinUnitPrice = { tempEditorId, minUnitPrice ->
+                onEvent(SalesReturnEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
             },
+            onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
+                onEvent(SalesReturnEvent.UpdateItemMaxUnitQuantity(tempEditorId, maxUnitQuantity))
+            },
+            onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
+                onEvent(SalesReturnEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
+            }
         )
 
         OrderTotalsSection(

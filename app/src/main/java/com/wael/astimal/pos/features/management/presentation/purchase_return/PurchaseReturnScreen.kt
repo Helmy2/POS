@@ -43,8 +43,8 @@ fun PurchaseReturnRoute(
 
 @Composable
 fun PurchaseReturnScreen(
-    state: PurchaseReturnScreenState,
-    onEvent: (PurchaseReturnScreenEvent) -> Unit,
+    state: PurchaseReturnState,
+    onEvent: (PurchaseReturnEvent) -> Unit,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit
 ) {
@@ -52,11 +52,11 @@ fun PurchaseReturnScreen(
     LaunchedEffect(state.snackbarMessage, state.error) {
         state.snackbarMessage?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseReturnScreenEvent.ClearSnackbar)
+            onEvent(PurchaseReturnEvent.ClearSnackbar)
         }
         state.error?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseReturnScreenEvent.ClearError)
+            onEvent(PurchaseReturnEvent.ClearError)
         }
     }
 
@@ -66,19 +66,19 @@ fun PurchaseReturnScreen(
         loading = state.loading,
         isNew = state.isNew,
         canEdit = state.canEdit,
-        onQueryChange = { onEvent(PurchaseReturnScreenEvent.UpdateQuery(it)) },
-        onSearch = { onEvent(PurchaseReturnScreenEvent.SearchReturns(it)) },
-        onSearchActiveChange = { onEvent(PurchaseReturnScreenEvent.UpdateIsQueryActive(it)) },
+        onQueryChange = { onEvent(PurchaseReturnEvent.UpdateQuery(it)) },
+        onSearch = { onEvent(PurchaseReturnEvent.SearchReturns(it)) },
+        onSearchActiveChange = { onEvent(PurchaseReturnEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
         lastModifiedDate = state.selectedReturn?.lastModified,
-        onDelete = { onEvent(PurchaseReturnScreenEvent.DeleteReturn) },
-        onCreate = { onEvent(PurchaseReturnScreenEvent.SaveReturn) },
-        onUpdate = { onEvent(PurchaseReturnScreenEvent.SaveReturn) },
-        onNew = { onEvent(PurchaseReturnScreenEvent.OpenNewReturnForm) },
+        onDelete = { onEvent(PurchaseReturnEvent.DeleteReturn) },
+        onCreate = { onEvent(PurchaseReturnEvent.SaveReturn) },
+        onUpdate = { onEvent(PurchaseReturnEvent.SaveReturn) },
+        onNew = { onEvent(PurchaseReturnEvent.OpenNewReturnForm) },
         searchResults = {
             ItemGrid(
                 list = state.returns,
-                onItemClick = { onEvent(PurchaseReturnScreenEvent.SelectReturnToView(it)) },
+                onItemClick = { onEvent(PurchaseReturnEvent.SelectReturnToView(it)) },
                 label = {
                     Text(
                         "Return to ${it.supplier?.name?.displayName(LocalAppLocale.current)}",
@@ -99,25 +99,24 @@ fun PurchaseReturnScreen(
 
 @Composable
 fun PurchaseReturnForm(
-    state: PurchaseReturnScreenState,
-    onEvent: (PurchaseReturnScreenEvent) -> Unit
+    state: PurchaseReturnState,
+    onEvent: (PurchaseReturnEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
-    val input = state.input
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         DataPicker(
-            selectedDateMillis = input.date,
-            onDateSelected = { onEvent(PurchaseReturnScreenEvent.UpdateTransferDate(it)) },
+            selectedDateMillis = state.currentReturnInput.date,
+            onDateSelected = { onEvent(PurchaseReturnEvent.UpdateReturnDate(it)) },
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
             selectedItemId = state.selectedSupplier?.id,
-            onItemSelected = { onEvent(PurchaseReturnScreenEvent.SelectSupplier(it)) },
+            onItemSelected = { onEvent(PurchaseReturnEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id }
         )
@@ -125,42 +124,48 @@ fun PurchaseReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.employee),
             items = state.availableEmployees,
-            selectedItemId = input.selectedEmployeeId,
-            onItemSelected = { onEvent(PurchaseReturnScreenEvent.SelectEmployee(it?.id)) },
+            selectedItemId = state.currentReturnInput.selectedEmployeeId,
+            onItemSelected = { onEvent(PurchaseReturnEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false
         )
 
         OrderInputFields(
-            itemList = input.items,
-            selectedPaymentType = input.paymentType,
-            amountPaid = input.amountPaid,
-            onUpdateAmountPaid = { onEvent(PurchaseReturnScreenEvent.UpdateAmountPaid(it)) },
-            onAddNewItemToOrder = { onEvent(PurchaseReturnScreenEvent.AddItemToReturn) },
+            itemList = state.currentReturnInput.items,
+            selectedPaymentType = state.currentReturnInput.paymentType,
+            amountPaid = state.currentReturnInput.amountPaid,
+            onUpdateAmountPaid = { onEvent(PurchaseReturnEvent.UpdateAmountPaid(it)) },
+            onAddNewItemToOrder = { onEvent(PurchaseReturnEvent.AddItemToReturn) },
             availableProducts = state.availableProducts,
-            onSelectPaymentType = { onEvent(PurchaseReturnScreenEvent.UpdatePaymentType(it)) },
+            onSelectPaymentType = { onEvent(PurchaseReturnEvent.UpdatePaymentType(it)) },
             onItemSelected = { tempEditorId, product ->
-                onEvent(PurchaseReturnScreenEvent.UpdateItemProduct(tempEditorId, product))
+                onEvent(PurchaseReturnEvent.UpdateItemProduct(tempEditorId, product))
             },
             onRemoveItemFromOrder = { tempEditorId ->
-                onEvent(PurchaseReturnScreenEvent.RemoveItemFromReturn(tempEditorId))
+                onEvent(PurchaseReturnEvent.RemoveItemFromReturn(tempEditorId))
             },
-            onUpdateItemQuantity = { tempEditorId, quantity ->
-                onEvent(PurchaseReturnScreenEvent.UpdateItemQuantity(tempEditorId, quantity))
+            onUpdateItemUnit = { tempEditorId, isMaxUnitSelected ->
+                onEvent(PurchaseReturnEvent.UpdateItemUnit(tempEditorId, isMaxUnitSelected))
             },
-            onUpdateItemUnit = { tempEditorId, unit ->
-                onEvent(PurchaseReturnScreenEvent.UpdateItemUnit(tempEditorId, unit))
+            onUpdateItemMaxUnitPrice = { tempEditorId, maxUnitPrice ->
+                onEvent(PurchaseReturnEvent.UpdateItemMaxUnitPrice(tempEditorId, maxUnitPrice))
             },
-            onUpdateItemPrice = { tempEditorId, price ->
-                onEvent(PurchaseReturnScreenEvent.UpdateItemPrice(tempEditorId, price))
+            onUpdateItemMinUnitPrice = { tempEditorId, minUnitPrice ->
+                onEvent(PurchaseReturnEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
             },
+            onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
+                onEvent(PurchaseReturnEvent.UpdateItemMaxUnitQuantity(tempEditorId, maxUnitQuantity))
+            },
+            onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
+                onEvent(PurchaseReturnEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
+            }
         )
 
         OrderTotalsSection(
-            totalAmount = input.totalAmount,
-            amountPaid = input.amountPaid.toDoubleOrNull() ?: 0.0,
-            amountRemaining = input.amountRemaining
+            totalAmount = state.currentReturnInput.totalAmount,
+            amountPaid = state.currentReturnInput.amountPaid.toDoubleOrNull() ?: 0.0,
+            amountRemaining = state.currentReturnInput.amountRemaining
         )
     }
 }

@@ -198,4 +198,7 @@
     <string name="receive_from_client">receive from client</string>
     <string name="pay_to_supplier">pay to supplier</string>
     <string name="receive_pay_voucher">Receive pay voucher</string>
+    <string name="max_price">Max unit price</string>
+    <string name="min_price">Min unit price</string>
+    <string name="error_searching_purchases">Error searching purchases</string>
 </resources>

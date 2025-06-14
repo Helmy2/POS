@@ -1,12 +1,11 @@
 package com.wael.astimal.pos.features.management.presentation.sales
 
 import androidx.annotation.StringRes
-import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
+import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.management.domain.entity.Client
+import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
-import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class OrderState(
@@ -53,9 +52,12 @@ sealed interface OrderEvent {
     data class UpdateTransferDate(val date: Long?) : OrderEvent
     data class UpdateAmountPaid(val amount: String) : OrderEvent
     data class UpdateItemProduct(val tempEditorId: String, val product: Product?) : OrderEvent
-    data class UpdateItemUnit(val tempEditorId: String, val productUnit: ProductUnit?) : OrderEvent
-    data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) : OrderEvent
-    data class UpdateItemPrice(val tempEditorId: String, val price: String) : OrderEvent
+    data class UpdateItemUnit(val tempEditorId: String, val isMaxUnitSelected: Boolean) : OrderEvent
+
+    data class UpdateItemMaxUnitQuantity(val tempEditorId: String, val quantity: String) : OrderEvent
+    data class UpdateItemMinUnitQuantity(val tempEditorId: String, val quantity: String) : OrderEvent
+    data class UpdateItemMaxUnitPrice(val tempEditorId: String, val price: String) : OrderEvent
+    data class UpdateItemMinUnitPrice(val tempEditorId: String, val price: String) : OrderEvent
 
     data object SaveOrder : OrderEvent
     data object ClearSnackbar : OrderEvent

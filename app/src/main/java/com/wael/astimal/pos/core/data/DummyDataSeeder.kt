@@ -91,7 +91,7 @@ class DummyDataSeeder(
             enName = "Supplier 1",
             responsibleEmployeeLocalId = employees["emp1"],
             address = "789 Supply St, Cairo",
-            isSynced = true,
+            isSynced = false,
             phone = "3334445550",
             indebtedness = 0.0,
             isClient = true,
@@ -104,7 +104,7 @@ class DummyDataSeeder(
             enName = "Supplier 2",
             responsibleEmployeeLocalId = employees["emp2"],
             address = "101 Supply Rd, Alexandria",
-            isSynced = true,
+            isSynced = false,
             phone = "6667778880",
             indebtedness = 150.75,
             isClient = false,
@@ -122,7 +122,7 @@ class DummyDataSeeder(
             email = "super_admin@example.com",
             phone = "5551234567",
             isAdminFlag = true,
-            isSynced = true
+            isSynced = false
         )
         val adminLocalId = userDao.insertOrUpdate(adminUser)
 
@@ -134,7 +134,7 @@ class DummyDataSeeder(
             email = "employee1@example.com",
             phone = "555000111",
             isEmployeeFlag = true,
-            isSynced = true
+            isSynced = false
         )
         val emp1LocalId = userDao.insertOrUpdate(emp1)
 
@@ -146,7 +146,7 @@ class DummyDataSeeder(
             email = "employee2@example.com",
             phone = "555000222",
             isEmployeeFlag = true,
-            isSynced = true
+            isSynced = false
         )
         val emp2LocalId = userDao.insertOrUpdate(emp2)
 
@@ -162,7 +162,7 @@ class DummyDataSeeder(
             address = "123 Nile St, Cairo",
             debt = 250.50,
             isSupplier = false,
-            isSynced = true,
+            isSynced = false,
             phone1 = "1112223330",
             phone2 = "1112223331",
             phone3 = null
@@ -177,7 +177,7 @@ class DummyDataSeeder(
             address = "456 Cornish Rd, Alexandria",
             debt = 0.0,
             isSupplier = true,
-            isSynced = true,
+            isSynced = false,
             phone1 = "7778889990",
             phone2 = null,
             phone3 = null
@@ -188,17 +188,17 @@ class DummyDataSeeder(
     private suspend fun populateDummyUnits(): Map<String, Long> {
         val pieceId = unitDao.insertOrUpdate(
             UnitEntity(
-                serverId = -1, arName = "قطعة", enName = "Piece", isSynced = true
+                serverId = -1, arName = "قطعة", enName = "Piece", isSynced = false
             )
         )
         val dozenId = unitDao.insertOrUpdate(
             UnitEntity(
-                serverId = -2, arName = "دستة", enName = "Dozen", isSynced = true
+                serverId = -2, arName = "دستة", enName = "Dozen", isSynced = false
             )
         )
         val boxId = unitDao.insertOrUpdate(
             UnitEntity(
-                serverId = -3, arName = "علبة", enName = "Box", isSynced = true
+                serverId = -3, arName = "علبة", enName = "Box", isSynced = false
             )
         )
         return mapOf("piece" to pieceId, "dozen" to dozenId, "box" to boxId)
@@ -211,7 +211,7 @@ class DummyDataSeeder(
                 arName = "المخزن الرئيسي",
                 enName = "Main Warehouse",
                 type = StoreType.MAIN,
-                isSynced = true
+                isSynced = false
             )
         )
         val storeAId = storeDao.insertOrUpdate(
@@ -220,7 +220,7 @@ class DummyDataSeeder(
                 arName = "فرع أ",
                 enName = "Branch A",
                 type = StoreType.SUB,
-                isSynced = true
+                isSynced = false
             )
         )
         val storeBId = storeDao.insertOrUpdate(
@@ -229,7 +229,7 @@ class DummyDataSeeder(
                 arName = "فرع ب",
                 enName = "Branch B",
                 type = StoreType.SUB,
-                isSynced = true
+                isSynced = false
             )
         )
         return mapOf("main" to mainStoreId, "storeA" to storeAId, "storeB" to storeBId)
@@ -238,17 +238,17 @@ class DummyDataSeeder(
     private suspend fun populateDummyCategories(): Map<String, Long> {
         val lensesId = categoryDao.insertOrUpdate(
             CategoryEntity(
-                serverId = -1, arName = "عدسات", enName = "Lenses", isSynced = true
+                serverId = -1, arName = "عدسات", enName = "Lenses", isSynced = false
             )
         )
         val solutionsId = categoryDao.insertOrUpdate(
             CategoryEntity(
-                serverId = -2, arName = "محاليل", enName = "Solutions", isSynced = true
+                serverId = -2, arName = "محاليل", enName = "Solutions", isSynced = false
             )
         )
         val accessoriesId = categoryDao.insertOrUpdate(
             CategoryEntity(
-                serverId = -3, arName = "اكسسوارات", enName = "Accessories", isSynced = true
+                serverId = -3, arName = "اكسسوارات", enName = "Accessories", isSynced = false
             )
         )
         return mapOf(
@@ -268,7 +268,7 @@ class DummyDataSeeder(
             sellingPrice = 180.0,
             openingBalanceQuantity = 50.0,
             storeId = stores["main"],
-            isSynced = true,
+            isSynced = false,
             minimumUnitId = null,
             maximumUnitId = units["box"],
             subUnitsPerMainUnit = 1.0,
@@ -284,7 +284,7 @@ class DummyDataSeeder(
             sellingPrice = 55.0,
             openingBalanceQuantity = 100.0,
             storeId = stores["main"],
-            isSynced = true,
+            isSynced = false,
             minimumUnitId = null,
             maximumUnitId = units["piece"],
             subUnitsPerMainUnit = 1.0,
@@ -300,7 +300,7 @@ class DummyDataSeeder(
             sellingPrice = 15.0,
             openingBalanceQuantity = 200.0,
             storeId = stores["main"],
-            isSynced = true,
+            isSynced = false,
             minimumUnitId = units["piece"],
             maximumUnitId = units["dozen"],
             subUnitsPerMainUnit = 12.0,

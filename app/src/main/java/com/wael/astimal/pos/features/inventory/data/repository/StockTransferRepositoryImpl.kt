@@ -68,14 +68,12 @@ class StockTransferRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = fromStoreId,
                         productId = item.productLocalId,
-                        transactionUnitId = item.unitLocalId,
                         transactionQuantity = -item.quantity,
                     )
                     // Increase stock in destination store
                     stockRepository.adjustStock(
                         storeId = toStoreId,
                         productId = item.productLocalId,
-                        transactionUnitId = item.unitLocalId,
                         transactionQuantity = item.quantity
                     )
                 }
@@ -109,14 +107,26 @@ class StockTransferRepositoryImpl(
 
                 // Revert stock changes from the old items
                 existingTransferWithDetails.itemsWithProducts.forEach { oldItem ->
-                    stockRepository.adjustStock(oldItem.item.productLocalId, oldFromStoreId, oldItem.item.unitLocalId, oldItem.item.quantity) // Add back
-                    stockRepository.adjustStock(oldItem.item.productLocalId, oldToStoreId, oldItem.item.unitLocalId, -oldItem.item.quantity) // Remove
+                    stockRepository.adjustStock(
+                        oldItem.item.productLocalId,
+                        oldFromStoreId,
+                        oldItem.item.quantity
+                    ) // Add back
+                    stockRepository.adjustStock(
+                        oldItem.item.productLocalId,
+                        oldToStoreId,
+                        -oldItem.item.quantity
+                    ) // Remove
                 }
 
                 // Apply stock changes for the new items
                 items.forEach { newItem ->
-                    stockRepository.adjustStock(newItem.productLocalId, fromStoreId, newItem.unitLocalId, -newItem.quantity) // Remove
-                    stockRepository.adjustStock(newItem.productLocalId, toStoreId, newItem.unitLocalId, newItem.quantity) // Add
+                    stockRepository.adjustStock(
+                        newItem.productLocalId,
+                        fromStoreId,
+                        -newItem.quantity
+                    ) // Remove
+                    stockRepository.adjustStock(newItem.productLocalId, toStoreId, newItem.quantity) // Add
                 }
 
                 // Update the transfer record itself
@@ -148,8 +158,16 @@ class StockTransferRepositoryImpl(
 
                     // Revert stock changes
                     transferToDelete.itemsWithProducts.forEach { item ->
-                        stockRepository.adjustStock(item.item.productLocalId, fromStoreId, item.item.unitLocalId, item.item.quantity) // Add back
-                        stockRepository.adjustStock(item.item.productLocalId, toStoreId, item.item.unitLocalId, -item.item.quantity) // Remove
+                        stockRepository.adjustStock(
+                            item.item.productLocalId,
+                            fromStoreId,
+                            item.item.quantity
+                        ) // Add back
+                        stockRepository.adjustStock(
+                            item.item.productLocalId,
+                            toStoreId,
+                            -item.item.quantity
+                        ) // Remove
                     }
 
                     // Mark as deleted

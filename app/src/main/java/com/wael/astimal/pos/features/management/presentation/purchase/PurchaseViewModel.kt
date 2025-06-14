@@ -3,16 +3,17 @@ package com.wael.astimal.pos.features.management.presentation.purchase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
+import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
-import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.user.domain.entity.User
+import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
@@ -32,31 +33,16 @@ class PurchaseViewModel(
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(PurchaseScreenState())
-    val state: StateFlow<PurchaseScreenState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(PurchaseState())
+    val state: StateFlow<PurchaseState> = _state.asStateFlow()
     private var searchJob: Job? = null
 
     init {
         viewModelScope.launch {
-            sessionManager.getCurrentUser().collect { user ->
-                updateCurrentUser(user)
-            }
+            sessionManager.getCurrentUser().collect { updateCurrentUser(it) }
         }
-        onEvent(PurchaseScreenEvent.SearchPurchases(""))
+        onEvent(PurchaseEvent.SearchPurchases(""))
         loadDropdownData()
-    }
-
-    private fun updateCurrentUser(user: User?) {
-        _state.update {
-            when {
-                user == null -> it
-                user.isAdmin -> it.copy(currentUser = user)
-                else -> it.copy(
-                    currentUser = user,
-                    currentPurchaseInput = it.currentPurchaseInput.copy(selectedEmployeeId = user.id)
-                )
-            }
-        }
     }
 
     private fun loadDropdownData() {
@@ -74,87 +60,120 @@ class PurchaseViewModel(
         }
     }
 
-    fun onEvent(event: PurchaseScreenEvent) {
-        when (event) {
-            is PurchaseScreenEvent.SearchPurchases -> searchPurchases(event.query)
-            is PurchaseScreenEvent.SelectPurchaseToView -> selectPurchaseToView(event.purchase)
-            is PurchaseScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
-            is PurchaseScreenEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
-            is PurchaseScreenEvent.OpenNewPurchaseForm -> clearState()
-            is PurchaseScreenEvent.SelectSupplier -> _state.update { it.copy(selectedSupplier = event.supplier) }
-            is PurchaseScreenEvent.SelectEmployee -> updatePurchaseInput {
-                it.copy(
-                    selectedEmployeeId = event.employeeId
-                )
-            }
-
-            is PurchaseScreenEvent.UpdatePaymentType -> updatePurchaseInput {
-                it.copy(
-                    paymentType = event.type ?: PaymentType.CASH
-                )
-            }
-
-            is PurchaseScreenEvent.AddItemToPurchase -> updatePurchaseInput { it.copy(items = it.items + EditableItem()) }
-            is PurchaseScreenEvent.RemoveItemFromPurchase -> updatePurchaseInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
-            is PurchaseScreenEvent.UpdateItemProduct -> updatePurchaseItem(event.tempEditorId) {
-                it.copy(
-                    product = event.product,
-                    price = event.product?.averagePrice?.toString() ?: "0.0",
-                    selectedProductUnit = event.product?.minimumProductUnit
-                )
-            }
-
-            is PurchaseScreenEvent.UpdateItemUnit -> updatePurchaseItem(event.tempEditorId) {
-                it.copy(
-                    selectedProductUnit = event.productUnit
-                )
-            }
-
-            is PurchaseScreenEvent.UpdateItemQuantity -> updatePurchaseItem(event.tempEditorId) {
-                it.copy(
-                    quantity = event.quantity
-                )
-            }
-
-            is PurchaseScreenEvent.UpdateItemPrice -> updatePurchaseItem(event.tempEditorId) {
-                it.copy(
-                    price = event.price
-                )
-            }
-
-            is PurchaseScreenEvent.SavePurchase -> savePurchase()
-            is PurchaseScreenEvent.DeletePurchase -> deletePurchase()
-            is PurchaseScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
-            is PurchaseScreenEvent.ClearError -> _state.update { it.copy(error = null) }
-            is PurchaseScreenEvent.UpdateAmountPaid -> updatePurchaseInput { it.copy(amountPaid = event.amountPaid) }
-            is PurchaseScreenEvent.UpdateTransferDate -> updatePurchaseInput {
-                it.copy(
-                    date = event.date ?: System.currentTimeMillis()
+    private fun updateCurrentUser(user: User?) {
+        _state.update {
+            when {
+                user == null -> it
+                user.userType == UserType.ADMIN -> it.copy(currentUser = user)
+                else -> it.copy(
+                    currentUser = user,
+                    currentPurchaseInput = it.currentPurchaseInput.copy(selectedEmployeeId = user.id)
                 )
             }
         }
     }
 
-    private fun selectPurchaseToView(order: PurchaseOrder?) {
+    fun onEvent(event: PurchaseEvent) {
+        when (event) {
+            is PurchaseEvent.SearchPurchases -> searchPurchases(event.query)
+            is PurchaseEvent.SelectPurchaseToView -> updateSelectedPurchase(event.purchase)
+            is PurchaseEvent.SelectSupplier -> _state.update { it.copy(selectedSupplier = event.supplier) }
+            is PurchaseEvent.SelectEmployee -> updatePurchaseInput { it.copy(selectedEmployeeId = event.employeeId) }
+            is PurchaseEvent.UpdatePaymentType -> updatePurchaseInput {
+                it.copy(paymentType = event.type ?: PaymentType.CASH)
+            }
+            is PurchaseEvent.UpdateAmountPaid -> updatePurchaseInput { it.copy(amountPaid = event.amount) }
+            is PurchaseEvent.AddItemToPurchase -> updatePurchaseInput { it.copy(items = it.items + EditableItem()) }
+            is PurchaseEvent.RemoveItemFromPurchase -> updatePurchaseInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
+            is PurchaseEvent.UpdateItemProduct -> updatePurchaseItem(event.tempEditorId) {
+                val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    product = event.product,
+                    minUnitPrice = (event.product?.averagePrice?.div(conversionFactor)).toString(),
+                    maxUnitPrice = event.product?.averagePrice.toString(),
+                    minUnitQuantity = conversionFactor.toString(),
+                    maxUnitQuantity = "1.0",
+                )
+            }
+            is PurchaseEvent.UpdateItemUnit -> updatePurchaseItem(event.tempEditorId) {
+                it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
+            }
+            is PurchaseEvent.SavePurchase -> savePurchase()
+            is PurchaseEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
+            is PurchaseEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
+            is PurchaseEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
+            is PurchaseEvent.DeletePurchase -> deletePurchase()
+            PurchaseEvent.OpenNewPurchaseForm -> clearState()
+            PurchaseEvent.ClearError -> _state.update { it.copy(error = null) }
+            is PurchaseEvent.UpdatePurchaseDate -> updatePurchaseInput {
+                it.copy(date = event.date ?: System.currentTimeMillis())
+            }
+            is PurchaseEvent.UpdateItemMaxUnitPrice -> updatePurchaseItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    maxUnitPrice = event.price,
+                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+            is PurchaseEvent.UpdateItemMinUnitPrice -> updatePurchaseItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    minUnitPrice = event.price,
+                    maxUnitPrice = (event.price.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+            is PurchaseEvent.UpdateItemMaxUnitQuantity -> updatePurchaseItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    maxUnitQuantity = event.quantity,
+                    minUnitQuantity = (event.quantity.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+            is PurchaseEvent.UpdateItemMinUnitQuantity -> updatePurchaseItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    minUnitQuantity = event.quantity,
+                    maxUnitQuantity = (event.quantity.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+        }
+    }
+
+    private fun deletePurchase() {
+        viewModelScope.launch {
+            _state.value.selectedPurchase?.localId?.let {
+                purchaseRepository.deletePurchase(it).fold(onSuccess = {
+                    clearState(snackbarMessage = R.string.purchase_deleted)
+                }, onFailure = { _state.update { it.copy(error = R.string.error_deleting_purchase) } })
+            }
+        }
+    }
+
+    private fun updateSelectedPurchase(purchase: PurchaseOrder?) {
         _state.update {
             it.copy(
-                selectedPurchase = order,
                 isQueryActive = false,
-                selectedSupplier = order?.supplier,
-                currentPurchaseInput = if (order == null) EditableItemList(selectedEmployeeId = _state.value.currentUser?.id)
-                else EditableItemList(
-                    selectedEmployeeId = order.user?.id,
-                    paymentType = order.paymentType,
-                    date = order.data,
-                    items = order.items.map { item ->
+                selectedPurchase = purchase,
+                selectedSupplier = purchase?.supplier,
+                currentPurchaseInput = if (purchase == null) EditableItemList(
+                    selectedEmployeeId = it.currentUser?.id,
+                ) else EditableItemList(
+                    selectedEmployeeId = purchase.user?.id,
+                    paymentType = purchase.paymentType,
+                    date = purchase.data,
+                    items = purchase.items.map { item ->
+                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         EditableItem(
                             tempEditorId = item.localId.toString(),
                             product = item.product,
-                            selectedProductUnit = item.productUnit,
-                            quantity = item.quantity.toString(),
-                            price = item.purchasePrice.toString(),
+                            isSelectedUnitIsMax = item.productUnit?.localId == item.product?.maximumProductUnit?.localId,
+                            maxUnitPrice = item.purchasePrice.toString(),
+                            minUnitPrice = (item.purchasePrice / conversionFactor).toString(),
+                            maxUnitQuantity = item.quantity.toString(),
+                            minUnitQuantity = (item.quantity * conversionFactor).toString(),
                         )
-                    }
+                    },
+                    amountPaid = purchase.amountPaid.toString(),
                 )
             )
         }
@@ -164,9 +183,7 @@ class PurchaseViewModel(
         _state.update { it.copy(currentPurchaseInput = action(it.currentPurchaseInput)) }
     }
 
-    private fun updatePurchaseItem(
-        tempId: String, action: (EditableItem) -> EditableItem
-    ) {
+    private fun updatePurchaseItem(tempId: String, action: (EditableItem) -> EditableItem) {
         val currentItems = _state.value.currentPurchaseInput.items.toMutableList()
         val index = currentItems.indexOfFirst { it.tempEditorId == tempId }
         if (index != -1) {
@@ -203,87 +220,71 @@ class PurchaseViewModel(
     private fun savePurchase() {
         val purchaseInput = _state.value.currentPurchaseInput
         val selectedSupplier = _state.value.selectedSupplier
-        val currentUserID = _state.value.currentUser?.id ?: run {
-            _state.update { it.copy(error = R.string.user_not_identified) }; return
+        val loggedInEmployeeId = _state.value.currentUser?.id
+        if (loggedInEmployeeId == null) {
+            _state.update { it.copy(error = R.string.user_not_identified) }
+            return
         }
         if (selectedSupplier == null || purchaseInput.items.isEmpty()) {
-            _state.update { it.copy(error = R.string.supplier_and_at_least_one_item_are_required) }; return
+            _state.update { it.copy(error = R.string.supplier_and_at_least_one_item_are_required) }
+            return
         }
+
         val itemEntities = purchaseInput.items.mapNotNull {
-            val quantity = it.quantity.toDoubleOrNull() ?: 0.0
-            if (it.product == null || it.selectedProductUnit == null || quantity <= 0) return@mapNotNull null
+            val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
+            if (it.product == null || quantity <= 0) return@mapNotNull null
             PurchaseProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedProductUnit.localId,
+                unitLocalId = it.product.maximumProductUnit.localId,
                 quantity = quantity,
-                purchasePrice = it.price.toDoubleOrNull() ?: 0.0,
-                itemTotalPrice = quantity * (it.price.toDoubleOrNull() ?: 0.0),
-                purchaseLocalId = 0L,
-                serverId = null
+                purchasePrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
+                itemTotalPrice = it.lineTotal,
+                serverId = null,
+                purchaseLocalId = 0L
             )
         }
+
         if (itemEntities.size != purchaseInput.items.size) {
-            _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }; return
+            _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
+            return
         }
+
         val purchaseEntity = PurchaseEntity(
             localId = _state.value.selectedPurchase?.localId ?: 0L,
-            supplierLocalId = selectedSupplier.id,
-            employeeLocalId = purchaseInput.selectedEmployeeId ?: currentUserID,
-            amountRemaining = purchaseInput.amountRemaining,
-            totalAmount = purchaseInput.totalAmount,
-            amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
-            paymentType = purchaseInput.paymentType,
-            purchaseDate = System.currentTimeMillis(),
             serverId = null,
             invoiceNumber = null,
+            supplierLocalId = selectedSupplier.id,
+            employeeLocalId = purchaseInput.selectedEmployeeId ?: loggedInEmployeeId,
+            amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
+            amountRemaining = purchaseInput.amountRemaining,
+            totalAmount = purchaseInput.totalAmount,
+            paymentType = purchaseInput.paymentType,
+            purchaseDate = purchaseInput.date
         )
+
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
-            val result = if (_state.value.isNew) purchaseRepository.addPurchase(
-                purchaseEntity, itemEntities
-            ) else purchaseRepository.updatePurchase(
-                purchaseEntity, itemEntities
-            )
+            val result = if (_state.value.isNew) purchaseRepository.addPurchase(purchaseEntity, itemEntities)
+            else purchaseRepository.updatePurchase(purchaseEntity, itemEntities)
 
-            result.fold(
-                onSuccess = {
-                    clearState(R.string.purchase_saved)
-                },
-                onFailure = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            error = R.string.something_went_wrong
-                        )
-                    }
-                })
-        }
-    }
-
-    private fun deletePurchase() {
-        val purchaseToDelete = _state.value.selectedPurchase ?: return
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            purchaseRepository.deletePurchase(purchaseToDelete.localId).fold(onSuccess = {
-                clearState(R.string.purchase_deleted)
+            result.fold(onSuccess = {
+                clearState(snackbarMessage = R.string.purchase_saved)
             }, onFailure = {
                 _state.update {
-                    it.copy(
-                        loading = false, error = R.string.error_deleting_purchase
-                    )
+                    it.copy(loading = false, error = R.string.something_went_wrong)
                 }
             })
-            onEvent(PurchaseScreenEvent.SearchPurchases(""))
         }
     }
 
     private fun clearState(snackbarMessage: Int? = null) {
         _state.update {
             it.copy(
-                loading = false,
+                selectedPurchase = null,
+                selectedSupplier = null,
+                currentPurchaseInput = EditableItemList(),
                 isQueryActive = false,
                 snackbarMessage = snackbarMessage,
-                currentPurchaseInput = EditableItemList(),
             )
         }
         updateCurrentUser(state.value.currentUser)

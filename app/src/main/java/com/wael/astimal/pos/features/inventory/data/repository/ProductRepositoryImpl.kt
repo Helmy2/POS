@@ -37,7 +37,7 @@ class ProductRepositoryImpl(
 
     override suspend fun addProduct(productEntity: ProductEntity): Result<Unit> {
         return try {
-            if (productEntity.arName.isNullOrBlank() && productEntity.enName.isNullOrBlank()) {
+            if (productEntity.arName.isBlank() && productEntity.enName.isBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the product."))
             }
             // Ensure it's marked as new and unsynced
@@ -58,7 +58,7 @@ class ProductRepositoryImpl(
 
     override suspend fun updateProduct(productEntity: ProductEntity): Result<Product> {
         return try {
-            if (productEntity.arName.isNullOrBlank() && productEntity.enName.isNullOrBlank()) {
+            if (productEntity.arName.isBlank() && productEntity.enName.isBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the product."))
             }
             val entityToUpdate = productEntity.copy(

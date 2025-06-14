@@ -50,7 +50,6 @@ class PurchaseRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = item.productLocalId,
-                        transactionUnitId = item.unitLocalId,
                         transactionQuantity = item.quantity // INCREASE stock for a purchase
                     )
                 }
@@ -81,7 +80,8 @@ class PurchaseRepositoryImpl(
 
             database.withTransaction {
                 val employeeId = purchase.employeeLocalId ?: throw Exception("Employee ID missing.")
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                    ?: throw Exception("Employee's store not found.")
 
                 val oldPurchase = purchaseDao.getPurchaseWithDetails(purchase.localId)
                 if (oldPurchase != null) {
@@ -90,7 +90,6 @@ class PurchaseRepositoryImpl(
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = oldItem.purchaseItem.productLocalId,
-                            transactionUnitId = oldItem.purchaseItem.unitLocalId,
                             transactionQuantity = -oldItem.purchaseItem.quantity // Decrease stock to revert
                         )
                     }
@@ -102,7 +101,8 @@ class PurchaseRepositoryImpl(
                     }
                 }
 
-                val entityToUpdate = purchase.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                val entityToUpdate =
+                    purchase.copy(isSynced = false, lastModified = System.currentTimeMillis())
                 purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
 
                 // Apply new adjustments
@@ -110,7 +110,6 @@ class PurchaseRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = newItem.productLocalId,
-                        transactionUnitId = newItem.unitLocalId,
                         transactionQuantity = newItem.quantity // Increase stock
                     )
                 }
@@ -136,15 +135,16 @@ class PurchaseRepositoryImpl(
                     ?: throw NoSuchElementException("Purchase not found with localId: $purchaseLocalId")
 
                 if (!purchaseToDelete.purchase.isDeletedLocally) {
-                    val employeeId = purchaseToDelete.purchase.employeeLocalId ?: throw Exception("Employee ID missing.")
-                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
+                    val employeeId = purchaseToDelete.purchase.employeeLocalId
+                        ?: throw Exception("Employee ID missing.")
+                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                        ?: throw Exception("Employee's store not found.")
 
                     // Revert stock and debt adjustments
                     purchaseToDelete.itemsWithProductDetails.forEach { item ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = item.purchaseItem.productLocalId,
-                            transactionUnitId = item.purchaseItem.unitLocalId,
                             transactionQuantity = -item.purchaseItem.quantity // DECREASE stock to revert
                         )
                     }
@@ -156,7 +156,9 @@ class PurchaseRepositoryImpl(
                     }
 
                     val entityToMarkAsDeleted = purchaseToDelete.purchase.copy(
-                        isDeletedLocally = true, isSynced = false, lastModified = System.currentTimeMillis()
+                        isDeletedLocally = true,
+                        isSynced = false,
+                        lastModified = System.currentTimeMillis()
                     )
                     purchaseDao.updatePurchase(entityToMarkAsDeleted)
                 }

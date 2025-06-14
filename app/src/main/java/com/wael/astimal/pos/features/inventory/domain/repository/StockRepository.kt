@@ -12,7 +12,6 @@ interface StockRepository {
     suspend fun adjustStock(
         storeId: Long,
         productId: Long,
-        transactionUnitId: Long,
         transactionQuantity: Double,
     )
 

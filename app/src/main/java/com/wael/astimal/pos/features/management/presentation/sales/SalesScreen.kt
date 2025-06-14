@@ -142,15 +142,21 @@ fun OrderForm(
             onRemoveItemFromOrder = { tempEditorId ->
                 onEvent(OrderEvent.RemoveItemFromOrder(tempEditorId))
             },
-            onUpdateItemQuantity = { tempEditorId, quantity ->
-                onEvent(OrderEvent.UpdateItemQuantity(tempEditorId, quantity))
+            onUpdateItemUnit = { tempEditorId, isMaxUnitSelected ->
+                onEvent(OrderEvent.UpdateItemUnit(tempEditorId, isMaxUnitSelected))
             },
-            onUpdateItemUnit = { tempEditorId, unit ->
-                onEvent(OrderEvent.UpdateItemUnit(tempEditorId, unit))
+            onUpdateItemMaxUnitPrice = { tempEditorId, maxUnitPrice ->
+                onEvent(OrderEvent.UpdateItemMaxUnitPrice(tempEditorId, maxUnitPrice))
             },
-            onUpdateItemPrice = { tempEditorId, price ->
-                onEvent(OrderEvent.UpdateItemPrice(tempEditorId, price))
+            onUpdateItemMinUnitPrice = { tempEditorId, minUnitPrice ->
+                onEvent(OrderEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
             },
+            onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
+                onEvent(OrderEvent.UpdateItemMaxUnitQuantity(tempEditorId, maxUnitQuantity))
+            },
+            onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
+                onEvent(OrderEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
+            }
         )
 
         OrderTotalsSection(

@@ -1,54 +1,56 @@
 package com.wael.astimal.pos.features.management.presentation.purchase
 
 import androidx.annotation.StringRes
+import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
-import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.user.domain.entity.User
 
-data class PurchaseScreenState(
+data class PurchaseState(
     val loading: Boolean = false,
-    val currentUser: User? = null,
+    var currentUser: User? = null,
     val purchases: List<PurchaseOrder> = emptyList(),
     val selectedPurchase: PurchaseOrder? = null,
     val selectedSupplier: Supplier? = null,
     val currentPurchaseInput: EditableItemList = EditableItemList(),
     val availableSuppliers: List<Supplier> = emptyList(),
-    val availableEmployees: List<User> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
-    val availableUnits: List<Unit> = emptyList(),
+    val availableEmployees: List<User> = emptyList(),
     val query: String = "",
     @StringRes val error: Int? = null,
     @StringRes val snackbarMessage: Int? = null,
-    val isQueryActive: Boolean = false
+    val isQueryActive: Boolean = false,
 ) {
     val isNew: Boolean get() = selectedPurchase == null
     val canEdit: Boolean
-        get() = currentUser?.isAdmin == true ||
-            (currentPurchaseInput.selectedEmployeeId == currentUser?.id && currentUser?.isEmployee == true)
+        get() {
+            return currentUser?.isAdmin == true || (currentPurchaseInput.selectedEmployeeId == currentUser?.id && currentUser?.isEmployee == true)
+        }
 }
 
-sealed interface PurchaseScreenEvent {
-    data class SearchPurchases(val query: String) : PurchaseScreenEvent
-    data class SelectPurchaseToView(val purchase: PurchaseOrder?) : PurchaseScreenEvent
-    data class UpdateQuery(val query: String) : PurchaseScreenEvent
-    data class UpdateIsQueryActive(val isActive: Boolean) : PurchaseScreenEvent
-    data object OpenNewPurchaseForm : PurchaseScreenEvent
-    data class SelectSupplier(val supplier: Supplier?) : PurchaseScreenEvent
-    data class SelectEmployee(val employeeId: Long?) : PurchaseScreenEvent
-    data class UpdatePaymentType(val type: PaymentType?) : PurchaseScreenEvent
-    data object AddItemToPurchase : PurchaseScreenEvent
-    data class RemoveItemFromPurchase(val tempEditorId: String) : PurchaseScreenEvent
-    data class UpdateItemProduct(val tempEditorId: String, val product: Product?) : PurchaseScreenEvent
-    data class UpdateItemUnit(val tempEditorId: String, val productUnit: com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit?) : PurchaseScreenEvent
-    data class UpdateItemQuantity(val tempEditorId: String, val quantity: String) : PurchaseScreenEvent
-    data class UpdateItemPrice(val tempEditorId: String, val price: String) : PurchaseScreenEvent
-    data class UpdateAmountPaid(val amountPaid: String) : PurchaseScreenEvent
-    data class UpdateTransferDate(val date: Long?) : PurchaseScreenEvent
-    data object SavePurchase : PurchaseScreenEvent
-    data object DeletePurchase : PurchaseScreenEvent
-    data object ClearSnackbar : PurchaseScreenEvent
-    data object ClearError : PurchaseScreenEvent
+sealed interface PurchaseEvent {
+    data class SearchPurchases(val query: String) : PurchaseEvent
+    data class SelectPurchaseToView(val purchase: PurchaseOrder?) : PurchaseEvent
+    data class UpdateIsQueryActive(val isActive: Boolean) : PurchaseEvent
+    data class UpdateQuery(val query: String) : PurchaseEvent
+    data class SelectSupplier(val supplier: Supplier?) : PurchaseEvent
+    data class SelectEmployee(val employeeId: Long?) : PurchaseEvent
+    data object DeletePurchase : PurchaseEvent
+    data object AddItemToPurchase : PurchaseEvent
+    data class RemoveItemFromPurchase(val tempEditorId: String) : PurchaseEvent
+    data class UpdatePaymentType(val type: PaymentType?) : PurchaseEvent
+    data class UpdatePurchaseDate(val date: Long?) : PurchaseEvent
+    data class UpdateAmountPaid(val amount: String) : PurchaseEvent
+    data class UpdateItemProduct(val tempEditorId: String, val product: Product?) : PurchaseEvent
+    data class UpdateItemUnit(val tempEditorId: String, val isMaxUnitSelected: Boolean) : PurchaseEvent
+    data class UpdateItemMaxUnitQuantity(val tempEditorId: String, val quantity: String) : PurchaseEvent
+    data class UpdateItemMinUnitQuantity(val tempEditorId: String, val quantity: String) : PurchaseEvent
+    data class UpdateItemMaxUnitPrice(val tempEditorId: String, val price: String) : PurchaseEvent
+    data class UpdateItemMinUnitPrice(val tempEditorId: String, val price: String) : PurchaseEvent
+    data object SavePurchase : PurchaseEvent
+    data object ClearSnackbar : PurchaseEvent
+    data object ClearError : PurchaseEvent
+    data object OpenNewPurchaseForm : PurchaseEvent
 }

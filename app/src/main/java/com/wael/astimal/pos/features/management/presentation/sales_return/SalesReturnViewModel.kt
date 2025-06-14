@@ -3,11 +3,11 @@ package com.wael.astimal.pos.features.management.presentation.sales_return
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
@@ -80,50 +80,61 @@ class SalesReturnViewModel(
             is SalesReturnEvent.SelectClient -> _state.update { it.copy(selectedClient = event.client) }
             is SalesReturnEvent.SelectEmployee -> updateReturnInput { it.copy(selectedEmployeeId = event.employeeId) }
             is SalesReturnEvent.UpdatePaymentType -> updateReturnInput {
-                it.copy(
-                    paymentType = event.type ?: PaymentType.CASH
-                )
+                it.copy(paymentType = event.type ?: PaymentType.CASH)
             }
-
             is SalesReturnEvent.UpdateAmountPaid -> updateReturnInput { it.copy(amountPaid = event.amount) }
             is SalesReturnEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableItem()) }
             is SalesReturnEvent.RemoveItemFromReturn -> updateReturnInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             is SalesReturnEvent.UpdateItemProduct -> updateReturnItem(event.tempEditorId) {
+                val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     product = event.product,
-                    price = event.product?.sellingPrice?.toString() ?: "0.0",
-                    selectedProductUnit = event.product?.minimumProductUnit
+                    minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
+                    maxUnitPrice = event.product?.sellingPrice.toString(),
+                    minUnitQuantity = conversionFactor.toString(),
+                    maxUnitQuantity = "1.0",
                 )
             }
-
             is SalesReturnEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
-                it.copy(
-                    selectedProductUnit = event.productUnit
-                )
+                it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
             }
-
-            is SalesReturnEvent.UpdateItemQuantity -> updateReturnItem(event.tempEditorId) {
-                it.copy(
-                    quantity = event.quantity
-                )
-            }
-
-            is SalesReturnEvent.UpdateItemPrice -> updateReturnItem(event.tempEditorId) {
-                it.copy(
-                    price = event.price
-                )
-            }
-
             is SalesReturnEvent.SaveReturn -> saveReturn()
             is SalesReturnEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is SalesReturnEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
             is SalesReturnEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
             is SalesReturnEvent.DeleteReturn -> deleteReturn()
-            is SalesReturnEvent.OpenNewReturnForm -> clearState()
-
-            is SalesReturnEvent.ClearError -> _state.update { it.copy(error = null) }
+            SalesReturnEvent.OpenNewReturnForm -> clearState()
+            SalesReturnEvent.ClearError -> _state.update { it.copy(error = null) }
             is SalesReturnEvent.UpdateReturnDate -> updateReturnInput {
                 it.copy(date = event.date ?: System.currentTimeMillis())
+            }
+            is SalesReturnEvent.UpdateItemMaxUnitPrice -> updateReturnItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    maxUnitPrice = event.price,
+                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+            is SalesReturnEvent.UpdateItemMinUnitPrice -> updateReturnItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    minUnitPrice = event.price,
+                    maxUnitPrice = (event.price.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+            is SalesReturnEvent.UpdateItemMaxUnitQuantity -> updateReturnItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    maxUnitQuantity = event.quantity,
+                    minUnitQuantity = (event.quantity.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
+                )
+            }
+            is SalesReturnEvent.UpdateItemMinUnitQuantity -> updateReturnItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
+                it.copy(
+                    minUnitQuantity = event.quantity,
+                    maxUnitQuantity = (event.quantity.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
+                )
             }
         }
     }
@@ -144,26 +155,29 @@ class SalesReturnViewModel(
     private fun updateSelectedReturn(salesReturn: SalesReturn?) {
         _state.update {
             it.copy(
+                isQueryActive = false,
                 selectedReturn = salesReturn,
                 selectedClient = salesReturn?.client,
                 currentReturnInput = if (salesReturn == null) EditableItemList(
-                    selectedEmployeeId = _state.value.currentUser?.id
+                    selectedEmployeeId = it.currentUser?.id,
                 ) else EditableItemList(
                     selectedEmployeeId = salesReturn.employee?.id,
                     paymentType = salesReturn.paymentType,
                     date = salesReturn.data,
                     items = salesReturn.items.map { item ->
+                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         EditableItem(
                             tempEditorId = item.localId.toString(),
                             product = item.product,
-                            selectedProductUnit = item.productUnit,
-                            quantity = item.quantity.toString(),
-                            price = item.priceAtReturn.toString(),
+                            isSelectedUnitIsMax = item.productUnit?.localId == item.product?.maximumProductUnit?.localId,
+                            maxUnitPrice = item.priceAtReturn.toString(),
+                            minUnitPrice = (item.priceAtReturn / conversionFactor).toString(),
+                            maxUnitQuantity = item.quantity.toString(),
+                            minUnitQuantity = (item.quantity * conversionFactor).toString(),
                         )
                     },
                     amountPaid = salesReturn.amountPaid.toString(),
-                ),
-                isQueryActive = false
+                )
             )
         }
     }
@@ -188,26 +202,17 @@ class SalesReturnViewModel(
             delay(300)
             salesReturnRepository.getReturns(query).catch {
                 _state.update {
-                    it.copy(
-                        loading = false, error = R.string.error_searching_orders
-                    )
+                    it.copy(loading = false, error = R.string.error_searching_orders)
                 }
-            }.collect { returns ->
-                _state.update {
-                    it.copy(
-                        loading = false, returns = returns
-                    )
-                }
-            }
+            }.collect { returns -> _state.update { it.copy(loading = false, returns = returns) } }
         }
     }
 
     private fun saveReturn() {
         val returnInput = _state.value.currentReturnInput
         val selectedClient = _state.value.selectedClient
-        val employeeId = _state.value.currentUser?.id
-
-        if (employeeId == null) {
+        val loggedInEmployeeId = _state.value.currentUser?.id
+        if (loggedInEmployeeId == null) {
             _state.update { it.copy(error = R.string.user_not_identified) }
             return
         }
@@ -216,18 +221,16 @@ class SalesReturnViewModel(
             return
         }
 
-        val returnId = _state.value.selectedReturn?.localId ?: 0L
         val itemEntities = returnInput.items.mapNotNull {
-            val quantity = it.quantity.toDoubleOrNull() ?: 0.0
-            if (it.product == null || it.selectedProductUnit == null || quantity <= 0) return@mapNotNull null
+            val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
+            if (it.product == null || quantity <= 0) return@mapNotNull null
             OrderProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedProductUnit.localId,
                 quantity = quantity,
-                unitSellingPrice = it.price.toDoubleOrNull() ?: 0.0,
+                unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,
                 serverId = null,
-                orderLocalId = returnId
+                orderLocalId = 0L // This will be set correctly by Room
             )
         }
 
@@ -237,32 +240,29 @@ class SalesReturnViewModel(
         }
 
         val returnEntity = OrderReturnEntity(
-            localId = returnId,
+            localId = _state.value.selectedReturn?.localId ?: 0L,
+            serverId = null,
+            invoiceNumber = null,
             clientLocalId = selectedClient.id,
-            employeeLocalId = returnInput.selectedEmployeeId ?: employeeId,
+            employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
             previousDebt = selectedClient.debt,
             amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
             amountRemaining = returnInput.amountRemaining,
             totalAmount = returnInput.totalAmount,
             paymentType = returnInput.paymentType,
             returnDate = returnInput.date,
-            serverId = null,
-            invoiceNumber = null,
         )
 
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
-            val result =
-                if (_state.value.isNew) salesReturnRepository.addReturn(returnEntity, itemEntities)
-                else salesReturnRepository.updateReturn(returnEntity, itemEntities)
+            val result = if (_state.value.isNew) salesReturnRepository.addReturn(returnEntity, itemEntities)
+            else salesReturnRepository.updateReturn(returnEntity, itemEntities)
 
             result.fold(onSuccess = {
                 clearState(snackbarMessage = R.string.return_saved)
             }, onFailure = {
                 _state.update {
-                    it.copy(
-                        loading = false, error = R.string.something_went_wrong
-                    )
+                    it.copy(loading = false, error = R.string.something_went_wrong)
                 }
             })
         }
@@ -271,12 +271,11 @@ class SalesReturnViewModel(
     private fun clearState(snackbarMessage: Int? = null) {
         _state.update {
             it.copy(
-                loading = false,
-                isQueryActive = false,
-                snackbarMessage = snackbarMessage,
                 selectedReturn = null,
                 selectedClient = null,
-                currentReturnInput = EditableItemList()
+                currentReturnInput = EditableItemList(),
+                isQueryActive = false,
+                snackbarMessage = snackbarMessage,
             )
         }
         updateCurrentUser(state.value.currentUser)

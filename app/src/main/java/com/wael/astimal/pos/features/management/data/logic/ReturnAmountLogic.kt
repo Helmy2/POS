@@ -32,7 +32,6 @@ class ReturnAmountLogic(
             stockRepository.adjustStock(
                 storeId = employeeStoreId,
                 productId = item.productLocalId,
-                transactionUnitId = item.unitLocalId,
                 transactionQuantity = item.quantity
             )
         }
@@ -55,7 +54,6 @@ class ReturnAmountLogic(
             stockRepository.adjustStock(
                 storeId = employeeStoreId,
                 productId = item.productLocalId,
-                transactionUnitId = item.unitLocalId,
                 transactionQuantity = -item.quantity
             )
         }

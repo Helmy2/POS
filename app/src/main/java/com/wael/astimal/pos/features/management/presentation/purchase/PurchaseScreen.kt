@@ -41,8 +41,8 @@ fun PurchaseRoute(
 
 @Composable
 fun PurchaseScreen(
-    state: PurchaseScreenState,
-    onEvent: (PurchaseScreenEvent) -> Unit,
+    state: PurchaseState,
+    onEvent: (PurchaseEvent) -> Unit,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit
 ) {
@@ -50,11 +50,11 @@ fun PurchaseScreen(
     LaunchedEffect(state.snackbarMessage, state.error) {
         state.snackbarMessage?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseScreenEvent.ClearSnackbar)
+            onEvent(PurchaseEvent.ClearSnackbar)
         }
         state.error?.let {
             snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseScreenEvent.ClearError)
+            onEvent(PurchaseEvent.ClearError)
         }
     }
 
@@ -64,19 +64,19 @@ fun PurchaseScreen(
         loading = state.loading,
         isNew = state.isNew,
         canEdit = state.canEdit,
-        onQueryChange = { onEvent(PurchaseScreenEvent.UpdateQuery(it)) },
-        onSearch = { onEvent(PurchaseScreenEvent.SearchPurchases(it)) },
-        onSearchActiveChange = { onEvent(PurchaseScreenEvent.UpdateIsQueryActive(it)) },
+        onQueryChange = { onEvent(PurchaseEvent.UpdateQuery(it)) },
+        onSearch = { onEvent(PurchaseEvent.SearchPurchases(it)) },
+        onSearchActiveChange = { onEvent(PurchaseEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
         lastModifiedDate = state.selectedPurchase?.lastModified,
-        onDelete = { onEvent(PurchaseScreenEvent.DeletePurchase) },
-        onCreate = { onEvent(PurchaseScreenEvent.SavePurchase) },
-        onUpdate = { onEvent(PurchaseScreenEvent.SavePurchase) },
-        onNew = { onEvent(PurchaseScreenEvent.OpenNewPurchaseForm) },
+        onDelete = { onEvent(PurchaseEvent.DeletePurchase) },
+        onCreate = { onEvent(PurchaseEvent.SavePurchase) },
+        onUpdate = { onEvent(PurchaseEvent.SavePurchase) },
+        onNew = { onEvent(PurchaseEvent.OpenNewPurchaseForm) },
         searchResults = {
             ItemGrid(
                 list = state.purchases,
-                onItemClick = { onEvent(PurchaseScreenEvent.SelectPurchaseToView(it)) },
+                onItemClick = { onEvent(PurchaseEvent.SelectPurchaseToView(it)) },
                 label = {
                     Label("Purchase from ${it.supplier?.name?.displayName(LocalAppLocale.current)}")
                 },
@@ -91,8 +91,8 @@ fun PurchaseScreen(
 
 @Composable
 fun PurchaseForm(
-    state: PurchaseScreenState,
-    onEvent: (PurchaseScreenEvent) -> Unit
+    state: PurchaseState,
+    onEvent: (PurchaseEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
     val purchaseInput = state.currentPurchaseInput
@@ -102,14 +102,14 @@ fun PurchaseForm(
     ) {
         DataPicker(
             selectedDateMillis = purchaseInput.date,
-            onDateSelected = { onEvent(PurchaseScreenEvent.UpdateTransferDate(it)) },
+            onDateSelected = { onEvent(PurchaseEvent.UpdatePurchaseDate(it)) },
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
             selectedItemId = state.selectedSupplier?.id,
-            onItemSelected = { onEvent(PurchaseScreenEvent.SelectSupplier(it)) },
+            onItemSelected = { onEvent(PurchaseEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id }
         )
@@ -118,7 +118,7 @@ fun PurchaseForm(
             label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = purchaseInput.selectedEmployeeId,
-            onItemSelected = { onEvent(PurchaseScreenEvent.SelectEmployee(it?.id)) },
+            onItemSelected = { onEvent(PurchaseEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false
@@ -128,25 +128,31 @@ fun PurchaseForm(
             itemList = purchaseInput.items,
             selectedPaymentType = purchaseInput.paymentType,
             amountPaid = purchaseInput.amountPaid,
-            onUpdateAmountPaid = { onEvent(PurchaseScreenEvent.UpdateAmountPaid(it)) },
-            onAddNewItemToOrder = { onEvent(PurchaseScreenEvent.AddItemToPurchase) },
+            onUpdateAmountPaid = { onEvent(PurchaseEvent.UpdateAmountPaid(it)) },
+            onAddNewItemToOrder = { onEvent(PurchaseEvent.AddItemToPurchase) },
             availableProducts = state.availableProducts,
-            onSelectPaymentType = { onEvent(PurchaseScreenEvent.UpdatePaymentType(it)) },
+            onSelectPaymentType = { onEvent(PurchaseEvent.UpdatePaymentType(it)) },
             onItemSelected = { tempEditorId, product ->
-                onEvent(PurchaseScreenEvent.UpdateItemProduct(tempEditorId, product))
+                onEvent(PurchaseEvent.UpdateItemProduct(tempEditorId, product))
             },
             onRemoveItemFromOrder = { tempEditorId ->
-                onEvent(PurchaseScreenEvent.RemoveItemFromPurchase(tempEditorId))
+                onEvent(PurchaseEvent.RemoveItemFromPurchase(tempEditorId))
             },
-            onUpdateItemQuantity = { tempEditorId, quantity ->
-                onEvent(PurchaseScreenEvent.UpdateItemQuantity(tempEditorId, quantity))
+            onUpdateItemUnit = { tempEditorId, isMaxUnitSelected ->
+                onEvent(PurchaseEvent.UpdateItemUnit(tempEditorId, isMaxUnitSelected))
             },
-            onUpdateItemUnit = { tempEditorId, unit ->
-                onEvent(PurchaseScreenEvent.UpdateItemUnit(tempEditorId, unit))
+            onUpdateItemMaxUnitPrice = { tempEditorId, maxUnitPrice ->
+                onEvent(PurchaseEvent.UpdateItemMaxUnitPrice(tempEditorId, maxUnitPrice))
             },
-            onUpdateItemPrice = { tempEditorId, price ->
-                onEvent(PurchaseScreenEvent.UpdateItemPrice(tempEditorId, price))
+            onUpdateItemMinUnitPrice = { tempEditorId, minUnitPrice ->
+                onEvent(PurchaseEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
             },
+            onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
+                onEvent(PurchaseEvent.UpdateItemMaxUnitQuantity(tempEditorId, maxUnitQuantity))
+            },
+            onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
+                onEvent(PurchaseEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
+            }
         )
 
         OrderTotalsSection(

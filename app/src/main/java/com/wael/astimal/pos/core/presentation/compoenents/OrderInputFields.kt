@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 
@@ -44,9 +45,11 @@ fun OrderInputFields(
     onSelectPaymentType: (PaymentType?) -> Unit,
     onItemSelected: (tempEditorId: String, product: Product?) -> Unit,
     onRemoveItemFromOrder: (tempEditorId: String) -> Unit,
-    onUpdateItemQuantity: (tempEditorId: String, quantity: String) -> Unit,
-    onUpdateItemUnit: (tempEditorId: String, unit: ProductUnit?) -> Unit,
-    onUpdateItemPrice: (tempEditorId: String, price: String) -> Unit,
+    onUpdateItemMaxUnitQuantity: (tempEditorId: String, quantity: String) -> Unit,
+    onUpdateItemMinUnitQuantity: (tempEditorId: String, quantity: String) -> Unit,
+    onUpdateItemUnit: (tempEditorId: String, isMaxUnitSelected: Boolean) -> Unit,
+    onUpdateItemMaxUnitPrice: (tempEditorId: String, price: String) -> Unit,
+    onUpdateItemMinUnitPrice: (tempEditorId: String, price: String) -> Unit,
 ) {
     val context = LocalContext.current
     Column {
@@ -58,9 +61,11 @@ fun OrderInputFields(
                 availableProducts = availableProducts,
                 onUpdateSelectedItem = onItemSelected,
                 onRemoveItemFromOrder = onRemoveItemFromOrder,
-                onUpdateItemQuantity = onUpdateItemQuantity,
                 onUpdateItemUnit = onUpdateItemUnit,
-                onUpdateItemPrice = onUpdateItemPrice,
+                onUpdateItemMaxUnitQuantity = onUpdateItemMaxUnitQuantity,
+                onUpdateItemMinUnitQuantity = onUpdateItemMinUnitQuantity,
+                onUpdateItemMaxUnitPrice = onUpdateItemMaxUnitPrice,
+                onUpdateItemMinUnitPrice = onUpdateItemMinUnitPrice,
             )
         }
 
@@ -81,7 +86,8 @@ fun OrderInputFields(
             selectedItemId = selectedPaymentType.ordinal.toLong(),
             onItemSelected = onSelectPaymentType,
             itemToDisplayString = { context.getString(it.stringResource()) },
-            itemToId = { it.ordinal.toLong() })
+            itemToId = { it.ordinal.toLong() },
+        )
 
         TextInputField(
             value = amountPaid,
@@ -102,9 +108,11 @@ private fun OrderItemRow(
     availableProducts: List<Product>,
     onUpdateSelectedItem: (tempEditorId: String, product: Product?) -> Unit,
     onRemoveItemFromOrder: (tempEditorId: String) -> Unit,
-    onUpdateItemQuantity: (tempEditorId: String, quantity: String) -> Unit,
-    onUpdateItemUnit: (tempEditorId: String, unit: ProductUnit?) -> Unit,
-    onUpdateItemPrice: (tempEditorId: String, price: String) -> Unit,
+    onUpdateItemMaxUnitQuantity: (tempEditorId: String, quantity: String) -> Unit,
+    onUpdateItemMinUnitQuantity: (tempEditorId: String, quantity: String) -> Unit,
+    onUpdateItemUnit: (tempEditorId: String, isMaxUnitSelected: Boolean) -> Unit,
+    onUpdateItemMaxUnitPrice: (tempEditorId: String, price: String) -> Unit,
+    onUpdateItemMinUnitPrice: (tempEditorId: String, price: String) -> Unit,
 ) {
     val language = LocalAppLocale.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -122,40 +130,106 @@ private fun OrderItemRow(
                 Icon(Icons.Default.Delete, stringResource(R.string.remove_item))
             }
         }
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.unit),
-            items = listOf(
-                item.product?.minimumProductUnit, item.product?.maximumProductUnit
-            ),
-            selectedItemId = item.selectedProductUnit?.localId,
-            onItemSelected = { unit -> onUpdateItemUnit(item.tempEditorId, unit) },
-            itemToDisplayString = { it?.localizedName?.displayName(language) ?: "" },
-            itemToId = { it?.localId ?: -1L },
-        )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TextInputField(
-                value = item.quantity,
-                onValueChange = { onUpdateItemQuantity(item.tempEditorId, it) },
-                label = stringResource(R.string.qty),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f)
-            )
-            TextInputField(
-                value = item.price,
-                onValueChange = { onUpdateItemPrice(item.tempEditorId, it) },
-                label = stringResource(R.string.price),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f)
-            )
-            TextInputField(
-                value = "%.2f".format(item.lineTotal),
-                onValueChange = { },
-                readOnly = true,
-                label = stringResource(R.string.total),
-                modifier = Modifier.weight(1f)
-            )
+
+        AnimatedVisibility(item.product?.minimumProductUnit != null) {
+            Column {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.unit),
+                    items = listOfNotNull(
+                        item.product?.minimumProductUnit, item.product?.maximumProductUnit
+                    ),
+                    selectedItemId = if (item.isSelectedUnitIsMax) {
+                        item.product?.maximumProductUnit?.localId
+                    } else {
+                        item.product?.minimumProductUnit?.localId
+                    },
+                    onItemSelected = { unit ->
+                        onUpdateItemUnit(
+                            item.tempEditorId,
+                            unit?.localId == item.product?.maximumProductUnit?.localId
+                        )
+                    },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToId = { it.localId },
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Label(
+                        item.product?.minimumProductUnit?.localizedName?.displayName(language)
+                            ?: "", modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                    TextInputField(
+                        value = item.minUnitQuantity,
+                        onValueChange = { onUpdateItemMinUnitQuantity(item.tempEditorId, it) },
+                        label = stringResource(R.string.qty),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        enabled = item.isSelectedUnitIsMax.not()
+                    )
+                    TextInputField(
+                        value = item.minUnitPrice,
+                        onValueChange = { onUpdateItemMinUnitPrice(item.tempEditorId, it) },
+                        label = stringResource(R.string.price),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        enabled = item.isSelectedUnitIsMax.not()
+                    )
+                }
+            }
+        }
+        AnimatedVisibility(item.product?.maximumProductUnit != null) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Label(
+                        item.product?.maximumProductUnit?.localizedName?.displayName(language) ?: ""
+                    )
+                    TextInputField(
+                        value = item.maxUnitQuantity,
+                        onValueChange = { onUpdateItemMaxUnitQuantity(item.tempEditorId, it) },
+                        label = stringResource(R.string.qty),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        enabled = item.isSelectedUnitIsMax
+                    )
+                    TextInputField(
+                        value = item.maxUnitPrice,
+                        onValueChange = { onUpdateItemMaxUnitPrice(item.tempEditorId, it) },
+                        label = stringResource(R.string.price),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        enabled = item.isSelectedUnitIsMax
+                    )
+                }
+
+                Card{
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.total),
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "%.2f".format(item.lineTotal),
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
         }
     }
 }

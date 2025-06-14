@@ -3,15 +3,15 @@ package com.wael.astimal.pos.features.management.presentation.sales
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
+import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
+import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
-import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
-import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -89,20 +89,19 @@ class SalesViewModel(
             is OrderEvent.UpdateItemProduct -> updateOrderItem(event.tempEditorId) {
                 it.copy(
                     product = event.product,
-                    price = event.product?.sellingPrice?.toString() ?: "0.0",
-                    selectedProductUnit = event.product?.minimumProductUnit
+                    minUnitPrice = event.product?.sellingPrice?.div(
+                        event.product.subUnitsPerMainUnit
+                    ).toString(),
+                    maxUnitPrice = event.product?.sellingPrice.toString(),
+                    minUnitQuantity = event.product?.subUnitsPerMainUnit.toString(),
+                    maxUnitQuantity = "1.0",
                 )
             }
 
             is OrderEvent.UpdateItemUnit -> updateOrderItem(event.tempEditorId) {
-                it.copy(selectedProductUnit = event.productUnit)
+                it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
             }
 
-            is OrderEvent.UpdateItemQuantity -> updateOrderItem(event.tempEditorId) {
-                it.copy(quantity = event.quantity)
-            }
-
-            is OrderEvent.UpdateItemPrice -> updateOrderItem(event.tempEditorId) { it.copy(price = event.price) }
             is OrderEvent.SaveOrder -> saveOrder()
             is OrderEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is OrderEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
@@ -112,6 +111,42 @@ class SalesViewModel(
             OrderEvent.ClearError -> _state.update { it.copy(error = null) }
             is OrderEvent.UpdateTransferDate -> updateOrderInput {
                 it.copy(date = event.date ?: System.currentTimeMillis())
+            }
+
+            is OrderEvent.UpdateItemMaxUnitPrice -> updateOrderItem(event.tempEditorId) {
+                it.copy(
+                    maxUnitPrice = event.price,
+                    minUnitPrice = event.price.toDoubleOrNull()?.div(
+                        it.product?.subUnitsPerMainUnit ?: 1.0
+                    )?.toString() ?: "0.0"
+                )
+            }
+
+            is OrderEvent.UpdateItemMinUnitPrice -> updateOrderItem(event.tempEditorId) {
+                it.copy(
+                    minUnitPrice = event.price,
+                    maxUnitPrice = (event.price.toDoubleOrNull()?.times(
+                        it.product?.subUnitsPerMainUnit ?: 1.0
+                    ) ?: 0.0).toString()
+                )
+            }
+
+            is OrderEvent.UpdateItemMaxUnitQuantity -> updateOrderItem(event.tempEditorId) {
+                it.copy(
+                    maxUnitQuantity = event.quantity,
+                    minUnitQuantity = (event.quantity.toDoubleOrNull()?.times(
+                        it.product?.subUnitsPerMainUnit ?: 1.0
+                    ) ?: 0.0).toString()
+                )
+            }
+
+            is OrderEvent.UpdateItemMinUnitQuantity -> updateOrderItem(event.tempEditorId) {
+                it.copy(
+                    minUnitQuantity = event.quantity,
+                    maxUnitQuantity = (event.quantity.toDoubleOrNull()?.div(
+                        it.product?.subUnitsPerMainUnit ?: 1.0
+                    ) ?: 0.0).toString()
+                )
             }
         }
     }
@@ -140,9 +175,15 @@ class SalesViewModel(
                         EditableItem(
                             tempEditorId = item.localId.toString(),
                             product = item.product,
-                            selectedProductUnit = item.productUnit,
-                            quantity = item.quantity.toString(),
-                            price = item.unitSellingPrice.toString(),
+                            isSelectedUnitIsMax = true,
+                            minUnitPrice = item.unitSellingPrice.div(
+                                item.product?.subUnitsPerMainUnit ?: 1.0
+                            ).toString(),
+                            minUnitQuantity = item.quantity.div(
+                                item.product?.subUnitsPerMainUnit ?: 1.0
+                            ).toString(),
+                            maxUnitPrice = item.unitSellingPrice.toString(),
+                            maxUnitQuantity = item.quantity.toString(),
                         )
                     },
                     amountPaid = order.amountPaid.toString(),
@@ -191,13 +232,12 @@ class SalesViewModel(
         }
 
         val itemEntities = orderInput.items.mapNotNull {
-            val quantity = it.quantity.toDoubleOrNull() ?: 0.0
-            if (it.product == null || it.selectedProductUnit == null || quantity <= 0) return@mapNotNull null
+            val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
+            if (it.product == null || quantity <= 0) return@mapNotNull null
             OrderProductEntity(
                 productLocalId = it.product.localId,
-                unitLocalId = it.selectedProductUnit.localId,
                 quantity = quantity,
-                unitSellingPrice = it.price.toDoubleOrNull() ?: 0.0,
+                unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                 itemTotalPrice = it.lineTotal,
                 serverId = null,
                 orderLocalId = 0L

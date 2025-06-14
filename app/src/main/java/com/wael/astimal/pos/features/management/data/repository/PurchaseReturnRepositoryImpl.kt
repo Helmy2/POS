@@ -50,7 +50,6 @@ class PurchaseReturnRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = item.productLocalId,
-                        transactionUnitId = item.unitLocalId,
                         transactionQuantity = -item.quantity // DECREASE stock for a purchase return
                     )
                 }
@@ -90,7 +89,6 @@ class PurchaseReturnRepositoryImpl(
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = oldItem.purchaseReturnItem.productLocalId,
-                            transactionUnitId = oldItem.purchaseReturnItem.unitLocalId,
                             transactionQuantity = oldItem.purchaseReturnItem.quantity // Add stock back
                         )
                     }
@@ -107,7 +105,6 @@ class PurchaseReturnRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = newItem.productLocalId,
-                        transactionUnitId = newItem.unitLocalId,
                         transactionQuantity = -newItem.quantity // Decrease stock
                     )
                 }
@@ -138,7 +135,6 @@ class PurchaseReturnRepositoryImpl(
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = item.purchaseReturnItem.productLocalId,
-                            transactionUnitId = item.purchaseReturnItem.unitLocalId,
                             transactionQuantity = item.purchaseReturnItem.quantity
                         )
                     }
