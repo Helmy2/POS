@@ -182,7 +182,7 @@
     <string name="stock_adjustment_reason_other">stock adjustment reason other</string>
     <string name="error_loading_dashboard_data">Error loading dashboard data</string>
     <string name="total_revenue">Total revenue</string>
-    <string name="todays_sales">Todays sales</string>
+    <string name="todays_sales">Today\'s sales</string>
     <string name="sales_analytics">Sales analytics</string>
     <string name="today">Today</string>
     <string name="weekly">Weekly</string>
@@ -204,4 +204,12 @@
     <string name="ok">OK</string>
     <string name="not_enough_stock">Not enough stock</string>
     <string name="in_stock">In stock</string>
+    <string name="save_payment">Save payment</string>
+    <string name="transaction_type">Transaction type</string>
+    <string name="employee_payments">Employee payments</string>
+    <string name="please_select_an_employee">Please select an employee</string>
+    <string name="error_saving_payment">Error saving payment</string>
+    <string name="payment_saved_successfully">Payment saved successfully</string>
+    <string name="employee_payment">Employee payment</string>
+    <string name="withdrawal">Withdrawal</string>
 </resources>

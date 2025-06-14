@@ -22,6 +22,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.features.management.presentation.client_info.ClientInfoRoute
 import com.wael.astimal.pos.features.management.presentation.employee_account.EmployeeAccountRoute
+import com.wael.astimal.pos.features.management.presentation.employee_payment.EmployeePaymentRoute
 import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseRoute
 import com.wael.astimal.pos.features.management.presentation.purchase_return.PurchaseReturnRoute
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherRoute
@@ -94,6 +95,7 @@ fun ManagementScreen(
                                 ManagementDestination.PurchaseReturn -> context.getString(R.string.purchase_return)
                                 ManagementDestination.EmployeeAccount -> context.getString(R.string.employee_account)
                                 ManagementDestination.ReceivePayVoucher -> context.getString(R.string.receive_pay_voucher)
+                                ManagementDestination.EmployeePayment -> context.getString(R.string.employee_payment)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -159,6 +161,14 @@ fun ManagementScreen(
                             snackbarHostState = snackbarHostState,
                         )
                     }
+
+                    ManagementDestination.EmployeePayment -> {
+                        EmployeePaymentRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+
 
                     else -> {}
                 }

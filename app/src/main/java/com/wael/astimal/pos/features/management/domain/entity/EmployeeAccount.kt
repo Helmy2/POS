@@ -26,7 +26,7 @@ enum class EmployeeTransactionType {
     DEDUCTION,
     ADVANCE,
     BONUS,
-    DIFFERENCE;
+    WITHDRAWAL;
 
     fun getStringResId(): Int {
         return when (this) {
@@ -35,7 +35,7 @@ enum class EmployeeTransactionType {
             DEDUCTION -> R.string.deduction
             ADVANCE -> R.string.advance
             BONUS -> R.string.bonus
-            DIFFERENCE -> R.string.difference
+            WITHDRAWAL -> R.string.withdrawal
         }
     }
 }
