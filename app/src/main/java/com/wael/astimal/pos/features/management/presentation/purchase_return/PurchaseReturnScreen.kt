@@ -5,13 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,21 +20,22 @@ import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
 import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PurchaseReturnRoute(
     viewModel: PurchaseReturnViewModel = koinViewModel(),
-    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     PurchaseReturnScreen(
         state = state,
         onEvent = viewModel::onEvent,
-        snackbarHostState = snackbarHostState,
-        onBack = onBack
+        onBack = onBack,
+        eventFlow = viewModel.eventFlow,
     )
 }
 
@@ -45,22 +43,11 @@ fun PurchaseReturnRoute(
 fun PurchaseReturnScreen(
     state: PurchaseReturnState,
     onEvent: (PurchaseReturnEvent) -> Unit,
-    snackbarHostState: SnackbarHostState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    eventFlow: SharedFlow<UiEvent>
 ) {
-    val context = LocalContext.current
-    LaunchedEffect(state.snackbarMessage, state.error) {
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseReturnEvent.ClearSnackbar)
-        }
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(PurchaseReturnEvent.ClearError)
-        }
-    }
-
     SearchScreen(
+        eventFlow = eventFlow,
         query = state.query,
         isSearchActive = state.isQueryActive,
         loading = state.loading,
@@ -104,7 +91,9 @@ fun PurchaseReturnForm(
 ) {
     val currentLanguage = LocalAppLocale.current
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         DataPicker(
@@ -155,10 +144,20 @@ fun PurchaseReturnForm(
                 onEvent(PurchaseReturnEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
             },
             onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
-                onEvent(PurchaseReturnEvent.UpdateItemMaxUnitQuantity(tempEditorId, maxUnitQuantity))
+                onEvent(
+                    PurchaseReturnEvent.UpdateItemMaxUnitQuantity(
+                        tempEditorId,
+                        maxUnitQuantity
+                    )
+                )
             },
             onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
-                onEvent(PurchaseReturnEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
+                onEvent(
+                    PurchaseReturnEvent.UpdateItemMinUnitQuantity(
+                        tempEditorId,
+                        minUnitQuantity
+                    )
+                )
             }
         )
 

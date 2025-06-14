@@ -19,14 +19,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -38,35 +35,26 @@ import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun StockTransferRoute(
-    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     viewModel: StockTransferViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    LaunchedEffect(state.snackbarMessage, state.error) {
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(StockTransferScreenEvent.ClearSnackbar)
-        }
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(StockTransferScreenEvent.ClearError)
-        }
-    }
 
     StockTransferScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onBack = onBack,
+        eventFlow = viewModel.eventFlow,
     )
 }
 
@@ -75,10 +63,12 @@ fun StockTransferScreen(
     state: StockTransferScreenState,
     onEvent: (StockTransferScreenEvent) -> Unit,
     onBack: () -> Unit,
+    eventFlow: SharedFlow<UiEvent>,
 ) {
     val language = LocalAppLocale.current
 
     SearchScreen(
+        eventFlow = eventFlow,
         query = state.query,
         isSearchActive = state.isQueryActive,
         loading = state.loading,

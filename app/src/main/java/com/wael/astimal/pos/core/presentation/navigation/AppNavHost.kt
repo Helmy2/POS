@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -17,7 +16,6 @@ import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 fun AppNavHost(
     startDestination: Destination,
     navController: NavHostController,
-    snackbarState: SnackbarHostState,
 ) {
     NavHost(
         navController = navController,
@@ -27,16 +25,16 @@ fun AppNavHost(
             startDestination = Destination.Main.Dashboard
         ) {
             composable<Destination.Main.Dashboard> {
-                DashboardRoute(snackbarHostState = snackbarState)
+                DashboardRoute()
             }
             composable<Destination.Main.Inventory> {
-                InventoryRoute(navController = navController, snackbarHostState = snackbarState)
+                InventoryRoute(navController = navController)
             }
             composable<Destination.Main.Settings> {
                 SettingsRoute(navController = navController)
             }
             composable<Destination.Main.Management> {
-                ManagementRoute(navController = navController, snackbarHostState = snackbarState)
+                ManagementRoute(navController = navController)
             }
         }
 
@@ -44,7 +42,7 @@ fun AppNavHost(
             startDestination = Destination.Auth.Login
         ) {
             composable<Destination.Auth.Login> {
-                LoginRoute(navController = navController, snackbarState = snackbarState)
+                LoginRoute(navController = navController)
             }
         }
     }

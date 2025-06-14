@@ -10,10 +10,10 @@ data class CategoryScreenState(
     val inputEnName: String = "",
     val query: String = "",
     val isQueryActive: Boolean = false,
-    val error: String? = null,
 ) {
     val isNew: Boolean get() = selectedCategory == null
 }
+
 sealed interface CategoryScreenEvent {
     data object CreateCategory : CategoryScreenEvent
     data object UpdateCategory : CategoryScreenEvent

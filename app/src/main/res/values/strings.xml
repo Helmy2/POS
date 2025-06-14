@@ -4,7 +4,6 @@
     <string name="welcome_back">Welcome Back</string>
     <string name="login_to_your_account">Log in to your account</string>
     <string name="logout">Log Out</string>
-
     <string name="name">Name</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
@@ -24,25 +23,19 @@
     <string name="create">Create</string>
     <string name="update">Update</string>
     <string name="delete">Delete</string>
-
     <string name="error_invalid_email">Invalid email address</string>
     <string name="error_invalid_password">Invalid password</string>
     <string name="error_password_empty">Password is required</string>
     <string name="error_password_weak">Password must be at least 8 characters and contain an uppercase letter and a special character.</string>
     <string name="error_name_required">Name is required</string>
-
     <string name="logged_out_success">Logged out successfully</string>
-
     <string name="dashboard">Dashboard</string>
     <string name="inventory">Inventory</string>
     <string name="management">Manage</string>
     <string name="settings">Settings</string>
-
     <string name="no_internet">No internet connection</string>
     <string name="back_online">Back online</string>
-
     <string name="something_went_wrong">Something went wrong</string>
-
     <string name="unit">Unit</string>
     <string name="stores">Stores</string>
     <string name="categories">Categories</string>
@@ -212,4 +205,23 @@
     <string name="payment_saved_successfully">Payment saved successfully</string>
     <string name="employee_payment">Employee payment</string>
     <string name="withdrawal">Withdrawal</string>
+    <string name="error_fetching_categories">Error fetching categories</string>
+    <string name="at_least_one_name_arabic_or_english_is_required">At least one name (Arabic or English) is required.</string>
+    <string name="no_category_selected_for_deletion">No category selected for deletion.</string>
+    <string name="failed_to_save_category">Failed to save category</string>
+    <string name="failed_to_delete_category">Failed to delete category</string>
+    <string name="error_fetching_products">Error fetching products</string>
+    <string name="at_least_one_product_name_is_required">At least one product name is required.</string>
+    <string name="failed_to_save_product">Failed to save product</string>
+    <string name="failed_to_delete_product">Failed to delete product</string>
+    <string name="error_fetching_stores">Error fetching stores</string>
+    <string name="failed_to_save_store">Failed to save store</string>
+    <string name="no_store_selected_for_deletion">No store selected for deletion.</string>
+    <string name="failed_to_delete_store">Failed to delete store</string>
+    <string name="error_fetching_units">Error fetching units</string>
+    <string name="failed_to_create_unit">Failed to create unit</string>
+    <string name="no_unit_selected_for_update">No unit selected for update.</string>
+    <string name="failed_to_update_unit">Failed to update unit</string>
+    <string name="no_unit_selected_for_deletion">No unit selected for deletion.</string>
+    <string name="failed_to_delete_unit">Failed to delete unit</string>
 </resources>

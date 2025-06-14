@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.management.presentation.purchase_return
 
-import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
@@ -19,8 +18,6 @@ data class PurchaseReturnState(
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
     val query: String = "",
-    @StringRes val error: Int? = null,
-    @StringRes val snackbarMessage: Int? = null,
     val isQueryActive: Boolean = false,
 ) {
     val isNew: Boolean get() = selectedReturn == null
@@ -50,7 +47,5 @@ sealed interface PurchaseReturnEvent {
     data class UpdateItemMaxUnitPrice(val tempEditorId: String, val price: String) : PurchaseReturnEvent
     data class UpdateItemMinUnitPrice(val tempEditorId: String, val price: String) : PurchaseReturnEvent
     data object SaveReturn : PurchaseReturnEvent
-    data object ClearSnackbar : PurchaseReturnEvent
-    data object ClearError : PurchaseReturnEvent
     data object OpenNewReturnForm : PurchaseReturnEvent
 }

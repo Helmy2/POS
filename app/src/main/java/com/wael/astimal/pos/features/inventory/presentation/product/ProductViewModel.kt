@@ -2,6 +2,8 @@ package com.wael.astimal.pos.features.inventory.presentation.product
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
@@ -10,8 +12,10 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
@@ -28,6 +32,9 @@ class ProductViewModel(
     val state: StateFlow<ProductState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         searchProducts("")
@@ -94,16 +101,12 @@ class ProductViewModel(
     private fun searchProducts(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true) }
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
             productRepository.getProducts(query).catch { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Error fetching products: ${e.message}"
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_products))
             }.collect { products ->
                 _state.update {
                     it.copy(
@@ -149,15 +152,14 @@ class ProductViewModel(
     }
 
     private fun saveProduct() {
-        val currentState = _state.value
-        if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
-            _state.update { it.copy(error = "At least one product name is required.") }
-            return
-        }
-        // Add more validation as needed (e.g., prices are numbers, category/unit selected)
-
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            val currentState = _state.value
+            if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_product_name_is_required))
+                return@launch
+            }
+
+            _state.update { it.copy(loading = true) }
 
             // Construct ProductEntity from current state
             val productEntity = ProductEntity(
@@ -167,7 +169,7 @@ class ProductViewModel(
                 enName = currentState.inputEnName,
                 categoryId = currentState.selectedCategoryId,
                 averagePrice = currentState.inputAveragePrice.toDoubleOrNull() ?: 0.0,
-                sellingPrice = currentState.inputSellingPrice.toDoubleOrNull()?: 0.0,
+                sellingPrice = currentState.inputSellingPrice.toDoubleOrNull() ?: 0.0,
                 openingBalanceQuantity = currentState.inputOpeningBalance.toDoubleOrNull(),
                 storeId = currentState.selectedStoreId,
                 minimumUnitId = currentState.selectedMinStockUnitId,
@@ -200,11 +202,7 @@ class ProductViewModel(
                     )
                 }
             }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to save product: ${e.message}"
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_product))
             })
         }
     }
@@ -212,7 +210,7 @@ class ProductViewModel(
     private fun deleteSelectedProduct() {
         val productToDelete = _state.value.selectedProduct ?: return
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true) }
             val result = productRepository.deleteProduct(productToDelete.localId)
             result.fold(onSuccess = {
                 _state.update {
@@ -231,11 +229,7 @@ class ProductViewModel(
                     )
                 }
             }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to delete product: ${e.message}"
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_product))
             })
         }
     }

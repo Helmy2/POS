@@ -3,11 +3,14 @@ package com.wael.astimal.pos.features.management.presentation.supplier_info
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
@@ -26,23 +29,25 @@ class SupplierViewModel(
         onEvent(SupplierInfoEvent.SearchSuppliers(_state.value.query))
     }
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
     fun onEvent(event: SupplierInfoEvent) {
         when (event) {
             is SupplierInfoEvent.SearchSuppliers -> searchSuppliersList(event.query)
             is SupplierInfoEvent.SelectSupplier -> {
                 _state.update {
                     it.copy(
-                        selectedSupplier = event.supplier,
-                        showDetailDialog = event.supplier != null
+                        selectedSupplier = event.supplier, showDetailDialog = event.supplier != null
                     )
                 }
             }
 
-            is SupplierInfoEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is SupplierInfoEvent.UpdateQuery -> {
                 _state.update { it.copy(query = event.query) }
                 searchSuppliersList(event.query)
             }
+
             SupplierInfoEvent.DetailSupplier -> _state.update { it.copy(showDetailDialog = false) }
             SupplierInfoEvent.ShowDetailDialog -> _state.update { it.copy(showDetailDialog = true) }
         }
@@ -51,22 +56,15 @@ class SupplierViewModel(
     private fun searchSuppliersList(query: String) {
         clientSearchJob?.cancel()
         clientSearchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null, query = query) }
+            _state.update { it.copy(loading = true, query = query) }
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
-            clientRepository.getSuppliers(query)
-                .catch { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            error = R.string.error_searching_clients
-                        )
-                    }
-                }
-                .collect { clients ->
-                    _state.update { it.copy(loading = false, searchResults = clients) }
-                }
+            clientRepository.getSuppliers(query).catch { e ->
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_searching_clients))
+            }.collect { clients ->
+                _state.update { it.copy(loading = false, searchResults = clients) }
+            }
         }
     }
 }

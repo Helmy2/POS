@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -32,7 +30,7 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -40,7 +38,12 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.util.convertToString
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,10 +62,26 @@ fun SearchScreen(
     onUpdate: () -> Unit,
     onNew: () -> Unit,
     modifier: Modifier = Modifier,
-    canEdit: Boolean= true,
+    canEdit: Boolean = true,
     searchResults: @Composable () -> Unit,
     mainContent: @Composable () -> Unit,
+    eventFlow: Flow<UiEvent>
 ) {
+
+    val context = LocalContext.current
+
+    ObserveEffect(eventFlow, eventFlow) {
+        when (it) {
+            is UiEvent.ShowSnackbar -> {
+                SnackbarController.sendEvent(
+                    event = SnackbarEvent(
+                        message = context.getString(it.message)
+                    )
+                )
+            }
+        }
+    }
+
     BackHandler {
         if (isSearchActive) onSearchActiveChange(false)
         else onBack()
@@ -109,8 +128,7 @@ fun SearchScreen(
             AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
                 if (it) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
                     }
@@ -190,7 +208,6 @@ fun SearchScreen(
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SearchScreen(
@@ -200,10 +217,24 @@ fun SearchScreen(
     onSearch: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    eventFlow: Flow<UiEvent>,
     mainContent: @Composable () -> Unit,
 ) {
-    val keyboard = LocalSoftwareKeyboardController.current
-    val isKeyboardVisible = WindowInsets.isImeVisible
+
+    val context = LocalContext.current
+
+    ObserveEffect(eventFlow, eventFlow) {
+        when (it) {
+            is UiEvent.ShowSnackbar -> {
+                SnackbarController.sendEvent(
+                    event = SnackbarEvent(
+                        message = context.getString(it.message)
+                    )
+                )
+            }
+        }
+    }
+
     Box(
         modifier
             .padding(top = 16.dp, start = 16.dp, end = 16.dp)
@@ -223,12 +254,7 @@ fun SearchScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    BackButton(
-                        onClick = {
-                            if (isKeyboardVisible) keyboard?.hide()
-                            else onBack()
-                        },
-                    )
+                    BackButton(onClick = onBack)
                     SearchBarDefaults.InputField(
                         query = query,
                         onQueryChange = onQueryChange,

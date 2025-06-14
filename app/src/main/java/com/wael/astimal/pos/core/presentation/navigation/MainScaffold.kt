@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -24,7 +26,10 @@ import androidx.navigation.compose.rememberNavController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.TopLevelRoutes
+import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
 import com.wael.astimal.pos.core.util.Connectivity
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 
@@ -34,6 +39,23 @@ fun MainScaffold(
 ) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    ObserveEffect(SnackbarController.events, snackbarHostState) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            if (it.message.isNotEmpty()) {
+                val result = snackbarHostState.showSnackbar(
+                    it.message,
+                    it.action?.name,
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    it.action?.action?.invoke()
+                }
+            }
+        }
+    }
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val isOnTopLevelRoute = TopLevelRoutes.routes.any {
         navBackStackEntry?.destination?.hasRoute(it.route::class) == true
@@ -89,7 +111,6 @@ fun MainScaffold(
             AppNavHost(
                 startDestination = startDestination,
                 navController = navController,
-                snackbarState = snackbarHostState,
             )
         }
     }

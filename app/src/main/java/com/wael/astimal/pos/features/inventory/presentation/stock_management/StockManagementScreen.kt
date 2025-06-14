@@ -11,11 +11,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,39 +25,34 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun StockManagementRoute(
     onBack: () -> Unit,
     viewModel: StockManagementViewModel = koinViewModel(),
-    snackbarHostState: SnackbarHostState
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LaunchedEffect(state.error, state.snackbarMessage) {
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(StockManagementEvent.ClearError)
-        }
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(StockManagementEvent.ClearSnackbar)
-        }
-    }
-
-    StockManagementScreen(onBack = onBack, state = state, onEvent = viewModel::onEvent)
+    StockManagementScreen(
+        onBack = onBack,
+        eventFlow = viewModel.eventFlow,
+        state = state,
+        onEvent = viewModel::onEvent
+    )
 }
 
 @Composable
 fun StockManagementScreen(
     state: StockManagementState,
     onEvent: (StockManagementEvent) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    eventFlow: SharedFlow<UiEvent>
 ) {
     val language = LocalAppLocale.current
     if (state.showAdjustmentDialog) {
@@ -67,6 +60,7 @@ fun StockManagementScreen(
     }
 
     SearchScreen(
+        eventFlow = eventFlow,
         query = state.query,
         loading = state.loading,
         onBack = onBack,

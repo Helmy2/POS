@@ -3,7 +3,6 @@ package com.wael.astimal.pos.features.management.presentation.management
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
@@ -35,7 +34,6 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ManagementRoute(
     navController: NavHostController,
-    snackbarHostState: SnackbarHostState,
     viewModel: ManagementViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -43,7 +41,6 @@ fun ManagementRoute(
         state = state,
         onEvent = viewModel::handleEvent,
         navController = navController,
-        snackbarHostState = snackbarHostState
     )
 }
 
@@ -55,7 +52,6 @@ fun ManagementScreen(
     state: ManagementState,
     onEvent: (ManagementEvent) -> Unit,
     navController: NavHostController,
-    snackbarHostState: SnackbarHostState,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -117,14 +113,12 @@ fun ManagementScreen(
                     ManagementDestination.SalesOrder -> {
                         SalesRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 
                     ManagementDestination.OrderReturn -> {
                         SalesReturnRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 
@@ -137,35 +131,30 @@ fun ManagementScreen(
                     ManagementDestination.PurchaseOrder -> {
                         PurchaseRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 
                     ManagementDestination.PurchaseReturn -> {
                         PurchaseReturnRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 
                     ManagementDestination.EmployeeAccount -> {
                         EmployeeAccountRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 
                     ManagementDestination.ReceivePayVoucher -> {
                         ReceivePayVoucherRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 
                     ManagementDestination.EmployeePayment -> {
                         EmployeePaymentRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                            snackbarHostState = snackbarHostState,
                         )
                     }
 

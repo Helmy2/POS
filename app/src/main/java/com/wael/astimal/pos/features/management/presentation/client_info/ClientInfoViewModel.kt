@@ -3,11 +3,14 @@ package com.wael.astimal.pos.features.management.presentation.client_info
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
@@ -19,6 +22,9 @@ class ClientInfoViewModel(
 
     private val _state = MutableStateFlow(ClientInfoState())
     val state: StateFlow<ClientInfoState> = _state.asStateFlow()
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     private var clientSearchJob: Job? = null
 
@@ -37,8 +43,6 @@ class ClientInfoViewModel(
                     )
                 }
             }
-
-            is ClientInfoEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is ClientInfoEvent.UpdateQuery -> {
                 _state.update { it.copy(query = event.query) }
                 searchClientsList(event.query)
@@ -51,18 +55,13 @@ class ClientInfoViewModel(
     private fun searchClientsList(query: String) {
         clientSearchJob?.cancel()
         clientSearchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null, query = query) }
+            _state.update { it.copy(loading = true, query = query) }
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
             clientRepository.searchClients(query)
                 .catch { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            error = R.string.error_searching_clients
-                        )
-                    }
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_searching_clients))
                 }
                 .collect { clients ->
                     _state.update { it.copy(loading = false, searchResults = clients) }

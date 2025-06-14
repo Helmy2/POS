@@ -2,14 +2,18 @@ package com.wael.astimal.pos.features.inventory.presentation.unit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -24,6 +28,9 @@ class UnitViewModel(
     val state: StateFlow<UnitDetailsState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         handleEvent(UnitEvent.Search(""))
@@ -51,17 +58,13 @@ class UnitViewModel(
     private fun searchUnits(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true) }
             if (query.length > 2 || query.isEmpty()) {
                 delay(300)
             }
             unitRepository.getUnits(query).map { entities -> entities.map { it.toDomain() } }
                 .catch { e ->
-                    _state.update {
-                        it.copy(
-                            loading = false, error = "Error fetching units: ${e.message}"
-                        )
-                    }
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_units))
                 }.collect { unitDetailsList ->
                     _state.update { it.copy(loading = false, searchResults = unitDetailsList) }
                 }
@@ -87,14 +90,14 @@ class UnitViewModel(
     }
 
     private fun createUnitFromState() {
-        val currentState = _state.value
-        if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
-            _state.update { it.copy(error = "At least one name (Arabic or English) is required.") }
-            return
-        }
-
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            val currentState = _state.value
+            if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_name_arabic_or_english_is_required))
+                return@launch
+            }
+
+            _state.update { it.copy(loading = true) }
             val newUnitEntity = UnitEntity(
                 serverId = null,
                 arName = currentState.arName,
@@ -111,29 +114,25 @@ class UnitViewModel(
                     )
                 }
             }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to create unit: ${e.message}"
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_create_unit))
             })
         }
     }
 
     private fun updateUnitFromState() {
-        val currentState = _state.value
-        val unitToUpdate = currentState.selectedProductUnit
-        if (unitToUpdate == null) {
-            _state.update { it.copy(error = "No unit selected for update.") }
-            return
-        }
-        if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
-            _state.update { it.copy(error = "At least one name (Arabic or English) is required.") }
-            return
-        }
-
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            val currentState = _state.value
+            val unitToUpdate = currentState.selectedProductUnit
+            if (unitToUpdate == null) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.no_unit_selected_for_update))
+                return@launch
+            }
+            if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_name_arabic_or_english_is_required))
+                return@launch
+            }
+
+            _state.update { it.copy(loading = true) }
             val updatedUnitEntity = UnitEntity(
                 localId = unitToUpdate.localId,
                 serverId = unitToUpdate.serverId,
@@ -154,24 +153,20 @@ class UnitViewModel(
                     )
                 }
             }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to update unit: ${e.message}"
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_update_unit))
             })
         }
     }
 
     private fun deleteSelectedUnit() {
-        val unitToDeleteDetails = _state.value.selectedProductUnit
-        if (unitToDeleteDetails == null) {
-            _state.update { it.copy(error = "No unit selected for deletion.") }
-            return
-        }
-
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            val unitToDeleteDetails = _state.value.selectedProductUnit
+            if (unitToDeleteDetails == null) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.no_unit_selected_for_deletion))
+                return@launch
+            }
+
+            _state.update { it.copy(loading = true) }
             val unitEntityToDelete = UnitEntity(
                 localId = unitToDeleteDetails.localId,
                 serverId = unitToDeleteDetails.serverId,
@@ -190,11 +185,7 @@ class UnitViewModel(
                     )
                 }
             }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false, error = "Failed to delete unit: ${e.message}"
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_unit))
             })
         }
     }

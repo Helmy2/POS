@@ -4,12 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,21 +18,21 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
 import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SalesRoute(
-    viewModel: SalesViewModel = koinViewModel(),
-    snackbarHostState: SnackbarHostState,
-    onBack: () -> Unit
+    viewModel: SalesViewModel = koinViewModel(), onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     SalesScreen(
         state = state,
+        eventFlow = viewModel.eventFlow,
         onEvent = viewModel::onEvent,
-        snackbarHostState = snackbarHostState,
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
@@ -43,21 +40,10 @@ fun SalesRoute(
 fun SalesScreen(
     state: OrderState,
     onEvent: (OrderEvent) -> Unit,
-    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
+    eventFlow: SharedFlow<UiEvent>,
 ) {
     val language = LocalAppLocale.current
-    val context = LocalContext.current
-    LaunchedEffect(state.snackbarMessage, state.error) {
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(OrderEvent.ClearSnackbar)
-        }
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            onEvent(OrderEvent.ClearError)
-        }
-    }
 
     SearchScreen(
         query = state.query,
@@ -89,6 +75,7 @@ fun SalesScreen(
         mainContent = {
             OrderForm(state = state, onEvent = onEvent)
         },
+        eventFlow = eventFlow
     )
 }
 
@@ -156,8 +143,7 @@ fun OrderForm(
             },
             onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
                 onEvent(OrderEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
-            }
-        )
+            })
 
         OrderTotalsSection(
             totalAmount = orderInput.totalAmount,

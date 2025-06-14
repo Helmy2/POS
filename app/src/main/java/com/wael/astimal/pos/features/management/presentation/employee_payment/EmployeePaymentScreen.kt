@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,25 +22,14 @@ import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import org.koin.androidx.compose.koinViewModel
 
+// todo use search screen
+
 @Composable
 fun EmployeePaymentRoute(
     onBack: () -> Unit,
     viewModel: EmployeePaymentViewModel = koinViewModel(),
-    snackbarHostState: SnackbarHostState
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    LaunchedEffect(state.error, state.snackbarMessage) {
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(EmployeePaymentEvent.ClearError)
-        }
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(EmployeePaymentEvent.ClearSnackbar)
-        }
-    }
 
     EmployeePaymentScreen(onBack = onBack, state = state, onEvent = viewModel::onEvent)
 }

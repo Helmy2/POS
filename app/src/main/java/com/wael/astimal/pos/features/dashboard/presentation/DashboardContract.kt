@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
-import androidx.annotation.StringRes
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 
@@ -30,11 +29,9 @@ data class DashboardState(
     val kpiData: KpiData = KpiData(),
     val salesAnalytics: List<DailySale> = emptyList(),
     val selectedTimePeriod: TimePeriod = TimePeriod.WEEKLY,
-    @StringRes val error: Int? = null
 )
 
 sealed interface DashboardEvent {
     data class SelectTimePeriod(val period: TimePeriod) : DashboardEvent
     data object RefreshData : DashboardEvent
-    data object ClearError : DashboardEvent
 }

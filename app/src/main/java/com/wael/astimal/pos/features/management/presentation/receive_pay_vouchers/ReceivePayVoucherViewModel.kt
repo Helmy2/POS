@@ -3,14 +3,17 @@ package com.wael.astimal.pos.features.management.presentation.receive_pay_vouche
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -29,6 +32,9 @@ class ReceivePayVoucherViewModel(
     private val _state = MutableStateFlow(ReceivePayVoucherState())
     val state: StateFlow<ReceivePayVoucherState> = _state.asStateFlow()
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
     init {
         loadInitialData()
     }
@@ -42,8 +48,6 @@ class ReceivePayVoucherViewModel(
             is ReceivePayVoucherEvent.UpdateNotes -> _state.update { it.copy(notes = event.notes) }
             is ReceivePayVoucherEvent.UpdateDate -> _state.update { it.copy(date = event.date) }
             is ReceivePayVoucherEvent.SaveVoucher -> saveVoucher()
-            is ReceivePayVoucherEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
-            is ReceivePayVoucherEvent.ClearError -> _state.update { it.copy(error = null) }
         }
     }
 
@@ -62,7 +66,7 @@ class ReceivePayVoucherViewModel(
                 )
             }
         }.catch {
-            _state.update { it.copy(isLoading = false, error = R.string.error_loading_data) }
+            _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_data))
         }.launchIn(viewModelScope)
     }
 
@@ -73,12 +77,12 @@ class ReceivePayVoucherViewModel(
             val amount = currentState.amount.toDoubleOrNull()
 
             if (currentUser == null) {
-                _state.update { it.copy(error = R.string.user_not_identified) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
                 return@launch
             }
 
             if (amount == null || amount <= 0) {
-                _state.update { it.copy(error = R.string.invalid_amount) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_amount))
                 return@launch
             }
 
@@ -88,7 +92,7 @@ class ReceivePayVoucherViewModel(
             }
 
             if (party == null) {
-                _state.update { it.copy(error = R.string.please_select_a_party) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_a_party))
                 return@launch
             }
 
@@ -106,9 +110,9 @@ class ReceivePayVoucherViewModel(
 
             voucherRepository.addVoucher(voucher).fold(
                 onSuccess = {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.voucher_saved_successfully))
                     _state.update {
                         it.copy(
-                            snackbarMessage = R.string.voucher_saved_successfully,
                             amount = "",
                             notes = "",
                             selectedClient = null,
@@ -117,7 +121,7 @@ class ReceivePayVoucherViewModel(
                     }
                 },
                 onFailure = {
-                    _state.update { it.copy(error = R.string.error_saving_voucher) }
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_voucher))
                 }
             )
         }

@@ -14,14 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,21 +30,14 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccount
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import org.koin.androidx.compose.koinViewModel
 
+// todo Use Search screen
+
 @Composable
 fun EmployeeAccountRoute(
     onBack: () -> Unit,
     viewModel: EmployeeAccountViewModel = koinViewModel(),
-    snackbarHostState: SnackbarHostState
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    LaunchedEffect(state.error) {
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(EmployeeAccountEvent.ClearError)
-        }
-    }
 
     EmployeeAccountScreen(onBack = onBack, state = state, onEvent = viewModel::onEvent)
 }

@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
-import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -18,8 +17,6 @@ data class StockTransferScreenState(
     val availableEmployees: List<User> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val currentUser: User? = null,
-    @StringRes val error: Int? = null,
-    @StringRes val snackbarMessage: Int? = null
 ) {
     val isNew: Boolean get() = selectedTransfer == null
     val canEditEmployee: Boolean get() = currentUser?.isAdmin == true
@@ -61,6 +58,4 @@ sealed interface StockTransferScreenEvent {
     data class UpdateItemMinUnitQuantity(val itemEditorId: String, val quantity: String) : StockTransferScreenEvent
     data object SaveTransfer : StockTransferScreenEvent
     data class DeleteTransfer(val transferLocalId: Long) : StockTransferScreenEvent
-    data object ClearSnackbar : StockTransferScreenEvent
-    data object ClearError : StockTransferScreenEvent
 }

@@ -10,10 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,11 +25,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
 import com.wael.astimal.pos.features.user.presentation.components.AuthTextField
 import com.wael.astimal.pos.features.user.presentation.components.CredentialsHeader
 import com.wael.astimal.pos.features.user.presentation.components.PasswordTextField
 import com.wael.astimal.pos.features.user.presentation.components.ProgressiveButton
-import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -39,25 +39,24 @@ import org.koin.androidx.compose.koinViewModel
 fun LoginRoute(
     navController: NavHostController,
     viewModel: LoginViewModel = koinViewModel(),
-    snackbarState: SnackbarHostState,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collectLatest { effect ->
-            when (effect) {
-                LoginEffect.NavigateToHome -> {
-                    navController.navigate(Destination.Main) {
-                        popUpTo(0)
-                    }
+    ObserveEffect(viewModel.effect, viewModel.effect) {
+        when (it) {
+            LoginEffect.NavigateToHome -> {
+                navController.navigate(Destination.Main) {
+                    popUpTo(0)
                 }
+            }
 
-                is LoginEffect.ShowError -> {
-                    snackbarState.showSnackbar(
-                        message = context.getString(effect.message),
+            is LoginEffect.ShowError -> {
+                SnackbarController.sendEvent(
+                    event = SnackbarEvent(
+                        message = context.getString(it.message)
                     )
-                }
+                )
             }
         }
     }

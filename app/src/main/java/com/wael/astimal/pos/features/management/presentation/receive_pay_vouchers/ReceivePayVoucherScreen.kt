@@ -15,15 +15,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,26 +37,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// todo use search screen
 @Composable
 fun ReceivePayVoucherRoute(
     onBack: () -> Unit,
     viewModel: ReceivePayVoucherViewModel = koinViewModel(),
-    snackbarHostState: SnackbarHostState
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    LaunchedEffect(state.error, state.snackbarMessage) {
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(ReceivePayVoucherEvent.ClearError)
-        }
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(ReceivePayVoucherEvent.ClearSnackbar)
-        }
-    }
-
     ReceivePayVoucherScreen(onBack = onBack, state = state, onEvent = viewModel::onEvent)
 }
 

@@ -10,7 +10,6 @@ data class UnitDetailsState(
     val enName: String = "",
     val query: String = "",
     val isQueryActive: Boolean = false,
-    val error: String? = null,
 ) {
     val isNew: Boolean get() = selectedProductUnit == null
 }

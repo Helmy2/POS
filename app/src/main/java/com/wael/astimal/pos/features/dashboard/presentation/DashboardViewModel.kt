@@ -3,9 +3,12 @@ package com.wael.astimal.pos.features.dashboard.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -21,6 +24,9 @@ class DashboardViewModel(
     private val _state = MutableStateFlow(DashboardState())
     val state: StateFlow<DashboardState> = _state.asStateFlow()
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
     init {
         loadDashboardData()
     }
@@ -31,8 +37,8 @@ class DashboardViewModel(
                 _state.update { it.copy(selectedTimePeriod = event.period) }
                 loadDashboardData()
             }
+
             is DashboardEvent.RefreshData -> loadDashboardData()
-            is DashboardEvent.ClearError -> _state.update { it.copy(error = null) }
         }
     }
 
@@ -65,12 +71,7 @@ class DashboardViewModel(
                 }
             }
             .catch {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = R.string.error_loading_dashboard_data
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_dashboard_data))
             }
             .launchIn(viewModelScope)
     }

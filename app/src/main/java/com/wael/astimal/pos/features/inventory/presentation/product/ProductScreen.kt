@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,11 +15,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -36,6 +37,7 @@ fun ProductRoute(
         onEvent = viewModel::onEvent,
         onBack = onBack,
         modifier = modifier,
+        eventFlow = viewModel.eventFlow,
     )
 }
 
@@ -46,9 +48,11 @@ fun ProductScreen(
     onEvent: (ProductEvent) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    eventFlow: SharedFlow<UiEvent>,
 ) {
     val language = LocalAppLocale.current
     SearchScreen(
+        eventFlow = eventFlow,
         modifier = modifier,
         query = state.query,
         isSearchActive = state.isQueryActive,
@@ -70,7 +74,7 @@ fun ProductScreen(
                     onEvent(ProductEvent.UpdateIsQueryActive(false))
                     onEvent(ProductEvent.SelectProduct(product))
                 },
-                label = { Text(it.localizedName.displayName(language)) },
+                label = { Label(it.localizedName.displayName(language)) },
                 isSelected = { product -> product.localId == state.selectedProduct?.localId },
             )
         },
@@ -79,10 +83,6 @@ fun ProductScreen(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                if (state.error != null) {
-                    Text(state.error, color = MaterialTheme.colorScheme.error)
-                }
-
                 LabeledTextField(
                     value = state.inputArName,
                     onValueChange = { onEvent(ProductEvent.UpdateInputArName(it)) },
@@ -149,7 +149,7 @@ fun ProductScreen(
 
                 LabeledTextField(
                     value = state.subUnitsPerMainUnit,
-                    onValueChange = {value->
+                    onValueChange = { value ->
                         value.toDoubleOrNull()?.let {
                             onEvent(ProductEvent.UpdateSubUnitsPerMainUnit(value))
                         }

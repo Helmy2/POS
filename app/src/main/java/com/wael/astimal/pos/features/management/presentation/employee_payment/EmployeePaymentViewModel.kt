@@ -3,13 +3,16 @@ package com.wael.astimal.pos.features.management.presentation.employee_payment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -23,6 +26,9 @@ class EmployeePaymentViewModel(
 
     private val _state = MutableStateFlow(EmployeePaymentState())
     val state: StateFlow<EmployeePaymentState> = _state.asStateFlow()
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         loadEmployees()
@@ -43,8 +49,6 @@ class EmployeePaymentViewModel(
             is EmployeePaymentEvent.UpdateAmount -> _state.update { it.copy(amount = event.amount) }
             is EmployeePaymentEvent.UpdateNotes -> _state.update { it.copy(notes = event.notes) }
             is EmployeePaymentEvent.SavePayment -> savePayment()
-            is EmployeePaymentEvent.ClearError -> _state.update { it.copy(error = null) }
-            is EmployeePaymentEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
         }
     }
 
@@ -56,15 +60,15 @@ class EmployeePaymentViewModel(
             var amount = currentState.amount.toDoubleOrNull()
 
             if (currentUser == null) {
-                _state.update { it.copy(error = R.string.user_not_identified) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
                 return@launch
             }
             if (selectedEmployee == null) {
-                _state.update { it.copy(error = R.string.please_select_an_employee) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_an_employee))
                 return@launch
             }
             if (amount == null || amount <= 0) {
-                _state.update { it.copy(error = R.string.invalid_amount) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_amount))
                 return@launch
             }
 
@@ -86,16 +90,9 @@ class EmployeePaymentViewModel(
             )
 
             employeeAccountRepository.addManualPayment(transaction).fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        snackbarMessage = R.string.payment_saved_successfully,
-                        selectedEmployee = null,
-                        amount = "",
-                        notes = ""
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.payment_saved_successfully))
             }, onFailure = {
-                _state.update { it.copy(error = R.string.error_saving_payment) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_payment))
             })
         }
     }

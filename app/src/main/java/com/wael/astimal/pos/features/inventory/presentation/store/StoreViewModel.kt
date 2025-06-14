@@ -2,13 +2,17 @@ package com.wael.astimal.pos.features.inventory.presentation.store
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
@@ -22,6 +26,9 @@ class StoreViewModel(
     val state: StateFlow<StoreState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         onEvent(StoreEvent.Search(""))
@@ -38,6 +45,7 @@ class StoreViewModel(
                 _state.update { it.copy(query = event.query) }
                 searchStores(event.query)
             }
+
             is StoreEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
             is StoreEvent.UpdateInputArName -> _state.update { it.copy(inputArName = event.name) }
             is StoreEvent.UpdateInputEnName -> _state.update { it.copy(inputEnName = event.name) }
@@ -48,17 +56,15 @@ class StoreViewModel(
     private fun searchStores(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true) }
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
-            storeRepository.getStores(query)
-                .catch { e ->
-                    _state.update { it.copy(loading = false, error = "Error fetching stores: ${e.message}") }
-                }
-                .collect { stores ->
-                    _state.update { it.copy(loading = false, searchResults = stores) }
-                }
+            storeRepository.getStores(query).catch { e ->
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_stores))
+            }.collect { stores ->
+                _state.update { it.copy(loading = false, searchResults = stores) }
+            }
         }
     }
 
@@ -85,14 +91,14 @@ class StoreViewModel(
     }
 
     private fun saveStore() {
-        val currentState = _state.value
-        if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
-            _state.update { it.copy(error = "At least one name (Arabic or English) is required.") }
-            return
-        }
-
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            val currentState = _state.value
+            if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_name_arabic_or_english_is_required))
+                return@launch
+            }
+
+            _state.update { it.copy(loading = true) }
 
             val result = if (currentState.isNew || currentState.selectedStore == null) {
                 storeRepository.addStore(
@@ -109,51 +115,45 @@ class StoreViewModel(
                 )
             }
 
-            result.fold(
-                onSuccess = { savedStore ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedStore = null,
-                            inputArName = "",
-                            inputEnName = "",
-                            inputType = StoreType.SUB
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update { it.copy(loading = false, error = "Failed to save store: ${e.message}") }
+            result.fold(onSuccess = { savedStore ->
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        selectedStore = null,
+                        inputArName = "",
+                        inputEnName = "",
+                        inputType = StoreType.SUB
+                    )
                 }
-            )
+            }, onFailure = { e ->
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_store))
+            })
         }
     }
 
     private fun deleteSelectedStore() {
-        val storeToDelete = _state.value.selectedStore
-        if (storeToDelete == null) {
-            _state.update { it.copy(error = "No store selected for deletion.") }
-            return
-        }
-
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            val storeToDelete = _state.value.selectedStore
+            if (storeToDelete == null) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.no_store_selected_for_deletion))
+                return@launch
+            }
+
+            _state.update { it.copy(loading = true) }
             val result = storeRepository.deleteStore(storeToDelete)
-            result.fold(
-                onSuccess = {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            selectedStore = null,
-                            inputArName = "",
-                            inputEnName = "",
-                            inputType = StoreType.SUB
-                        )
-                    }
-                },
-                onFailure = { e ->
-                    _state.update { it.copy(loading = false, error = "Failed to delete store: ${e.message}") }
+            result.fold(onSuccess = {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        selectedStore = null,
+                        inputArName = "",
+                        inputEnName = "",
+                        inputType = StoreType.SUB
+                    )
                 }
-            )
+            }, onFailure = { e ->
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_store))
+            })
         }
     }
 }

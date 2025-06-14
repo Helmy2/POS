@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.entity.Language
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
@@ -15,8 +16,10 @@ import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -37,6 +40,9 @@ class StockTransferViewModel(
     val state: StateFlow<StockTransferScreenState> = _state.asStateFlow()
     private var searchJob: Job? = null
     private val stockObservationJobs = mutableMapOf<String, Job>()
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -151,9 +157,7 @@ class StockTransferViewModel(
 
             is StockTransferScreenEvent.SaveTransfer -> saveCurrentTransfer()
             is StockTransferScreenEvent.DeleteTransfer -> deleteTransfer(event.transferLocalId)
-            is StockTransferScreenEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is StockTransferScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
-            StockTransferScreenEvent.ClearError -> _state.update { it.copy(error = null) }
             is StockTransferScreenEvent.SelectEmployee -> {
                 _state.update {
                     it.copy(
@@ -175,8 +179,8 @@ class StockTransferViewModel(
         val fromStoreId = _state.value.currentTransferInput.fromStoreId ?: return
         stockObservationJobs[tempId] =
             stockRepository.getStockQuantityFlow(fromStoreId, productId).onEach { stock ->
-                    updateTransferItem(tempId) { it.copy(currentStock = stock) }
-                }.launchIn(viewModelScope)
+                updateTransferItem(tempId) { it.copy(currentStock = stock) }
+            }.launchIn(viewModelScope)
     }
 
     private fun resubscribeAllStockObservers() {
@@ -232,27 +236,23 @@ class StockTransferViewModel(
     private fun searchTransfers(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null, query = query) }
+            _state.update { it.copy(loading = true, query = query) }
             stockTransferRepository.getStockTransfersWithDetails().catch {
-                    _state.update {
-                        it.copy(
-                            loading = false, error = R.string.error_fetching_transfers
-                        )
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_transfers))
+            }.collect { transfers ->
+                val filtered = if (query.isBlank()) {
+                    transfers
+                } else {
+                    transfers.filter { transfer ->
+                        val fromStoreName =
+                            transfer.fromStore?.name?.displayName(Language.Arabic) ?: ""
+                        val toStoreName =
+                            transfer.toStore?.name?.displayName(Language.English) ?: ""
+                        fromStoreName.contains(query, true) || toStoreName.contains(query, true)
                     }
-                }.collect { transfers ->
-                    val filtered = if (query.isBlank()) {
-                        transfers
-                    } else {
-                        transfers.filter { transfer ->
-                            val fromStoreName =
-                                transfer.fromStore?.name?.displayName(Language.Arabic) ?: ""
-                            val toStoreName =
-                                transfer.toStore?.name?.displayName(Language.English) ?: ""
-                            fromStoreName.contains(query, true) || toStoreName.contains(query, true)
-                        }
-                    }
-                    _state.update { it.copy(loading = false, transfers = filtered) }
                 }
+                _state.update { it.copy(loading = false, transfers = filtered) }
+            }
         }
     }
 
@@ -262,33 +262,26 @@ class StockTransferViewModel(
             val loggedInUserId = _state.value.currentUser?.id
 
             if (currentInput.fromStoreId == null || currentInput.toStoreId == null) {
-                _state.update { it.copy(error = R.string.from_and_to_stores_must_be_selected) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.from_and_to_stores_must_be_selected))
                 return@launch
             }
             if (currentInput.fromStoreId == currentInput.toStoreId) {
-                _state.update { it.copy(error = R.string.from_and_to_stores_cannot_be_the_same) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.from_and_to_stores_cannot_be_the_same))
                 return@launch
             }
             if (currentInput.items.isEmpty()) {
-                _state.update { it.copy(error = R.string.transfer_must_have_at_least_one_item) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transfer_must_have_at_least_one_item))
                 return@launch
             }
             if (loggedInUserId == null) {
-                _state.update { it.copy(error = R.string.user_not_identified_cannot_save_transfer) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified_cannot_save_transfer))
                 return@launch
             }
 
             for (item in currentInput.items) {
                 val quantity = item.maxUnitQuantity.toDoubleOrNull() ?: 0.0
                 if (quantity > item.currentStock) {
-                    val productName =
-                        item.product?.localizedName?.displayName(Language.English) ?: "Product"
-                    _state.update {
-                        it.copy(
-                            error = R.string.not_enough_stock,
-                            snackbarMessage = productName.hashCode()
-                        )
-                    }
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.not_enough_stock))
                     return@launch
                 }
             }
@@ -308,11 +301,11 @@ class StockTransferViewModel(
             }
 
             if (itemEntities.size != currentInput.items.size) {
-                _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
                 return@launch
             }
 
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true) }
             val result = if (_state.value.isNew) {
                 stockTransferRepository.addStockTransfer(
                     fromStoreId = currentInput.fromStoreId,
@@ -338,30 +331,20 @@ class StockTransferViewModel(
                 clear(snackbarMessage = R.string.transfer_saved_successfully)
                 onEvent(StockTransferScreenEvent.SearchTransfers(""))
             }, onFailure = { e ->
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        error = R.string.failed_to_save_transfer,
-                        snackbarMessage = e.message?.toIntOrNull()
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_transfer))
             })
         }
     }
 
     private fun deleteTransfer(transferLocalId: Long) {
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(loading = true) }
             val result = stockTransferRepository.deleteStockTransfer(transferLocalId)
             result.fold(onSuccess = {
                 clear(snackbarMessage = R.string.transfer_deleted_successfully)
                 onEvent(StockTransferScreenEvent.SearchTransfers(""))
             }, onFailure = {
-                _state.update {
-                    it.copy(
-                        loading = false, error = R.string.failed_to_delete_transfer
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_transfer))
             })
         }
     }
@@ -369,15 +352,11 @@ class StockTransferViewModel(
     private fun clear(snackbarMessage: Int? = null) {
         stockObservationJobs.values.forEach { it.cancel() }
         stockObservationJobs.clear()
-        _state.update {
-            it.copy(
-                snackbarMessage = snackbarMessage,
-                loading = false,
-                isQueryActive = false,
-                selectedTransfer = null,
-                currentTransferInput = EditableStockTransfer()
-            )
-        }
         updateCurrentUser(_state.value.currentUser)
+        viewModelScope.launch {
+            snackbarMessage?.let {
+                _eventFlow.emit(UiEvent.ShowSnackbar(snackbarMessage))
+            }
+        }
     }
 }

@@ -12,7 +12,6 @@ data class StoreState(
     val inputType: StoreType? = null,
     val query: String = "",
     val isQueryActive: Boolean = false,
-    val error: String? = null
 ) {
     val isNew: Boolean get() = selectedStore == null
 }

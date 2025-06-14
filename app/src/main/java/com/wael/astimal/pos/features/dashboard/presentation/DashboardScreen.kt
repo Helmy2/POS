@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,20 +38,30 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
+import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun DashboardRoute(
-    viewModel: DashboardViewModel = koinViewModel(), snackbarHostState: SnackbarHostState
+    viewModel: DashboardViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
 
-    LaunchedEffect(state.error) {
-        state.error?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
-            viewModel.onEvent(DashboardEvent.ClearError)
+    ObserveEffect(viewModel.eventFlow, viewModel.eventFlow) {
+        when (it) {
+            is UiEvent.ShowSnackbar -> {
+                SnackbarController.sendEvent(
+                    event = SnackbarEvent(
+                        message = context.getString(it.message)
+                    )
+                )
+            }
         }
     }
 
@@ -132,18 +141,15 @@ fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit
             }
             TimePeriodSelector(
                 selectedPeriod = state.selectedTimePeriod,
-                onPeriodSelected = { onEvent(DashboardEvent.SelectTimePeriod(it)) }
-            )
+                onPeriodSelected = { onEvent(DashboardEvent.SelectTimePeriod(it)) })
             Spacer(modifier = Modifier.height(16.dp))
             CartesianChartHost(
                 chart = rememberCartesianChart(
                     rememberColumnCartesianLayer(
                         ColumnCartesianLayer.ColumnProvider.series(
-                            vicoTheme.columnCartesianLayerColors.map { color ->
-                                rememberLineComponent(fill(MaterialTheme.colorScheme.primary))
-                            }
-                        )
-                    ),
+                        vicoTheme.columnCartesianLayerColors.map { color ->
+                            rememberLineComponent(fill(MaterialTheme.colorScheme.primary))
+                        })),
                     startAxis = VerticalAxis.rememberStart(),
                     bottomAxis = HorizontalAxis.rememberBottom(
                         valueFormatter = { _, value, _ ->

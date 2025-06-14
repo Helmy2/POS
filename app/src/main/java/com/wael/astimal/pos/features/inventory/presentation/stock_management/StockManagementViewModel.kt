@@ -3,14 +3,17 @@ package com.wael.astimal.pos.features.inventory.presentation.stock_management
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -30,6 +33,9 @@ class StockManagementViewModel(
 
     private var stockJob: Job? = null
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
     init {
         loadInitialData()
     }
@@ -40,10 +46,12 @@ class StockManagementViewModel(
                 _state.update { it.copy(query = event.query) }
                 loadStocks()
             }
+
             is StockManagementEvent.FilterByStore -> {
                 _state.update { it.copy(selectedStore = event.store) }
                 loadStocks()
             }
+
             is StockManagementEvent.ShowAdjustmentDialog -> {
                 _state.update {
                     it.copy(
@@ -55,31 +63,34 @@ class StockManagementViewModel(
                     )
                 }
             }
+
             is StockManagementEvent.DismissAdjustmentDialog -> {
                 _state.update { it.copy(showAdjustmentDialog = false, adjustmentTarget = null) }
             }
+
             is StockManagementEvent.UpdateAdjustmentQuantity -> {
                 _state.update { it.copy(adjustmentQuantityChange = event.quantity) }
             }
+
             is StockManagementEvent.UpdateAdjustmentReason -> {
                 _state.update { it.copy(adjustmentReason = event.reason) }
             }
+
             is StockManagementEvent.UpdateAdjustmentNotes -> {
                 _state.update { it.copy(adjustmentNotes = event.notes) }
             }
+
             is StockManagementEvent.SaveStockAdjustment -> {
                 saveStockAdjustment()
             }
-            is StockManagementEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
-            is StockManagementEvent.ClearError -> _state.update { it.copy(error = null) }
         }
     }
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            storeRepository.getStores()
-                .catch { _state.update { it.copy(error = R.string.error_loading_stores) } }
-                .collect { stores ->
+            storeRepository.getStores().catch {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stores))
+                }.collect { stores ->
                     _state.update { it.copy(stores = stores) }
                 }
         }
@@ -89,21 +100,12 @@ class StockManagementViewModel(
     private fun loadStocks() {
         stockJob?.cancel()
         stockJob = stockRepository.getStoreStocks(
-            query = _state.value.query,
-            selectedStoreId = _state.value.selectedStore?.localId
-        )
-            .onEach { stocks ->
+            query = _state.value.query, selectedStoreId = _state.value.selectedStore?.localId
+        ).onEach { stocks ->
                 _state.update { it.copy(stocks = stocks, loading = false) }
-            }
-            .catch {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        error = R.string.error_loading_stock
-                    )
-                }
-            }
-            .launchIn(viewModelScope)
+            }.catch {
+            _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stock))
+            }.launchIn(viewModelScope)
     }
 
     private fun saveStockAdjustment() {
@@ -113,12 +115,14 @@ class StockManagementViewModel(
             val quantityChange = _state.value.adjustmentQuantityChange.toDoubleOrNull()
 
             if (target == null || currentUser == null) {
-                _state.update { it.copy(error = R.string.error_missing_data, showAdjustmentDialog = false) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_missing_data))
+
+                _state.update { it.copy(showAdjustmentDialog = false) }
                 return@launch
             }
 
             if (quantityChange == null || quantityChange == 0.0) {
-                _state.update { it.copy(error = R.string.invalid_quantity) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_quantity))
                 return@launch
             }
 
@@ -137,19 +141,9 @@ class StockManagementViewModel(
 
             try {
                 stockRepository.addStockAdjustment(adjustment)
-                _state.update {
-                    it.copy(
-                        showAdjustmentDialog = false,
-                        snackbarMessage = R.string.stock_updated_successfully
-                    )
-                }
-            } catch (e: Exception) {
-                _state.update {
-                    it.copy(
-                        showAdjustmentDialog = false,
-                        error = R.string.error_updating_stock
-                    )
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.stock_updated_successfully))
+            } catch (_: Exception) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_updating_stock))
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.management.presentation.sales_return
 
-import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
@@ -19,8 +18,6 @@ data class SalesReturnState(
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
     val query: String = "",
-    @StringRes val error: Int? = null,
-    @StringRes val snackbarMessage: Int? = null,
     val isQueryActive: Boolean = false,
 ) {
     val isNew: Boolean get() = selectedReturn == null
@@ -50,7 +47,5 @@ sealed interface SalesReturnEvent {
     data class UpdateItemMaxUnitPrice(val tempEditorId: String, val price: String) : SalesReturnEvent
     data class UpdateItemMinUnitPrice(val tempEditorId: String, val price: String) : SalesReturnEvent
     data object SaveReturn : SalesReturnEvent
-    data object ClearSnackbar : SalesReturnEvent
-    data object ClearError : SalesReturnEvent
     data object OpenNewReturnForm : SalesReturnEvent
 }

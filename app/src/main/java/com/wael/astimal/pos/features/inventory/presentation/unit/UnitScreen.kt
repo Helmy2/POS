@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,9 +16,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
+import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -33,6 +35,7 @@ fun UnitRoute(
         state = state, onEvent = viewModel::handleEvent,
         onBack = onBack,
         modifier,
+        eventFlow = viewModel.eventFlow,
     )
 }
 
@@ -43,9 +46,11 @@ fun UnitScreen(
     onEvent: (UnitEvent) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    eventFlow: SharedFlow<UiEvent>,
 ) {
     val language = LocalAppLocale.current
     SearchScreen(
+        eventFlow = eventFlow,
         modifier = modifier,
         query = state.query,
         isSearchActive = state.isQueryActive,
@@ -67,7 +72,7 @@ fun UnitScreen(
                     onEvent(UnitEvent.UpdateIsQueryActive(false))
                     onEvent(UnitEvent.Select(it))
                 },
-                label = { Text(it.localizedName.displayName(language)) },
+                label = { Label(it.localizedName.displayName(language)) },
                 isSelected = { it.localId == state.selectedProductUnit?.localId },
             )
         },

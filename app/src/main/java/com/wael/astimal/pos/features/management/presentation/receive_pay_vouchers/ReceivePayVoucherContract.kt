@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers
 
-import androidx.annotation.StringRes
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
@@ -18,10 +17,6 @@ data class ReceivePayVoucherState(
     val amount: String = "",
     val notes: String = "",
     val date: Long = System.currentTimeMillis(),
-
-
-    @StringRes val error: Int? = null,
-    @StringRes val snackbarMessage: Int? = null
 )
 
 sealed interface ReceivePayVoucherEvent {
@@ -32,6 +27,4 @@ sealed interface ReceivePayVoucherEvent {
     data class UpdateNotes(val notes: String) : ReceivePayVoucherEvent
     data class UpdateDate(val date: Long) : ReceivePayVoucherEvent
     data object SaveVoucher : ReceivePayVoucherEvent
-    data object ClearSnackbar : ReceivePayVoucherEvent
-    data object ClearError : ReceivePayVoucherEvent
 }

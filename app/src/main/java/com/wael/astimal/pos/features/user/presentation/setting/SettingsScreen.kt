@@ -19,7 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,12 +28,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.features.user.presentation.components.ClickableText
 import com.wael.astimal.pos.features.user.presentation.components.LabeledRow
 import com.wael.astimal.pos.features.user.presentation.components.LanguageSettingRow
 import com.wael.astimal.pos.features.user.presentation.components.ThemeSettingsRow
 import com.wael.astimal.pos.features.user.presentation.components.UpdateNameDialog
-import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -44,13 +43,11 @@ fun SettingsRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collectLatest { effect ->
-            when (effect) {
-                SettingsEffect.NavigateToLogin -> {
-                    navController.navigate(Destination.Auth) {
-                        popUpTo(0)
-                    }
+    ObserveEffect(viewModel.effect, viewModel.effect) {
+        when (it) {
+            SettingsEffect.NavigateToLogin -> {
+                navController.navigate(Destination.Auth) {
+                    popUpTo(0)
                 }
             }
         }

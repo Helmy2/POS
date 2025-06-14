@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.management.presentation.sales_return
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
@@ -20,8 +21,10 @@ import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -43,6 +46,9 @@ class SalesReturnViewModel(
     val state: StateFlow<SalesReturnState> = _state.asStateFlow()
     private var searchJob: Job? = null
     private val stockObservationJobs = mutableMapOf<String, Job>()
+
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -89,6 +95,7 @@ class SalesReturnViewModel(
             is SalesReturnEvent.UpdatePaymentType -> updateReturnInput {
                 it.copy(paymentType = event.type ?: PaymentType.CASH)
             }
+
             is SalesReturnEvent.UpdateAmountPaid -> updateReturnInput { it.copy(amountPaid = event.amount) }
             is SalesReturnEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableItem()) }
             is SalesReturnEvent.RemoveItemFromReturn -> {
@@ -96,6 +103,7 @@ class SalesReturnViewModel(
                 stockObservationJobs.remove(event.tempEditorId)
                 updateReturnInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             }
+
             is SalesReturnEvent.UpdateItemProduct -> {
                 updateReturnItem(event.tempEditorId) {
                     val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
@@ -111,45 +119,53 @@ class SalesReturnViewModel(
                     observeStockForItem(event.tempEditorId, it.localId)
                 }
             }
+
             is SalesReturnEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
                 it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
             }
+
             is SalesReturnEvent.SaveReturn -> saveReturn()
-            is SalesReturnEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is SalesReturnEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
             is SalesReturnEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
             is SalesReturnEvent.DeleteReturn -> deleteReturn()
             SalesReturnEvent.OpenNewReturnForm -> clearState()
-            SalesReturnEvent.ClearError -> _state.update { it.copy(error = null) }
             is SalesReturnEvent.UpdateReturnDate -> updateReturnInput {
                 it.copy(date = event.date ?: System.currentTimeMillis())
             }
+
             is SalesReturnEvent.UpdateItemMaxUnitPrice -> updateReturnItem(event.tempEditorId) {
                 val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     maxUnitPrice = event.price,
-                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
+                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString()
+                        ?: "0.0"
                 )
             }
+
             is SalesReturnEvent.UpdateItemMinUnitPrice -> updateReturnItem(event.tempEditorId) {
                 val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     minUnitPrice = event.price,
-                    maxUnitPrice = (event.price.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
+                    maxUnitPrice = (event.price.toDoubleOrNull()
+                        ?.times(conversionFactor))?.toString() ?: "0.0"
                 )
             }
+
             is SalesReturnEvent.UpdateItemMaxUnitQuantity -> updateReturnItem(event.tempEditorId) {
                 val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     maxUnitQuantity = event.quantity,
-                    minUnitQuantity = (event.quantity.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
+                    minUnitQuantity = (event.quantity.toDoubleOrNull()
+                        ?.times(conversionFactor))?.toString() ?: "0.0"
                 )
             }
+
             is SalesReturnEvent.UpdateItemMinUnitQuantity -> updateReturnItem(event.tempEditorId) {
                 val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     minUnitQuantity = event.quantity,
-                    maxUnitQuantity = (event.quantity.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
+                    maxUnitQuantity = (event.quantity.toDoubleOrNull()
+                        ?.div(conversionFactor))?.toString() ?: "0.0"
                 )
             }
         }
@@ -160,11 +176,10 @@ class SalesReturnViewModel(
         viewModelScope.launch {
             val employeeId = _state.value.currentUser?.id ?: return@launch
             val storeId = employeeDao.getStoreIdForEmployee(employeeId) ?: return@launch
-            stockObservationJobs[tempId] = stockRepository.getStockQuantityFlow(storeId, productId)
-                .onEach { stock ->
+            stockObservationJobs[tempId] =
+                stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
                     updateReturnItem(tempId) { it.copy(currentStock = stock) }
-                }
-                .launchIn(viewModelScope)
+                }.launchIn(viewModelScope)
         }
     }
 
@@ -174,9 +189,7 @@ class SalesReturnViewModel(
                 .fold(onSuccess = {
                     clearState(snackbarMessage = R.string.return_deleted)
                 }, onFailure = {
-                    _state.update {
-                        it.copy(error = R.string.error_deleting_return)
-                    }
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_return))
                 })
         }
     }
@@ -230,12 +243,10 @@ class SalesReturnViewModel(
     private fun searchReturns(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null, query = query) }
+            _state.update { it.copy(loading = true, query = query) }
             delay(300)
             salesReturnRepository.getReturns(query).catch {
-                _state.update {
-                    it.copy(loading = false, error = R.string.error_searching_orders)
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_searching_orders))
             }.collect { returns -> _state.update { it.copy(loading = false, returns = returns) } }
         }
     }
@@ -246,11 +257,11 @@ class SalesReturnViewModel(
             val selectedClient = _state.value.selectedClient
             val loggedInEmployeeId = _state.value.currentUser?.id
             if (loggedInEmployeeId == null) {
-                _state.update { it.copy(error = R.string.user_not_identified) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
                 return@launch
             }
             if (selectedClient == null || returnInput.items.isEmpty()) {
-                _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.client_and_at_least_one_item_are_required))
                 return@launch
             }
 
@@ -268,7 +279,7 @@ class SalesReturnViewModel(
             }
 
             if (itemEntities.size != returnInput.items.size) {
-                _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
                 return@launch
             }
 
@@ -287,15 +298,14 @@ class SalesReturnViewModel(
             )
 
             _state.update { it.copy(loading = true) }
-            val result = if (_state.value.isNew) salesReturnRepository.addReturn(returnEntity, itemEntities)
-            else salesReturnRepository.updateReturn(returnEntity, itemEntities)
+            val result =
+                if (_state.value.isNew) salesReturnRepository.addReturn(returnEntity, itemEntities)
+                else salesReturnRepository.updateReturn(returnEntity, itemEntities)
 
             result.fold(onSuccess = {
                 clearState(snackbarMessage = R.string.return_saved)
             }, onFailure = {
-                _state.update {
-                    it.copy(loading = false, error = R.string.something_went_wrong)
-                }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.something_went_wrong))
             })
         }
     }
@@ -307,9 +317,13 @@ class SalesReturnViewModel(
                 selectedClient = null,
                 currentReturnInput = EditableItemList(),
                 isQueryActive = false,
-                snackbarMessage = snackbarMessage,
             )
         }
         updateCurrentUser(state.value.currentUser)
+        viewModelScope.launch {
+            snackbarMessage?.let {
+                _eventFlow.emit(UiEvent.ShowSnackbar(snackbarMessage))
+            }
+        }
     }
 }

@@ -23,8 +23,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.Client
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -37,6 +39,7 @@ fun ClientInfoRoute(
         state = state,
         onEvent = viewModel::onEvent,
         onBack = onBack,
+        eventFlow = viewModel.eventFlow,
     )
 }
 
@@ -45,9 +48,11 @@ fun ClientInfoScreen(
     state: ClientInfoState,
     onEvent: (ClientInfoEvent) -> Unit,
     onBack: () -> Unit,
+    eventFlow: SharedFlow<UiEvent>,
 ) {
 
     SearchScreen(
+        eventFlow = eventFlow,
         query = state.query,
         loading = state.loading,
         onBack = onBack,
