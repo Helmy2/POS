@@ -202,4 +202,6 @@
     <string name="min_price">Min unit price</string>
     <string name="error_searching_purchases">Error searching purchases</string>
     <string name="ok">OK</string>
+    <string name="not_enough_stock">Not enough stock</string>
+    <string name="in_stock">In stock</string>
 </resources>

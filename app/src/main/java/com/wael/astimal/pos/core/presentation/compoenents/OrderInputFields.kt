@@ -131,6 +131,8 @@ private fun OrderItemRow(
             }
         }
 
+        Text(text = "${stringResource(R.string.in_stock)}: ${item.currentStock}", style = MaterialTheme.typography.bodySmall)
+
         AnimatedVisibility(item.product?.minimumProductUnit != null) {
             Column {
                 CustomExposedDropdownMenu(

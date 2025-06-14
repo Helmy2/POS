@@ -11,6 +11,7 @@ data class EditableItem(
     val maxUnitQuantity: String = "",
     val minUnitPrice: String = "0",
     val maxUnitPrice: String = "0",
+    val currentStock: Double = 0.0
 ) {
     val lineTotal: Double
         get() {

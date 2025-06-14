@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
@@ -12,6 +13,7 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
+import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -22,6 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,13 +33,16 @@ class SalesReturnViewModel(
     private val salesReturnRepository: SalesReturnRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
+    private val employeeDao: EmployeeDao,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SalesReturnState())
     val state: StateFlow<SalesReturnState> = _state.asStateFlow()
     private var searchJob: Job? = null
+    private val stockObservationJobs = mutableMapOf<String, Job>()
 
     init {
         viewModelScope.launch {
@@ -84,16 +91,25 @@ class SalesReturnViewModel(
             }
             is SalesReturnEvent.UpdateAmountPaid -> updateReturnInput { it.copy(amountPaid = event.amount) }
             is SalesReturnEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableItem()) }
-            is SalesReturnEvent.RemoveItemFromReturn -> updateReturnInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
-            is SalesReturnEvent.UpdateItemProduct -> updateReturnItem(event.tempEditorId) {
-                val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    product = event.product,
-                    minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
-                    maxUnitPrice = event.product?.sellingPrice.toString(),
-                    minUnitQuantity = conversionFactor.toString(),
-                    maxUnitQuantity = "1.0",
-                )
+            is SalesReturnEvent.RemoveItemFromReturn -> {
+                stockObservationJobs[event.tempEditorId]?.cancel()
+                stockObservationJobs.remove(event.tempEditorId)
+                updateReturnInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
+            }
+            is SalesReturnEvent.UpdateItemProduct -> {
+                updateReturnItem(event.tempEditorId) {
+                    val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
+                    it.copy(
+                        product = event.product,
+                        minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
+                        maxUnitPrice = event.product?.sellingPrice.toString(),
+                        minUnitQuantity = conversionFactor.toString(),
+                        maxUnitQuantity = "1.0",
+                    )
+                }
+                event.product?.let {
+                    observeStockForItem(event.tempEditorId, it.localId)
+                }
             }
             is SalesReturnEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
                 it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
@@ -139,6 +155,19 @@ class SalesReturnViewModel(
         }
     }
 
+    private fun observeStockForItem(tempId: String, productId: Long) {
+        stockObservationJobs[tempId]?.cancel()
+        viewModelScope.launch {
+            val employeeId = _state.value.currentUser?.id ?: return@launch
+            val storeId = employeeDao.getStoreIdForEmployee(employeeId) ?: return@launch
+            stockObservationJobs[tempId] = stockRepository.getStockQuantityFlow(storeId, productId)
+                .onEach { stock ->
+                    updateReturnItem(tempId) { it.copy(currentStock = stock) }
+                }
+                .launchIn(viewModelScope)
+        }
+    }
+
     private fun deleteReturn() {
         viewModelScope.launch {
             salesReturnRepository.deleteReturn(_state.value.selectedReturn?.localId ?: 0L)
@@ -153,6 +182,9 @@ class SalesReturnViewModel(
     }
 
     private fun updateSelectedReturn(salesReturn: SalesReturn?) {
+        stockObservationJobs.values.forEach { it.cancel() }
+        stockObservationJobs.clear()
+
         _state.update {
             it.copy(
                 isQueryActive = false,
@@ -209,51 +241,51 @@ class SalesReturnViewModel(
     }
 
     private fun saveReturn() {
-        val returnInput = _state.value.currentReturnInput
-        val selectedClient = _state.value.selectedClient
-        val loggedInEmployeeId = _state.value.currentUser?.id
-        if (loggedInEmployeeId == null) {
-            _state.update { it.copy(error = R.string.user_not_identified) }
-            return
-        }
-        if (selectedClient == null || returnInput.items.isEmpty()) {
-            _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
-            return
-        }
-
-        val itemEntities = returnInput.items.mapNotNull {
-            val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
-            if (it.product == null || quantity <= 0) return@mapNotNull null
-            OrderProductEntity(
-                productLocalId = it.product.localId,
-                quantity = quantity,
-                unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
-                itemTotalPrice = it.lineTotal,
-                serverId = null,
-                orderLocalId = 0L // This will be set correctly by Room
-            )
-        }
-
-        if (itemEntities.size != returnInput.items.size) {
-            _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
-            return
-        }
-
-        val returnEntity = OrderReturnEntity(
-            localId = _state.value.selectedReturn?.localId ?: 0L,
-            serverId = null,
-            invoiceNumber = null,
-            clientLocalId = selectedClient.id,
-            employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
-            previousDebt = selectedClient.debt,
-            amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
-            amountRemaining = returnInput.amountRemaining,
-            totalAmount = returnInput.totalAmount,
-            paymentType = returnInput.paymentType,
-            returnDate = returnInput.date,
-        )
-
         viewModelScope.launch {
+            val returnInput = _state.value.currentReturnInput
+            val selectedClient = _state.value.selectedClient
+            val loggedInEmployeeId = _state.value.currentUser?.id
+            if (loggedInEmployeeId == null) {
+                _state.update { it.copy(error = R.string.user_not_identified) }
+                return@launch
+            }
+            if (selectedClient == null || returnInput.items.isEmpty()) {
+                _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
+                return@launch
+            }
+
+            val itemEntities = returnInput.items.mapNotNull {
+                val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
+                if (it.product == null || quantity <= 0) return@mapNotNull null
+                OrderProductEntity(
+                    productLocalId = it.product.localId,
+                    quantity = quantity,
+                    unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
+                    itemTotalPrice = it.lineTotal,
+                    serverId = null,
+                    orderLocalId = 0L
+                )
+            }
+
+            if (itemEntities.size != returnInput.items.size) {
+                _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
+                return@launch
+            }
+
+            val returnEntity = OrderReturnEntity(
+                localId = _state.value.selectedReturn?.localId ?: 0L,
+                serverId = null,
+                invoiceNumber = null,
+                clientLocalId = selectedClient.id,
+                employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
+                previousDebt = selectedClient.debt,
+                amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
+                amountRemaining = returnInput.amountRemaining,
+                totalAmount = returnInput.totalAmount,
+                paymentType = returnInput.paymentType,
+                returnDate = returnInput.date
+            )
+
             _state.update { it.copy(loading = true) }
             val result = if (_state.value.isNew) salesReturnRepository.addReturn(returnEntity, itemEntities)
             else salesReturnRepository.updateReturn(returnEntity, itemEntities)

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
@@ -12,6 +13,7 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
+import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -22,6 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,13 +33,16 @@ class SalesViewModel(
     private val orderRepository: SalesOrderRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
+    private val employeeDao: EmployeeDao,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OrderState())
     val state: StateFlow<OrderState> = _state.asStateFlow()
     private var searchJob: Job? = null
+    private val stockObservationJobs = mutableMapOf<String, Job>()
 
     init {
         viewModelScope.launch {
@@ -82,26 +89,31 @@ class SalesViewModel(
             is OrderEvent.UpdatePaymentType -> updateOrderInput {
                 it.copy(paymentType = event.type ?: PaymentType.CASH)
             }
-
             is OrderEvent.UpdateAmountPaid -> updateOrderInput { it.copy(amountPaid = event.amount) }
             is OrderEvent.AddItemToOrder -> updateOrderInput { it.copy(items = it.items + EditableItem()) }
-            is OrderEvent.RemoveItemFromOrder -> updateOrderInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
-            is OrderEvent.UpdateItemProduct -> updateOrderItem(event.tempEditorId) {
-                it.copy(
-                    product = event.product,
-                    minUnitPrice = event.product?.sellingPrice?.div(
-                        event.product.subUnitsPerMainUnit
-                    ).toString(),
-                    maxUnitPrice = event.product?.sellingPrice.toString(),
-                    minUnitQuantity = event.product?.subUnitsPerMainUnit.toString(),
-                    maxUnitQuantity = "1.0",
-                )
+            is OrderEvent.RemoveItemFromOrder -> {
+                stockObservationJobs[event.tempEditorId]?.cancel()
+                stockObservationJobs.remove(event.tempEditorId)
+                updateOrderInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
             }
-
+            is OrderEvent.UpdateItemProduct -> {
+                updateOrderItem(event.tempEditorId) {
+                    val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
+                    it.copy(
+                        product = event.product,
+                        minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
+                        maxUnitPrice = event.product?.sellingPrice.toString(),
+                        minUnitQuantity = conversionFactor.toString(),
+                        maxUnitQuantity = "1.0",
+                    )
+                }
+                event.product?.let {
+                    observeStockForItem(event.tempEditorId, it.localId)
+                }
+            }
             is OrderEvent.UpdateItemUnit -> updateOrderItem(event.tempEditorId) {
                 it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
             }
-
             is OrderEvent.SaveOrder -> saveOrder()
             is OrderEvent.ClearSnackbar -> _state.update { it.copy(snackbarMessage = null) }
             is OrderEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
@@ -112,54 +124,62 @@ class SalesViewModel(
             is OrderEvent.UpdateTransferDate -> updateOrderInput {
                 it.copy(date = event.date ?: System.currentTimeMillis())
             }
-
             is OrderEvent.UpdateItemMaxUnitPrice -> updateOrderItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     maxUnitPrice = event.price,
-                    minUnitPrice = event.price.toDoubleOrNull()?.div(
-                        it.product?.subUnitsPerMainUnit ?: 1.0
-                    )?.toString() ?: "0.0"
+                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
                 )
             }
-
             is OrderEvent.UpdateItemMinUnitPrice -> updateOrderItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     minUnitPrice = event.price,
-                    maxUnitPrice = (event.price.toDoubleOrNull()?.times(
-                        it.product?.subUnitsPerMainUnit ?: 1.0
-                    ) ?: 0.0).toString()
+                    maxUnitPrice = (event.price.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
                 )
             }
-
             is OrderEvent.UpdateItemMaxUnitQuantity -> updateOrderItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     maxUnitQuantity = event.quantity,
-                    minUnitQuantity = (event.quantity.toDoubleOrNull()?.times(
-                        it.product?.subUnitsPerMainUnit ?: 1.0
-                    ) ?: 0.0).toString()
+                    minUnitQuantity = (event.quantity.toDoubleOrNull()?.times(conversionFactor))?.toString() ?: "0.0"
                 )
             }
-
             is OrderEvent.UpdateItemMinUnitQuantity -> updateOrderItem(event.tempEditorId) {
+                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
                 it.copy(
                     minUnitQuantity = event.quantity,
-                    maxUnitQuantity = (event.quantity.toDoubleOrNull()?.div(
-                        it.product?.subUnitsPerMainUnit ?: 1.0
-                    ) ?: 0.0).toString()
+                    maxUnitQuantity = (event.quantity.toDoubleOrNull()?.div(conversionFactor))?.toString() ?: "0.0"
                 )
             }
+        }
+    }
+
+    private fun observeStockForItem(tempId: String, productId: Long) {
+        stockObservationJobs[tempId]?.cancel()
+        viewModelScope.launch {
+            val employeeId = _state.value.currentUser?.id ?: return@launch
+            val storeId = employeeDao.getStoreIdForEmployee(employeeId) ?: return@launch
+            stockObservationJobs[tempId] = stockRepository.getStockQuantityFlow(storeId, productId)
+                .onEach { stock ->
+                    updateOrderItem(tempId) { it.copy(currentStock = stock) }
+                }
+                .launchIn(viewModelScope)
         }
     }
 
     private fun deleteOrder(id: Long) {
         viewModelScope.launch {
             orderRepository.deleteOrder(id).fold(onSuccess = {
-                clearState()
+                clearState(snackbarMessage = R.string.order_deleted)
             }, onFailure = { _state.update { it.copy(error = R.string.error_deleting_order) } })
         }
     }
 
     private fun updateSelectedOrder(order: SalesOrder?) {
+        stockObservationJobs.values.forEach { it.cancel() }
+        stockObservationJobs.clear()
+
         _state.update {
             it.copy(
                 isQueryActive = false,
@@ -172,18 +192,15 @@ class SalesViewModel(
                     paymentType = order.paymentType,
                     date = order.data,
                     items = order.items.map { item ->
+                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         EditableItem(
                             tempEditorId = item.localId.toString(),
                             product = item.product,
                             isSelectedUnitIsMax = true,
-                            minUnitPrice = item.unitSellingPrice.div(
-                                item.product?.subUnitsPerMainUnit ?: 1.0
-                            ).toString(),
-                            minUnitQuantity = item.quantity.div(
-                                item.product?.subUnitsPerMainUnit ?: 1.0
-                            ).toString(),
                             maxUnitPrice = item.unitSellingPrice.toString(),
+                            minUnitPrice = (item.unitSellingPrice / conversionFactor).toString(),
                             maxUnitQuantity = item.quantity.toString(),
+                            minUnitQuantity = (item.quantity * conversionFactor).toString(),
                         )
                     },
                     amountPaid = order.amountPaid.toString(),
@@ -219,60 +236,66 @@ class SalesViewModel(
     }
 
     private fun saveOrder() {
-        val orderInput = _state.value.currentOrderInput
-        val selectedClient = _state.value.selectedClient
-        val loggedInEmployeeId = _state.value.currentUser?.id
-        if (loggedInEmployeeId == null) {
-            _state.update { it.copy(error = R.string.user_not_identified) }
-            return
-        }
-        if (selectedClient == null || orderInput.items.isEmpty()) {
-            _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
-            return
-        }
-
-        val itemEntities = orderInput.items.mapNotNull {
-            val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
-            if (it.product == null || quantity <= 0) return@mapNotNull null
-            OrderProductEntity(
-                productLocalId = it.product.localId,
-                quantity = quantity,
-                unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
-                itemTotalPrice = it.lineTotal,
-                serverId = null,
-                orderLocalId = 0L
-            )
-        }
-
-        if (itemEntities.size != orderInput.items.size) {
-            _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
-            return
-        }
-
-        val orderEntity = OrderEntity(
-            clientLocalId = selectedClient.id,
-            employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
-            amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
-            amountRemaining = orderInput.amountRemaining,
-            totalAmount = orderInput.totalAmount,
-            paymentType = orderInput.paymentType,
-            orderDate = orderInput.date,
-            serverId = null,
-            localId = state.value.selectedOrder?.localId ?: 0L,
-            invoiceNumber = null,
-        )
-
         viewModelScope.launch {
+            val orderInput = _state.value.currentOrderInput
+            val selectedClient = _state.value.selectedClient
+            val loggedInEmployeeId = _state.value.currentUser?.id
+            if (loggedInEmployeeId == null) {
+                _state.update { it.copy(error = R.string.user_not_identified) }
+                return@launch
+            }
+            if (selectedClient == null || orderInput.items.isEmpty()) {
+                _state.update { it.copy(error = R.string.client_and_at_least_one_item_are_required) }
+                return@launch
+            }
+
+            val itemEntities = orderInput.items.mapNotNull {
+                val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
+                if (it.product == null || quantity <= 0) return@mapNotNull null
+
+                if (quantity > it.currentStock) {
+                    _state.update { state -> state.copy(error = R.string.not_enough_stock) }
+                    return@launch
+                }
+
+                OrderProductEntity(
+                    productLocalId = it.product.localId,
+                    quantity = quantity,
+                    unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
+                    itemTotalPrice = it.lineTotal,
+                    serverId = null,
+                    orderLocalId = 0L
+                )
+            }
+
+            if (itemEntities.size != orderInput.items.size) {
+                _state.update { it.copy(error = R.string.one_or_more_order_items_are_invalid) }
+                return@launch
+            }
+
+            val orderEntity = OrderEntity(
+                localId = _state.value.selectedOrder?.localId ?: 0L,
+                serverId = null,
+                invoiceNumber = null,
+                clientLocalId = selectedClient.id,
+                employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
+                amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
+                amountRemaining = orderInput.amountRemaining,
+                totalAmount = orderInput.totalAmount,
+                paymentType = orderInput.paymentType,
+                orderDate = orderInput.date
+            )
+
             _state.update { it.copy(loading = true) }
             val result = if (_state.value.isNew) orderRepository.addOrder(orderEntity, itemEntities)
             else orderRepository.updateOrder(orderEntity, itemEntities)
 
             result.fold(onSuccess = {
                 clearState(snackbarMessage = R.string.order_saved)
-            }, onFailure = {
+            }, onFailure = { e ->
                 _state.update {
                     it.copy(
-                        loading = false, error = R.string.something_went_wrong
+                        loading = false, error = R.string.something_went_wrong, snackbarMessage = e.message?.toIntOrNull()
                     )
                 }
             })

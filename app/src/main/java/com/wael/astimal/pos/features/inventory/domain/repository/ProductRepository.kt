@@ -11,5 +11,5 @@ interface ProductRepository {
     suspend fun getProductByServerId(serverId: Int): Product?
     suspend fun addProduct(productEntity: ProductEntity): Result<Unit>
     suspend fun updateProduct(productEntity: ProductEntity): Result<Product>
-    suspend fun deleteProduct(product: Product): Result<Unit>
+    suspend fun deleteProduct(productLocalId: Long): Result<Unit>
 }

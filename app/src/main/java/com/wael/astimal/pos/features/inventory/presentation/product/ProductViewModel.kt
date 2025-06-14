@@ -213,7 +213,7 @@ class ProductViewModel(
         val productToDelete = _state.value.selectedProduct ?: return
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
-            val result = productRepository.deleteProduct(productToDelete)
+            val result = productRepository.deleteProduct(productToDelete.localId)
             result.fold(onSuccess = {
                 _state.update {
                     it.copy(

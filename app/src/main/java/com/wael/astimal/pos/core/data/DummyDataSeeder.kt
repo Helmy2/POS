@@ -1,25 +1,23 @@
 package com.wael.astimal.pos.core.data
 
-import com.wael.astimal.pos.features.management.data.entity.ClientEntity
-import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
-import com.wael.astimal.pos.features.management.data.local.ClientDao
-import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
+import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.management.data.entity.ClientEntity
+import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
+import com.wael.astimal.pos.features.management.data.local.ClientDao
+import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.data.local.UserDao
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,9 +29,9 @@ class DummyDataSeeder(
     private val storeDao: StoreDao,
     private val unitDao: UnitDao,
     private val categoryDao: CategoryDao,
-    private val productDao: ProductDao,
-    private val stockTransferDao: StockTransferDao,
     private val employeeDao: EmployeeDao,
+    private val sessionManager: SessionManager,
+    private val productRep: ProductRepository,
     private val applicationScope: CoroutineScope
 ) {
 
@@ -58,28 +56,31 @@ class DummyDataSeeder(
         val stores = populateDummyStores()
 
         assignEmployeesToStores(employees, stores)
+        sessionManager.saveSession(
+            employees["emp1"]!!,
+            ""
+        )
 
         val units = populateDummyUnits()
         val categories = populateDummyCategories()
-        populateDummyClients(employees) // Now returns void
-        populateDummySuppliers(employees) // Now returns void
-        val products = populateDummyProducts(categories, units, stores)
-        populateDummyStockTransfers(stores, employees, products, units)
+        populateDummyClients(employees)
+        populateDummySuppliers(employees)
+        populateDummyProducts(categories, units, stores)
 
         println("Dummy data population complete.")
     }
 
-    private suspend fun assignEmployeesToStores(employees: Map<String, Long>, stores: Map<String, Long>) {
+    private suspend fun assignEmployeesToStores(
+        employees: Map<String, Long>, stores: Map<String, Long>
+    ) {
         employeeDao.assignStoreToEmployee(
             EmployeeStoreEntity(
-                employeeLocalId = employees["emp1"]!!,
-                storeLocalId = stores["storeA"]!!
+                employeeLocalId = employees["emp1"]!!, storeLocalId = stores["storeA"]!!
             )
         )
         employeeDao.assignStoreToEmployee(
             EmployeeStoreEntity(
-                employeeLocalId = employees["emp2"]!!,
-                storeLocalId = stores["storeB"]!!
+                employeeLocalId = employees["emp2"]!!, storeLocalId = stores["storeB"]!!
             )
         )
     }
@@ -260,6 +261,7 @@ class DummyDataSeeder(
         categories: Map<String, Long>, units: Map<String, Long>, stores: Map<String, Long>
     ): Map<String, Long> {
         val product1 = ProductEntity(
+            localId = 1,
             serverId = -1,
             arName = "عدسات ديزيو الشهرية",
             enName = "Desio Monthly Lenses",
@@ -273,9 +275,10 @@ class DummyDataSeeder(
             maximumUnitId = units["box"],
             subUnitsPerMainUnit = 1.0,
         )
-        val prod1Id = productDao.insertOrUpdate(product1)
+        productRep.addProduct(product1)
 
         val product2 = ProductEntity(
+            localId = 2,
             serverId = -2,
             arName = "محلول أوبتي-فري",
             enName = "Opti-Free Solution",
@@ -289,9 +292,10 @@ class DummyDataSeeder(
             maximumUnitId = units["piece"],
             subUnitsPerMainUnit = 1.0,
         )
-        val prod2Id = productDao.insertOrUpdate(product2)
+        productRep.addProduct(product2)
 
         val product3 = ProductEntity(
+            localId = 3,
             serverId = -3,
             arName = "حافظة عدسات",
             enName = "Lens Case",
@@ -305,69 +309,7 @@ class DummyDataSeeder(
             maximumUnitId = units["dozen"],
             subUnitsPerMainUnit = 12.0,
         )
-        val prod3Id = productDao.insertOrUpdate(product3)
-        return mapOf("desio" to prod1Id, "optiFree" to prod2Id, "lensCase" to prod3Id)
-    }
-
-    private suspend fun populateDummyStockTransfers(
-        stores: Map<String, Long>,
-        employees: Map<String, Long>,
-        products: Map<String, Long>,
-        units: Map<String, Long>
-    ) {
-        val transfer1 = StockTransferEntity(
-            serverId = -1,
-            fromStoreId = stores["main"],
-            toStoreId = stores["storeA"],
-            initiatedByUserId = employees["admin"],
-            transferDate = System.currentTimeMillis() - 86400000 // 1 day ago
-        )
-        val transfer1LocalId = stockTransferDao.insertStockTransfer(transfer1)
-        stockTransferDao.insertStockTransferItems(
-            listOf(
-                StockTransferItemEntity(
-                    stockTransferLocalId = transfer1LocalId,
-                    productLocalId = products["desio"]!!,
-                    unitLocalId = units["box"]!!,
-                    quantity = 10.0,
-                    maximumOpeningBalance = null,
-                    minimumOpeningBalance = null,
-                    localId = -1,
-                    serverId = null
-                ), StockTransferItemEntity(
-                    stockTransferLocalId = transfer1LocalId,
-                    productLocalId = products["optiFree"]!!,
-                    unitLocalId = units["piece"]!!,
-                    quantity = 20.0,
-                    maximumOpeningBalance = null,
-                    minimumOpeningBalance = null,
-                    localId = -2,
-                    serverId = null
-                )
-            )
-        )
-
-        val transfer2 = StockTransferEntity(
-            serverId = -2,
-            fromStoreId = stores["main"],
-            toStoreId = stores["storeB"],
-            initiatedByUserId = employees["emp1"],
-            transferDate = System.currentTimeMillis()
-        )
-        val transfer2LocalId = stockTransferDao.insertStockTransfer(transfer2)
-        stockTransferDao.insertStockTransferItems(
-            listOf(
-                StockTransferItemEntity(
-                    stockTransferLocalId = transfer2LocalId,
-                    productLocalId = products["lensCase"]!!,
-                    unitLocalId = units["dozen"]!!,
-                    quantity = 5.0,
-                    maximumOpeningBalance = null,
-                    minimumOpeningBalance = null,
-                    localId = -3,
-                    serverId = null
-                )
-            )
-        )
+        productRep.addProduct(product3)
+        return mapOf("desio" to 1, "optiFree" to 2, "lensCase" to 3)
     }
 }

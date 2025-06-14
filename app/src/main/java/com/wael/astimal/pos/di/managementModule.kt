@@ -49,21 +49,21 @@ val managementModule = module {
     single<SupplierRepository> { SupplierRepositoryImpl(get()) }
     single<PurchaseRepository> { PurchaseRepositoryImpl(get(), get(), get(), get(), get()) }
     single<PurchaseReturnRepository> {
-        PurchaseReturnRepositoryImpl(
-            get(), get(), get(), get(), get()
-        )
+        PurchaseReturnRepositoryImpl(get(), get(), get(), get(), get())
     }
     single<EmployeeAccountRepository> { EmployeeAccountRepositoryImpl(get(), get()) }
-    single<ReceivePayVoucherRepository> { ReceivePayVoucherRepositoryImpl(get(),get(),get(),get()) }
+    single<ReceivePayVoucherRepository> {
+        ReceivePayVoucherRepositoryImpl(get(), get(), get(), get())
+    }
 
     viewModel { ManagementViewModel() }
 
     viewModel { ClientInfoViewModel(get()) }
-    viewModel { SalesReturnViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SalesViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SalesReturnViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SalesViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SupplierViewModel(get()) }
-    viewModel { PurchaseViewModel(get(), get(), get(), get(), get()) }
-    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get()) }
+    viewModel { PurchaseViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { EmployeeAccountViewModel(get(), get()) }
     viewModel { ReceivePayVoucherViewModel(get(), get(), get(), get()) }
 

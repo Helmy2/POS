@@ -39,16 +39,16 @@ val coreModule = module {
 
     single {
         DummyDataSeeder(
-            userDao = get(),
-            clientDao = get(),
-            storeDao = get(),
-            unitDao = get(),
-            categoryDao = get(),
-            productDao = get(),
-            stockTransferDao = get(),
-            supplierDao = get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
             applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-            employeeDao = get()
         )
     }
 }

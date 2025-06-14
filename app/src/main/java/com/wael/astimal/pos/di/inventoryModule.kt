@@ -36,9 +36,9 @@ val inventoryModule = module {
     single<UnitRepository> { UnitRepositoryImpl(get()) }
     single<StoreRepository> { StoreRepositoryImpl(get()) }
     single<CategoryRepository> { CategoryRepositoryImpl(get()) }
-    single<ProductRepository> { ProductRepositoryImpl(get()) }
+    single<ProductRepository> { ProductRepositoryImpl(get(),get(),get(),get()) }
     single<StockTransferRepository> { StockTransferRepositoryImpl(get(), get(), get()) }
-    single<StockRepository> { StockRepositoryImpl(get(), get(),get()) }
+    single<StockRepository> { StockRepositoryImpl(get(), get(),get(),get()) }
 
     viewModel { InventoryViewModel() }
     viewModel { UnitViewModel(get()) }
