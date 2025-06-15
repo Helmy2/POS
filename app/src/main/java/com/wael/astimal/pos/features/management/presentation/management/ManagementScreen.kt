@@ -14,11 +14,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
+import com.wael.astimal.pos.features.management.presentation.account_statement.AccountStatementRoute
 import com.wael.astimal.pos.features.management.presentation.business_partner.BusinessPartnerRoute
 import com.wael.astimal.pos.features.management.presentation.employee_account.EmployeeAccountRoute
 import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseRoute
@@ -88,6 +90,7 @@ fun ManagementScreen(
                                 ManagementDestination.EmployeeAccount -> context.getString(R.string.employee_account)
                                 ManagementDestination.ReceivePayVoucher -> context.getString(R.string.receive_pay_voucher)
                                 ManagementDestination.BusinessPartner -> context.getString(R.string.business_partner)
+                                ManagementDestination.AccountStatement -> stringResource(R.string.accountstatement)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -141,6 +144,12 @@ fun ManagementScreen(
 
                     ManagementDestination.BusinessPartner -> {
                         BusinessPartnerRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                        )
+                    }
+
+                    ManagementDestination.AccountStatement -> {
+                        AccountStatementRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                         )
                     }

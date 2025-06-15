@@ -36,10 +36,10 @@ class ReceivePayVoucherRepositoryImpl(
                     amount = voucher.amount,
                     clientLocalId = if (voucher.party is Client) voucher.party.id else null,
                     supplierLocalId = if (voucher.party is Supplier) voucher.party.id else null,
-                    partyType = voucher.partyType,
                     date = voucher.date,
                     notes = voucher.notes,
-                    createdByUserId = voucher.createdBy.id
+                    employeeLocalId = voucher.createdBy.id,
+                    isReceipt = voucher.partyType == VoucherPartyType.CLIENT
                 )
                 voucherDao.insertVoucher(voucherEntity)
 

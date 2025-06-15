@@ -245,4 +245,14 @@
     <string name="error_deleting_partner">Error deleting partner</string>
     <string name="confirm_delete">Confirm Delete</string>
     <string name="confirm_delete_partner_message">Are you sure you want to delete %s? This action cannot be undone.</string>
+
+    <string name="account_statement">Account Statement</string>
+    <string name="error_loading_partner_details">Error: Could not load partner details.</string>
+    <string name="description">Description</string>
+    <string name="debit">Debit</string>
+    <string name="credit">Credit</string>
+    <string name="balance">Balance</string>
+    <string name="date">Date</string>
+    <string name="back_to_list">Back to list</string>
+    <string name="accountstatement">AccountStatement</string>
 </resources>

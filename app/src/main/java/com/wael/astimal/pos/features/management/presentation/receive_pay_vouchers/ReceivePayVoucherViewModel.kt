@@ -105,7 +105,7 @@ class ReceivePayVoucherViewModel(
                 date = currentState.date,
                 notes = currentState.notes.takeIf { it.isNotBlank() },
                 createdBy = currentUser,
-                isSynced = false
+                isSynced = false,
             )
 
             voucherRepository.addVoucher(voucher).fold(

@@ -9,7 +9,7 @@ data class ManagementState(
 )
 
 enum class ManagementDestination {
-    BusinessPartner, SalesOrder, OrderReturn, PurchaseOrder, PurchaseReturn, EmployeeAccount, ReceivePayVoucher;
+    BusinessPartner, SalesOrder, OrderReturn, PurchaseOrder, PurchaseReturn, EmployeeAccount, ReceivePayVoucher,AccountStatement;
 
     companion object {
         fun getAll(): List<ManagementDestination> = listOf(
@@ -20,6 +20,7 @@ enum class ManagementDestination {
             PurchaseReturn,
             EmployeeAccount,
             ReceivePayVoucher,
+            AccountStatement
         )
     }
 }

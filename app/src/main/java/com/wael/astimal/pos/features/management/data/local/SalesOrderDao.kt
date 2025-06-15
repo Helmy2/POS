@@ -47,6 +47,10 @@ interface SalesOrderDao {
     @Query("SELECT * FROM orders WHERE NOT isDeletedLocally ORDER BY orderDate DESC")
     fun getAllOrdersWithDetailsFlow(): Flow<List<OrderWithDetailsEntity>>
 
+    @Transaction
+    @Query("SELECT * FROM orders WHERE clientLocalId = :clientId AND NOT isDeletedLocally ORDER BY orderDate DESC")
+    fun getSalesOrdersByClientId(clientId: Long): Flow<List<OrderWithDetailsEntity>>
+
     @Query("SELECT * FROM order_products WHERE orderLocalId = :orderLocalId")
     suspend fun getItemsForOrder(orderLocalId: Long): List<OrderProductEntity>
 

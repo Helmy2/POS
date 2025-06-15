@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
@@ -24,15 +25,19 @@ interface PurchaseDao {
     @Query("DELETE FROM purchase_products WHERE purchaseLocalId = :purchaseId")
     suspend fun deleteItemsForPurchase(purchaseId: Long)
 
-    @androidx.room.Transaction
+    @Transaction
     @Query("SELECT * FROM purchases WHERE NOT isDeletedLocally ORDER BY purchaseDate DESC")
     fun getAllPurchasesWithDetailsFlow(): Flow<List<PurchaseWithDetailsEntity>>
 
-    @androidx.room.Transaction
+    @Transaction
+    @Query("SELECT * FROM purchases WHERE supplierLocalId = :supplierId AND NOT isDeletedLocally ORDER BY purchaseDate DESC")
+    fun getPurchasesBySupplierId(supplierId: Long): Flow<List<PurchaseWithDetailsEntity>>
+
+    @Transaction
     @Query("SELECT * FROM purchases WHERE localId = :localId")
     suspend fun getPurchaseWithDetails(localId: Long): PurchaseWithDetailsEntity?
 
-    @androidx.room.Transaction
+    @Transaction
     suspend fun insertPurchaseWithItems(purchase: PurchaseEntity, items: List<PurchaseProductEntity>): Long {
         val purchaseId = insertOrUpdatePurchase(purchase)
         val itemsWithId = items.map { it.copy(purchaseLocalId = purchaseId) }
@@ -42,7 +47,7 @@ interface PurchaseDao {
         return purchaseId
     }
 
-    @androidx.room.Transaction
+    @Transaction
     suspend fun updatePurchaseWithItems(purchase: PurchaseEntity, items: List<PurchaseProductEntity>) {
         updatePurchase(purchase)
         deleteItemsForPurchase(purchase.localId)

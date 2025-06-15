@@ -4,10 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnWithDetailsEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnWithDetailsEntity
@@ -30,11 +28,11 @@ interface PurchaseReturnDao {
     @Query("SELECT * FROM purchase_returns WHERE localId = :localId")
     suspend fun getPurchaseReturnEntityByLocalId(localId: Long): PurchaseReturnEntity?
 
-    @androidx.room.Transaction
+    @Transaction
     @Query("SELECT * FROM purchase_returns WHERE localId = :localId")
     suspend fun getPurchaseReturnWithDetails(localId: Long): PurchaseReturnWithDetailsEntity?
 
-    @androidx.room.Transaction
+    @Transaction
     suspend fun insertPurchaseReturnWithItems(purchaseReturn: PurchaseReturnEntity, items: List<PurchaseReturnProductEntity>): Long {
         val returnId = insertOrUpdatePurchaseReturn(purchaseReturn)
         val itemsWithId = items.map { it.copy(purchaseReturnLocalId = returnId) }
@@ -44,7 +42,7 @@ interface PurchaseReturnDao {
         return returnId
     }
 
-    @androidx.room.Transaction
+    @Transaction
     suspend fun updatePurchaseReturnWithItems(purchaseReturn: PurchaseReturnEntity, items: List<PurchaseReturnProductEntity>) {
         updatePurchaseReturn(purchaseReturn)
         deleteItemsForPurchaseReturn(purchaseReturn.localId)
@@ -54,7 +52,11 @@ interface PurchaseReturnDao {
         }
     }
 
-    @androidx.room.Transaction
+    @Transaction
     @Query("SELECT * FROM purchase_returns WHERE NOT isDeletedLocally ORDER BY returnDate DESC")
     fun getAllPurchaseReturnsWithDetailsFlow(): Flow<List<PurchaseReturnWithDetailsEntity>>
+
+    @Transaction
+    @Query("SELECT * FROM purchase_returns WHERE supplierLocalId = :supplierId AND NOT isDeletedLocally")
+    fun getReturnsBySupplierId(supplierId: Long): Flow<List<PurchaseReturnWithDetailsEntity>>
 }

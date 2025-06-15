@@ -50,6 +50,11 @@ interface OrderReturnDao {
     @Query("SELECT * FROM order_returns WHERE NOT isDeletedLocally ORDER BY returnDate DESC")
     fun getAllReturnsWithDetailsFlow(): Flow<List<OrderReturnWithDetailsEntity>>
 
+    @Transaction
+    @Query("SELECT * FROM order_returns WHERE clientLocalId = :clientId AND NOT isDeletedLocally")
+    fun getReturnsByClientId(clientId: Long): Flow<List<OrderReturnWithDetailsEntity>>
+
+
     @Query("SELECT * FROM order_products WHERE orderLocalId = :orderReturnLocalId")
     suspend fun getItemsForReturn(orderReturnLocalId: Long): List<OrderProductEntity>
 }
