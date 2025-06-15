@@ -79,14 +79,15 @@ fun EmployeeAccountScreen(
                         employee?.let { onEvent(EmployeeAccountEvent.SelectEmployee(it)) }
                     },
                     itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
-                    itemToId = { it.id })
+                    itemToId = { it.id },
+                    canClearSelection = false,
+                )
             }
         }) {
         Column(
-            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
-
             CustomExposedDropdownMenu(
                 label = stringResource(R.string.transaction_type),
                 items = EmployeeTransactionType.entries,
@@ -100,6 +101,7 @@ fun EmployeeAccountScreen(
                 },
                 itemToDisplayString = { context.getString(it.getStringResId()) },
                 itemToId = { it.ordinal.toLong() },
+                canClearSelection = false,
             )
 
             TextInputField(

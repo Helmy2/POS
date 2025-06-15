@@ -149,7 +149,8 @@ fun StockTransferForm(
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
-            enabled = canChangeFromStore
+            enabled = canChangeFromStore,
+            canClearSelection = false,
         )
 
         CustomExposedDropdownMenu(
@@ -159,7 +160,8 @@ fun StockTransferForm(
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
-            enabled = canEditTheRest
+            enabled = canEditTheRest,
+            canClearSelection = false,
         )
 
         CustomExposedDropdownMenu(
@@ -169,7 +171,8 @@ fun StockTransferForm(
             onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
             itemToId = { it.id },
-            enabled = canEditEmployee
+            enabled = canEditEmployee,
+            canClearSelection = false,
         )
 
         Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
@@ -222,6 +225,7 @@ fun StockTransferItemRow(
                     itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId },
                     enabled = enabled,
+                    canClearSelection = false,
                 )
             }
             IconButton(onClick = onRemoveItem, enabled = enabled) {
@@ -259,7 +263,8 @@ fun StockTransferItemRow(
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId },
-                    enabled = enabled
+                    enabled = enabled,
+                    canClearSelection = false,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

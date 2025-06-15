@@ -103,7 +103,9 @@ fun ProductScreen(
                     selectedItemId = state.selectedCategoryId,
                     onItemSelected = { category -> onEvent(ProductEvent.SelectCategoryId(category?.localId)) },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId })
+                    itemToId = { it.localId },
+                    canClearSelection = false,
+                )
 
                 LabeledTextField(
                     value = state.inputAveragePrice,
@@ -137,7 +139,9 @@ fun ProductScreen(
                     selectedItemId = state.selectedStoreId,
                     onItemSelected = { store -> onEvent(ProductEvent.SelectStoreId(store?.localId)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.localId })
+                    itemToId = { it.localId },
+                    canClearSelection = false,
+                )
 
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.min_stock_unit),
@@ -145,17 +149,16 @@ fun ProductScreen(
                     selectedItemId = state.selectedMinStockUnitId,
                     onItemSelected = { unit -> onEvent(ProductEvent.SelectMinStockUnitId(unit?.localId)) },
                     itemToDisplayString = { "${it.enName}: ${it.arName}" },
-                    itemToId = { it.localId })
+                    itemToId = { it.localId },
+                    canClearSelection = true,
+                )
 
                 LabeledTextField(
-                    value = state.subUnitsPerMainUnit,
-                    onValueChange = { value ->
+                    value = state.subUnitsPerMainUnit, onValueChange = { value ->
                         value.toDoubleOrNull()?.let {
                             onEvent(ProductEvent.UpdateSubUnitsPerMainUnit(value))
                         }
-                    },
-                    label = "Min unit per Max unit",
-                    keyboardOptions = KeyboardOptions(
+                    }, label = "Min unit per Max unit", keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
                     )
                 )
@@ -166,7 +169,9 @@ fun ProductScreen(
                     selectedItemId = state.selectedMaxStockUnitId,
                     onItemSelected = { unit -> onEvent(ProductEvent.SelectMaxStockUnitId(unit?.localId)) },
                     itemToDisplayString = { "${it.enName}: ${it.arName}" },
-                    itemToId = { it.localId })
+                    itemToId = { it.localId },
+                    canClearSelection = false,
+                )
             }
         },
     )

@@ -104,7 +104,8 @@ fun StoreScreen(
                     selectedItemId = state.inputType?.ordinal?.toLong(),
                     onItemSelected = { onEvent(StoreEvent.UpdateInputType(it)) },
                     itemToDisplayString = { it.name },
-                    itemToId = { it.ordinal.toLong() }
+                    itemToId = { it.ordinal.toLong() },
+                    canClearSelection = false,
                 )
             }
         },

@@ -100,7 +100,8 @@ fun PurchaseForm(
             selectedItemId = state.selectedSupplier?.id,
             onItemSelected = { onEvent(PurchaseEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id }
+            itemToId = { it.id },
+            canClearSelection = false,
         )
 
         CustomExposedDropdownMenu(
@@ -110,7 +111,8 @@ fun PurchaseForm(
             onItemSelected = { onEvent(PurchaseEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
-            enabled = state.currentUser?.isAdmin ?: false
+            enabled = state.currentUser?.isAdmin ?: false,
+            canClearSelection = false,
         )
 
         OrderInputFields(

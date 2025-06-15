@@ -119,7 +119,8 @@ fun AccountStatementScreen(
     ) {
         AnimatedContent(
             targetState = state.selectedPartner == null,
-            transitionSpec = { fadeIn() togetherWith fadeOut() }
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) { isPartnerListVisible ->
             if (isPartnerListVisible) {
                 PartnerSelectionView(

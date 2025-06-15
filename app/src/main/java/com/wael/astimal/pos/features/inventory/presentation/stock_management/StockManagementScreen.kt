@@ -75,7 +75,7 @@ fun StockManagementScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .padding(horizontal = 16.dp),
         ) {
             CustomExposedDropdownMenu(
                 label = stringResource(R.string.filter_by_store),
@@ -84,6 +84,7 @@ fun StockManagementScreen(
                 onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
                 itemToDisplayString = { it.name.displayName(language) },
                 itemToId = { it.localId },
+                canClearSelection = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -165,6 +166,7 @@ fun StockAdjustmentDialog(state: StockManagementState, onEvent: (StockManagement
                     },
                     itemToDisplayString = { context.getString(it.getStringResource()) },
                     itemToId = { it.ordinal.toLong() },
+                    canClearSelection = false,
                 )
             }
         },

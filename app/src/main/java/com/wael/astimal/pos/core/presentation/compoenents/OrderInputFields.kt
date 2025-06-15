@@ -87,6 +87,7 @@ fun OrderInputFields(
             onItemSelected = onSelectPaymentType,
             itemToDisplayString = { context.getString(it.stringResource()) },
             itemToId = { it.ordinal.toLong() },
+            canClearSelection = false
         )
 
         TextInputField(
@@ -124,14 +125,19 @@ private fun OrderItemRow(
                     selectedItemId = item.product?.localId,
                     onItemSelected = { onUpdateSelectedItem(item.tempEditorId, it) },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId })
+                    itemToId = { it.localId },
+                    canClearSelection = false,
+                )
             }
             IconButton(onClick = { onRemoveItemFromOrder(item.tempEditorId) }) {
                 Icon(Icons.Default.Delete, stringResource(R.string.remove_item))
             }
         }
 
-        Text(text = "${stringResource(R.string.in_stock)}: ${item.currentStock}", style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = "${stringResource(R.string.in_stock)}: ${item.currentStock}",
+            style = MaterialTheme.typography.bodySmall
+        )
 
         AnimatedVisibility(item.product?.minimumProductUnit != null) {
             Column {
@@ -153,6 +159,7 @@ private fun OrderItemRow(
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.localId },
+                    canClearSelection = false,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -214,7 +221,7 @@ private fun OrderItemRow(
                     )
                 }
 
-                Card{
+                Card {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()

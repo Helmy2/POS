@@ -106,7 +106,9 @@ fun BusinessPartnerScreen(
         },
         loading = state.loading,
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)) {
             BusinessPartnerList(
                 partners = state.searchResults,
                 onPartnerClick = { onEvent(BusinessPartnerInfoEvent.SelectBusinessPartner(it)) },

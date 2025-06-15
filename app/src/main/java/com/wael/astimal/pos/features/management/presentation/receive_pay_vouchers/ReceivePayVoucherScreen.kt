@@ -80,11 +80,13 @@ fun ReceivePayVoucherScreen(
                         it?.let { onEvent(ReceivePayVoucherEvent.SelectPartyType(it)) }
                     },
                     itemToDisplayString = { context.getString(it.getStringRes()) },
-                    itemToId = { it.ordinal.toLong() })
+                    itemToId = { it.ordinal.toLong() },
+                    canClearSelection = false,
+                )
             }
         }) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AnimatedContent(
@@ -98,7 +100,9 @@ fun ReceivePayVoucherScreen(
                             selectedItemId = state.selectedClient?.id,
                             onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
                             itemToDisplayString = { it.name.displayName(currentLanguage) },
-                            itemToId = { it.id })
+                            itemToId = { it.id },
+                            canClearSelection = false,
+                        )
                     }
 
                     VoucherPartyType.SUPPLIER -> {
@@ -108,7 +112,9 @@ fun ReceivePayVoucherScreen(
                             selectedItemId = state.selectedSupplier?.id,
                             onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
                             itemToDisplayString = { it.name.displayName(currentLanguage) },
-                            itemToId = { it.id })
+                            itemToId = { it.id },
+                            canClearSelection = false,
+                        )
                     }
                 }
             }

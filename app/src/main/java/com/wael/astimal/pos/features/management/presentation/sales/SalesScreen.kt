@@ -103,7 +103,9 @@ fun OrderForm(
             selectedItemId = state.selectedClient?.id,
             onItemSelected = { onEvent(OrderEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id })
+            itemToId = { it.id },
+            canClearSelection = false,
+        )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.employee),
@@ -112,7 +114,8 @@ fun OrderForm(
             onItemSelected = { onEvent(OrderEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
-            enabled = state.currentUser?.isAdmin ?: false
+            enabled = state.currentUser?.isAdmin ?: false,
+            canClearSelection = false,
         )
 
         OrderInputFields(

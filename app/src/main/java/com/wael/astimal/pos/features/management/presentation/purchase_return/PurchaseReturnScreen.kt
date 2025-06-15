@@ -107,7 +107,8 @@ fun PurchaseReturnForm(
             selectedItemId = state.selectedSupplier?.id,
             onItemSelected = { onEvent(PurchaseReturnEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id }
+            itemToId = { it.id },
+            canClearSelection = false,
         )
 
         CustomExposedDropdownMenu(
@@ -117,7 +118,8 @@ fun PurchaseReturnForm(
             onItemSelected = { onEvent(PurchaseReturnEvent.SelectEmployee(it?.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
-            enabled = state.currentUser?.isAdmin ?: false
+            enabled = state.currentUser?.isAdmin ?: false,
+            canClearSelection = false,
         )
 
         OrderInputFields(
