@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
@@ -56,7 +55,7 @@ fun Screen(
                 .fillMaxSize()
                 .padding(it)
         ) {
-            AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
+            AnimatedContent(loading) { it ->
                 if (it) {
                     Box(
                         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center

@@ -1,38 +1,57 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.TopLevelRoutes
+import com.wael.astimal.pos.core.domain.navigation.isTopLevelRoute
 import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
-import com.wael.astimal.pos.core.util.Connectivity
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 
 
+@Composable
+private fun rememberDelayedDestination(navController: NavController): State<NavBackStackEntry?> {
+    val immediateDestination by navController.currentBackStackEntryAsState()
+    val delayedDestination = remember { mutableStateOf(immediateDestination) }
+
+    LaunchedEffect(immediateDestination) {
+        delayedDestination.value = immediateDestination
+    }
+    return delayedDestination
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScaffold(
     startDestination: Destination = Destination.Main
@@ -56,52 +75,52 @@ fun MainScaffold(
         }
     }
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val isOnTopLevelRoute = TopLevelRoutes.routes.any {
-        navBackStackEntry?.destination?.hasRoute(it.route::class) == true
+    // Use our new delayed state holder instead of the immediate one
+    val navBackStackEntry by rememberDelayedDestination(navController)
+    val currentDestination = navBackStackEntry?.destination
+
+    // All UI decisions are now based on the DELAYED destination
+    val isOnTopLevelRoute = isTopLevelRoute(currentDestination)
+
+    val currentTopLevelRoute = TopLevelRoutes.routes.find {
+        currentDestination?.hasRoute(it.route::class) == true
     }
-
-    val connectivity: Connectivity = koinInject()
-    val state by connectivity.statusUpdates.collectAsStateWithLifecycle(
-        Connectivity.Status.Connected(
-            connectionType = Connectivity.ConnectionType.Unknown
-        )
-    )
-
-    var isReconnected by remember { mutableStateOf(false) }
-    val noInternetMessage = stringResource(R.string.no_internet)
-    val backOnlineMessage = stringResource(R.string.back_online)
-
-    LaunchedEffect(state) {
-        if (state.isDisconnected) {
-            snackbarHostState.showSnackbar(noInternetMessage)
-            isReconnected = true
-        }
-
-        if (isReconnected && state.isConnected) {
-            snackbarHostState.showSnackbar(backOnlineMessage)
-        }
-    }
+    val topBarTitle = currentTopLevelRoute?.let { stringResource(id = it.name) } ?: ""
 
     Scaffold(
+        topBar = {
+            if (isOnTopLevelRoute) {
+                TopAppBar(
+                    title = { Text(topBarTitle) },
+                    actions = {
+                        IconButton(onClick = { navController.navigate(Destination.Settings) }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(id = com.wael.astimal.pos.R.string.settings)
+                            )
+                        }
+                    }
+                )
+            }
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         NavigationSuiteScaffold(
-            layoutType = if (isOnTopLevelRoute) NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
-                currentWindowAdaptiveInfo()
-            ) else NavigationSuiteType.None,
+            layoutType = if (isOnTopLevelRoute) {
+                NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+            } else {
+                NavigationSuiteType.None
+            },
             modifier = Modifier.padding(paddingValues),
             navigationSuiteItems = {
                 mainNavigationItems(
-                    onDestinationSelected = {
-                        navController.apply {
-                            navigate(it) {
-                                popUpTo(graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
+                    onDestinationSelected = { destination ->
+                        navController.navigate(destination) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
                             }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     },
                     navBackStackEntry = navBackStackEntry,

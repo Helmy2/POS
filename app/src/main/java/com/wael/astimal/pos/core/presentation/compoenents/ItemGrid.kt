@@ -31,7 +31,8 @@ fun <T> ItemGrid(
             list.forEach {
                 Card(
                     onClick = { onItemClick(it) }, colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected(it)) MaterialTheme.colorScheme.primaryContainer else CardDefaults.cardColors().containerColor
+                        containerColor = if (isSelected(it)) MaterialTheme.colorScheme.primaryContainer
+                        else CardDefaults.cardColors().containerColor
                     )
                 ) {
                     label.invoke(it)

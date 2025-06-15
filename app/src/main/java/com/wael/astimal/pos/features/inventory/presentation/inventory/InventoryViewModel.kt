@@ -2,20 +2,15 @@ package com.wael.astimal.pos.features.inventory.presentation.inventory
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class InventoryViewModel : ViewModel() {
 
     private val _state = MutableStateFlow(InventoryState())
-    val state = _state
+    val state: StateFlow<InventoryState> = _state.asStateFlow()
 
-    fun handleEvent(event: InventoryEvent) {
-        when (event) {
-            is InventoryEvent.UpdateSelectDestination -> updateSelectDestination(event.destination)
-        }
-    }
-
-    private fun updateSelectDestination(destination: InventoryDestination) {
-        _state.update { it.copy(selectedDestination = destination) }
+    init {
+        _state.value = InventoryState(items = InventoryDestinations.getAll())
     }
 }

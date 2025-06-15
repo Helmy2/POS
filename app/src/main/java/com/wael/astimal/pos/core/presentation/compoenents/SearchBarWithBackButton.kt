@@ -1,8 +1,8 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,9 +35,9 @@ fun SearchBarWithBackButton(
         tonalElevation = SearchBarDefaults.TonalElevation,
         shadowElevation = SearchBarDefaults.ShadowElevation,
         modifier = Modifier.Companion
-            .padding(16.dp)
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
             .zIndex(1f)
-            .width(360.dp)
+            .fillMaxWidth()
     ) {
         Row(
             verticalAlignment = Alignment.Companion.CenterVertically,

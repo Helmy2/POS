@@ -72,23 +72,31 @@ fun StockManagementScreen(
         },
         loading = state.loading,
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
         ) {
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.filter_by_store),
-                    items = state.stores,
-                    selectedItemId = state.selectedStore?.localId,
-                    onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.localId },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            items(
-                state.stocks, key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
-                StockItemCard(stockItem = stockItem, onEvent = onEvent)
+            CustomExposedDropdownMenu(
+                label = stringResource(R.string.filter_by_store),
+                items = state.stores,
+                selectedItemId = state.selectedStore?.localId,
+                onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
+                itemToDisplayString = { it.name.displayName(language) },
+                itemToId = { it.localId },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    state.stocks,
+                    key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
+                    StockItemCard(stockItem = stockItem, onEvent = onEvent)
+                }
             }
         }
     }
