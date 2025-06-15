@@ -23,7 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
@@ -59,18 +60,20 @@ fun StockManagementScreen(
         StockAdjustmentDialog(state = state, onEvent = onEvent)
     }
 
-    SearchScreen(
+    Screen(
         eventFlow = eventFlow,
-        query = state.query,
+        topBar = {
+            SearchBarWithBackButton(
+                query = state.query,
+                onBack = onBack,
+                onQueryChange = { onEvent(StockManagementEvent.SearchStock(it)) },
+                onSearch = { onEvent(StockManagementEvent.SearchStock(it)) },
+            )
+        },
         loading = state.loading,
-        onBack = onBack,
-        onQueryChange = { onEvent(StockManagementEvent.SearchStock(it)) },
-        onSearch = { onEvent(StockManagementEvent.SearchStock(it)) },
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
                 CustomExposedDropdownMenu(
@@ -84,8 +87,7 @@ fun StockManagementScreen(
                 )
             }
             items(
-                state.stocks,
-                key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
+                state.stocks, key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
                 StockItemCard(stockItem = stockItem, onEvent = onEvent)
             }
         }
@@ -110,8 +112,7 @@ fun StockItemCard(stockItem: StoreStock, onEvent: (StockManagementEvent) -> Unit
                     stockItem.store.name.displayName(
                         LocalAppLocale.current
                     )
-                }",
-                style = MaterialTheme.typography.bodySmall
+                }", style = MaterialTheme.typography.bodySmall
             )
             Text(
                 text = stringResource(R.string.current_quantity) + ": ${stockItem.quantity}",
@@ -168,6 +169,5 @@ fun StockAdjustmentDialog(state: StockManagementState, onEvent: (StockManagement
             TextButton(onClick = { onEvent(StockManagementEvent.DismissAdjustmentDialog) }) {
                 Text(stringResource(R.string.cancel))
             }
-        }
-    )
+        })
 }

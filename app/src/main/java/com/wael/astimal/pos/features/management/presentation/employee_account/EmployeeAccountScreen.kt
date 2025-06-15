@@ -27,15 +27,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
-import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccount
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -45,21 +44,13 @@ fun EmployeeAccountRoute(
     viewModel: EmployeeAccountViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    ObserveEffect(viewModel.eventFlow, viewModel.eventFlow) {
-        when (it) {
-            is UiEvent.ShowSnackbar -> {
-                SnackbarController.sendEvent(
-                    event = SnackbarEvent(
-                        message = context.getString(it.message)
-                    )
-                )
-            }
-        }
-    }
-
-    EmployeeAccountScreen(onBack = onBack, state = state, onEvent = viewModel::onEvent)
+    EmployeeAccountScreen(
+        onBack = onBack,
+        state = state,
+        onEvent = viewModel::onEvent,
+        eventFlow = viewModel.eventFlow
+    )
 }
 
 @Composable
@@ -67,75 +58,80 @@ fun EmployeeAccountScreen(
     onBack: () -> Unit,
     state: EmployeeAccountState,
     onEvent: (EmployeeAccountEvent) -> Unit,
+    eventFlow: SharedFlow<UiEvent>,
 ) {
     val currentLanguage = LocalAppLocale.current
     val context = LocalContext.current
 
-    Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BackButton(onBack, Modifier.padding(16.dp))
-            CustomExposedDropdownMenu(
-                label = stringResource(R.string.employee),
-                items = state.employees,
-                selectedItemId = state.selectedEmployee?.id,
-                onItemSelected = { employee ->
-                    employee?.let { onEvent(EmployeeAccountEvent.SelectEmployee(it)) }
-                },
-                itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
-                itemToId = { it.id })
-        }
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.transaction_type),
-            items = EmployeeTransactionType.entries,
-            selectedItemId = state.transactionType.ordinal.toLong(),
-            onItemSelected = {
-                onEvent(
-                    EmployeeAccountEvent.SelectTransactionType(
-                        it ?: EmployeeTransactionType.SALARY
-                    )
-                )
-            },
-            itemToDisplayString = { context.getString(it.getStringResId()) },
-            itemToId = { it.ordinal.toLong() },
-        )
-
-        TextInputField(
-            value = state.amount,
-            onValueChange = { onEvent(EmployeeAccountEvent.UpdateAmount(it)) },
-            label = stringResource(R.string.amount),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        TextInputField(
-            value = state.notes,
-            onValueChange = { onEvent(EmployeeAccountEvent.UpdateNotes(it)) },
-            label = stringResource(R.string.notes_optional),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Button(
-            onClick = { onEvent(EmployeeAccountEvent.SavePayment) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.save_payment))
-        }
-
-        AnimatedVisibility(state.loading.not()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
+    Screen(
+        loading = state.loading, eventFlow = eventFlow, topBar = {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp),
             ) {
-                state.employeeAccount?.let { account ->
-                    AccountSummaryCard(account)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    TransactionList(transactions = account.transactions)
+                BackButton(onBack, Modifier.padding(16.dp))
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.employee),
+                    items = state.employees,
+                    selectedItemId = state.selectedEmployee?.id,
+                    onItemSelected = { employee ->
+                        employee?.let { onEvent(EmployeeAccountEvent.SelectEmployee(it)) }
+                    },
+                    itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
+                    itemToId = { it.id })
+            }
+        }) {
+        Column(
+            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+
+            CustomExposedDropdownMenu(
+                label = stringResource(R.string.transaction_type),
+                items = EmployeeTransactionType.entries,
+                selectedItemId = state.transactionType.ordinal.toLong(),
+                onItemSelected = {
+                    onEvent(
+                        EmployeeAccountEvent.SelectTransactionType(
+                            it ?: EmployeeTransactionType.SALARY
+                        )
+                    )
+                },
+                itemToDisplayString = { context.getString(it.getStringResId()) },
+                itemToId = { it.ordinal.toLong() },
+            )
+
+            TextInputField(
+                value = state.amount,
+                onValueChange = { onEvent(EmployeeAccountEvent.UpdateAmount(it)) },
+                label = stringResource(R.string.amount),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            TextInputField(
+                value = state.notes,
+                onValueChange = { onEvent(EmployeeAccountEvent.UpdateNotes(it)) },
+                label = stringResource(R.string.notes_optional),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(
+                onClick = { onEvent(EmployeeAccountEvent.SavePayment) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.save_payment))
+            }
+
+            AnimatedVisibility(state.loading.not()) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    state.employeeAccount?.let { account ->
+                        AccountSummaryCard(account)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        TransactionList(transactions = account.transactions)
+                    }
                 }
             }
         }

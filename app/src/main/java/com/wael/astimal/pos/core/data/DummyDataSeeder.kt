@@ -36,9 +36,7 @@ class DummyDataSeeder(
 ) {
 
     fun seedInitialDataIfNeeded() {
-        // Launch in a coroutine to perform database operations off the main thread
         applicationScope.launch(Dispatchers.IO) {
-            // Check if data already exists to avoid re-populating
             val userCount = userDao.getUserCount()
             if (userCount == 0) {
                 populateAllDummyData()
@@ -50,16 +48,11 @@ class DummyDataSeeder(
 
     private suspend fun populateAllDummyData() {
         println("Populating all dummy data...")
-
-        // The order of population is important due to foreign key constraints.
         val employees = populateDummyUsersAndEmployees()
         val stores = populateDummyStores()
 
         assignEmployeesToStores(employees, stores)
-        sessionManager.saveSession(
-            employees["emp1"]!!,
-            ""
-        )
+        sessionManager.saveSession(employees["emp1"]!!, "")
 
         val units = populateDummyUnits()
         val categories = populateDummyCategories()
@@ -85,33 +78,40 @@ class DummyDataSeeder(
         )
     }
 
+    /**
+     * Populates suppliers, including one that is also a client.
+     */
     private suspend fun populateDummySuppliers(employees: Map<String, Long>) {
-        val supplier1Entity = SupplierEntity(
-            localId = -301,
-            arName = "مورد ١",
-            enName = "Supplier 1",
-            responsibleEmployeeLocalId = employees["emp1"],
-            address = "789 Supply St, Cairo",
+        // This partner is both a supplier and a client.
+        // It has the same name as the corresponding record in populateDummyClients.
+        val universalPartnerAsSupplier = SupplierEntity(
+            localId = 0L, // Let Room auto-generate the ID
+            arName = "شريك عالمي",
+            enName = "Universal Partner",
+            responsibleEmployeeLocalId = employees["emp2"],
+            address = "1 El Tahrir Square, Cairo",
             isSynced = false,
-            phone = "3334445550",
-            indebtedness = 0.0,
-            isClient = true,
+            phone = "0123456789",
+            indebtedness = 350.0,
+            isClient = true, // IMPORTANT: Flag indicating it is also a client
             isDeletedLocally = false,
         )
-        supplierDao.insertOrUpdateSupplier(supplier1Entity)
-        val supplier2Entity = SupplierEntity(
-            localId = -302,
-            arName = "مورد ٢",
-            enName = "Supplier 2",
-            responsibleEmployeeLocalId = employees["emp2"],
+        supplierDao.insertOrUpdateSupplier(universalPartnerAsSupplier)
+
+        // This partner is only a supplier.
+        val supplierOnly = SupplierEntity(
+            localId = 0L, // Let Room auto-generate the ID
+            arName = "مورد ٢ (فقط)",
+            enName = "Supplier Two (Only)",
+            responsibleEmployeeLocalId = employees["emp1"],
             address = "101 Supply Rd, Alexandria",
             isSynced = false,
             phone = "6667778880",
             indebtedness = 150.75,
-            isClient = false,
+            isClient = false, // IMPORTANT: Flag indicating it is not a client
             isDeletedLocally = false,
         )
-        supplierDao.insertOrUpdateSupplier(supplier2Entity)
+        supplierDao.insertOrUpdateSupplier(supplierOnly)
     }
 
     private suspend fun populateDummyUsersAndEmployees(): Map<String, Long> {
@@ -154,53 +154,53 @@ class DummyDataSeeder(
         return mapOf("admin" to adminLocalId, "emp1" to emp1LocalId, "emp2" to emp2LocalId)
     }
 
+    /**
+     * Populates clients, including one that is also a supplier.
+     */
     private suspend fun populateDummyClients(employees: Map<String, Long>) {
-        val client1Entity = ClientEntity(
-            localId = -201,
-            arName = "عميل ١",
-            enName = "Client 1",
+        // This partner is only a client.
+        val clientOnly = ClientEntity(
+            localId = 0L, // Let Room auto-generate the ID
+            arName = "عميل ١ (فقط)",
+            enName = "Client One (Only)",
             responsibleEmployeeLocalId = employees["emp1"],
             address = "123 Nile St, Cairo",
             debt = 250.50,
-            isSupplier = false,
+            isSupplier = false, // IMPORTANT: Flag indicating it is not a supplier
             isSynced = false,
             phone1 = "1112223330",
             phone2 = "1112223331",
             phone3 = null
         )
-        clientDao.insertOrUpdateClient(client1Entity)
+        clientDao.insertOrUpdateClient(clientOnly)
 
-        val client2Entity = ClientEntity(
-            localId = -202,
-            arName = "عميل ٢",
-            enName = "Client 2",
+        // This partner is both a client and a supplier.
+        // It has the same name as the corresponding record in populateDummySuppliers.
+        val universalPartnerAsClient = ClientEntity(
+            localId = 0L, // Let Room auto-generate the ID
+            arName = "شريك عالمي",
+            enName = "Universal Partner",
             responsibleEmployeeLocalId = employees["emp2"],
-            address = "456 Cornish Rd, Alexandria",
-            debt = 0.0,
-            isSupplier = true,
+            address = "1 El Tahrir Square, Cairo",
+            debt = 1200.0,
+            isSupplier = true, // IMPORTANT: Flag indicating it is also a supplier
             isSynced = false,
-            phone1 = "7778889990",
+            phone1 = "0123456789",
             phone2 = null,
             phone3 = null
         )
-        clientDao.insertOrUpdateClient(client2Entity)
+        clientDao.insertOrUpdateClient(universalPartnerAsClient)
     }
 
     private suspend fun populateDummyUnits(): Map<String, Long> {
         val pieceId = unitDao.insertOrUpdate(
-            UnitEntity(
-                serverId = -1, arName = "قطعة", enName = "Piece", isSynced = false
-            )
+            UnitEntity(serverId = -1, arName = "قطعة", enName = "Piece", isSynced = false)
         )
         val dozenId = unitDao.insertOrUpdate(
-            UnitEntity(
-                serverId = -2, arName = "دستة", enName = "Dozen", isSynced = false
-            )
+            UnitEntity(serverId = -2, arName = "دستة", enName = "Dozen", isSynced = false)
         )
         val boxId = unitDao.insertOrUpdate(
-            UnitEntity(
-                serverId = -3, arName = "علبة", enName = "Box", isSynced = false
-            )
+            UnitEntity(serverId = -3, arName = "علبة", enName = "Box", isSynced = false)
         )
         return mapOf("piece" to pieceId, "dozen" to dozenId, "box" to boxId)
     }
@@ -217,20 +217,12 @@ class DummyDataSeeder(
         )
         val storeAId = storeDao.insertOrUpdate(
             StoreEntity(
-                serverId = -2,
-                arName = "فرع أ",
-                enName = "Branch A",
-                type = StoreType.SUB,
-                isSynced = false
+                serverId = -2, arName = "فرع أ", enName = "Branch A", type = StoreType.SUB, isSynced = false
             )
         )
         val storeBId = storeDao.insertOrUpdate(
             StoreEntity(
-                serverId = -3,
-                arName = "فرع ب",
-                enName = "Branch B",
-                type = StoreType.SUB,
-                isSynced = false
+                serverId = -3, arName = "فرع ب", enName = "Branch B", type = StoreType.SUB, isSynced = false
             )
         )
         return mapOf("main" to mainStoreId, "storeA" to storeAId, "storeB" to storeBId)
@@ -238,14 +230,10 @@ class DummyDataSeeder(
 
     private suspend fun populateDummyCategories(): Map<String, Long> {
         val lensesId = categoryDao.insertOrUpdate(
-            CategoryEntity(
-                serverId = -1, arName = "عدسات", enName = "Lenses", isSynced = false
-            )
+            CategoryEntity(serverId = -1, arName = "عدسات", enName = "Lenses", isSynced = false)
         )
         val solutionsId = categoryDao.insertOrUpdate(
-            CategoryEntity(
-                serverId = -2, arName = "محاليل", enName = "Solutions", isSynced = false
-            )
+            CategoryEntity(serverId = -2, arName = "محاليل", enName = "Solutions", isSynced = false)
         )
         val accessoriesId = categoryDao.insertOrUpdate(
             CategoryEntity(

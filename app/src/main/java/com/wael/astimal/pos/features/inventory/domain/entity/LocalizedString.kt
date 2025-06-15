@@ -3,8 +3,8 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Language
 
 data class LocalizedString(
-    val arName: String?,
-    val enName: String?,
+    val arName: String? = null,
+    val enName: String? = null,
 ) {
     fun displayName(
         language: Language

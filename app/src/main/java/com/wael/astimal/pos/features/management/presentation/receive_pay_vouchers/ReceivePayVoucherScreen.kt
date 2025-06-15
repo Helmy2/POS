@@ -25,15 +25,14 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
-import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
+import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,106 +45,106 @@ fun ReceivePayVoucherRoute(
     viewModel: ReceivePayVoucherViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    ObserveEffect(viewModel.eventFlow, viewModel.eventFlow) {
-        when (it) {
-            is UiEvent.ShowSnackbar -> {
-                SnackbarController.sendEvent(
-                    event = SnackbarEvent(
-                        message = context.getString(it.message)
-                    )
-                )
-            }
-        }
-    }
-
-    ReceivePayVoucherScreen(onBack = onBack, state = state, onEvent = viewModel::onEvent)
+    ReceivePayVoucherScreen(
+        onBack = onBack,
+        state = state,
+        onEvent = viewModel::onEvent,
+        eventFlow = viewModel.eventFlow
+    )
 }
 
 @Composable
 fun ReceivePayVoucherScreen(
-    state: ReceivePayVoucherState, onEvent: (ReceivePayVoucherEvent) -> Unit, onBack: () -> Unit
+    state: ReceivePayVoucherState,
+    onEvent: (ReceivePayVoucherEvent) -> Unit,
+    onBack: () -> Unit,
+    eventFlow: SharedFlow<UiEvent>
 ) {
     val context = LocalContext.current
     val currentLanguage = LocalAppLocale.current
 
-    Column(
-        modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    Screen(
+        loading = state.isLoading, eventFlow = eventFlow, topBar = {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp),
+            ) {
+                BackButton(onBack, Modifier.padding(16.dp))
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.client_or_suppler),
+                    items = VoucherPartyType.entries,
+                    selectedItemId = state.partyType.ordinal.toLong(),
+                    onItemSelected = { it ->
+                        it?.let { onEvent(ReceivePayVoucherEvent.SelectPartyType(it)) }
+                    },
+                    itemToDisplayString = { context.getString(it.getStringRes()) },
+                    itemToId = { it.ordinal.toLong() })
+            }
+        }) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            BackButton(onBack, Modifier.padding(16.dp))
-            CustomExposedDropdownMenu(
-                label = stringResource(R.string.client_or_suppler),
-                items = VoucherPartyType.entries,
-                selectedItemId = state.partyType.ordinal.toLong(),
-                onItemSelected = { it ->
-                    it?.let { onEvent(ReceivePayVoucherEvent.SelectPartyType(it)) }
-                },
-                itemToDisplayString = { context.getString(it.getStringRes()) },
-                itemToId = { it.ordinal.toLong() })
-        }
+            AnimatedContent(
+                state.partyType
+            ) { partyType ->
+                when (partyType) {
+                    VoucherPartyType.CLIENT -> {
+                        CustomExposedDropdownMenu(
+                            label = stringResource(R.string.client),
+                            items = state.clients,
+                            selectedItemId = state.selectedClient?.id,
+                            onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
+                            itemToDisplayString = { it.name.displayName(currentLanguage) },
+                            itemToId = { it.id })
+                    }
 
-        AnimatedContent(
-            state.partyType
-        ) { partyType ->
-            when (partyType) {
-                VoucherPartyType.CLIENT -> {
-                    CustomExposedDropdownMenu(
-                        label = stringResource(R.string.client),
-                        items = state.clients,
-                        selectedItemId = state.selectedClient?.id,
-                        onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
-                        itemToDisplayString = { it.name.displayName(currentLanguage) },
-                        itemToId = { it.id })
-                }
-
-                VoucherPartyType.SUPPLIER -> {
-                    CustomExposedDropdownMenu(
-                        label = stringResource(R.string.supplier),
-                        items = state.suppliers,
-                        selectedItemId = state.selectedSupplier?.id,
-                        onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
-                        itemToDisplayString = { it.name.displayName(currentLanguage) },
-                        itemToId = { it.id })
+                    VoucherPartyType.SUPPLIER -> {
+                        CustomExposedDropdownMenu(
+                            label = stringResource(R.string.supplier),
+                            items = state.suppliers,
+                            selectedItemId = state.selectedSupplier?.id,
+                            onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
+                            itemToDisplayString = { it.name.displayName(currentLanguage) },
+                            itemToId = { it.id })
+                    }
                 }
             }
-        }
 
-        OutlinedTextField(
-            value = state.amount,
-            onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateAmount(it)) },
-            label = { Text(stringResource(R.string.amount)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = state.amount,
+                onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateAmount(it)) },
+                label = { Text(stringResource(R.string.amount)) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        DataPicker(
-            selectedDateMillis = state.date, onDateSelected = {
-                onEvent(
-                    ReceivePayVoucherEvent.UpdateDate(
-                        it ?: System.currentTimeMillis()
+            DataPicker(
+                selectedDateMillis = state.date, onDateSelected = {
+                    onEvent(
+                        ReceivePayVoucherEvent.UpdateDate(
+                            it ?: System.currentTimeMillis()
+                        )
                     )
-                )
-            })
+                })
 
-        OutlinedTextField(
-            value = state.notes,
-            onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateNotes(it)) },
-            label = { Text(stringResource(R.string.notes_optional)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = state.notes,
+                onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateNotes(it)) },
+                label = { Text(stringResource(R.string.notes_optional)) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Button(
-            onClick = { onEvent(ReceivePayVoucherEvent.SaveVoucher) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.save_voucher))
+            Button(
+                onClick = { onEvent(ReceivePayVoucherEvent.SaveVoucher) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.save_voucher))
+            }
+
+            VoucherList(vouchers = state.vouchers)
         }
-
-        VoucherList(vouchers = state.vouchers)
     }
 }
 

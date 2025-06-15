@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,12 +15,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
 class BusinessPartnerViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
+    private val sessionManager: SessionManager // Injected to check user role
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BusinessPartnerInfoState())
@@ -30,6 +34,12 @@ class BusinessPartnerViewModel(
     private var businessPartnerSearchJob: Job? = null
 
     init {
+        // Check user role on init
+        viewModelScope.launch {
+            val user = sessionManager.getCurrentUser().firstOrNull()
+            _state.update { it.copy(isAdmin = user?.isAdmin == true) }
+        }
+        // Initial search
         onEvent(BusinessPartnerInfoEvent.SearchBusinessPartners(_state.value.query))
     }
 
@@ -44,19 +54,66 @@ class BusinessPartnerViewModel(
                     )
                 }
             }
-
             is BusinessPartnerInfoEvent.UpdateQuery -> {
                 _state.update { it.copy(query = event.query) }
                 searchBusinessPartnersList(event.query)
             }
-
-            BusinessPartnerInfoEvent.DetailBusinessPartner -> _state.update {
-                it.copy(
-                    showDetailDialog = false
-                )
+            is BusinessPartnerInfoEvent.AddNewPartnerClicked -> {
+                _state.update {
+                    it.copy(
+                        showEditDialog = true,
+                        partnerToEdit = createBlankBusinessPartner() // Use helper to create an empty partner
+                    )
+                }
             }
+            is BusinessPartnerInfoEvent.EditPartnerClicked -> {
+                _state.update {
+                    it.copy(
+                        showDetailDialog = false, // Close detail dialog
+                        showEditDialog = true, // Open edit dialog
+                        partnerToEdit = event.partner
+                    )
+                }
+            }
+            is BusinessPartnerInfoEvent.SavePartnerClicked -> {
+                savePartner(event.partner)
+            }
+            is BusinessPartnerInfoEvent.DeletePartnerClicked -> {
+                deletePartner(event.partner)
+            }
+            BusinessPartnerInfoEvent.DismissEditDialog -> {
+                _state.update { it.copy(showEditDialog = false, partnerToEdit = null) }
+            }
+            BusinessPartnerInfoEvent.DismissDetailDialog -> {
+                _state.update { it.copy(showDetailDialog = false, selectedBusinessPartner = null) }
+            }
+        }
+    }
 
-            BusinessPartnerInfoEvent.ShowDetailDialog -> _state.update { it.copy(showDetailDialog = true) }
+    private fun savePartner(partner: BusinessPartner) {
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val result = businessPartnerRepository.saveBusinessPartner(partner)
+            if (result.isSuccess) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.partner_saved_successfully))
+                _state.update { it.copy(isSaving = false, showEditDialog = false, partnerToEdit = null) }
+            } else {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_partner))
+                _state.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    private fun deletePartner(partner: BusinessPartner) {
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val result = businessPartnerRepository.deleteBusinessPartner(partner)
+            _state.update { it.copy(isSaving = false, showDetailDialog = false, selectedBusinessPartner = null) }
+            if (result.isSuccess) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.partner_deleted_successfully))
+            } else {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_partner))
+            }
         }
     }
 
@@ -67,7 +124,7 @@ class BusinessPartnerViewModel(
             if (query.length > 1 || query.isEmpty()) {
                 delay(300)
             }
-            businessPartnerRepository.getBusinessPartners(query).catch { e ->
+            businessPartnerRepository.getBusinessPartners(query).catch {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_searching_business_partners))
             }.collect { businessPartners ->
                 _state.update { it.copy(loading = false, searchResults = businessPartners) }

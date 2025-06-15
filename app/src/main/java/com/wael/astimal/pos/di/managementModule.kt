@@ -56,11 +56,11 @@ val managementModule = module {
     single<ReceivePayVoucherRepository> {
         ReceivePayVoucherRepositoryImpl(get(), get(), get(), get())
     }
-    single<BusinessPartnerRepository> { BusinessPartnerRepositoryImpl(get(),get()) }
+    single<BusinessPartnerRepository> { BusinessPartnerRepositoryImpl(get(),get(),get(),get(),get()) }
 
     viewModel { ManagementViewModel() }
 
-    viewModel { BusinessPartnerViewModel(get()) }
+    viewModel { BusinessPartnerViewModel(get(),get()) }
     viewModel { SalesReturnViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SalesViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { PurchaseViewModel(get(), get(), get(), get(), get(), get(), get()) }

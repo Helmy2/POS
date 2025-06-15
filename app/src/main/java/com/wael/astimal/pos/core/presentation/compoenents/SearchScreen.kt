@@ -6,12 +6,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,9 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +32,6 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
@@ -92,13 +87,13 @@ fun SearchScreen(
             .fillMaxSize()
             .semantics { isTraversalGroup = true }) {
         DockedSearchBar(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
-                .align(Alignment.TopCenter)
+                .align(Alignment.Companion.TopCenter)
                 .semantics { traversalIndex = 0f },
             inputField = {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Companion.CenterVertically
                 ) {
                     BackButton(
                         onClick = {
@@ -118,17 +113,18 @@ fun SearchScreen(
                                 Icon(Icons.Default.Search, contentDescription = null)
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.Companion.weight(1f)
                     )
                 }
             },
             expanded = isSearchActive,
             onExpandedChange = onSearchActiveChange,
         ) {
-            AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
+            AnimatedContent(loading, modifier = Modifier.Companion.padding(8.dp)) { it ->
                 if (it) {
                     Box(
-                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                        modifier = Modifier.Companion.fillMaxSize(),
+                        contentAlignment = Alignment.Companion.Center
                     ) {
                         CircularProgressIndicator()
                     }
@@ -138,19 +134,19 @@ fun SearchScreen(
             }
         }
         Column(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .padding(top = 64.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Companion.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             mainContent()
             Column(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .padding(8.dp),
-                horizontalAlignment = Alignment.End,
+                horizontalAlignment = Alignment.Companion.End,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AnimatedVisibility(visible = !isNew && !loading) {
@@ -162,8 +158,8 @@ fun SearchScreen(
                 }
 
                 Row(
-                    modifier = Modifier.align(Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.Companion.align(Alignment.Companion.End),
+                    verticalAlignment = Alignment.Companion.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ElevatedButton(
@@ -194,93 +190,13 @@ fun SearchScreen(
                     Row {
                         Text(
                             text = stringResource(R.string.last_modification_date),
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.Companion.padding(end = 8.dp)
                         )
                         Text(
                             text = lastModifiedDate?.convertToString()
                                 ?: stringResource(R.string.last_modified_date_not_available),
                         )
                     }
-                }
-            }
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable
-fun SearchScreen(
-    query: String,
-    loading: Boolean,
-    onQueryChange: (String) -> Unit,
-    onSearch: (String) -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    eventFlow: Flow<UiEvent>,
-    mainContent: @Composable () -> Unit,
-) {
-
-    val context = LocalContext.current
-
-    ObserveEffect(eventFlow, eventFlow) {
-        when (it) {
-            is UiEvent.ShowSnackbar -> {
-                SnackbarController.sendEvent(
-                    event = SnackbarEvent(
-                        message = context.getString(it.message)
-                    )
-                )
-            }
-        }
-    }
-
-    Box(
-        modifier
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-            .fillMaxSize()
-    ) {
-        Column {
-            Surface(
-                shape = SearchBarDefaults.dockedShape,
-                color = SearchBarDefaults.colors().containerColor,
-                contentColor = contentColorFor(SearchBarDefaults.colors().containerColor),
-                tonalElevation = SearchBarDefaults.TonalElevation,
-                shadowElevation = SearchBarDefaults.ShadowElevation,
-                modifier = modifier
-                    .zIndex(1f)
-                    .width(360.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    BackButton(onClick = onBack)
-                    SearchBarDefaults.InputField(
-                        query = query,
-                        onQueryChange = onQueryChange,
-                        onSearch = onSearch,
-                        expanded = true,
-                        onExpandedChange = {},
-                        placeholder = { Text(stringResource(R.string.search)) },
-                        trailingIcon = {
-                            IconButton(onClick = { onQueryChange(query) }) {
-                                Icon(Icons.Default.Search, contentDescription = null)
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-
-            AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
-                if (it) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    mainContent()
                 }
             }
         }

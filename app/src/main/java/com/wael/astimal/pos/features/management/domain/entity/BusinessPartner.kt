@@ -20,8 +20,9 @@ data class BusinessPartner(
     var type: PartnerType,
 
     val clientDebt: Double = 0.0,
-    val supplierIndebtedness: Double = 0.0
-){
+    val supplierIndebtedness: Double = 0.0,
+    val isSynced: Boolean
+) {
     val id: String get() = "$clientLocalId,$supplierLocalId"
     val netBalance: Double get() = supplierIndebtedness - clientDebt
 }

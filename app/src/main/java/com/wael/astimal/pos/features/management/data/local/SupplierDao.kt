@@ -21,4 +21,8 @@ interface SupplierDao {
 
     @Query("UPDATE suppliers SET indebtedness = indebtedness + :change WHERE localId = :supplierId")
     suspend fun adjustIndebtedness(supplierId: Long, change: Double)
+
+    // Add this method to your SupplierDao interface
+    @Query("UPDATE suppliers SET isDeletedLocally = 1, lastModified = :timestamp WHERE localId = :localId")
+    suspend fun softDeleteSupplier(localId: Long, timestamp: Long = System.currentTimeMillis())
 }

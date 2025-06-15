@@ -167,7 +167,6 @@
     <string name="quantity_change_by">Quantity chang by</string>
     <string name="reason">Reason</string>
     <string name="notes_optional">Notes optional</string>
-    <string name="save">Save</string>
     <string name="stock_adjustment_reason_initial_count">Stock adjustment reason initial count</string>
     <string name="stock_adjustment_reason_recount">stock adjustment reason recount</string>
     <string name="stock_adjustment_reason_damaged_goods">stock adjustment reason damaged goods</string>
@@ -235,4 +234,15 @@
     <string name="client_and_supplier">Client &amp; Supplier</string>
     <string name="indebtedness">Indebtedness: %s</string>
     <string name="address_placeholder">Address: %s</string>
+
+    <string name="add_partner">Add Partner</string>
+    <string name="edit_partner">Edit Partner</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="partner_saved_successfully">Partner saved successfully</string>
+    <string name="error_saving_partner">Error saving partner</string>
+    <string name="partner_deleted_successfully">Partner deleted successfully</string>
+    <string name="error_deleting_partner">Error deleting partner</string>
+    <string name="confirm_delete">Confirm Delete</string>
+    <string name="confirm_delete_partner_message">Are you sure you want to delete %s? This action cannot be undone.</string>
 </resources>
