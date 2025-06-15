@@ -226,4 +226,13 @@
     <string name="failed_to_delete_unit">Failed to delete unit</string>
     <string name="select">Select</string>
     <string name="client_or_suppler">Client or suppler</string>
+    <string name="error_searching_business_partners">Error searching business partners</string>
+    <string name="business_partner">Business partner</string>
+
+    <string name="net_balance_positive">Net Balance (You Owe): %s</string>
+    <string name="net_balance_negative">Net Balance (They Owe): %s</string>
+    <string name="business_partners">Business Partners</string>
+    <string name="client_and_supplier">Client &amp; Supplier</string>
+    <string name="indebtedness">Indebtedness: %s</string>
+    <string name="address_placeholder">Address: %s</string>
 </resources>

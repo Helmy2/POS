@@ -19,14 +19,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
-import com.wael.astimal.pos.features.management.presentation.client_info.ClientInfoRoute
+import com.wael.astimal.pos.features.management.presentation.business_partner.BusinessPartnerRoute
 import com.wael.astimal.pos.features.management.presentation.employee_account.EmployeeAccountRoute
 import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseRoute
 import com.wael.astimal.pos.features.management.presentation.purchase_return.PurchaseReturnRoute
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherRoute
 import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
-import com.wael.astimal.pos.features.management.presentation.supplier_info.SupplierInfoRoute
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -82,14 +81,13 @@ fun ManagementScreen(
                     label = {
                         Text(
                             when (it) {
-                                ManagementDestination.ClientInfo -> context.getString(R.string.client_info)
                                 ManagementDestination.SalesOrder -> context.getString(R.string.sales_order)
                                 ManagementDestination.OrderReturn -> context.getString(R.string.order_return)
-                                ManagementDestination.SupplierInfo -> context.getString(R.string.supplier_info)
                                 ManagementDestination.PurchaseOrder -> context.getString(R.string.purchase_order)
                                 ManagementDestination.PurchaseReturn -> context.getString(R.string.purchase_return)
                                 ManagementDestination.EmployeeAccount -> context.getString(R.string.employee_account)
                                 ManagementDestination.ReceivePayVoucher -> context.getString(R.string.receive_pay_voucher)
+                                ManagementDestination.BusinessPartner -> context.getString(R.string.business_partner)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(16.dp)
@@ -104,9 +102,6 @@ fun ManagementScreen(
         detailPane = {
             AnimatedPane {
                 when (scaffoldNavigator.currentDestination?.contentKey) {
-                    ManagementDestination.ClientInfo -> {
-                        ClientInfoRoute(onBack = { scope.launch { scaffoldNavigator.navigateBack() } })
-                    }
 
                     ManagementDestination.SalesOrder -> {
                         SalesRoute(
@@ -116,12 +111,6 @@ fun ManagementScreen(
 
                     ManagementDestination.OrderReturn -> {
                         SalesReturnRoute(
-                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
-                        )
-                    }
-
-                    ManagementDestination.SupplierInfo -> {
-                        SupplierInfoRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                         )
                     }
@@ -146,6 +135,12 @@ fun ManagementScreen(
 
                     ManagementDestination.ReceivePayVoucher -> {
                         ReceivePayVoucherRoute(
+                            onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
+                        )
+                    }
+
+                    ManagementDestination.BusinessPartner -> {
+                        BusinessPartnerRoute(
                             onBack = { scope.launch { scaffoldNavigator.navigateBack() } },
                         )
                     }
