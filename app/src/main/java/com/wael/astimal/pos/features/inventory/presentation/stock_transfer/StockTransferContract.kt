@@ -21,14 +21,15 @@ data class StockTransferScreenState(
     val isNew: Boolean get() = selectedTransfer == null
     val canEditEmployee: Boolean get() = currentUser?.isAdmin == true
     val canEdit: Boolean get() = currentUser?.isAdmin == true || currentTransferInput.selectedEmployeeId == currentUser?.id
+    val canChangeFromStore: Boolean get() = currentUser?.isAdmin == true
 }
 
 data class EditableStockTransfer(
     val localId: Long = 0L,
-    val fromStoreId: Long? = null,
-    val toStoreId: Long? = null,
+    val fromStore: Store? = null,
+    val toStore: Store? = null,
     val selectedEmployeeId: Long? = null,
-    val transferDate: Long? = System.currentTimeMillis(),
+    val transferDate: Long = System.currentTimeMillis(),
     val items: List<EditableStockTransferItem> = listOf(),
 )
 

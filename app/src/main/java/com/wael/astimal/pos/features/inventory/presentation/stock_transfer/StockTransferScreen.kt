@@ -110,7 +110,7 @@ fun StockTransferScreen(
                 availableProducts = state.availableProducts,
                 availableEmployees = state.availableEmployees,
                 onEvent = onEvent,
-                isNewTransfer = state.isNew.not(),
+                canChangeFromStore = state.canChangeFromStore,
                 canEditEmployee = state.canEditEmployee,
                 canEditTheRest = state.canEdit
             )
@@ -126,9 +126,9 @@ fun StockTransferForm(
     availableProducts: List<Product>,
     availableEmployees: List<User>,
     onEvent: (StockTransferScreenEvent) -> Unit,
-    isNewTransfer: Boolean,
-    canEditEmployee: Boolean = true,
-    canEditTheRest: Boolean = true
+    canEditEmployee: Boolean,
+    canEditTheRest: Boolean,
+    canChangeFromStore: Boolean
 ) {
     val localAppLocale = LocalAppLocale.current
     Column(
@@ -137,29 +137,25 @@ fun StockTransferForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            if (isNewTransfer) stringResource(R.string.new_stock_transfer) else stringResource(R.string.transfer_details),
-            style = MaterialTheme.typography.headlineSmall
-        )
         DataPicker(
-            selectedDateMillis = editableTransfer.transferDate ?: System.currentTimeMillis(),
+            selectedDateMillis = editableTransfer.transferDate,
             onDateSelected = { onEvent(StockTransferScreenEvent.UpdateTransferDate(it)) },
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.from_store),
             items = availableStores,
-            selectedItemId = editableTransfer.fromStoreId,
+            selectedItemId = editableTransfer.fromStore?.localId,
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
-            enabled = canEditTheRest
+            enabled = canChangeFromStore
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.to_store),
-            items = availableStores.filter { it.localId != editableTransfer.fromStoreId },
-            selectedItemId = editableTransfer.toStoreId,
+            items = availableStores.filter { it.localId != editableTransfer.fromStore?.localId },
+            selectedItemId = editableTransfer.toStore?.localId,
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
             itemToId = { it.localId },
@@ -295,33 +291,29 @@ fun StockTransferItemRow(
             }
         }
         AnimatedVisibility(item.product?.maximumProductUnit != null) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Label(
-                        item.product?.maximumProductUnit?.localizedName?.displayName(language) ?: ""
-                    )
-                    TextInputField(
-                        value = item.maxUnitQuantity,
-                        onValueChange = {
-                            onEvent(
-                                StockTransferScreenEvent.UpdateItemMaxUnitQuantity(
-                                    item.tempEditorId,
-                                    it
-                                )
+                Label(
+                    item.product?.maximumProductUnit?.localizedName?.displayName(language) ?: ""
+                )
+                TextInputField(
+                    value = item.maxUnitQuantity,
+                    onValueChange = {
+                        onEvent(
+                            StockTransferScreenEvent.UpdateItemMaxUnitQuantity(
+                                item.tempEditorId,
+                                it
                             )
-                        },
-                        label = stringResource(R.string.qty),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f),
-                        enabled = item.isSelectedUnitIsMax && enabled
-                    )
-                }
+                        )
+                    },
+                    label = stringResource(R.string.qty),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f),
+                    enabled = item.isSelectedUnitIsMax && enabled
+                )
             }
         }
     }

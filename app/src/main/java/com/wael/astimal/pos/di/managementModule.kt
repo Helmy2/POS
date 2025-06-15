@@ -22,7 +22,6 @@ import com.wael.astimal.pos.features.management.domain.repository.SupplierReposi
 import com.wael.astimal.pos.features.management.presentation.management.ManagementViewModel
 import com.wael.astimal.pos.features.management.presentation.client_info.ClientInfoViewModel
 import com.wael.astimal.pos.features.management.presentation.employee_account.EmployeeAccountViewModel
-import com.wael.astimal.pos.features.management.presentation.employee_payment.EmployeePaymentViewModel
 import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseViewModel
 import com.wael.astimal.pos.features.management.presentation.purchase_return.PurchaseReturnViewModel
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherViewModel
@@ -65,8 +64,6 @@ val managementModule = module {
     viewModel { SupplierViewModel(get()) }
     viewModel { PurchaseViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { EmployeeAccountViewModel(get(), get()) }
+    viewModel { EmployeeAccountViewModel(get(), get(),get()) }
     viewModel { ReceivePayVoucherViewModel(get(), get(), get(), get()) }
-    viewModel { EmployeePaymentViewModel(get(), get(), get()) }
-
 }

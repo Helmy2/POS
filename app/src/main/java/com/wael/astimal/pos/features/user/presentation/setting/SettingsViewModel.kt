@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val settingManger: SettingsManager, private val sessionManager: SessionManager
+    private val settingManger: SettingsManager,
+    private val sessionManager: SessionManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -35,9 +36,7 @@ class SettingsViewModel(
     fun handleEvent(event: SettingsEvent) {
         when (event) {
             is SettingsEvent.Logout -> logout()
-            is SettingsEvent.UpdateEditeNameDialog -> updateEditeNameDialog(event.show)
             is SettingsEvent.UpdateName -> updateName(event.name)
-            is SettingsEvent.ConfirmUpdateName -> confirmUpdate()
             is SettingsEvent.UpdateThemeMode -> updateTheme(event.mode)
             is SettingsEvent.UpdateLanguage -> updateLanguage(event.language)
             is SettingsEvent.UpdateLanguageDialog -> updateLangeDialog(event.show)
@@ -66,16 +65,8 @@ class SettingsViewModel(
     }
 
 
-    private fun confirmUpdate() {
-        // todo: Implement the logic to confirm the name update
-    }
-
     private fun updateName(name: String) {
         _state.update { it.copy(name = name) }
-    }
-
-    private fun updateEditeNameDialog(show: Boolean) {
-        _state.update { it.copy(showEditNameDialog = show) }
     }
 
     private fun initializeUserData() {

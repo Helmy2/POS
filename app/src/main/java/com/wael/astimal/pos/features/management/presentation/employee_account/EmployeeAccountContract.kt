@@ -1,15 +1,23 @@
 package com.wael.astimal.pos.features.management.presentation.employee_account
 
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccount
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class EmployeeAccountState(
-    val isLoading: Boolean = false,
+    val loading: Boolean = false,
     val employees: List<User> = emptyList(),
     val selectedEmployee: User? = null,
     val employeeAccount: EmployeeAccount? = null,
+    val amount: String = "",
+    val transactionType: EmployeeTransactionType = EmployeeTransactionType.SALARY,
+    val notes: String = "",
 )
 
 sealed interface EmployeeAccountEvent {
     data class SelectEmployee(val employee: User) : EmployeeAccountEvent
+    data class SelectTransactionType(val type: EmployeeTransactionType) : EmployeeAccountEvent
+    data class UpdateAmount(val amount: String) : EmployeeAccountEvent
+    data class UpdateNotes(val notes: String) : EmployeeAccountEvent
+    data object SavePayment : EmployeeAccountEvent
 }

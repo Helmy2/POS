@@ -224,4 +224,6 @@
     <string name="failed_to_update_unit">Failed to update unit</string>
     <string name="no_unit_selected_for_deletion">No unit selected for deletion.</string>
     <string name="failed_to_delete_unit">Failed to delete unit</string>
+    <string name="select">Select</string>
+    <string name="client_or_suppler">Client or suppler</string>
 </resources>

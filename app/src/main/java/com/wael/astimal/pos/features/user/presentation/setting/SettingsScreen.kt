@@ -1,22 +1,15 @@
 package com.wael.astimal.pos.features.user.presentation.setting
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,11 +22,9 @@ import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.features.user.presentation.components.ClickableText
 import com.wael.astimal.pos.features.user.presentation.components.LabeledRow
 import com.wael.astimal.pos.features.user.presentation.components.LanguageSettingRow
 import com.wael.astimal.pos.features.user.presentation.components.ThemeSettingsRow
-import com.wael.astimal.pos.features.user.presentation.components.UpdateNameDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -73,19 +64,10 @@ fun SettingsScreen(
         ) {
             LabeledRow(
                 label = stringResource(R.string.name), content = {
-                    ClickableText(content = {
-                        Row {
-                            Text(
-                                text = state.user?.localizedName?.displayName(state.language)
-                                    ?: stringResource(R.string.n_a)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = stringResource(R.string.edit_name)
-                            )
-                        }
-                    }, onClick = { onEvent(SettingsEvent.UpdateEditeNameDialog(true)) })
+                    Text(
+                        text = state.user?.localizedName?.displayName(state.language)
+                            ?: stringResource(R.string.n_a)
+                    )
                 }, modifier = Modifier
                     .sizeIn(maxWidth = 400.dp)
                     .fillMaxWidth()
@@ -113,15 +95,6 @@ fun SettingsScreen(
             ) {
                 Text(text = stringResource(R.string.logout))
             }
-        }
-        AnimatedVisibility(state.showEditNameDialog) {
-            UpdateNameDialog(
-                name = state.name,
-                onValueChange = { onEvent(SettingsEvent.UpdateName(it)) },
-                onConfirm = { onEvent(SettingsEvent.ConfirmUpdateName) },
-                onDismiss = { onEvent(SettingsEvent.UpdateEditeNameDialog(false)) },
-                modifier = Modifier.padding(16.dp)
-            )
         }
     }
 }

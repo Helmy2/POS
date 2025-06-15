@@ -6,7 +6,6 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class SettingsState(
     val user: User? = null,
-    val showEditNameDialog: Boolean = false,
     val showEditProfilePictureDialog: Boolean = false,
     val showThemeDialog: Boolean = false,
     val showLanguageDialog: Boolean = false,
@@ -18,13 +17,11 @@ data class SettingsState(
 
 sealed interface SettingsEvent {
     data object Logout : SettingsEvent
-    data class UpdateEditeNameDialog(val show: Boolean) : SettingsEvent
     data class UpdateThemeDialog(val show: Boolean) : SettingsEvent
     data class UpdateLanguageDialog(val show: Boolean) : SettingsEvent
     data class UpdateName(val name: String) : SettingsEvent
     data class UpdateThemeMode(val mode: ThemeMode) : SettingsEvent
     data class UpdateLanguage(val language: Language) : SettingsEvent
-    data object ConfirmUpdateName : SettingsEvent
 }
 
 sealed class SettingsEffect {

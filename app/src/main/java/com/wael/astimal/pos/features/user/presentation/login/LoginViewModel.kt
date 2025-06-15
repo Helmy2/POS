@@ -43,11 +43,11 @@ class LoginViewModel(
     }
 
     private fun login() {
+        // todo login
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
             val result = sessionManger.saveSession(
-                userId = 3L,
-                authToken = "test_auth_token" // todo replace with actual auth token
+                userId = _state.value.username.toLongOrNull() ?: 2L, authToken = "test_auth_token"
             )
             handleAuthResult(result) {
                 _effect.emit(LoginEffect.NavigateToHome)
