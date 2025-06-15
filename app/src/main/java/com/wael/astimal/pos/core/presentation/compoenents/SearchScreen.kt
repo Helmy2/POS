@@ -13,17 +13,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DockedSearchBar
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -77,120 +80,117 @@ fun SearchScreen(
         }
     }
 
+    val fabActions = remember(isNew, loading, canEdit) {
+        buildList {
+            if (canEdit) {
+                add(
+                    FabAction(
+                        icon = Icons.Default.Create,
+                        label = context.getString(if (isNew) R.string.create else R.string.update),
+                        onClick = if (isNew) onCreate else onUpdate
+                    )
+                )
+            }
+            if (isNew.not()) {
+                if (canEdit) {
+                    add(
+                        FabAction(
+                            icon = Icons.Default.Delete,
+                            label = context.getString(R.string.delete),
+                            onClick = onDelete
+                        )
+                    )
+                }
+                add(
+                    FabAction(
+                        icon = Icons.Default.FileCopy,
+                        label = context.getString(R.string.new_),
+                        onClick = onNew
+                    )
+                )
+            }
+        }
+    }
+
     BackHandler {
         if (isSearchActive) onSearchActiveChange(false)
         else onBack()
     }
-    Box(
-        modifier
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-            .fillMaxSize()
-            .semantics { isTraversalGroup = true }) {
-        DockedSearchBar(
-            modifier = Modifier.Companion
-                .fillMaxWidth()
-                .align(Alignment.Companion.TopCenter)
-                .semantics { traversalIndex = 0f },
-            inputField = {
-                Row(
-                    verticalAlignment = Alignment.Companion.CenterVertically
-                ) {
-                    BackButton(
-                        onClick = {
-                            if (isSearchActive) onSearchActiveChange(false)
-                            else onBack()
-                        },
-                    )
-                    SearchBarDefaults.InputField(
-                        query = query,
-                        onQueryChange = onQueryChange,
-                        onSearch = onSearch,
-                        expanded = isSearchActive,
-                        onExpandedChange = onSearchActiveChange,
-                        placeholder = { Text(stringResource(R.string.search)) },
-                        trailingIcon = {
-                            IconButton(onClick = { onSearch(query) }) {
-                                Icon(Icons.Default.Search, contentDescription = null)
-                            }
-                        },
-                        modifier = Modifier.Companion.weight(1f)
-                    )
-                }
-            },
-            expanded = isSearchActive,
-            onExpandedChange = onSearchActiveChange,
-        ) {
-            AnimatedContent(loading, modifier = Modifier.Companion.padding(8.dp)) { it ->
-                if (it) {
-                    Box(
-                        modifier = Modifier.Companion.fillMaxSize(),
-                        contentAlignment = Alignment.Companion.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    searchResults()
-                }
-            }
-        }
-        Column(
-            modifier = Modifier.Companion
-                .padding(top = 64.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.Companion.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            mainContent()
-            Column(
-                modifier = Modifier.Companion
+    Scaffold(
+        topBar = {
+            DockedSearchBar(
+                modifier = Modifier
+                    .padding(16.dp)
                     .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.Companion.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AnimatedVisibility(visible = !isNew && !loading) {
-                    ElevatedButton(
-                        onClick = { onNew() },
+                    .semantics { traversalIndex = 0f },
+                inputField = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.new_))
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.Companion.align(Alignment.Companion.End),
-                    verticalAlignment = Alignment.Companion.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ElevatedButton(
-                        onClick = { onDelete() },
-                        enabled = !isNew && !loading && canEdit,
-                    ) {
-                        Text(stringResource(R.string.delete))
-                    }
-                    Button(
-                        onClick = {
-                            if (isNew) {
-                                onCreate()
-                            } else {
-                                onUpdate()
-                            }
-                        },
-                        enabled = !loading && canEdit,
-                    ) {
-                        Text(
-                            stringResource(
-                                if (isNew) R.string.create
-                                else R.string.update
-                            )
+                        BackButton(
+                            onClick = {
+                                if (isSearchActive) onSearchActiveChange(false)
+                                else onBack()
+                            },
+                        )
+                        SearchBarDefaults.InputField(
+                            query = query,
+                            onQueryChange = onQueryChange,
+                            onSearch = onSearch,
+                            expanded = isSearchActive,
+                            onExpandedChange = onSearchActiveChange,
+                            placeholder = { Text(stringResource(R.string.search)) },
+                            trailingIcon = {
+                                IconButton(onClick = { onSearch(query) }) {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
                         )
                     }
+                },
+                expanded = isSearchActive,
+                onExpandedChange = onSearchActiveChange,
+            ) {
+                AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
+                    if (it) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        searchResults()
+                    }
                 }
+            }
+        },
+        floatingActionButton = {
+            MultiActionFab(
+                actions = fabActions,
+                isEnabled = true
+            )
+        }
+    ) {
+        Box(
+            modifier
+                .padding(it)
+                .fillMaxSize()
+                .semantics { isTraversalGroup = true }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                mainContent()
                 AnimatedVisibility(visible = !isNew && !loading) {
                     Row {
                         Text(
                             text = stringResource(R.string.last_modification_date),
-                            modifier = Modifier.Companion.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(
                             text = lastModifiedDate?.convertToString()
