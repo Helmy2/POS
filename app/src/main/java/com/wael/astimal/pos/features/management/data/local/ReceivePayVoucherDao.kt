@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherWithDetails
 import kotlinx.coroutines.flow.Flow
@@ -36,4 +37,14 @@ interface ReceivePayVoucherDao {
         ORDER BY date DESC
     """)
     fun getVouchersByPartnerIds(clientId: Long, supplierId: Long): Flow<List<ReceivePayVoucherWithDetails>>
+
+    @Update
+    suspend fun updateVoucher(voucher: ReceivePayVoucherEntity)
+
+    @Query("DELETE FROM receive_pay_vouchers WHERE localId = :voucherId")
+    suspend fun deleteVoucher(voucherId: Long)
+
+    @Transaction
+    @Query("SELECT * FROM receive_pay_vouchers WHERE localId = :voucherId")
+    suspend fun getVoucherWithDetailsById(voucherId: Long): ReceivePayVoucherWithDetails?
 }

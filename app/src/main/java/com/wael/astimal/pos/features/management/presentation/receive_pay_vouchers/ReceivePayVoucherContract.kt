@@ -4,20 +4,28 @@ import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class ReceivePayVoucherState(
     val isLoading: Boolean = false,
     val vouchers: List<ReceivePayVoucher> = emptyList(),
     val clients: List<Client> = emptyList(),
     val suppliers: List<Supplier> = emptyList(),
-
     val partyType: VoucherPartyType = VoucherPartyType.CLIENT,
     val selectedClient: Client? = null,
     val selectedSupplier: Supplier? = null,
     val amount: String = "",
     val notes: String = "",
     val date: Long = System.currentTimeMillis(),
-)
+    val isSaving: Boolean = false,
+    val currentUser: User? = null,
+    val voucherToEdit: ReceivePayVoucher? = null,
+    val showEditDialog: Boolean = false
+) {
+    val canEdit = currentUser?.isAdmin == true ||
+            (selectedClient?.responsibleEmployee?.id == currentUser?.id && partyType == VoucherPartyType.CLIENT)
+            || (selectedSupplier?.responsibleEmployee?.id == currentUser?.id && partyType == VoucherPartyType.SUPPLIER)
+}
 
 sealed interface ReceivePayVoucherEvent {
     data class SelectPartyType(val type: VoucherPartyType) : ReceivePayVoucherEvent
@@ -26,5 +34,9 @@ sealed interface ReceivePayVoucherEvent {
     data class UpdateAmount(val amount: String) : ReceivePayVoucherEvent
     data class UpdateNotes(val notes: String) : ReceivePayVoucherEvent
     data class UpdateDate(val date: Long) : ReceivePayVoucherEvent
-    data object SaveVoucher : ReceivePayVoucherEvent
+    data object AddVoucher : ReceivePayVoucherEvent
+    data class EditVoucherClicked(val voucher: ReceivePayVoucher) : ReceivePayVoucherEvent
+    data class DeleteVoucherClicked(val voucher: ReceivePayVoucher) : ReceivePayVoucherEvent
+    data class SaveVoucher(val voucher: ReceivePayVoucher) : ReceivePayVoucherEvent
+    data object DismissEditDialog : ReceivePayVoucherEvent
 }

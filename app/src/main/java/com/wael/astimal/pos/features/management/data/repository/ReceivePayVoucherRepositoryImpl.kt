@@ -31,46 +31,48 @@ class ReceivePayVoucherRepositoryImpl(
     override suspend fun addVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return try {
             database.withTransaction {
-                val voucherEntity = ReceivePayVoucherEntity(
-                    serverId = null,
-                    amount = voucher.amount,
-                    clientLocalId = if (voucher.party is Client) voucher.party.id else null,
-                    supplierLocalId = if (voucher.party is Supplier) voucher.party.id else null,
-                    date = voucher.date,
-                    notes = voucher.notes,
-                    employeeLocalId = voucher.createdBy.id,
-                    isReceipt = voucher.partyType == VoucherPartyType.CLIENT
-                )
+                val voucherEntity = voucher.toEntity()
                 val voucherId = voucherDao.insertVoucher(voucherEntity)
+                partnerTransactionDao.insertTransaction(voucher.toLedgerEntry(voucherId))
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
-                // Create a corresponding entry in the unified transaction ledger
-                val transaction = when (voucher.partyType) {
-                    VoucherPartyType.CLIENT -> {
-                        // A payment received from a client is a CREDIT to their account (reduces what they owe)
-                        PartnerTransactionEntity(
-                            clientId = (voucher.party as Client).id,
-                            supplierId = null,
-                            sourceTransactionId = voucherId,
-                            transactionType = TransactionType.PAYMENT_RECEIVED,
-                            date = voucher.date,
-                            debit = 0.0,
-                            credit = voucher.amount
-                        )
-                    }
-                    VoucherPartyType.SUPPLIER -> {
-                        // A payment sent to a supplier is a DEBIT to their account (reduces what you owe them)
-                        PartnerTransactionEntity(
-                            clientId = null,
-                            supplierId = (voucher.party as Supplier).id,
-                            sourceTransactionId = voucherId,
-                            transactionType = TransactionType.PAYMENT_SENT,
-                            date = voucher.date,
-                            debit = voucher.amount,
-                            credit = 0.0
-                        )
-                    }
-                }
-                partnerTransactionDao.insertTransaction(transaction)
+    override suspend fun updateVoucher(voucher: ReceivePayVoucher): Result<Unit> {
+        return try {
+            database.withTransaction {
+                val voucherEntity = voucher.toEntity()
+                voucherDao.updateVoucher(voucherEntity)
+
+                // Delete the old ledger entry and insert the updated one
+                partnerTransactionDao.deleteTransactionsBySource(
+                    voucher.localId,
+                    voucher.getTransactionType()
+                )
+                partnerTransactionDao.insertTransaction(voucher.toLedgerEntry(voucher.localId))
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteVoucher(voucherId: Long): Result<Unit> {
+        return try {
+            database.withTransaction {
+                // Delete both the voucher and its corresponding ledger entry
+                val voucherToDelete =
+                    voucherDao.getVoucherWithDetailsById(voucherId) ?: throw NoSuchElementException(
+                        "Voucher not found"
+                    )
+                partnerTransactionDao.deleteTransactionsBySource(
+                    voucherId,
+                    voucherToDelete.toDomain().getTransactionType()
+                )
+                voucherDao.deleteVoucher(voucherId)
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -78,3 +80,48 @@ class ReceivePayVoucherRepositoryImpl(
         }
     }
 }
+
+// Helper mapper functions
+private fun ReceivePayVoucher.toEntity(): ReceivePayVoucherEntity {
+    return ReceivePayVoucherEntity(
+        localId = this.localId,
+        serverId = this.serverId,
+        amount = this.amount,
+        clientLocalId = if (this.party is Client) this.party.id else null,
+        supplierLocalId = if (this.party is Supplier) this.party.id else null,
+        date = this.date,
+        notes = this.notes,
+        employeeLocalId = this.createdBy.id,
+        isReceipt = this.partyType == VoucherPartyType.CLIENT,
+        isSynced = false // Always mark as unsynced on create/update
+    )
+}
+
+private fun ReceivePayVoucher.toLedgerEntry(voucherId: Long): PartnerTransactionEntity {
+    return when (this.partyType) {
+        VoucherPartyType.CLIENT -> PartnerTransactionEntity(
+            clientId = (this.party as Client).id,
+            supplierId = null,
+            sourceTransactionId = voucherId,
+            transactionType = TransactionType.PAYMENT_RECEIVED,
+            date = this.date,
+            debit = 0.0,
+            credit = this.amount
+        )
+
+        VoucherPartyType.SUPPLIER -> PartnerTransactionEntity(
+            clientId = null,
+            supplierId = (this.party as Supplier).id,
+            sourceTransactionId = voucherId,
+            transactionType = TransactionType.PAYMENT_SENT,
+            date = this.date,
+            debit = this.amount,
+            credit = 0.0
+        )
+    }
+}
+
+private fun ReceivePayVoucher.getTransactionType(): TransactionType {
+    return if (this.partyType == VoucherPartyType.CLIENT) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
+}
+

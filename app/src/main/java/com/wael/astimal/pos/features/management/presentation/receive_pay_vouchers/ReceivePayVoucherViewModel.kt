@@ -36,27 +36,138 @@ class ReceivePayVoucherViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            val currentUser = sessionManager.getCurrentUser().first()
+            _state.update {
+                it.copy(
+                    currentUser = currentUser
+                )
+            }
+        }
         loadInitialData()
     }
 
     fun onEvent(event: ReceivePayVoucherEvent) {
         when (event) {
-            is ReceivePayVoucherEvent.SelectPartyType -> _state.update { it.copy(partyType = event.type, selectedClient = null, selectedSupplier = null) }
+            is ReceivePayVoucherEvent.SelectPartyType -> _state.update {
+                it.copy(
+                    partyType = event.type,
+                    selectedClient = null,
+                    selectedSupplier = null
+                )
+            }
+
             is ReceivePayVoucherEvent.SelectClient -> _state.update { it.copy(selectedClient = event.client) }
             is ReceivePayVoucherEvent.SelectSupplier -> _state.update { it.copy(selectedSupplier = event.supplier) }
             is ReceivePayVoucherEvent.UpdateAmount -> _state.update { it.copy(amount = event.amount) }
             is ReceivePayVoucherEvent.UpdateNotes -> _state.update { it.copy(notes = event.notes) }
             is ReceivePayVoucherEvent.UpdateDate -> _state.update { it.copy(date = event.date) }
-            is ReceivePayVoucherEvent.SaveVoucher -> saveVoucher()
+            is ReceivePayVoucherEvent.AddVoucher -> addVoucher()
+            is ReceivePayVoucherEvent.EditVoucherClicked -> _state.update {
+                it.copy(
+                    showEditDialog = true,
+                    voucherToEdit = event.voucher
+                )
+            }
+
+            is ReceivePayVoucherEvent.SaveVoucher -> saveVoucher(event.voucher)
+            is ReceivePayVoucherEvent.DeleteVoucherClicked -> deleteVoucher(event.voucher)
+            is ReceivePayVoucherEvent.DismissEditDialog -> _state.update {
+                it.copy(
+                    showEditDialog = false,
+                    voucherToEdit = null
+                )
+            }
+        }
+    }
+
+    private fun addVoucher() {
+        viewModelScope.launch {
+
+            val currentState = _state.value
+            val currentUser = _state.value.currentUser
+            val amount = currentState.amount.toDoubleOrNull()
+
+            if (currentUser == null || amount == null || amount <= 0) {
+                viewModelScope.launch { _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_data)) }
+                return@launch
+            }
+
+            val party: Any = when (currentState.partyType) {
+                VoucherPartyType.CLIENT -> currentState.selectedClient ?: run {
+                    viewModelScope.launch { _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_a_party)) }
+                    return@launch
+                }
+
+                VoucherPartyType.SUPPLIER -> currentState.selectedSupplier ?: run {
+                    viewModelScope.launch { _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_a_party)) }
+                    return@launch
+                }
+            }
+
+            val newVoucher = ReceivePayVoucher(
+                localId = 0,
+                serverId = null,
+                amount = amount,
+                party = party,
+                partyType = currentState.partyType,
+                date = currentState.date,
+                notes = currentState.notes.takeIf { it.isNotBlank() },
+                createdBy = currentUser,
+                isSynced = false
+            )
+            saveVoucher(newVoucher)
+        }
+    }
+
+    private fun saveVoucher(voucher: ReceivePayVoucher) {
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val result = if (voucher.localId == 0L) {
+                voucherRepository.addVoucher(voucher)
+            } else {
+                voucherRepository.updateVoucher(voucher)
+            }
+            result.fold(
+                onSuccess = {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.voucher_saved_successfully))
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            showEditDialog = false,
+                            voucherToEdit = null,
+                            amount = "",
+                            notes = "",
+                            selectedClient = null,
+                        )
+                    }
+                },
+                onFailure = {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_voucher))
+                    _state.update { it.copy(isSaving = false) }
+                }
+            )
+        }
+    }
+
+    private fun deleteVoucher(voucher: ReceivePayVoucher) {
+        viewModelScope.launch {
+            val result = voucherRepository.deleteVoucher(voucher.localId)
+            if (result.isSuccess) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.voucher_deleted_successfully))
+            } else {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_voucher))
+            }
         }
     }
 
     private fun loadInitialData() {
-        val vouchersFlow = voucherRepository.getVouchers()
-        val clientsFlow = clientRepository.searchClients()
-        val suppliersFlow = supplierRepository.getSuppliers()
-
-        combine(vouchersFlow, clientsFlow, suppliersFlow) { vouchers, clients, suppliers ->
+        _state.update { it.copy(isLoading = true) }
+        combine(
+            voucherRepository.getVouchers(),
+            clientRepository.searchClients(""),
+            supplierRepository.getSuppliers("")
+        ) { vouchers, clients, suppliers ->
             _state.update {
                 it.copy(
                     vouchers = vouchers,
@@ -68,62 +179,5 @@ class ReceivePayVoucherViewModel(
         }.catch {
             _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_data))
         }.launchIn(viewModelScope)
-    }
-
-    private fun saveVoucher() {
-        viewModelScope.launch {
-            val currentState = _state.value
-            val currentUser = sessionManager.getCurrentUser().first()
-            val amount = currentState.amount.toDoubleOrNull()
-
-            if (currentUser == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
-                return@launch
-            }
-
-            if (amount == null || amount <= 0) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_amount))
-                return@launch
-            }
-
-            val party: Any? = when (currentState.partyType) {
-                VoucherPartyType.CLIENT -> currentState.selectedClient
-                VoucherPartyType.SUPPLIER -> currentState.selectedSupplier
-            }
-
-            if (party == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_a_party))
-                return@launch
-            }
-
-            val voucher = ReceivePayVoucher(
-                localId = 0L,
-                serverId = null,
-                amount = amount,
-                party = party,
-                partyType = currentState.partyType,
-                date = currentState.date,
-                notes = currentState.notes.takeIf { it.isNotBlank() },
-                createdBy = currentUser,
-                isSynced = false,
-            )
-
-            voucherRepository.addVoucher(voucher).fold(
-                onSuccess = {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.voucher_saved_successfully))
-                    _state.update {
-                        it.copy(
-                            amount = "",
-                            notes = "",
-                            selectedClient = null,
-                            selectedSupplier = null
-                        )
-                    }
-                },
-                onFailure = {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_voucher))
-                }
-            )
-        }
     }
 }

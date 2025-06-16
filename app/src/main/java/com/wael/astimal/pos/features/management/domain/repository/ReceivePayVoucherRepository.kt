@@ -6,4 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface ReceivePayVoucherRepository {
     fun getVouchers(): Flow<List<ReceivePayVoucher>>
     suspend fun addVoucher(voucher: ReceivePayVoucher): Result<Unit>
+    suspend fun updateVoucher(voucher: ReceivePayVoucher): Result<Unit>
+    suspend fun deleteVoucher(voucherId: Long): Result<Unit>
 }
