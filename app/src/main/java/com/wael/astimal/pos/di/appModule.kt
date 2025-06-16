@@ -9,4 +9,5 @@ val appModule = module {
     includes(inventoryModule)
     includes(managementModule)
     includes(dashboardModule)
+    includes(reportsModule)
 }

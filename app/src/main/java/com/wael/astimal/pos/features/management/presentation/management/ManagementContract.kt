@@ -13,11 +13,11 @@ data class ManagementState(
 object ManagementDestinations {
     fun getAll(): List<ManagementItem> = listOf(
         ManagementItem(Destination.BusinessPartners, R.string.business_partner),
+        ManagementItem(Destination.EmployeeAccounts, R.string.employee_account),
         ManagementItem(Destination.SalesOrders, R.string.sales_order),
         ManagementItem(Destination.SalesReturns, R.string.order_return),
         ManagementItem(Destination.PurchaseOrders, R.string.purchase_order),
         ManagementItem(Destination.PurchaseReturns, R.string.purchase_return),
-        ManagementItem(Destination.EmployeeAccounts, R.string.employee_account),
         ManagementItem(Destination.Vouchers, R.string.receive_pay_voucher)
     )
 }

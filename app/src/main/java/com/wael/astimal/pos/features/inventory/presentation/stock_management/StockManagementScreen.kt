@@ -1,15 +1,21 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,32 +78,26 @@ fun StockManagementScreen(
         },
         loading = state.loading,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(200.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            CustomExposedDropdownMenu(
-                label = stringResource(R.string.filter_by_store),
-                items = state.stores,
-                selectedItemId = state.selectedStore?.localId,
-                onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
-                itemToDisplayString = { it.name.displayName(language) },
-                itemToId = { it.localId },
-                canClearSelection = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            )
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    state.stocks,
-                    key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
-                    StockItemCard(stockItem = stockItem, onEvent = onEvent)
-                }
+            item {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.filter_by_store),
+                    items = state.stores,
+                    selectedItemId = state.selectedStore?.localId,
+                    onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToId = { it.localId },
+                    canClearSelection = true,
+                )
+            }
+            items(
+                state.stocks, key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
+                StockItemCard(stockItem = stockItem, onEvent = onEvent)
             }
         }
     }
@@ -106,29 +106,42 @@ fun StockManagementScreen(
 @Composable
 fun StockItemCard(stockItem: StoreStock, onEvent: (StockManagementEvent) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = stockItem.product.localizedName.displayName(LocalAppLocale.current),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = stringResource(R.string.store) + ": ${
-                    stockItem.store.name.displayName(
-                        LocalAppLocale.current
+        Box {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stockItem.product.localizedName.displayName(LocalAppLocale.current),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = stringResource(R.string.store) + ": ${
+                        stockItem.store.name.displayName(
+                            LocalAppLocale.current
+                        )
+                    }", style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = stringResource(R.string.current_quantity) + ": ${stockItem.quantity}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            IconButton(
+                onClick = { onEvent(StockManagementEvent.ShowAdjustmentDialog(stockItem)) },
+                modifier = Modifier
+                    .align(
+                        Alignment.TopEnd
                     )
-                }", style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = stringResource(R.string.current_quantity) + ": ${stockItem.quantity}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Button(onClick = { onEvent(StockManagementEvent.ShowAdjustmentDialog(stockItem)) }) {
-                Text(stringResource(R.string.adjust))
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.adjust)
+                )
             }
         }
     }

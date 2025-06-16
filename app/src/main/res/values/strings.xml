@@ -253,4 +253,5 @@
     <string name="back_to_list">Back to list</string>
     <string name="reports">Reports</string>
     <string name="units">Units</string>
+    <string name="min_unit_per_max_unit">Min unit per Max unit</string>
 </resources>

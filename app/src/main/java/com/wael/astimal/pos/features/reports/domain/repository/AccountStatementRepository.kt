@@ -1,7 +1,7 @@
-package com.wael.astimal.pos.features.management.domain.repository
+package com.wael.astimal.pos.features.reports.domain.repository
 
-import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
 import kotlinx.coroutines.flow.Flow
 
 /**

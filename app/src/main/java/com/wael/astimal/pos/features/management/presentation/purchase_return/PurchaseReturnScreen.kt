@@ -1,8 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.purchase_return
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -90,11 +89,9 @@ fun PurchaseReturnForm(
     onEvent: (PurchaseReturnEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    FlowRow(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         DataPicker(
             selectedDateMillis = state.currentReturnInput.date,

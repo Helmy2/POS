@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.management.presentation.receive_pay_vouche
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -85,7 +86,7 @@ fun ReceivePayVoucherScreen(
                 )
             }
         }) {
-        Column(
+        FlowRow(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {

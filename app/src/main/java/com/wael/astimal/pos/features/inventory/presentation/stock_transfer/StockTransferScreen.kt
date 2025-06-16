@@ -4,9 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -131,11 +131,11 @@ fun StockTransferForm(
     canChangeFromStore: Boolean
 ) {
     val localAppLocale = LocalAppLocale.current
-    Column(
+    FlowRow(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
     ) {
         DataPicker(
             selectedDateMillis = editableTransfer.transferDate,
@@ -175,20 +175,18 @@ fun StockTransferForm(
             canClearSelection = false,
         )
 
-        Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
         editableTransfer.items.forEach { item ->
             StockTransferItemRow(
                 item = item,
                 availableProducts = availableProducts,
                 onEvent = onEvent,
                 onRemoveItem = { onEvent(StockTransferScreenEvent.RemoveItemFromTransfer(item.tempEditorId)) },
-                enabled = canEditTheRest
+                enabled = canEditTheRest,
             )
         }
 
         Button(
             onClick = { onEvent(StockTransferScreenEvent.AddItemToTransfer) },
-            modifier = Modifier.fillMaxWidth(),
             enabled = canEditTheRest
         ) {
             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
@@ -205,10 +203,13 @@ fun StockTransferItemRow(
     availableProducts: List<Product>,
     onEvent: (StockTransferScreenEvent) -> Unit,
     onRemoveItem: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ) {
     val language = LocalAppLocale.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(horizontal = 24.dp)
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f)) {
                 CustomExposedDropdownMenu(

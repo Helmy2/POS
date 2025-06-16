@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.management.domain.entity
+package com.wael.astimal.pos.features.reports.domain.entity
 
 import java.time.LocalDateTime
 

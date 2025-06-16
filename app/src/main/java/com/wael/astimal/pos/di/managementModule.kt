@@ -3,7 +3,6 @@ package com.wael.astimal.pos.di
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.data.logic.ReturnAmountLogic
-import com.wael.astimal.pos.features.management.data.repository.AccountStatementRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.BusinessPartnerRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.ClientRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.EmployeeAccountRepositoryImpl
@@ -13,7 +12,6 @@ import com.wael.astimal.pos.features.management.data.repository.ReceivePayVouche
 import com.wael.astimal.pos.features.management.data.repository.SalesOrderRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesReturnRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SupplierRepositoryImpl
-import com.wael.astimal.pos.features.management.domain.repository.AccountStatementRepository
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
@@ -23,7 +21,6 @@ import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVouc
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
-import com.wael.astimal.pos.features.management.presentation.account_statement.AccountStatementViewModel
 import com.wael.astimal.pos.features.management.presentation.business_partner.BusinessPartnerViewModel
 import com.wael.astimal.pos.features.management.presentation.employee_account.EmployeeAccountViewModel
 import com.wael.astimal.pos.features.management.presentation.management.ManagementViewModel
@@ -60,15 +57,6 @@ val managementModule = module {
         ReceivePayVoucherRepositoryImpl(get(), get(), get(), get())
     }
     single<BusinessPartnerRepository> { BusinessPartnerRepositoryImpl(get(),get(),get(),get(),get()) }
-    single<AccountStatementRepository> {
-        AccountStatementRepositoryImpl(
-            get(),
-            get(),
-            get(),
-            get(),
-            get()
-        )
-    }
 
     viewModel { ManagementViewModel() }
 
@@ -79,5 +67,4 @@ val managementModule = module {
     viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { EmployeeAccountViewModel(get(), get(),get()) }
     viewModel { ReceivePayVoucherViewModel(get(), get(), get(), get()) }
-    viewModel { AccountStatementViewModel(get(), get()) }
 }

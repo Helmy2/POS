@@ -1,8 +1,8 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,8 +81,8 @@ fun StoreScreen(
             )
         },
         mainContent = {
-            Column(
-                modifier = Modifier.padding(16.dp),
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 LabeledTextField(

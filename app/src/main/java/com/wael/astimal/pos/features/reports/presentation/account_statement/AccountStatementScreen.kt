@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.management.presentation.account_statement
+package com.wael.astimal.pos.features.reports.presentation.account_statement
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -39,10 +39,10 @@ import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
-import com.wael.astimal.pos.features.management.domain.entity.TransactionType
 import com.wael.astimal.pos.features.management.presentation.business_partner.getCompositeId
+import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
+import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter

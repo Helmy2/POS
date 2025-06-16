@@ -1,8 +1,8 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -79,9 +79,9 @@ fun ProductScreen(
             )
         },
         mainContent = {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 LabeledTextField(
                     value = state.inputArName,
@@ -96,7 +96,7 @@ fun ProductScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
 
-                // Category Dropdown
+
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.categories),
                     items = state.categories,
@@ -132,7 +132,6 @@ fun ProductScreen(
                     )
                 )
 
-                // Store Dropdown
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.stores),
                     items = state.stores,
@@ -158,7 +157,9 @@ fun ProductScreen(
                         value.toDoubleOrNull()?.let {
                             onEvent(ProductEvent.UpdateSubUnitsPerMainUnit(value))
                         }
-                    }, label = "Min unit per Max unit", keyboardOptions = KeyboardOptions(
+                    },
+                    label = stringResource(R.string.min_unit_per_max_unit),
+                    keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
                     )
                 )

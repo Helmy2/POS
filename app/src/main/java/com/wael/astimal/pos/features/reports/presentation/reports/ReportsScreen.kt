@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.management.presentation.management
+package com.wael.astimal.pos.features.reports.presentation.reports
 
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -14,13 +14,14 @@ import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import org.koin.androidx.compose.koinViewModel
 
+
 @Composable
-fun ManagementRoute(
+fun ReportsRoute(
     onNavigate: (Destination) -> Unit,
-    viewModel: ManagementViewModel = koinViewModel(),
+    viewModel: ReportsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ManagementScreen(
+    ReportsScreen(
         state = state,
         onNavigate = onNavigate,
     )
@@ -28,8 +29,8 @@ fun ManagementRoute(
 
 
 @Composable
-fun ManagementScreen(
-    state: ManagementState,
+fun ReportsScreen(
+    state: ReportsState,
     onNavigate: (Destination) -> Unit,
 ) {
     Scaffold { paddingValues ->
@@ -50,5 +51,3 @@ fun ManagementScreen(
         )
     }
 }
-
-

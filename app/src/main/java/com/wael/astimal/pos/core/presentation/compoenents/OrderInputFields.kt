@@ -52,9 +52,9 @@ fun OrderInputFields(
     onUpdateItemMinUnitPrice: (tempEditorId: String, price: String) -> Unit,
 ) {
     val context = LocalContext.current
-    Column {
-        Text(stringResource(R.string.items), style = MaterialTheme.typography.titleMedium)
-
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         itemList.forEach { item ->
             OrderItemRow(
                 item = item,
@@ -72,7 +72,7 @@ fun OrderInputFields(
         Button(
             onClick = { onAddNewItemToOrder() },
             modifier = Modifier
-                .align(Alignment.End)
+                .align(Alignment.CenterHorizontally)
                 .padding(8.dp),
         ) {
             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_item))
@@ -97,7 +97,6 @@ fun OrderInputFields(
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
             ),
-            modifier = Modifier.fillMaxWidth()
         )
     }
 }

@@ -1,8 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.sales
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -81,15 +80,13 @@ fun SalesScreen(
 
 @Composable
 fun OrderForm(
-    modifier: Modifier = Modifier, state: OrderState, onEvent: (OrderEvent) -> Unit
+    state: OrderState, onEvent: (OrderEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
     val orderInput = state.currentOrderInput
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    FlowRow(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
         DataPicker(

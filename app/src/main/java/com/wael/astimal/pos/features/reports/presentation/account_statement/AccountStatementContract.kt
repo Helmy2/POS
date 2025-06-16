@@ -1,7 +1,7 @@
-package com.wael.astimal.pos.features.management.presentation.account_statement
+package com.wael.astimal.pos.features.reports.presentation.account_statement
 
-import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
 
 
 data class AccountStatementState(

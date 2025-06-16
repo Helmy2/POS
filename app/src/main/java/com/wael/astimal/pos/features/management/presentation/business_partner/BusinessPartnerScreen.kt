@@ -4,17 +4,17 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -106,15 +106,12 @@ fun BusinessPartnerScreen(
         },
         loading = state.loading,
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)) {
-            BusinessPartnerList(
-                partners = state.searchResults,
-                onPartnerClick = { onEvent(BusinessPartnerInfoEvent.SelectBusinessPartner(it)) },
-                selectedPartnerId = state.selectedBusinessPartner?.getCompositeId()
-            )
-        }
+        BusinessPartnerList(
+            partners = state.searchResults,
+            onPartnerClick = { onEvent(BusinessPartnerInfoEvent.SelectBusinessPartner(it)) },
+            selectedPartnerId = state.selectedBusinessPartner?.getCompositeId(),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 
     // Show Detail Dialog
@@ -145,65 +142,81 @@ fun BusinessPartnerScreen(
 fun BusinessPartnerList(
     partners: List<BusinessPartner>,
     onPartnerClick: (BusinessPartner) -> Unit,
-    selectedPartnerId: String?
+    selectedPartnerId: String?,
+    modifier: Modifier = Modifier
 ) {
     val language = LocalAppLocale.current
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyVerticalGrid(
+        modifier = modifier,
+        columns = GridCells.Adaptive(250.dp)
+    ) {
         items(partners, key = { it.getCompositeId() }) { partner ->
-            ListItem(
-                headlineContent = {
-                Text(
-                    partner.name.displayName(language), fontWeight = FontWeight.Bold
-                )
-            },
-                supportingContent = {
-                    Column {
-                        Text(
-                            stringResource(
-                                R.string.address_placeholder,
-                                partner.address ?: stringResource(R.string.n_a)
+            Card {
+                ListItem(
+                    headlineContent = {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                partner.name.displayName(language), fontWeight = FontWeight.Bold
                             )
-                        )
-                        when (partner.type) {
-                            PartnerType.BOTH -> {
-                                val balanceText = if (partner.netBalance >= 0) {
-                                    stringResource(
-                                        R.string.net_balance_positive, partner.netBalance
-                                    )
-                                } else {
-                                    stringResource(
-                                        R.string.net_balance_negative, abs(partner.netBalance)
+                            PartnerTypeChip(partnerType = partner.type)
+                        }
+                    },
+                    supportingContent = {
+                        Column {
+                            Text(
+                                stringResource(
+                                    R.string.address_placeholder,
+                                    partner.address ?: stringResource(R.string.n_a)
+                                )
+                            )
+                            when (partner.type) {
+                                PartnerType.BOTH -> {
+                                    val balanceText = if (partner.netBalance >= 0) {
+                                        stringResource(
+                                            R.string.net_balance_positive, partner.netBalance
+                                        )
+                                    } else {
+                                        stringResource(
+                                            R.string.net_balance_negative, abs(partner.netBalance)
+                                        )
+                                    }
+                                    Text(
+                                        text = balanceText,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (partner.netBalance >= 0) PositiveBalanceColor else NegativeBalanceColor
                                     )
                                 }
-                                Text(
-                                    text = balanceText,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (partner.netBalance >= 0) PositiveBalanceColor else NegativeBalanceColor
-                                )
-                            }
 
-                            PartnerType.CLIENT -> {
-                                Text(stringResource(R.string.debt, partner.clientDebt.toString()))
-                            }
-
-                            else -> {
-                                Text(
-                                    stringResource(
-                                        R.string.indebtedness,
-                                        partner.supplierIndebtedness.toString()
+                                PartnerType.CLIENT -> {
+                                    Text(
+                                        stringResource(
+                                            R.string.debt,
+                                            partner.clientDebt.toString()
+                                        )
                                     )
-                                )
+                                }
+
+                                else -> {
+                                    Text(
+                                        stringResource(
+                                            R.string.indebtedness,
+                                            partner.supplierIndebtedness.toString()
+                                        )
+                                    )
+                                }
                             }
                         }
-                    }
-                },
-                trailingContent = { PartnerTypeChip(partnerType = partner.type) },
-                modifier = Modifier
-                    .clickable { onPartnerClick(partner) }
-                    .background(
-                        if (partner.getCompositeId() == selectedPartnerId) MaterialTheme.colorScheme.inversePrimary
-                        else Color.Transparent
-                    ))
+                    },
+                    modifier = Modifier
+                        .clickable { onPartnerClick(partner) }
+                        .background(
+                            if (partner.getCompositeId() == selectedPartnerId) MaterialTheme.colorScheme.inversePrimary
+                            else Color.Transparent
+                        ))
+            }
         }
     }
 }
@@ -217,10 +230,9 @@ fun BusinessPartnerDetailView(
 
     Column(modifier = Modifier.padding(16.dp)) {
         // ... (existing detail view content)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        FlowRow(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 partner.name.displayName(language), style = MaterialTheme.typography.headlineMedium

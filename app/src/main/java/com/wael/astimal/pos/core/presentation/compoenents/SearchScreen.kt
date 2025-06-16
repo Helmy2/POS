@@ -183,7 +183,7 @@ fun SearchScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 mainContent()
                 AnimatedVisibility(visible = !isNew && !loading) {

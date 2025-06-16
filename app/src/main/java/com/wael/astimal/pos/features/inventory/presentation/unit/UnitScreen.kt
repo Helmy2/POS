@@ -1,11 +1,9 @@
 package com.wael.astimal.pos.features.inventory.presentation.unit
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -77,24 +75,22 @@ fun UnitScreen(
             )
         },
         mainContent = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                FlowRow {
-                    LabeledTextField(
-                        value = state.arName,
-                        onValueChange = { onEvent(UnitEvent.UpdateArName(it)) },
-                        label = stringResource(R.string.ar_name),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    LabeledTextField(
-                        value = state.enName,
-                        onValueChange = { onEvent(UnitEvent.UpdateArName(it)) },
-                        label = stringResource(R.string.en_name),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                    )
-                }
+                LabeledTextField(
+                    value = state.arName,
+                    onValueChange = { onEvent(UnitEvent.UpdateArName(it)) },
+                    label = stringResource(R.string.ar_name),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
+                LabeledTextField(
+                    value = state.enName,
+                    onValueChange = { onEvent(UnitEvent.UpdateArName(it)) },
+                    label = stringResource(R.string.en_name),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
             }
         },
     )

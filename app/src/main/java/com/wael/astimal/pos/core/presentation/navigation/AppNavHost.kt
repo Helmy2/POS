@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -15,7 +14,6 @@ import com.wael.astimal.pos.features.inventory.presentation.stock_management.Sto
 import com.wael.astimal.pos.features.inventory.presentation.stock_transfer.StockTransferRoute
 import com.wael.astimal.pos.features.inventory.presentation.store.StoreRoute
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitRoute
-import com.wael.astimal.pos.features.management.presentation.account_statement.AccountStatementRoute
 import com.wael.astimal.pos.features.management.presentation.business_partner.BusinessPartnerRoute
 import com.wael.astimal.pos.features.management.presentation.employee_account.EmployeeAccountRoute
 import com.wael.astimal.pos.features.management.presentation.management.ManagementRoute
@@ -24,6 +22,8 @@ import com.wael.astimal.pos.features.management.presentation.purchase_return.Pur
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherRoute
 import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
+import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementRoute
+import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 
@@ -58,8 +58,9 @@ fun AppNavHost(
             }
             // Reports Hub
             composable<Destination.Reports> {
-                // todo
-                Text("Reports")
+                ReportsRoute(
+                    onNavigate = { navController.navigate(it) }
+                )
             }
 
 
