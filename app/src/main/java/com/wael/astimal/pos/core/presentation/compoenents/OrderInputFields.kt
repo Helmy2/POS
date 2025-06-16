@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -53,7 +52,8 @@ fun OrderInputFields(
 ) {
     val context = LocalContext.current
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         itemList.forEach { item ->
             OrderItemRow(
@@ -115,7 +115,10 @@ private fun OrderItemRow(
     onUpdateItemMinUnitPrice: (tempEditorId: String, price: String) -> Unit,
 ) {
     val language = LocalAppLocale.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(horizontal = 24.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f)) {
                 CustomExposedDropdownMenu(
@@ -163,7 +166,6 @@ private fun OrderItemRow(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
-                        .fillMaxWidth()
                         .padding(top = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -196,7 +198,6 @@ private fun OrderItemRow(
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Label(
@@ -220,10 +221,11 @@ private fun OrderItemRow(
                     )
                 }
 
-                Card {
+                Card(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = stringResource(R.string.total),

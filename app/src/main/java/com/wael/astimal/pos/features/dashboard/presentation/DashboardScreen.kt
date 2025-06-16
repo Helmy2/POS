@@ -42,6 +42,7 @@ import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.core.util.sharePdf
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
 
@@ -60,6 +61,14 @@ fun DashboardRoute(
                     event = SnackbarEvent(
                         message = context.getString(it.message)
                     )
+                )
+            }
+
+            is UiEvent.ShareFile -> {
+                sharePdf(
+                    context = context,
+                    uri = it.fileUri,
+                    title = context.getString(it.fileTitle)
                 )
             }
         }

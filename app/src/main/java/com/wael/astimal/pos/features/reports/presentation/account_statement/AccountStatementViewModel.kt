@@ -2,10 +2,12 @@ package com.wael.astimal.pos.features.reports.presentation.account_statement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.reports.domain.repository.AccountStatementRepository
+import com.wael.astimal.pos.features.reports.presentation.pdf.PdfGenerator
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,7 +24,8 @@ import kotlinx.coroutines.launch
 
 class AccountStatementViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
-    private val accountStatementRepository: AccountStatementRepository
+    private val accountStatementRepository: AccountStatementRepository,
+    private val pdfGenerator: PdfGenerator // Inject the generator
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AccountStatementState())
@@ -35,7 +38,6 @@ class AccountStatementViewModel(
     private var statementJob: Job? = null
 
     init {
-        // Initially load all partners with an empty query.
         searchPartners("")
     }
 
@@ -50,7 +52,6 @@ class AccountStatementViewModel(
                 loadAccountStatement(event.partner)
             }
             is AccountStatementEvent.ClearPartnerSelection -> {
-                // Go back to the partner list view
                 statementJob?.cancel()
                 _state.update {
                     it.copy(
@@ -59,6 +60,26 @@ class AccountStatementViewModel(
                         isStatementLoading = false
                     )
                 }
+            }
+            is AccountStatementEvent.ExportToPdf -> {
+                exportStatementToPdf()
+            }
+        }
+    }
+
+    private fun exportStatementToPdf() {
+        val partner = _state.value.selectedPartner
+        val transactions = _state.value.transactions
+        if (partner == null || transactions.isEmpty()) {
+            return
+        }
+
+        viewModelScope.launch {
+            val fileUri = pdfGenerator.generateStatementPdf(partner, transactions)
+            if (fileUri != null) {
+                _eventFlow.emit(UiEvent.ShareFile(fileUri, R.string.share_statement_pdf))
+            } else {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_creating_pdf))
             }
         }
     }
@@ -69,17 +90,11 @@ class AccountStatementViewModel(
         searchJob = viewModelScope.launch {
             _state.update { it.copy(isPartnerListLoading = true) }
             businessPartnerRepository.getBusinessPartners(query)
-                .debounce(300) // Small delay to avoid querying on every keystroke
-                .catch {
-                    _state.update { it.copy(isPartnerListLoading = false) }
-                    // Handle error
-                }
+                .debounce(300)
+                .catch { _state.update { it.copy(isPartnerListLoading = false) } }
                 .collect { partners ->
                     _state.update {
-                        it.copy(
-                            isPartnerListLoading = false,
-                            partners = partners
-                        )
+                        it.copy(isPartnerListLoading = false, partners = partners)
                     }
                 }
         }
@@ -90,16 +105,10 @@ class AccountStatementViewModel(
         statementJob = accountStatementRepository.getAccountStatement(partner)
             .onEach { transactions ->
                 _state.update {
-                    it.copy(
-                        isStatementLoading = false,
-                        transactions = transactions
-                    )
+                    it.copy(isStatementLoading = false, transactions = transactions)
                 }
             }
-            .catch {
-                _state.update { it.copy(isStatementLoading = false) }
-                // Handle error
-            }
+            .catch { _state.update { it.copy(isStatementLoading = false) } }
             .launchIn(viewModelScope)
 
         _state.update { it.copy(isStatementLoading = true) }

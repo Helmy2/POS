@@ -254,4 +254,8 @@
     <string name="reports">Reports</string>
     <string name="units">Units</string>
     <string name="min_unit_per_max_unit">Min unit per Max unit</string>
+    <string name="export_as_pdf">Export as PDF</string>
+    <string name="error_creating_pdf">Error creating PDF</string>
+    <string name="share_statement_pdf">Share Statement PDF</string>
+    <string name="back">Back</string>
 </resources>

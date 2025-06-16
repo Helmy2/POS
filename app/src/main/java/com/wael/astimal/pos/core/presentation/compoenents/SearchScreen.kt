@@ -41,6 +41,7 @@ import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.util.convertToString
+import com.wael.astimal.pos.core.util.sharePdf
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +76,14 @@ fun SearchScreen(
                     event = SnackbarEvent(
                         message = context.getString(it.message)
                     )
+                )
+            }
+
+            is UiEvent.ShareFile -> {
+                sharePdf(
+                    context = context,
+                    uri = it.fileUri,
+                    title = context.getString(it.fileTitle)
                 )
             }
         }

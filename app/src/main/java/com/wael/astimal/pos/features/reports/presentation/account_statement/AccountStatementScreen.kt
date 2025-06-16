@@ -15,9 +15,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
@@ -72,55 +77,57 @@ fun AccountStatementScreen(
     state: AccountStatementState,
     onEvent: (AccountStatementEvent) -> Unit,
     onBack: () -> Unit,
-    eventFlow: SharedFlow<UiEvent>,
+    eventFlow: SharedFlow<UiEvent>
 ) {
 
-    BackHandler {
-        if (state.selectedPartner == null) {
-            onBack()
-        } else {
-            onEvent(AccountStatementEvent.ClearPartnerSelection)
-        }
+    BackHandler(enabled = state.selectedPartner != null) {
+        onEvent(AccountStatementEvent.ClearPartnerSelection)
     }
+
     Screen(
-        loading = state.isStatementLoading,
+        loading = state.isPartnerListLoading || state.isStatementLoading,
         eventFlow = eventFlow,
         topBar = {
-            val title = if (state.selectedPartner == null) {
-                stringResource(R.string.account_statement)
-            } else {
-                state.selectedPartner.name.displayName(LocalAppLocale.current)
-            }
-
-            // The top bar changes depending on the view
-            if (state.selectedPartner == null) {
-                SearchBarWithBackButton(
-                    query = state.searchQuery,
-                    onQueryChange = { onEvent(AccountStatementEvent.SearchPartner(it)) },
-                    onSearch = { onEvent(AccountStatementEvent.SearchPartner(it)) },
-                    onBack = onBack,
-                )
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    BackButton(onClick = { onEvent(AccountStatementEvent.ClearPartnerSelection) })
-                    Text(
-                        title,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(16.dp)
+            AnimatedContent(
+                targetState = state.selectedPartner == null,
+            ) { isPartnerListVisible ->
+                if (isPartnerListVisible) {
+                    SearchBarWithBackButton(
+                        query = state.searchQuery,
+                        onQueryChange = { onEvent(AccountStatementEvent.SearchPartner(it)) },
+                        onSearch = { onEvent(AccountStatementEvent.SearchPartner(it)) },
+                        onBack = onBack,
                     )
+                } else {
+                    val title = if (state.selectedPartner == null) {
+                        stringResource(R.string.account_statement)
+                    } else {
+                        state.selectedPartner.name.displayName(LocalAppLocale.current)
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(title, style = MaterialTheme.typography.titleLarge)
+                        IconButton(onClick = { onEvent(AccountStatementEvent.ExportToPdf) }) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = stringResource(R.string.export_as_pdf)
+                            )
+                        }
+                    }
                 }
             }
         }
     ) {
         AnimatedContent(
             targetState = state.selectedPartner == null,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp),
+            transitionSpec = { fadeIn() togetherWith fadeOut() }
         ) { isPartnerListVisible ->
             if (isPartnerListVisible) {
                 PartnerSelectionView(
@@ -167,6 +174,7 @@ fun PartnerSelectionView(
     }
 }
 
+
 @Composable
 fun StatementDetailView(
     isLoading: Boolean,
@@ -176,14 +184,26 @@ fun StatementDetailView(
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            LazyColumn(
+            Card(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(bottom = 16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                item { TransactionListHeader() }
-                items(transactions) { transaction ->
-                    TransactionRow(transaction = transaction)
-                    HorizontalDivider()
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    stickyHeader {
+                        TransactionListHeader()
+                    }
+                    items(transactions) { transaction ->
+                        TransactionRow(transaction = transaction)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        )
+                    }
                 }
             }
         }
@@ -197,36 +217,36 @@ fun TransactionListHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             stringResource(R.string.date),
+            style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.weight(1.5f),
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Start
         )
         Text(
             stringResource(R.string.description),
-            modifier = Modifier.weight(3f),
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.weight(3f)
         )
         Text(
             stringResource(R.string.debit),
+            style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.weight(1.5f),
-            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End
         )
         Text(
             stringResource(R.string.credit),
+            style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.weight(1.5f),
-            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End
         )
         Text(
             stringResource(R.string.balance),
+            style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.weight(2f),
-            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End
         )
     }
@@ -236,58 +256,67 @@ fun TransactionListHeader() {
 fun TransactionRow(transaction: AccountTransaction) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yy", Locale.getDefault()) }
     val isOpeningBalance = transaction.transactionType == TransactionType.OPENING_BALANCE
-    val rowModifier = if (isOpeningBalance) {
-        Modifier.background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f))
-    } else {
-        Modifier
-    }
 
+    // Improved padding and alignment for better readability.
     Row(
-        modifier = rowModifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp),
+            .background(
+                if (isOpeningBalance) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+                else Color.Transparent
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // --- DATE ---
         Text(
-            transaction.date.format(dateFormatter),
+            text = transaction.date.format(dateFormatter),
             modifier = Modifier.weight(1.5f),
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            transaction.description,
-            modifier = Modifier.weight(3f),
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Start,
             fontWeight = if (isOpeningBalance) FontWeight.Bold else FontWeight.Normal
         )
+        // --- DESCRIPTION ---
+        Text(
+            text = transaction.description,
+            modifier = Modifier.weight(3f),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isOpeningBalance) FontWeight.Bold else FontWeight.Normal,
+            lineHeight = 18.sp
+        )
+        // --- DEBIT ---
         Text(
             text = if (transaction.debit != 0.0) String.format(
                 Locale.US,
                 "%.2f",
                 transaction.debit
-            ) else "",
+            ) else "—",
             modifier = Modifier.weight(1.5f),
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.End,
-            color = DebitColor
+            color = if (transaction.debit != 0.0) DebitColor else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = MaterialTheme.typography.labelMedium.fontFamily // Monospaced look for numbers
         )
+        // --- CREDIT ---
         Text(
             text = if (transaction.credit != 0.0) String.format(
                 Locale.US,
                 "%.2f",
                 transaction.credit
-            ) else "",
+            ) else "—",
             modifier = Modifier.weight(1.5f),
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.End,
-            color = CreditColor
+            color = if (transaction.credit != 0.0) CreditColor else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = MaterialTheme.typography.labelMedium.fontFamily
         )
+        // --- BALANCE ---
         Text(
             text = String.format(Locale.US, "%.2f", transaction.balance),
             modifier = Modifier.weight(2f),
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.End,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

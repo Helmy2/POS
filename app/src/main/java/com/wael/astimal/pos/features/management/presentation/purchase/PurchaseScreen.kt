@@ -84,7 +84,8 @@ fun PurchaseForm(
     val purchaseInput = state.currentPurchaseInput
     FlowRow(
         modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.Center
     ) {
         DataPicker(
             selectedDateMillis = purchaseInput.date,
