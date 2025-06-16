@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
@@ -30,4 +31,10 @@ interface EmployeeFinancesDao {
 
     @Query("DELETE FROM employee_sale_commissions WHERE sourceTransactionId = :orderId AND sourceTransactionType = :type")
     suspend fun deleteAllCommissionsBySource(orderId: Long, type: SourceTransactionType)
+
+    @Update
+    suspend fun updateEmployeeTransaction(transaction: EmployeeAccountTransactionEntity)
+
+    @Query("DELETE FROM employee_account_transactions WHERE localId = :localId")
+    suspend fun deleteEmployeeTransaction(localId: Long)
 }

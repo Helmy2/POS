@@ -7,4 +7,6 @@ import kotlinx.coroutines.flow.Flow
 interface EmployeeAccountRepository {
     fun getEmployeeAccount(employeeId: Long): Flow<EmployeeAccount?>
     suspend fun addManualPayment(transaction: EmployeeAccountTransaction): Result<Unit>
+    suspend fun updateManualPayment(transaction: EmployeeAccountTransaction): Result<Unit>
+    suspend fun deleteManualPayment(transactionId: Long): Result<Unit>
 }

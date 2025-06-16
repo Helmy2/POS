@@ -38,22 +38,43 @@ class EmployeeAccountRepositoryImpl(
 
     override suspend fun addManualPayment(transaction: EmployeeAccountTransaction): Result<Unit> {
         return try {
-            val entity = EmployeeAccountTransactionEntity(
-                localId = 0,
-                serverId = null,
-                employeeId = transaction.employeeId,
-                createdByEmployeeId = transaction.createdByEmployeeId,
-                type = transaction.type,
-                amount = transaction.amount,
-                relatedCommissionId = null,
-                notes = transaction.notes,
-                date = transaction.date,
-                isSynced = false
-            )
-            employeeFinancesDao.insertEmployeeTransaction(entity)
+            employeeFinancesDao.insertEmployeeTransaction(transaction.toEntity())
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    override suspend fun updateManualPayment(transaction: EmployeeAccountTransaction): Result<Unit> {
+        return try {
+            employeeFinancesDao.updateEmployeeTransaction(transaction.toEntity())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteManualPayment(transactionId: Long): Result<Unit> {
+        return try {
+            employeeFinancesDao.deleteEmployeeTransaction(transactionId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+private fun EmployeeAccountTransaction.toEntity(): EmployeeAccountTransactionEntity {
+    return EmployeeAccountTransactionEntity(
+        localId = this.localId,
+        serverId = this.serverId,
+        employeeId = this.employeeId,
+        createdByEmployeeId = this.createdByEmployeeId,
+        type = this.type,
+        amount = this.amount,
+        relatedCommissionId = this.relatedCommissionId,
+        notes = this.notes,
+        date = this.date,
+        isSynced = false
+    )
 }

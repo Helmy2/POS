@@ -271,4 +271,9 @@
     <string name="balance_summary_positive">Final Balance: You owe this partner %s.</string>
     <string name="balance_summary_negative">Final Balance: This partner owes you %s.</string>
     <string name="balance_summary_settled">The account is settled.</string>
+    <string name="error_saving_transaction">Error saving transaction</string>
+    <string name="transaction_saved_successfully">Transaction saved successfully</string>
+    <string name="error_admin_only">Admin only is allowed</string>
+    <string name="transaction_deleted_successfully">Transaction deleted successfully</string>
+    <string name="error_deleting_transaction">Error deleting transaction</string>
 </resources>

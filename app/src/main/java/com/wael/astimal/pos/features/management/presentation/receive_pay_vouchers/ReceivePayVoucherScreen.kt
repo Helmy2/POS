@@ -86,70 +86,73 @@ fun ReceivePayVoucherScreen(
                 )
             }
         }) {
-        FlowRow(
+        Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            AnimatedContent(
-                state.partyType
-            ) { partyType ->
-                when (partyType) {
-                    VoucherPartyType.CLIENT -> {
-                        CustomExposedDropdownMenu(
-                            label = stringResource(R.string.client),
-                            items = state.clients,
-                            selectedItemId = state.selectedClient?.id,
-                            onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
-                            itemToDisplayString = { it.name.displayName(currentLanguage) },
-                            itemToId = { it.id },
-                            canClearSelection = false,
-                        )
-                    }
+            FlowRow(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AnimatedContent(
+                    state.partyType
+                ) { partyType ->
+                    when (partyType) {
+                        VoucherPartyType.CLIENT -> {
+                            CustomExposedDropdownMenu(
+                                label = stringResource(R.string.client),
+                                items = state.clients,
+                                selectedItemId = state.selectedClient?.id,
+                                onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
+                                itemToDisplayString = { it.name.displayName(currentLanguage) },
+                                itemToId = { it.id },
+                                canClearSelection = false,
+                            )
+                        }
 
-                    VoucherPartyType.SUPPLIER -> {
-                        CustomExposedDropdownMenu(
-                            label = stringResource(R.string.supplier),
-                            items = state.suppliers,
-                            selectedItemId = state.selectedSupplier?.id,
-                            onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
-                            itemToDisplayString = { it.name.displayName(currentLanguage) },
-                            itemToId = { it.id },
-                            canClearSelection = false,
-                        )
+                        VoucherPartyType.SUPPLIER -> {
+                            CustomExposedDropdownMenu(
+                                label = stringResource(R.string.supplier),
+                                items = state.suppliers,
+                                selectedItemId = state.selectedSupplier?.id,
+                                onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
+                                itemToDisplayString = { it.name.displayName(currentLanguage) },
+                                itemToId = { it.id },
+                                canClearSelection = false,
+                            )
+                        }
                     }
                 }
-            }
 
-            OutlinedTextField(
-                value = state.amount,
-                onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateAmount(it)) },
-                label = { Text(stringResource(R.string.amount)) },
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = state.amount,
+                    onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateAmount(it)) },
+                    label = { Text(stringResource(R.string.amount)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            DataPicker(
-                selectedDateMillis = state.date, onDateSelected = {
-                    onEvent(
-                        ReceivePayVoucherEvent.UpdateDate(
-                            it ?: System.currentTimeMillis()
+                DataPicker(
+                    selectedDateMillis = state.date, onDateSelected = {
+                        onEvent(
+                            ReceivePayVoucherEvent.UpdateDate(
+                                it ?: System.currentTimeMillis()
+                            )
                         )
-                    )
-                })
+                    })
 
-            OutlinedTextField(
-                value = state.notes,
-                onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateNotes(it)) },
-                label = { Text(stringResource(R.string.notes_optional)) },
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = state.notes,
+                    onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateNotes(it)) },
+                    label = { Text(stringResource(R.string.notes_optional)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Button(
-                onClick = { onEvent(ReceivePayVoucherEvent.SaveVoucher) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.save_voucher))
+                Button(
+                    onClick = { onEvent(ReceivePayVoucherEvent.SaveVoucher) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.save_voucher))
+                }
             }
-
             VoucherList(vouchers = state.vouchers)
         }
     }
