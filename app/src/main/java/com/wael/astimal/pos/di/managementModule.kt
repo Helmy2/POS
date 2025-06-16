@@ -40,13 +40,14 @@ val managementModule = module {
     single { get<AppDatabase>().purchaseReturnDao() }
     single { get<AppDatabase>().employeeFinancesDao() }
     single { get<AppDatabase>().receivePayVoucherDao() }
+    single { get<AppDatabase>().partnerTransactionDao() }
 
     single { OrderAmountLogic(get(), get(), get(), get()) }
     single { ReturnAmountLogic(get(), get(), get(), get()) }
 
     single<ClientRepository> { ClientRepositoryImpl(get()) }
-    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get(), get(), get(), get()) }
-    single<SalesReturnRepository> { SalesReturnRepositoryImpl(get(), get(), get(), get()) }
+    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<SalesReturnRepository> { SalesReturnRepositoryImpl(get(), get(), get(), get(), get()) }
     single<SupplierRepository> { SupplierRepositoryImpl(get()) }
     single<PurchaseRepository> { PurchaseRepositoryImpl(get(), get(), get(), get(), get()) }
     single<PurchaseReturnRepository> {
@@ -54,9 +55,18 @@ val managementModule = module {
     }
     single<EmployeeAccountRepository> { EmployeeAccountRepositoryImpl(get(), get()) }
     single<ReceivePayVoucherRepository> {
-        ReceivePayVoucherRepositoryImpl(get(), get(), get(), get())
+        ReceivePayVoucherRepositoryImpl(get(), get(), get())
     }
-    single<BusinessPartnerRepository> { BusinessPartnerRepositoryImpl(get(),get(),get(),get(),get()) }
+    single<BusinessPartnerRepository> {
+        BusinessPartnerRepositoryImpl(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
 
     viewModel { ManagementViewModel() }
 

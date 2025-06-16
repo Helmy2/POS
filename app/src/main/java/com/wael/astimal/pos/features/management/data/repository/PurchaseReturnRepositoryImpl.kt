@@ -3,13 +3,15 @@ package com.wael.astimal.pos.features.management.data.repository
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
+import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
+import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,7 +21,7 @@ class PurchaseReturnRepositoryImpl(
     private val purchaseReturnDao: PurchaseReturnDao,
     private val employeeDao: EmployeeDao,
     private val stockRepository: StockRepository,
-    private val supplierRepository: SupplierRepository,
+    private val partnerTransactionDao: PartnerTransactionDao
 ) : PurchaseReturnRepository {
 
     override fun getPurchaseReturns(): Flow<List<PurchaseReturn>> {
@@ -39,10 +41,10 @@ class PurchaseReturnRepositoryImpl(
         return try {
             var insertedId: Long = -1
             database.withTransaction {
-                val employeeId = purchaseReturn.employeeLocalId
-                    ?: throw Exception("Employee ID is missing on the return record.")
+                val employeeId =
+                    purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Could not find an assigned store for the employee.")
+                    ?: throw Exception("Store not found.")
 
                 insertedId = purchaseReturnDao.insertPurchaseReturnWithItems(purchaseReturn, items)
 
@@ -50,16 +52,11 @@ class PurchaseReturnRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = item.productLocalId,
-                        transactionQuantity = -item.quantity // DECREASE stock for a purchase return
+                        transactionQuantity = -item.quantity
                     )
                 }
 
-                if (purchaseReturn.supplierLocalId != null) {
-                    supplierRepository.adjustSupplierIndebtedness(
-                        supplierLocalId = purchaseReturn.supplierLocalId,
-                        changeInDebt = -purchaseReturn.amountRemaining // DECREASE indebtedness to supplier
-                    )
-                }
+                addPurchaseReturnLedgerEntries(purchaseReturn, insertedId)
             }
             val createdReturn = getPurchaseReturnDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase return after insert."))
@@ -74,46 +71,43 @@ class PurchaseReturnRepositoryImpl(
         items: List<PurchaseReturnProductEntity>
     ): Result<PurchaseReturn> {
         return try {
-            if (purchaseReturn.localId == 0L) {
-                return Result.failure(IllegalArgumentException("Purchase Return localId is missing for update."))
-            }
-
+            val returnId = purchaseReturn.localId
             database.withTransaction {
-                val employeeId = purchaseReturn.employeeLocalId ?: throw Exception("Employee ID is missing.")
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
+                val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(returnId)
+                    ?: throw NoSuchElementException("Original return not found")
+                val employeeId =
+                    purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                    ?: throw Exception("Store not found.")
 
-                val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(purchaseReturn.localId)
-                if (oldReturn != null) {
-                    // Revert old adjustments
-                    oldReturn.itemsWithProductDetails.forEach { oldItem ->
-                        stockRepository.adjustStock(
-                            storeId = employeeStoreId,
-                            productId = oldItem.purchaseReturnItem.productLocalId,
-                            transactionQuantity = oldItem.purchaseReturnItem.quantity // Add stock back
-                        )
-                    }
-                    if (oldReturn.purchaseReturn.supplierLocalId != null) {
-                        supplierRepository.adjustSupplierIndebtedness(oldReturn.purchaseReturn.supplierLocalId, oldReturn.purchaseReturn.amountRemaining)
-                    }
+                oldReturn.itemsWithProductDetails.forEach { oldItem ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = oldItem.purchaseReturnItem.productLocalId,
+                        transactionQuantity = oldItem.purchaseReturnItem.quantity
+                    )
                 }
+                partnerTransactionDao.deleteTransactionsBySource(
+                    returnId,
+                    TransactionType.PURCHASE_RETURN,
+                    TransactionType.PAYMENT_RECEIVED
+                )
 
                 val entityToUpdate = purchaseReturn.copy(isSynced = false, lastModified = System.currentTimeMillis())
                 purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
 
-                // Apply new adjustments
                 items.forEach { newItem ->
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = newItem.productLocalId,
-                        transactionQuantity = -newItem.quantity // Decrease stock
+                        transactionQuantity = -newItem.quantity
                     )
                 }
-                if (entityToUpdate.supplierLocalId != null) {
-                    supplierRepository.adjustSupplierIndebtedness(entityToUpdate.supplierLocalId, -entityToUpdate.amountRemaining)
-                }
+                addPurchaseReturnLedgerEntries(entityToUpdate, returnId)
             }
-            val updatedReturn = getPurchaseReturnDetails(purchaseReturn.localId)
-                ?: return Result.failure(IllegalStateException("Failed to retrieve purchase return after update."))
+            val updatedReturn = getPurchaseReturnDetails(returnId) ?: return Result.failure(
+                IllegalStateException("Failed to retrieve return after update.")
+            )
             Result.success(updatedReturn)
         } catch (e: Exception) {
             Result.failure(e)
@@ -124,13 +118,13 @@ class PurchaseReturnRepositoryImpl(
         return try {
             database.withTransaction {
                 val returnToDelete = purchaseReturnDao.getPurchaseReturnWithDetails(localId)
-                    ?: throw NoSuchElementException("Purchase Return not found with localId: $localId")
+                    ?: throw NoSuchElementException("Return not found")
 
                 if (!returnToDelete.purchaseReturn.isDeletedLocally) {
                     val employeeId = returnToDelete.purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
-                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId) ?: throw Exception("Employee's store not found.")
+                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                        ?: throw Exception("Store not found.")
 
-                    // Revert stock and debt adjustments
                     returnToDelete.itemsWithProductDetails.forEach { item ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
@@ -138,12 +132,12 @@ class PurchaseReturnRepositoryImpl(
                             transactionQuantity = item.purchaseReturnItem.quantity
                         )
                     }
-                    if (returnToDelete.purchaseReturn.supplierLocalId != null) {
-                        supplierRepository.adjustSupplierIndebtedness(
-                            supplierLocalId = returnToDelete.purchaseReturn.supplierLocalId,
-                            changeInDebt = returnToDelete.purchaseReturn.amountRemaining
-                        )
-                    }
+
+                    partnerTransactionDao.deleteTransactionsBySource(
+                        localId,
+                        TransactionType.PURCHASE_RETURN,
+                        TransactionType.PAYMENT_RECEIVED
+                    )
 
                     val entityToMarkAsDeleted = returnToDelete.purchaseReturn.copy(
                         isDeletedLocally = true,
@@ -156,6 +150,38 @@ class PurchaseReturnRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private suspend fun addPurchaseReturnLedgerEntries(
+        purchaseReturn: PurchaseReturnEntity,
+        returnId: Long
+    ) {
+        if (purchaseReturn.supplierLocalId != null) {
+            partnerTransactionDao.insertTransaction(
+                PartnerTransactionEntity(
+                    clientId = null,
+                    supplierId = purchaseReturn.supplierLocalId,
+                    sourceTransactionId = returnId,
+                    transactionType = TransactionType.PURCHASE_RETURN,
+                    date = purchaseReturn.returnDate,
+                    debit = purchaseReturn.totalAmount, // A purchase return reduces what you owe them
+                    credit = 0.0
+                )
+            )
+            if (purchaseReturn.amountPaid > 0) {
+                partnerTransactionDao.insertTransaction(
+                    PartnerTransactionEntity(
+                        clientId = null,
+                        supplierId = purchaseReturn.supplierLocalId,
+                        sourceTransactionId = returnId,
+                        transactionType = TransactionType.PAYMENT_RECEIVED,
+                        date = purchaseReturn.returnDate,
+                        debit = 0.0,
+                        credit = purchaseReturn.amountPaid // Money received from a supplier is a credit
+                    )
+                )
+            }
         }
     }
 }

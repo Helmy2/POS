@@ -10,18 +10,8 @@ import org.koin.dsl.module
 
 val reportsModule = module {
 
-    single {
-        PdfGenerator(get())
-    }
-    single<AccountStatementRepository> {
-        AccountStatementRepositoryImpl(
-            get(), get(), get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
+    single { PdfGenerator(get()) }
+    single<AccountStatementRepository> { AccountStatementRepositoryImpl(get()) }
 
     viewModel { AccountStatementViewModel(get(), get(), get()) }
     viewModel { ReportsViewModel() }

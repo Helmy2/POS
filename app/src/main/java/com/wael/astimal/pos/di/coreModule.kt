@@ -5,10 +5,10 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.data.DummyDataSeeder
 import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.core.util.ConnectivityImp
 import com.wael.astimal.pos.core.util.PREFERENCES_NAME
-import com.wael.astimal.pos.core.data.DummyDataSeeder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,7 +39,6 @@ val coreModule = module {
 
     single {
         DummyDataSeeder(
-            get(),
             get(),
             get(),
             get(),

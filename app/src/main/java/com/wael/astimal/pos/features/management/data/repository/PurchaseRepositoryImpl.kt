@@ -3,13 +3,15 @@ package com.wael.astimal.pos.features.management.data.repository
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
+import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
+import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,7 +21,7 @@ class PurchaseRepositoryImpl(
     private val purchaseDao: PurchaseDao,
     private val employeeDao: EmployeeDao,
     private val stockRepository: StockRepository,
-    private val supplierRepository: SupplierRepository
+    private val partnerTransactionDao: PartnerTransactionDao
 ) : PurchaseRepository {
 
     override fun getPurchases(): Flow<List<PurchaseOrder>> {
@@ -50,16 +52,10 @@ class PurchaseRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = item.productLocalId,
-                        transactionQuantity = item.quantity // INCREASE stock for a purchase
+                        transactionQuantity = item.quantity
                     )
                 }
-
-                if (purchase.supplierLocalId != null) {
-                    supplierRepository.adjustSupplierIndebtedness(
-                        supplierLocalId = purchase.supplierLocalId,
-                        changeInDebt = purchase.amountRemaining // INCREASE indebtedness to supplier
-                    )
-                }
+                addPurchaseLedgerEntries(purchase, insertedId)
             }
             val createdPurchase = getPurchaseDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase after insert."))
@@ -74,33 +70,30 @@ class PurchaseRepositoryImpl(
         items: List<PurchaseProductEntity>
     ): Result<PurchaseOrder> {
         return try {
-            if (purchase.localId == 0L) {
-                return Result.failure(IllegalArgumentException("Purchase localId is missing for update operation."))
-            }
-
+            val purchaseId = purchase.localId
             database.withTransaction {
+                val oldPurchase = purchaseDao.getPurchaseWithDetails(purchaseId)
+                    ?: throw NoSuchElementException("Original purchase not found")
                 val employeeId = purchase.employeeLocalId ?: throw Exception("Employee ID missing.")
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Employee's store not found.")
+                    ?: throw Exception("Store not found.")
 
-                val oldPurchase = purchaseDao.getPurchaseWithDetails(purchase.localId)
-                if (oldPurchase != null) {
-                    // Revert old adjustments
-                    oldPurchase.itemsWithProductDetails.forEach { oldItem ->
-                        stockRepository.adjustStock(
-                            storeId = employeeStoreId,
-                            productId = oldItem.purchaseItem.productLocalId,
-                            transactionQuantity = -oldItem.purchaseItem.quantity // Decrease stock to revert
-                        )
-                    }
-                    if (oldPurchase.purchase.supplierLocalId != null) {
-                        supplierRepository.adjustSupplierIndebtedness(
-                            supplierLocalId = oldPurchase.purchase.supplierLocalId,
-                            changeInDebt = -oldPurchase.purchase.amountRemaining // Decrease debt to revert
-                        )
-                    }
+                // Revert old stock adjustments
+                oldPurchase.itemsWithProductDetails.forEach { oldItem ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = oldItem.purchaseItem.productLocalId,
+                        transactionQuantity = -oldItem.purchaseItem.quantity
+                    )
                 }
+                // Delete old ledger entries
+                partnerTransactionDao.deleteTransactionsBySource(
+                    purchaseId,
+                    TransactionType.PURCHASE,
+                    TransactionType.PAYMENT_SENT
+                )
 
+                // Update purchase and items
                 val entityToUpdate =
                     purchase.copy(isSynced = false, lastModified = System.currentTimeMillis())
                 purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
@@ -110,18 +103,16 @@ class PurchaseRepositoryImpl(
                     stockRepository.adjustStock(
                         storeId = employeeStoreId,
                         productId = newItem.productLocalId,
-                        transactionQuantity = newItem.quantity // Increase stock
+                        transactionQuantity = newItem.quantity
                     )
                 }
-                if (entityToUpdate.supplierLocalId != null) {
-                    supplierRepository.adjustSupplierIndebtedness(
-                        supplierLocalId = entityToUpdate.supplierLocalId,
-                        changeInDebt = entityToUpdate.amountRemaining // Increase debt
-                    )
-                }
+
+                // Re-add new ledger entries
+                addPurchaseLedgerEntries(entityToUpdate, purchaseId)
             }
-            val updatedPurchase = getPurchaseDetails(purchase.localId)
-                ?: return Result.failure(IllegalStateException("Failed to retrieve purchase after update."))
+            val updatedPurchase = getPurchaseDetails(purchase.localId) ?: return Result.failure(
+                IllegalStateException("Failed to retrieve purchase after update.")
+            )
             Result.success(updatedPurchase)
         } catch (e: Exception) {
             Result.failure(e)
@@ -132,28 +123,28 @@ class PurchaseRepositoryImpl(
         return try {
             database.withTransaction {
                 val purchaseToDelete = purchaseDao.getPurchaseWithDetails(purchaseLocalId)
-                    ?: throw NoSuchElementException("Purchase not found with localId: $purchaseLocalId")
+                    ?: throw NoSuchElementException("Purchase not found")
 
                 if (!purchaseToDelete.purchase.isDeletedLocally) {
                     val employeeId = purchaseToDelete.purchase.employeeLocalId
                         ?: throw Exception("Employee ID missing.")
                     val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                        ?: throw Exception("Employee's store not found.")
+                        ?: throw Exception("Store not found.")
 
-                    // Revert stock and debt adjustments
                     purchaseToDelete.itemsWithProductDetails.forEach { item ->
                         stockRepository.adjustStock(
                             storeId = employeeStoreId,
                             productId = item.purchaseItem.productLocalId,
-                            transactionQuantity = -item.purchaseItem.quantity // DECREASE stock to revert
+                            transactionQuantity = -item.purchaseItem.quantity
                         )
                     }
-                    if (purchaseToDelete.purchase.supplierLocalId != null) {
-                        supplierRepository.adjustSupplierIndebtedness(
-                            supplierLocalId = purchaseToDelete.purchase.supplierLocalId,
-                            changeInDebt = -purchaseToDelete.purchase.amountRemaining // DECREASE indebtedness to revert
-                        )
-                    }
+
+                    // Delete ledger entries
+                    partnerTransactionDao.deleteTransactionsBySource(
+                        purchaseLocalId,
+                        TransactionType.PURCHASE,
+                        TransactionType.PAYMENT_SENT
+                    )
 
                     val entityToMarkAsDeleted = purchaseToDelete.purchase.copy(
                         isDeletedLocally = true,
@@ -166,6 +157,35 @@ class PurchaseRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private suspend fun addPurchaseLedgerEntries(purchase: PurchaseEntity, purchaseId: Long) {
+        if (purchase.supplierLocalId != null) {
+            partnerTransactionDao.insertTransaction(
+                PartnerTransactionEntity(
+                    clientId = null,
+                    supplierId = purchase.supplierLocalId,
+                    sourceTransactionId = purchaseId,
+                    transactionType = TransactionType.PURCHASE,
+                    date = purchase.purchaseDate,
+                    debit = 0.0,
+                    credit = purchase.totalAmount
+                )
+            )
+            if (purchase.amountPaid > 0) {
+                partnerTransactionDao.insertTransaction(
+                    PartnerTransactionEntity(
+                        clientId = null,
+                        supplierId = purchase.supplierLocalId,
+                        sourceTransactionId = purchaseId,
+                        transactionType = TransactionType.PAYMENT_SENT,
+                        date = purchase.purchaseDate,
+                        debit = purchase.amountPaid,
+                        credit = 0.0
+                    )
+                )
+            }
         }
     }
 }

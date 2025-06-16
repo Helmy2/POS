@@ -36,9 +36,6 @@ class OrderAmountLogic(
             )
         }
 
-        val debtChange = order.totalAmount - order.amountPaid
-        clientRepository.adjustClientDebt(order.clientLocalId, debtChange)
-
         handleCommissions(order, orderId)
     }
 
@@ -58,9 +55,6 @@ class OrderAmountLogic(
             )
         }
 
-
-        val debtChange = order.totalAmount - order.amountPaid
-        clientRepository.adjustClientDebt(order.clientLocalId, -debtChange)
 
         val oldCommissions =
             employeeFinancesDao.getAllCommissionsBySource(order.localId, SourceTransactionType.SALE)

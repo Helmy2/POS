@@ -36,9 +36,6 @@ class ReturnAmountLogic(
             )
         }
 
-        val debtChange = returnEntity.totalAmount - returnEntity.amountPaid
-        clientRepository.adjustClientDebt(returnEntity.clientLocalId, -debtChange)
-
         handleCommissions(returnEntity, returnId)
     }
 
@@ -57,10 +54,6 @@ class ReturnAmountLogic(
                 transactionQuantity = -item.quantity
             )
         }
-
-        val debtChange = returnEntity.totalAmount - returnEntity.amountPaid
-        clientRepository.adjustClientDebt(returnEntity.clientLocalId, debtChange)
-
 
         val oldCommissions = employeeFinancesDao.getAllCommissionsBySource(
             returnEntity.localId,

@@ -11,7 +11,6 @@ data class SalesReturn(
     val invoiceNumber: String?,
     val client: Client?,
     val employee: User?,
-    val previousDebt: Double?,
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalAmount: Double,

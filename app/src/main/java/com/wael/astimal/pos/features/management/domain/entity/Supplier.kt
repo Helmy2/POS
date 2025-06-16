@@ -8,7 +8,6 @@ data class Supplier(
     val name: LocalizedString,
     val phones: List<String>,
     val address: String?,
-    val indebtedness: Double?,
     val isAlsoClient: Boolean,
     val responsibleEmployee: User?,
     val isSynced: Boolean,

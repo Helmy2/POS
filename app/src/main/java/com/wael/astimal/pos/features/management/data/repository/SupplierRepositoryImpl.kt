@@ -20,8 +20,4 @@ class SupplierRepositoryImpl(
     override suspend fun getSupplier(localId: Long): Supplier? {
         return supplierDao.getSupplierById(localId)?.toDomain()
     }
-
-    override suspend fun adjustSupplierIndebtedness(supplierLocalId: Long, changeInDebt: Double) {
-        supplierDao.adjustIndebtedness(supplierLocalId, changeInDebt)
-    }
 }

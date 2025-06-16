@@ -6,8 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
 
@@ -63,7 +63,6 @@ fun ClientWithDetailsEntity.toDomain(): Client {
             this.client.phone3,
         ),
         address = this.client.address,
-        debt = this.client.debt,
         isSupplier = this.client.isSupplier,
         isSynced = this.client.isSynced,
         lastModified = this.client.lastModified,

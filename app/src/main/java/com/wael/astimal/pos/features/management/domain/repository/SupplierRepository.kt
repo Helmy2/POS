@@ -6,5 +6,4 @@ import kotlinx.coroutines.flow.Flow
 interface SupplierRepository {
     fun getSuppliers(query: String=""): Flow<List<Supplier>>
     suspend fun getSupplier(localId: Long): Supplier?
-    suspend fun adjustSupplierIndebtedness(supplierLocalId: Long, changeInDebt: Double)
 }

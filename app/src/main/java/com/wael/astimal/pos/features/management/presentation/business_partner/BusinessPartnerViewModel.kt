@@ -19,10 +19,9 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
 class BusinessPartnerViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
-    private val sessionManager: SessionManager // Injected to check user role
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BusinessPartnerInfoState())
@@ -34,12 +33,10 @@ class BusinessPartnerViewModel(
     private var businessPartnerSearchJob: Job? = null
 
     init {
-        // Check user role on init
         viewModelScope.launch {
             val user = sessionManager.getCurrentUser().firstOrNull()
             _state.update { it.copy(isAdmin = user?.isAdmin == true) }
         }
-        // Initial search
         onEvent(BusinessPartnerInfoEvent.SearchBusinessPartners(_state.value.query))
     }
 
@@ -62,21 +59,26 @@ class BusinessPartnerViewModel(
                 _state.update {
                     it.copy(
                         showEditDialog = true,
-                        partnerToEdit = createBlankBusinessPartner() // Use helper to create an empty partner
+                        partnerToEdit = createBlankBusinessPartner()
                     )
                 }
             }
             is BusinessPartnerInfoEvent.EditPartnerClicked -> {
                 _state.update {
                     it.copy(
-                        showDetailDialog = false, // Close detail dialog
-                        showEditDialog = true, // Open edit dialog
+                        showDetailDialog = false,
+                        showEditDialog = true,
                         partnerToEdit = event.partner
                     )
                 }
             }
             is BusinessPartnerInfoEvent.SavePartnerClicked -> {
-                savePartner(event.partner)
+                // The partner object from the dialog state is combined with the opening balances
+                val finalPartner = event.partner.copy(
+                    clientDebt = event.openingDebt,
+                    supplierIndebtedness = event.openingIndebtedness
+                )
+                savePartner(finalPartner)
             }
             is BusinessPartnerInfoEvent.DeletePartnerClicked -> {
                 deletePartner(event.partner)

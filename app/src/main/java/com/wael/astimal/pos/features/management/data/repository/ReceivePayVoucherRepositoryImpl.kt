@@ -2,24 +2,24 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
+import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
+import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ReceivePayVoucherRepositoryImpl(
     private val database: AppDatabase,
     private val voucherDao: ReceivePayVoucherDao,
-    private val clientRepository: ClientRepository,
-    private val supplierRepository: SupplierRepository
+    private val partnerTransactionDao: PartnerTransactionDao
 ) : ReceivePayVoucherRepository {
 
     override fun getVouchers(): Flow<List<ReceivePayVoucher>> {
@@ -41,20 +41,36 @@ class ReceivePayVoucherRepositoryImpl(
                     employeeLocalId = voucher.createdBy.id,
                     isReceipt = voucher.partyType == VoucherPartyType.CLIENT
                 )
-                voucherDao.insertVoucher(voucherEntity)
+                val voucherId = voucherDao.insertVoucher(voucherEntity)
 
-                when (voucher.partyType) {
+                // Create a corresponding entry in the unified transaction ledger
+                val transaction = when (voucher.partyType) {
                     VoucherPartyType.CLIENT -> {
-                        val client = voucher.party as Client
-                        // We subtract because a payment from a client reduces their debt
-                        clientRepository.adjustClientDebt(client.id, -voucher.amount)
+                        // A payment received from a client is a CREDIT to their account (reduces what they owe)
+                        PartnerTransactionEntity(
+                            clientId = (voucher.party as Client).id,
+                            supplierId = null,
+                            sourceTransactionId = voucherId,
+                            transactionType = TransactionType.PAYMENT_RECEIVED,
+                            date = voucher.date,
+                            debit = 0.0,
+                            credit = voucher.amount
+                        )
                     }
                     VoucherPartyType.SUPPLIER -> {
-                        val supplier = voucher.party as Supplier
-                        // We subtract because a payment to a supplier reduces our indebtedness
-                        supplierRepository.adjustSupplierIndebtedness(supplier.id, -voucher.amount)
+                        // A payment sent to a supplier is a DEBIT to their account (reduces what you owe them)
+                        PartnerTransactionEntity(
+                            clientId = null,
+                            supplierId = (voucher.party as Supplier).id,
+                            sourceTransactionId = voucherId,
+                            transactionType = TransactionType.PAYMENT_SENT,
+                            date = voucher.date,
+                            debit = voucher.amount,
+                            credit = 0.0
+                        )
                     }
                 }
+                partnerTransactionDao.insertTransaction(transaction)
             }
             Result.success(Unit)
         } catch (e: Exception) {

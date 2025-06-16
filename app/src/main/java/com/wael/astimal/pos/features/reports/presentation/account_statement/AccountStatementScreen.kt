@@ -59,13 +59,12 @@ import java.util.Locale
 import kotlin.math.abs
 
 // Define colors for Debit and Credit for better readability in the statement
-val DebitColor = Color(0xFFD32F2F)
-val CreditColor = Color(0xFF388E3C)
+val DebitColor = Color(0xFF388E3C)
+val CreditColor = Color(0xFFD32F2F)
 
 @Composable
 fun AccountStatementRoute(
-    onBack: () -> Unit,
-    viewModel: AccountStatementViewModel = koinViewModel()
+    onBack: () -> Unit, viewModel: AccountStatementViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     AccountStatementScreen(
@@ -127,19 +126,16 @@ fun AccountStatementScreen(
                     }
                 }
             }
-        }
-    ) {
+        }) {
         AnimatedContent(
             targetState = state.selectedPartner == null,
             modifier = Modifier.padding(horizontal = 16.dp),
-            transitionSpec = { fadeIn() togetherWith fadeOut() }
-        ) { isPartnerListVisible ->
+            transitionSpec = { fadeIn() togetherWith fadeOut() }) { isPartnerListVisible ->
             if (isPartnerListVisible) {
                 PartnerSelectionView(
                     isLoading = state.isPartnerListLoading,
                     partners = state.partners,
-                    onPartnerSelected = { onEvent(AccountStatementEvent.SelectPartner(it)) }
-                )
+                    onPartnerSelected = { onEvent(AccountStatementEvent.SelectPartner(it)) })
             } else {
                 StatementDetailView(
                     isLoading = state.isStatementLoading,
@@ -171,8 +167,7 @@ fun PartnerSelectionView(
                             )
                         },
                         supportingContent = { Text(partner.address ?: "") },
-                        modifier = Modifier.clickable { onPartnerSelected(partner) }
-                    )
+                        modifier = Modifier.clickable { onPartnerSelected(partner) })
                     HorizontalDivider()
                 }
             }
@@ -183,9 +178,7 @@ fun PartnerSelectionView(
 
 @Composable
 fun StatementDetailView(
-    isLoading: Boolean,
-    transactions: List<AccountTransaction>,
-    partner: BusinessPartner?
+    isLoading: Boolean, transactions: List<AccountTransaction>, partner: BusinessPartner?
 ) {
     Box(
         modifier = Modifier
@@ -299,9 +292,7 @@ fun TransactionRow(transaction: AccountTransaction) {
         )
         Text(
             text = if (transaction.debit != 0.0) String.format(
-                Locale.US,
-                "%.2f",
-                transaction.debit
+                Locale.US, "%.2f", transaction.debit
             ) else "—",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1.8f),
@@ -310,9 +301,7 @@ fun TransactionRow(transaction: AccountTransaction) {
         )
         Text(
             text = if (transaction.credit != 0.0) String.format(
-                Locale.US,
-                "%.2f",
-                transaction.credit
+                Locale.US, "%.2f", transaction.credit
             ) else "—",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1.8f),
@@ -338,12 +327,10 @@ fun StatementFooter(finalBalance: Double?) {
 
     val (summaryText, summaryColor) = when {
         finalBalance > 0.01 -> stringResource(
-            R.string.balance_summary_negative,
-            formattedBalance
+            R.string.balance_summary_negative, formattedBalance
         ) to DebitColor // They Owe You
         finalBalance < -0.01 -> stringResource(
-            R.string.balance_summary_positive,
-            formattedBalance
+            R.string.balance_summary_positive, formattedBalance
         ) to CreditColor // You Owe Them
         else -> stringResource(R.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -98,10 +99,17 @@ fun BusinessPartnerScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { onEvent(BusinessPartnerInfoEvent.AddNewPartnerClicked) }) {
-                Icon(
-                    Icons.Default.Add, contentDescription = stringResource(R.string.add_partner)
-                )
+            AnimatedVisibility(
+                state.isAdmin
+            ) {
+                FloatingActionButton(
+                    onClick = { onEvent(BusinessPartnerInfoEvent.AddNewPartnerClicked) },
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_partner),
+                    )
+                }
             }
         },
         loading = state.loading,
@@ -114,7 +122,6 @@ fun BusinessPartnerScreen(
         )
     }
 
-    // Show Detail Dialog
     if (state.showDetailDialog && state.selectedBusinessPartner != null) {
         Dialog(onDismissRequest = { onEvent(BusinessPartnerInfoEvent.DismissDetailDialog) }) {
             Card {
@@ -127,99 +134,21 @@ fun BusinessPartnerScreen(
         }
     }
 
-    // Show Edit/Add Dialog
     if (state.showEditDialog && state.partnerToEdit != null) {
         BusinessPartnerEditDialog(
             partner = state.partnerToEdit,
             isSaving = state.isSaving,
             onDismiss = { onEvent(BusinessPartnerInfoEvent.DismissEditDialog) },
-            onSave = { onEvent(BusinessPartnerInfoEvent.SavePartnerClicked(it)) })
+            onSave = { partner, openingDebt, openingIndebtedness ->
+                onEvent(
+                    BusinessPartnerInfoEvent.SavePartnerClicked(
+                        partner, openingDebt, openingIndebtedness
+                    )
+                )
+            })
     }
 }
 
-
-@Composable
-fun BusinessPartnerList(
-    partners: List<BusinessPartner>,
-    onPartnerClick: (BusinessPartner) -> Unit,
-    selectedPartnerId: String?,
-    modifier: Modifier = Modifier
-) {
-    val language = LocalAppLocale.current
-    LazyVerticalGrid(
-        modifier = modifier,
-        columns = GridCells.Adaptive(250.dp)
-    ) {
-        items(partners, key = { it.getCompositeId() }) { partner ->
-            Card {
-                ListItem(
-                    headlineContent = {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                partner.name.displayName(language), fontWeight = FontWeight.Bold
-                            )
-                            PartnerTypeChip(partnerType = partner.type)
-                        }
-                    },
-                    supportingContent = {
-                        Column {
-                            Text(
-                                stringResource(
-                                    R.string.address_placeholder,
-                                    partner.address ?: stringResource(R.string.n_a)
-                                )
-                            )
-                            when (partner.type) {
-                                PartnerType.BOTH -> {
-                                    val balanceText = if (partner.netBalance >= 0) {
-                                        stringResource(
-                                            R.string.net_balance_positive, partner.netBalance
-                                        )
-                                    } else {
-                                        stringResource(
-                                            R.string.net_balance_negative, abs(partner.netBalance)
-                                        )
-                                    }
-                                    Text(
-                                        text = balanceText,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (partner.netBalance >= 0) PositiveBalanceColor else NegativeBalanceColor
-                                    )
-                                }
-
-                                PartnerType.CLIENT -> {
-                                    Text(
-                                        stringResource(
-                                            R.string.debt,
-                                            partner.clientDebt.toString()
-                                        )
-                                    )
-                                }
-
-                                else -> {
-                                    Text(
-                                        stringResource(
-                                            R.string.indebtedness,
-                                            partner.supplierIndebtedness.toString()
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .clickable { onPartnerClick(partner) }
-                        .background(
-                            if (partner.getCompositeId() == selectedPartnerId) MaterialTheme.colorScheme.inversePrimary
-                            else Color.Transparent
-                        ))
-            }
-        }
-    }
-}
 
 @Composable
 fun BusinessPartnerDetailView(
@@ -231,8 +160,7 @@ fun BusinessPartnerDetailView(
     Column(modifier = Modifier.padding(16.dp)) {
         // ... (existing detail view content)
         FlowRow(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+            horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 partner.name.displayName(language), style = MaterialTheme.typography.headlineMedium
@@ -332,11 +260,90 @@ fun BusinessPartnerDetailView(
 
 
 @Composable
+fun BusinessPartnerList(
+    partners: List<BusinessPartner>,
+    onPartnerClick: (BusinessPartner) -> Unit,
+    selectedPartnerId: String?,
+    modifier: Modifier = Modifier
+) {
+    val language = LocalAppLocale.current
+    LazyVerticalGrid(
+        modifier = modifier, columns = GridCells.Adaptive(250.dp)
+    ) {
+        items(partners, key = { it.getCompositeId() }) { partner ->
+            Card {
+                ListItem(
+                    headlineContent = {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            partner.name.displayName(language), fontWeight = FontWeight.Bold
+                        )
+                        PartnerTypeChip(partnerType = partner.type)
+                    }
+                }, supportingContent = {
+                    Column {
+                        Text(
+                            stringResource(
+                                R.string.address_placeholder,
+                                partner.address ?: stringResource(R.string.n_a)
+                            )
+                        )
+                        when (partner.type) {
+                            PartnerType.BOTH -> {
+                                val balanceText = if (partner.netBalance >= 0) {
+                                    stringResource(
+                                        R.string.net_balance_positive, partner.netBalance
+                                    )
+                                } else {
+                                    stringResource(
+                                        R.string.net_balance_negative, abs(partner.netBalance)
+                                    )
+                                }
+                                Text(
+                                    text = balanceText,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (partner.netBalance >= 0) PositiveBalanceColor else NegativeBalanceColor
+                                )
+                            }
+
+                            PartnerType.CLIENT -> {
+                                Text(
+                                    stringResource(
+                                        R.string.debt, partner.clientDebt.toString()
+                                    )
+                                )
+                            }
+
+                            else -> {
+                                Text(
+                                    stringResource(
+                                        R.string.indebtedness,
+                                        partner.supplierIndebtedness.toString()
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }, modifier = Modifier
+                        .clickable { onPartnerClick(partner) }
+                        .background(
+                            if (partner.getCompositeId() == selectedPartnerId) MaterialTheme.colorScheme.inversePrimary
+                            else Color.Transparent
+                        ))
+            }
+        }
+    }
+}
+
+@Composable
 fun BusinessPartnerEditDialog(
     partner: BusinessPartner,
     isSaving: Boolean,
     onDismiss: () -> Unit,
-    onSave: (BusinessPartner) -> Unit
+    onSave: (BusinessPartner, Double, Double) -> Unit
 ) {
     var enName by remember { mutableStateOf(partner.name.enName ?: "") }
     var arName by remember { mutableStateOf(partner.name.arName ?: "") }
@@ -344,6 +351,12 @@ fun BusinessPartnerEditDialog(
     var phone by remember { mutableStateOf(partner.phones.firstOrNull() ?: "") }
     var isClient by remember { mutableStateOf(partner.type == PartnerType.CLIENT || partner.type == PartnerType.BOTH) }
     var isSupplier by remember { mutableStateOf(partner.type == PartnerType.SUPPLIER || partner.type == PartnerType.BOTH) }
+
+    // State for the new opening balance fields
+    var openingDebt by remember { mutableStateOf("0.0") }
+    var openingIndebtedness by remember { mutableStateOf("0.0") }
+
+    val isNewPartner = partner.clientLocalId == null && partner.supplierLocalId == null
 
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -353,10 +366,9 @@ fun BusinessPartnerEditDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = if (partner.clientLocalId == null && partner.supplierLocalId == null) stringResource(
-                        R.string.add_partner
-                    ) else stringResource(R.string.edit_partner),
-                    style = MaterialTheme.typography.headlineSmall
+                    text = if (isNewPartner) stringResource(R.string.add_partner) else stringResource(
+                        R.string.edit_partner
+                    ), style = MaterialTheme.typography.headlineSmall
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -399,6 +411,40 @@ fun BusinessPartnerEditDialog(
                     Text("Supplier")
                 }
 
+                // Show opening balance fields ONLY for new partners
+                AnimatedVisibility(visible = isNewPartner) {
+                    Column {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Opening Balances", style = MaterialTheme.typography.labelLarge)
+                        // Show client debt field if the partner is a client
+                        if (isClient) {
+                            OutlinedTextField(
+                                value = openingDebt,
+                                onValueChange = {
+                                    openingDebt =
+                                        it.filter { c -> c.isDigit() || c == '.' || c == '-' }
+                                },
+                                label = { Text("Opening Debt (What they owe you)") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        // Show supplier indebtedness field if the partner is a supplier
+                        if (isSupplier) {
+                            OutlinedTextField(
+                                value = openingIndebtedness,
+                                onValueChange = {
+                                    openingIndebtedness =
+                                        it.filter { c -> c.isDigit() || c == '.' || c == '-' }
+                                },
+                                label = { Text("Opening Indebtedness (What you owe them)") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onDismiss, enabled = !isSaving) {
@@ -410,8 +456,7 @@ fun BusinessPartnerEditDialog(
                             val type = when {
                                 isClient && isSupplier -> PartnerType.BOTH
                                 isClient -> PartnerType.CLIENT
-                                isSupplier -> PartnerType.SUPPLIER
-                                else -> PartnerType.CLIENT // Default or show error
+                                else -> PartnerType.SUPPLIER
                             }
                             val updatedPartner = partner.copy(
                                 name = partner.name.copy(enName = enName, arName = arName),
@@ -419,15 +464,17 @@ fun BusinessPartnerEditDialog(
                                 phones = listOf(phone),
                                 type = type
                             )
-                            onSave(updatedPartner)
+                            onSave(
+                                updatedPartner,
+                                openingDebt.toDoubleOrNull() ?: 0.0,
+                                openingIndebtedness.toDoubleOrNull() ?: 0.0
+                            )
                         },
                         enabled = !isSaving && (isClient || isSupplier) && enName.isNotBlank() && arName.isNotBlank()
                     ) {
                         if (isSaving) {
                             CircularProgressIndicator(
-                                modifier = Modifier
-                                    .height(24.dp)
-                                    .width(24.dp),
+                                modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )

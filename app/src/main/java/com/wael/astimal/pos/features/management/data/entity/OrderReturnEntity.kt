@@ -6,13 +6,13 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
-import com.wael.astimal.pos.features.management.domain.entity.SalesReturnItem
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
+import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
+import com.wael.astimal.pos.features.management.domain.entity.SalesReturnItem
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
 
@@ -46,7 +46,6 @@ data class OrderReturnEntity(
     val invoiceNumber: String?,
     val clientLocalId: Long,
     val employeeLocalId: Long?,
-    val previousDebt: Double?,
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalAmount: Double,
@@ -130,7 +129,6 @@ fun OrderReturnWithDetailsEntity.toDomain(): SalesReturn {
         invoiceNumber = this.orderReturn.invoiceNumber,
         client = this.clientWithUser?.toDomain(),
         employee = this.employeeUser?.toDomain(),
-        previousDebt = this.orderReturn.previousDebt,
         amountPaid = this.orderReturn.amountPaid,
         amountRemaining = this.orderReturn.amountRemaining,
         totalAmount = this.orderReturn.totalAmount,

@@ -289,7 +289,6 @@ class SalesReturnViewModel(
                 invoiceNumber = null,
                 clientLocalId = selectedClient.id,
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
-                previousDebt = selectedClient.debt,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,
                 totalAmount = returnInput.totalAmount,

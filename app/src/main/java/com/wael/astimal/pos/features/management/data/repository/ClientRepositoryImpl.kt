@@ -15,10 +15,6 @@ class ClientRepositoryImpl(private val clientDao: ClientDao) :
         }
     }
 
-    override suspend fun adjustClientDebt(clientLocalId: Long, changeInDebt: Double) {
-        clientDao.adjustDebt(clientLocalId, changeInDebt)
-    }
-
     override suspend fun getClient(clientId: Long): Client? {
         return clientDao.getClientWithDetails(clientId)?.toDomain()
     }
