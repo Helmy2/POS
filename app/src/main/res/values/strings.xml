@@ -126,7 +126,6 @@
     <string name="purchase_return_saved">Purchase return saved</string>
     <string name="purchase_return_deleted">Purchase return deleted</string>
     <string name="error_deleting_purchase_return">Error deleting purchase return</string>
-    <string name="purchase_return">Purchase return</string>
     <string name="accept_transfer">Accept transfer</string>
     <string name="select_date">Select Date</string>
     <string name="employee">Employee</string>
@@ -258,4 +257,18 @@
     <string name="error_creating_pdf">Error creating PDF</string>
     <string name="share_statement_pdf">Share Statement PDF</string>
     <string name="back">Back</string>
+    <string name="invoice_no">Invoice #</string>
+    <string name="type">Type</string>
+    <string name="money_out">Money Out</string>
+    <string name="money_in">Money In</string>
+    <string name="opening_balance">Opening Balance</string>
+    <string name="sale">Sale</string>
+    <string name="purchase">Purchase</string>
+    <string name="sale_return">Sale Return</string>
+    <string name="purchase_return">Purchase Return</string>
+    <string name="payment_received">Payment Received</string>
+    <string name="payment_sent">Payment Sent</string>
+    <string name="balance_summary_positive">Final Balance: You owe this partner %s.</string>
+    <string name="balance_summary_negative">Final Balance: This partner owes you %s.</string>
+    <string name="balance_summary_settled">The account is settled.</string>
 </resources>

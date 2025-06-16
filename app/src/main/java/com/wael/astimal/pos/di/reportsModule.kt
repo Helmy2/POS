@@ -15,7 +15,11 @@ val reportsModule = module {
     }
     single<AccountStatementRepository> {
         AccountStatementRepositoryImpl(
-            get(), get(), get(), get(), get()
+            get(), get(), get(),
+            get(),
+            get(),
+            get(),
+            get(),
         )
     }
 

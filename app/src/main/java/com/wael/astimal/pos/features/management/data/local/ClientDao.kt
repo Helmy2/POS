@@ -52,4 +52,7 @@ interface ClientDao {
     // Add this method to your ClientDao interface
     @Query("UPDATE clients SET isDeletedLocally = 1, lastModified = :timestamp WHERE localId = :localId")
     suspend fun softDeleteClient(localId: Long, timestamp: Long = System.currentTimeMillis())
+
+    @Query("SELECT debt FROM clients WHERE localId = :clientId")
+    fun getDebtFlow(clientId: Long): Flow<Double?>
 }

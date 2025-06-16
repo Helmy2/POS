@@ -9,16 +9,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -26,12 +27,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,8 +53,10 @@ import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
+import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.abs
 
 // Define colors for Debit and Credit for better readability in the statement
 val DebitColor = Color(0xFFD32F2F)
@@ -138,7 +143,8 @@ fun AccountStatementScreen(
             } else {
                 StatementDetailView(
                     isLoading = state.isStatementLoading,
-                    transactions = state.transactions
+                    transactions = state.transactions,
+                    partner = state.selectedPartner
                 )
             }
         }
@@ -178,20 +184,20 @@ fun PartnerSelectionView(
 @Composable
 fun StatementDetailView(
     isLoading: Boolean,
-    transactions: List<AccountTransaction>
+    transactions: List<AccountTransaction>,
+    partner: BusinessPartner?
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+    ) {
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            Card(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
+            Column(Modifier.fillMaxSize()) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.weight(1f)
                 ) {
                     stickyHeader {
                         TransactionListHeader()
@@ -205,11 +211,15 @@ fun StatementDetailView(
                         )
                     }
                 }
+                if (partner != null) {
+                    StatementFooter(
+                        finalBalance = transactions.lastOrNull()?.balance
+                    )
+                }
             }
         }
     }
 }
-
 
 @Composable
 fun TransactionListHeader() {
@@ -217,35 +227,35 @@ fun TransactionListHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             stringResource(R.string.date),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.weight(1.5f),
             textAlign = TextAlign.Start
         )
         Text(
             stringResource(R.string.description),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.weight(3f)
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.weight(4f)
         )
         Text(
             stringResource(R.string.debit),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.weight(1.5f),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.weight(1.8f),
             textAlign = TextAlign.End
         )
         Text(
             stringResource(R.string.credit),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.weight(1.5f),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.weight(1.8f),
             textAlign = TextAlign.End
         )
         Text(
             stringResource(R.string.balance),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.weight(2f),
             textAlign = TextAlign.End
         )
@@ -257,66 +267,113 @@ fun TransactionRow(transaction: AccountTransaction) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yy", Locale.getDefault()) }
     val isOpeningBalance = transaction.transactionType == TransactionType.OPENING_BALANCE
 
-    // Improved padding and alignment for better readability.
+    val description = if (isOpeningBalance) {
+        stringResource(R.string.opening_balance)
+    } else {
+        "${getTransactionTypeString(transaction.transactionType)} #${transaction.invoiceNumber}"
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (isOpeningBalance) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
-                else Color.Transparent
+                if (isOpeningBalance) MaterialTheme.colorScheme.secondaryContainer.copy(
+                    alpha = 0.2f
+                ) else Color.Transparent
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // --- DATE ---
         Text(
-            text = transaction.date.format(dateFormatter),
+            transaction.date.format(dateFormatter),
+            style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.weight(1.5f),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Start,
-            fontWeight = if (isOpeningBalance) FontWeight.Bold else FontWeight.Normal
+            textAlign = TextAlign.Start
         )
-        // --- DESCRIPTION ---
         Text(
-            text = transaction.description,
-            modifier = Modifier.weight(3f),
-            style = MaterialTheme.typography.bodyMedium,
+            description,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(4f),
             fontWeight = if (isOpeningBalance) FontWeight.Bold else FontWeight.Normal,
-            lineHeight = 18.sp
+            lineHeight = 16.sp
         )
-        // --- DEBIT ---
         Text(
             text = if (transaction.debit != 0.0) String.format(
                 Locale.US,
                 "%.2f",
                 transaction.debit
             ) else "—",
-            modifier = Modifier.weight(1.5f),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1.8f),
             textAlign = TextAlign.End,
-            color = if (transaction.debit != 0.0) DebitColor else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = MaterialTheme.typography.labelMedium.fontFamily // Monospaced look for numbers
+            color = if (transaction.debit != 0.0) DebitColor else MaterialTheme.colorScheme.onSurfaceVariant
         )
-        // --- CREDIT ---
         Text(
             text = if (transaction.credit != 0.0) String.format(
                 Locale.US,
                 "%.2f",
                 transaction.credit
             ) else "—",
-            modifier = Modifier.weight(1.5f),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1.8f),
             textAlign = TextAlign.End,
-            color = if (transaction.credit != 0.0) CreditColor else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = MaterialTheme.typography.labelMedium.fontFamily
+            color = if (transaction.credit != 0.0) CreditColor else MaterialTheme.colorScheme.onSurfaceVariant
         )
-        // --- BALANCE ---
         Text(
             text = String.format(Locale.US, "%.2f", transaction.balance),
-            modifier = Modifier.weight(2f),
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(2f),
             textAlign = TextAlign.End,
             fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+@Composable
+fun StatementFooter(finalBalance: Double?) {
+    if (finalBalance == null) return
+
+    val numberFormat = remember { NumberFormat.getCurrencyInstance(Locale("ar", "EG")) }
+    val formattedBalance = numberFormat.format(abs(finalBalance))
+
+    val (summaryText, summaryColor) = when {
+        finalBalance > 0.01 -> stringResource(
+            R.string.balance_summary_negative,
+            formattedBalance
+        ) to DebitColor // They Owe You
+        finalBalance < -0.01 -> stringResource(
+            R.string.balance_summary_positive,
+            formattedBalance
+        ) to CreditColor // You Owe Them
+        else -> stringResource(R.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
+    }
+
+    Surface(modifier = Modifier.fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 4.dp) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(imageVector = Icons.Default.Info, contentDescription = "Info", tint = summaryColor)
+            Text(
+                text = summaryText,
+                style = MaterialTheme.typography.labelLarge,
+                color = summaryColor,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun getTransactionTypeString(type: TransactionType): String {
+    return when (type) {
+        TransactionType.OPENING_BALANCE -> stringResource(R.string.opening_balance)
+        TransactionType.SALE -> stringResource(R.string.sale)
+        TransactionType.PURCHASE -> stringResource(R.string.purchase)
+        TransactionType.SALE_RETURN -> stringResource(R.string.sale_return)
+        TransactionType.PURCHASE_RETURN -> stringResource(R.string.purchase_return)
+        TransactionType.PAYMENT_RECEIVED -> stringResource(R.string.payment_received)
+        TransactionType.PAYMENT_SENT -> stringResource(R.string.payment_sent)
     }
 }

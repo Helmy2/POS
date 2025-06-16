@@ -25,4 +25,7 @@ interface SupplierDao {
     // Add this method to your SupplierDao interface
     @Query("UPDATE suppliers SET isDeletedLocally = 1, lastModified = :timestamp WHERE localId = :localId")
     suspend fun softDeleteSupplier(localId: Long, timestamp: Long = System.currentTimeMillis())
+
+    @Query("SELECT indebtedness FROM suppliers WHERE localId = :supplierId")
+    fun getIndebtednessFlow(supplierId: Long): Flow<Double?>
 }
