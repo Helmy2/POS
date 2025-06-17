@@ -39,7 +39,7 @@ class AccountStatementRepositoryImpl(
                 runningBalance += (entry.debit - entry.credit)
                 statement.add(
                     AccountTransaction(
-                        date = entry.date.toLocalDateTime(),
+                        date = entry.createdAt.toLocalDateTime(),
                         transactionId = "${entry.transactionType}-${entry.sourceTransactionId}",
                         invoiceNumber = "Ref #${entry.sourceTransactionId}", // This can be enhanced later if needed
                         transactionType = entry.transactionType,

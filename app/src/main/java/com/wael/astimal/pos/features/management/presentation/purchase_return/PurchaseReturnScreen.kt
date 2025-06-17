@@ -56,7 +56,7 @@ fun PurchaseReturnScreen(
         onSearch = { onEvent(PurchaseReturnEvent.SearchReturns(it)) },
         onSearchActiveChange = { onEvent(PurchaseReturnEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedReturn?.lastModified,
+        lastModifiedDate = state.selectedReturn?.updatedAt,
         onDelete = { onEvent(PurchaseReturnEvent.DeleteReturn) },
         onCreate = { onEvent(PurchaseReturnEvent.SaveReturn) },
         onUpdate = { onEvent(PurchaseReturnEvent.SaveReturn) },
@@ -67,14 +67,14 @@ fun PurchaseReturnScreen(
                 onItemClick = { onEvent(PurchaseReturnEvent.SelectReturnToView(it)) },
                 label = {
                     Text(
-                        "Return to ${it.supplier?.name?.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}",
+                        "Return to ${it.supplier.name.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}",
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(16.dp)
                     )
                 },
-                isSelected = { item -> item.localId == state.selectedReturn?.localId },
+                isSelected = { item -> item.id.local == state.selectedReturn?.id?.local },
             )
         },
         mainContent = {
@@ -102,10 +102,10 @@ fun PurchaseReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
-            selectedItemId = state.selectedSupplier?.id,
+            selectedItemId = state.selectedSupplier?.id?.local,
             onItemSelected = { onEvent(PurchaseReturnEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id },
+            itemToId = { it.id.local },
             canClearSelection = false,
         )
 

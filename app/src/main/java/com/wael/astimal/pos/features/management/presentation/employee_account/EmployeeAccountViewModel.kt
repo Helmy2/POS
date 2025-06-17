@@ -146,61 +146,60 @@ class EmployeeAccountViewModel(
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_amount))
                 return@launch
             }
-
-            val newTransaction = _state.value.selectedTransaction?.copy(
-                employee = selectedEmployee,
-                createdByEmployee = currentUser,
-                type = currentState.transactionType,
-                amount = amount,
-                notes = currentState.notes,
-                isSynced = false
-            ) ?: EmployeeAccountTransaction(
-                localId = 0,
-                serverId = null,
-                employee = selectedEmployee,
-                createdByEmployee = currentUser,
-                type = currentState.transactionType,
-                amount = amount,
-                relatedCommissionId = null,
-                notes = currentState.notes,
-                creationDate = System.currentTimeMillis(),
-                isSynced = false
-            )
-            saveTransaction(newTransaction)
+//todo
+//            val newTransaction = _state.value.selectedTransaction?.copy(
+//                employee = selectedEmployee,
+//                createdByEmployee = currentUser,
+//                type = currentState.transactionType,
+//                amount = amount,
+//                notes = currentState.notes,
+//                isSynced = false
+//            ) ?: EmployeeAccountTransaction(
+//                id = ,
+//                employee = selectedEmployee,
+//                createdByEmployee = currentUser,
+//                type = currentState.transactionType,
+//                amount = amount,
+//                relatedCommissionId = null,
+//                notes = currentState.notes,
+//
+//            )
+//            saveTransaction(newTransaction)
         }
     }
 
     private fun saveTransaction(transaction: EmployeeAccountTransaction) {
-        viewModelScope.launch {
-            _state.update { it.copy(isSaving = true) }
-            val result = if (transaction.localId == 0L) {
-                employeeAccountRepository.addManualPayment(transaction)
-            } else {
-                employeeAccountRepository.updateManualPayment(transaction)
-            }
-
-            result.fold(onSuccess = {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
-                _state.update {
-                    it.copy(
-                        isSaving = false,
-                        showEditDialog = false,
-                        selectedTransaction = null,
-                        amount = "",
-                        notes = "",
-                        loading = false,
-                    )
-                }
-            }, onFailure = {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
-                _state.update { it.copy(isSaving = false) }
-            })
-        }
+        //todo
+//        viewModelScope.launch {
+//            _state.update { it.copy(isSaving = true) }
+//            val result = if (transaction.localId == 0L) {
+//                employeeAccountRepository.addManualPayment(transaction)
+//            } else {
+//                employeeAccountRepository.updateManualPayment(transaction)
+//            }
+//
+//            result.fold(onSuccess = {
+//                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
+//                _state.update {
+//                    it.copy(
+//                        isSaving = false,
+//                        showEditDialog = false,
+//                        selectedTransaction = null,
+//                        amount = "",
+//                        notes = "",
+//                        loading = false,
+//                    )
+//                }
+//            }, onFailure = {
+//                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
+//                _state.update { it.copy(isSaving = false) }
+//            })
+//        }
     }
 
     private fun deleteTransaction(transaction: EmployeeAccountTransaction) {
         viewModelScope.launch {
-            val result = employeeAccountRepository.deleteManualPayment(transaction.localId)
+            val result = employeeAccountRepository.deleteManualPayment(transaction.id.local)
             if (result.isSuccess) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_deleted_successfully))
             } else {

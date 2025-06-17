@@ -24,8 +24,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PurchaseRoute(
-    viewModel: PurchaseViewModel = koinViewModel(),
-    onBack: () -> Unit
+    viewModel: PurchaseViewModel = koinViewModel(), onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     PurchaseScreen(
@@ -54,7 +53,7 @@ fun PurchaseScreen(
         onSearch = { onEvent(PurchaseEvent.SearchPurchases(it)) },
         onSearchActiveChange = { onEvent(PurchaseEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedPurchase?.lastModified,
+        lastModifiedDate = state.selectedPurchase?.updatedAt,
         onDelete = { onEvent(PurchaseEvent.DeletePurchase) },
         onCreate = { onEvent(PurchaseEvent.SavePurchase) },
         onUpdate = { onEvent(PurchaseEvent.SavePurchase) },
@@ -64,21 +63,19 @@ fun PurchaseScreen(
                 list = state.purchases,
                 onItemClick = { onEvent(PurchaseEvent.SelectPurchaseToView(it)) },
                 label = {
-                    Label("Purchase from ${it.supplier?.name?.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}")
+                    Label("Purchase from ${it.supplier.name.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}")
                 },
-                isSelected = { purchase -> purchase.localId == state.selectedPurchase?.localId },
+                isSelected = { purchase -> purchase.id.local == state.selectedPurchase?.id?.local },
             )
         },
         mainContent = {
             PurchaseForm(state = state, onEvent = onEvent)
-        }
-    )
+        })
 }
 
 @Composable
 fun PurchaseForm(
-    state: PurchaseState,
-    onEvent: (PurchaseEvent) -> Unit
+    state: PurchaseState, onEvent: (PurchaseEvent) -> Unit
 ) {
     val currentLanguage = LocalAppLocale.current
     val purchaseInput = state.currentPurchaseInput
@@ -95,10 +92,10 @@ fun PurchaseForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
-            selectedItemId = state.selectedSupplier?.id,
+            selectedItemId = state.selectedSupplier?.id?.local,
             onItemSelected = { onEvent(PurchaseEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id },
+            itemToId = { it.id.local },
             canClearSelection = false,
         )
 
@@ -141,8 +138,7 @@ fun PurchaseForm(
             },
             onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
                 onEvent(PurchaseEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
-            }
-        )
+            })
 
         OrderTotalsSection(
             totalAmount = purchaseInput.totalAmount,

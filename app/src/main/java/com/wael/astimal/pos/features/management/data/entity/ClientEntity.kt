@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
@@ -19,26 +21,26 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["responsibleEmployeeLocalId"],
-            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
 data class ClientEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: Int? = null,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
+
     val arName: String,
     val enName: String,
-    val phone: String?,
-    val address: String?,
-    val debt: Double?,
+    val phone: String,
+    val address: String,
+    val debt: Double,
     val isSupplier: Boolean = false,
-    var isSynced: Boolean = false,
-    val responsibleEmployeeLocalId: Long? = null,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+    val responsibleEmployeeLocalId: Long,
+) : ItemEntity
 
 data class ClientWithDetailsEntity(
     @Embedded val client: ClientEntity,
@@ -50,17 +52,19 @@ data class ClientWithDetailsEntity(
 
 fun ClientWithDetailsEntity.toDomain(): Client {
     return Client(
-        id = this.client.localId,
+        id = Id(client.localId, client.serverId),
         name = LocalizedString(
-            arName = this.client.arName,
-            enName = this.client.enName
+            arName = client.arName,
+            enName = client.enName
         ),
-        phone = this.client.phone.orEmpty(),
-        address = this.client.address.orEmpty(),
-        isSupplier = this.client.isSupplier,
-        isSynced = this.client.isSynced,
-        lastModified = this.client.lastModified,
-        isDeletedLocally = this.client.isDeletedLocally,
-        responsibleEmployee = this.responsibleEmployeeUser?.toDomain()
+        phone = client.phone,
+        address = client.address,
+        isSupplier = client.isSupplier,
+        isSynced = client.isSynced,
+        lastModified = client.updatedAt,
+        isDeletedLocally = client.isDeletedLocally,
+        responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
+        updatedAt = client.updatedAt,
+        createdAt = client.createdAt
     )
 }

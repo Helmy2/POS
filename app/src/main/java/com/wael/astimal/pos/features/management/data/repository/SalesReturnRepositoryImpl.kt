@@ -98,7 +98,8 @@ class SalesReturnRepositoryImpl(
                     TransactionType.PAYMENT_SENT
                 )
 
-                val entityToUpdate = returnEntity.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                val entityToUpdate =
+                    returnEntity.copy(isSynced = false, updatedAt = System.currentTimeMillis())
                 orderReturnDao.updateReturnWithItems(entityToUpdate, items)
 
                 returnAmountLogic.processNewReturn(entityToUpdate, items, returnId)
@@ -133,7 +134,7 @@ class SalesReturnRepositoryImpl(
                     val returnToMarkAsDeleted = returnEntity.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        lastModified = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis()
                     )
                     orderReturnDao.updateReturn(returnToMarkAsDeleted)
                 }
@@ -148,11 +149,13 @@ class SalesReturnRepositoryImpl(
         // Create ledger entry for the sales return
         partnerTransactionDao.insertTransaction(
             PartnerTransactionEntity(
+                serverId = null,
                 clientId = returnEntity.clientLocalId,
                 supplierId = null,
                 sourceTransactionId = returnId,
                 transactionType = TransactionType.SALE_RETURN,
-                date = returnEntity.returnDate,
+                createdAt = returnEntity.createdAt,
+                updatedAt = returnEntity.updatedAt,
                 debit = 0.0,
                 credit = returnEntity.totalAmount // A sales return is a credit to the client
             )
@@ -161,11 +164,13 @@ class SalesReturnRepositoryImpl(
         if (returnEntity.amountPaid > 0) {
             partnerTransactionDao.insertTransaction(
                 PartnerTransactionEntity(
+                    serverId = null,
                     clientId = returnEntity.clientLocalId,
                     supplierId = null,
                     sourceTransactionId = returnId,
                     transactionType = TransactionType.PAYMENT_SENT,
-                    date = returnEntity.returnDate,
+                    createdAt = returnEntity.createdAt,
+                    updatedAt = returnEntity.updatedAt,
                     debit = returnEntity.amountPaid,
                     credit = 0.0
                 )

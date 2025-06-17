@@ -183,7 +183,7 @@ class SalesReturnViewModel(
 
     private fun deleteReturn() {
         viewModelScope.launch {
-            salesReturnRepository.deleteReturn(_state.value.selectedReturn?.localId ?: 0L)
+            salesReturnRepository.deleteReturn(_state.value.selectedReturn?.id?.local ?: 0L)
                 .fold(onSuccess = {
                     clearState(snackbarMessage = R.string.return_deleted)
                 }, onFailure = {
@@ -204,13 +204,13 @@ class SalesReturnViewModel(
                 currentReturnInput = if (salesReturn == null) EditableItemList(
                     selectedEmployeeId = it.currentUser?.id,
                 ) else EditableItemList(
-                    selectedEmployeeId = salesReturn.employee?.id,
+                    selectedEmployeeId = salesReturn.employee.id,
                     paymentType = salesReturn.paymentType,
                     date = salesReturn.data,
                     items = salesReturn.items.map { item ->
-                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
+                        val conversionFactor = item.product.subUnitsPerMainUnit
                         EditableItem(
-                            tempEditorId = item.localId.toString(),
+                            tempEditorId = item.id.local.toString(),
                             product = item.product,
                             isSelectedUnitIsMax = true,
                             maxUnitPrice = item.priceAtReturn.toString(),
@@ -282,16 +282,16 @@ class SalesReturnViewModel(
             }
 
             val returnEntity = OrderReturnEntity(
-                localId = _state.value.selectedReturn?.localId ?: 0L,
+                localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                clientLocalId = selectedClient.id,
+                clientLocalId = selectedClient.id.local,
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,
                 totalAmount = returnInput.totalAmount,
                 paymentType = returnInput.paymentType,
-                returnDate = returnInput.date
+                createdAt = returnInput.date
             )
 
             _state.update { it.copy(loading = true) }

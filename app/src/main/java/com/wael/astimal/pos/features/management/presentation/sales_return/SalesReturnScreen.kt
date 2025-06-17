@@ -57,7 +57,7 @@ fun SalesReturnScreen(
         onSearch = { onEvent(SalesReturnEvent.SearchReturns(it)) },
         onSearchActiveChange = { onEvent(SalesReturnEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedReturn?.lastModified,
+        lastModifiedDate = state.selectedReturn?.updatedAt,
         onCreate = { onEvent(SalesReturnEvent.SaveReturn) },
         onNew = { onEvent(SalesReturnEvent.OpenNewReturnForm) },
         searchResults = {
@@ -66,14 +66,14 @@ fun SalesReturnScreen(
                 onItemClick = { onEvent(SalesReturnEvent.SelectReturnToView(it)) },
                 label = {
                     Text(
-                        "Return to ${it.client?.name?.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}",
+                        "Return to ${it.client.name.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}",
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(16.dp)
                     )
                 },
-                isSelected = { item -> item.localId == state.selectedReturn?.localId },
+                isSelected = { item -> item.id.local == state.selectedReturn?.id?.local },
             )
         },
         mainContent = {
@@ -104,10 +104,10 @@ fun SalesReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
-            selectedItemId = state.selectedClient?.id,
+            selectedItemId = state.selectedClient?.id?.local,
             onItemSelected = { onEvent(SalesReturnEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id },
+            itemToId = { it.id.local },
             canClearSelection = false,
         )
 

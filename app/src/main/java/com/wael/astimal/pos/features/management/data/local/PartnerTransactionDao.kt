@@ -15,13 +15,13 @@ interface PartnerTransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: PartnerTransactionEntity)
 
-    @Query("SELECT * FROM partner_transactions WHERE clientId = :clientId ORDER BY date ASC, id ASC")
+    @Query("SELECT * FROM partner_transactions WHERE clientId = :clientId")
     fun getTransactionsForClient(clientId: Long): Flow<List<PartnerTransactionEntity>>
 
-    @Query("SELECT * FROM partner_transactions WHERE supplierId = :supplierId ORDER BY date ASC, id ASC")
+    @Query("SELECT * FROM partner_transactions WHERE supplierId = :supplierId")
     fun getTransactionsForSupplier(supplierId: Long): Flow<List<PartnerTransactionEntity>>
 
-    @Query("SELECT * FROM partner_transactions WHERE clientId = :clientId OR supplierId = :supplierId ORDER BY date ASC, id ASC")
+    @Query("SELECT * FROM partner_transactions WHERE clientId = :clientId OR supplierId = :supplierId")
     fun getTransactionsForPartner(
         clientId: Long,
         supplierId: Long

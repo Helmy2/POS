@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
@@ -30,19 +32,19 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     )], indices = [Index("clientLocalId"), Index("supplierLocalId"), Index("employeeLocalId")]
 )
 data class ReceivePayVoucherEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
     val isReceipt: Boolean, // True for Receive (from client), False for Pay (to supplier)
     val clientLocalId: Long?,
     val supplierLocalId: Long?,
     val employeeLocalId: Long,
     val amount: Double,
-    val date: Long,
-    val notes: String?,
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+    val notes: String,
+) : ItemEntity
 
 data class ReceivePayVoucherWithDetails(
     @Embedded val voucher: ReceivePayVoucherEntity,
@@ -73,28 +75,28 @@ fun ReceivePayVoucherWithDetails.toDomain(): ReceivePayVoucher {
     val partyType: VoucherPartyType
     val party: Any
 
-    if (this.voucher.isReceipt) {
+    if (voucher.isReceipt) {
         partyType = VoucherPartyType.CLIENT
-        party = this.client?.toDomain()
-            ?: throw IllegalStateException("Receipt voucher #${this.voucher.localId} must have a client.")
+        party = client?.toDomain()
+            ?: throw IllegalStateException("Receipt voucher #${voucher.localId} must have a client.")
     } else {
         partyType = VoucherPartyType.SUPPLIER
-        party = this.supplier?.toDomain()
-            ?: throw IllegalStateException("Payment voucher #${this.voucher.localId} must have a supplier.")
+        party = supplier?.toDomain()
+            ?: throw IllegalStateException("Payment voucher #${voucher.localId} must have a supplier.")
     }
 
-    val creator = this.createdByUser?.toDomain()
-        ?: throw IllegalStateException("Voucher #${this.voucher.localId} must have a creator employee.")
+    val creator = createdByUser?.toDomain()
+        ?: throw IllegalStateException("Voucher #${voucher.localId} must have a creator employee.")
 
     return ReceivePayVoucher(
-        localId = this.voucher.localId,
-        serverId = this.voucher.serverId,
-        amount = this.voucher.amount,
+        id = Id(voucher.localId, voucher.serverId),
+        amount = voucher.amount,
         party = party,
         partyType = partyType,
-        date = this.voucher.date,
-        notes = this.voucher.notes,
+        notes = voucher.notes,
         createdBy = creator,
-        isSynced = this.voucher.isSynced
+        createdAt = voucher.createdAt,
+        updatedAt = voucher.updatedAt,
+        isSynced = voucher.isSynced
     )
 }

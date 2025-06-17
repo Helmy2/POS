@@ -3,18 +3,21 @@ package com.wael.astimal.pos.features.management.presentation.business_partner
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class BusinessPartnerInfoState(
+    val currentUser: User? = null,
     val loading: Boolean = false,
     val searchResults: List<BusinessPartner> = emptyList(),
     val selectedBusinessPartner: BusinessPartner? = null,
     val query: String = "",
     val showDetailDialog: Boolean = false,
-    val isAdmin: Boolean = false,
     val showEditDialog: Boolean = false,
     val partnerToEdit: BusinessPartner? = null,
     val isSaving: Boolean = false
-)
+) {
+    val canEdit get() = currentUser?.isAdmin == true
+}
 
 sealed interface BusinessPartnerInfoEvent {
     data class SearchBusinessPartners(val query: String) : BusinessPartnerInfoEvent
@@ -33,14 +36,14 @@ sealed interface BusinessPartnerInfoEvent {
     ) : BusinessPartnerInfoEvent
 }
 
-fun createBlankBusinessPartner(): BusinessPartner {
+fun createBlankBusinessPartner(currentUser: User): BusinessPartner {
     return BusinessPartner(
         clientLocalId = null,
         supplierLocalId = null,
         name = LocalizedString(),
         address = "",
         phone = "",
-        responsibleEmployee = null,
+        responsibleEmployee = currentUser,
         type = PartnerType.CLIENT,
         clientDebt = 0.0,
         supplierIndebtedness = 0.0,

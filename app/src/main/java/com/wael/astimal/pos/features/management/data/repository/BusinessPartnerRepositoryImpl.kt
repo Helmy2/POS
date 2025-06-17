@@ -39,7 +39,7 @@ class BusinessPartnerRepositoryImpl(
                 val mapKey =
                     (client.name.enName.orEmpty() + client.name.arName.orEmpty()).lowercase()
                 partnerMap[mapKey] = client.toBusinessPartner(
-                    partnerTransactionDao.getClientBalance(client.id) ?: 0.0
+                    partnerTransactionDao.getClientBalance(client.id.local) ?: 0.0
                 )
             }
 
@@ -50,13 +50,13 @@ class BusinessPartnerRepositoryImpl(
                 if (existingPartner != null) {
                     partnerMap[mapKey] = existingPartner.copy(
                         type = PartnerType.BOTH,
-                        supplierLocalId = supplier.id,
-                        supplierIndebtedness = partnerTransactionDao.getSupplierBalance(supplier.id)
+                        supplierLocalId = supplier.id.local,
+                        supplierIndebtedness = partnerTransactionDao.getSupplierBalance(supplier.id.local)
                             ?: 0.0,
                     )
                 } else {
                     partnerMap[mapKey] = supplier.toBusinessPartner(
-                        partnerTransactionDao.getSupplierBalance(supplier.id) ?: 0.0
+                        partnerTransactionDao.getSupplierBalance(supplier.id.local) ?: 0.0
                     )
                 }
             }
@@ -129,11 +129,13 @@ class BusinessPartnerRepositoryImpl(
 
         partnerTransactionDao.insertTransaction(
             PartnerTransactionEntity(
+                serverId = null,
                 clientId = clientId,
                 supplierId = supplierId,
-                sourceTransactionId = 0L, // 0 for opening balance as it has no source
+                sourceTransactionId = 0L,
                 transactionType = TransactionType.OPENING_BALANCE,
-                date = System.currentTimeMillis(),
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 debit = debit,
                 credit = credit,
             )
@@ -146,7 +148,7 @@ private fun Client.toBusinessPartner(
     clientDebt: Double
 ): BusinessPartner {
     return BusinessPartner(
-        clientLocalId = this.id,
+        clientLocalId = this.id.local,
         supplierLocalId = null,
         name = this.name,
         address = this.address,
@@ -164,7 +166,7 @@ private fun Supplier.toBusinessPartner(
 ): BusinessPartner {
     return BusinessPartner(
         clientLocalId = null,
-        supplierLocalId = this.id,
+        supplierLocalId = this.id.local,
         name = this.name,
         address = this.address,
         phone = this.phone,
@@ -178,6 +180,7 @@ private fun Supplier.toBusinessPartner(
 
 private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
     return ClientEntity(
+        serverId = null,
         localId = this.clientLocalId ?: 0L,
         arName = this.name.arName.orEmpty(),
         enName = this.name.enName.orEmpty(),
@@ -185,13 +188,14 @@ private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
         address = this.address,
         debt = this.clientDebt,
         isSupplier = isSupplier,
-        responsibleEmployeeLocalId = this.responsibleEmployee?.id,
+        responsibleEmployeeLocalId = this.responsibleEmployee.id,
         isSynced = false
     )
 }
 
 private fun BusinessPartner.toSupplierEntity(isClient: Boolean): SupplierEntity {
     return SupplierEntity(
+        serverId = null,
         localId = this.supplierLocalId ?: 0L,
         arName = this.name.arName.orEmpty(),
         enName = this.name.enName.orEmpty(),
@@ -199,7 +203,7 @@ private fun BusinessPartner.toSupplierEntity(isClient: Boolean): SupplierEntity 
         address = this.address,
         indebtedness = this.supplierIndebtedness,
         isClient = isClient,
-        responsibleEmployeeLocalId = this.responsibleEmployee?.id,
+        responsibleEmployeeLocalId = this.responsibleEmployee.id,
         isSynced = false
     )
 }

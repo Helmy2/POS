@@ -16,18 +16,18 @@ class EmployeeAccountRepositoryImpl(
         return employeeFinancesDao.getAllTransactions().map { it.map { it -> it.toDomain() } }
     }
 
-    override suspend fun addManualPayment(transaction: EmployeeAccountTransaction): Result<Unit> {
+    override suspend fun addManualPayment(transaction: EmployeeAccountTransactionEntity): Result<Unit> {
         return try {
-            employeeFinancesDao.insertEmployeeTransaction(transaction.toEntity())
+            employeeFinancesDao.insertEmployeeTransaction(transaction)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun updateManualPayment(transaction: EmployeeAccountTransaction): Result<Unit> {
+    override suspend fun updateManualPayment(transaction: EmployeeAccountTransactionEntity): Result<Unit> {
         return try {
-            employeeFinancesDao.updateEmployeeTransaction(transaction.toEntity())
+            employeeFinancesDao.updateEmployeeTransaction(transaction)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -42,24 +42,4 @@ class EmployeeAccountRepositoryImpl(
             Result.failure(e)
         }
     }
-}
-
-private fun EmployeeAccountTransaction.toEntity(): EmployeeAccountTransactionEntity {
-    return EmployeeAccountTransactionEntity(
-        localId = this.localId,
-        serverId = this.serverId,
-        employeeId = this.employee?.id ?: throw KotlinNullPointerException(
-            "employeeId is null in EmployeeAccountTransactionEntity"
-        ),
-        createdByEmployeeId = this.createdByEmployee?.id ?: throw KotlinNullPointerException(
-            "createdByEmployee is null in EmployeeAccountTransactionEntity"
-        ),
-        type = this.type,
-        amount = this.amount,
-        relatedCommissionId = this.relatedCommissionId,
-        notes = this.notes,
-        creationDate = this.creationDate,
-        isSynced = false,
-        lastModificationDate = this.lastModificationDate
-    )
 }

@@ -135,20 +135,20 @@ fun AddVoucherForm(
                 VoucherPartyType.CLIENT -> CustomExposedDropdownMenu(
                     label = stringResource(R.string.client),
                     items = state.clients,
-                    selectedItemId = state.selectedClient?.id,
+                    selectedItemId = state.selectedClient?.id?.local,
                     onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
                     itemToDisplayString = { it.name.displayName(currentLanguage) },
-                    itemToId = { it.id },
+                    itemToId = { it.id.local },
                     canClearSelection = true,
                 )
 
                 VoucherPartyType.SUPPLIER -> CustomExposedDropdownMenu(
                     label = stringResource(R.string.supplier),
                     items = state.suppliers,
-                    selectedItemId = state.selectedSupplier?.id,
+                    selectedItemId = state.selectedSupplier?.id?.local,
                     onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
                     itemToDisplayString = { it.name.displayName(currentLanguage) },
-                    itemToId = { it.id },
+                    itemToId = { it.id.local },
                     canClearSelection = true
                 )
             }
@@ -195,10 +195,10 @@ fun VoucherList(
     onEvent: (ReceivePayVoucherEvent) -> Unit
 ) {
     LazyColumn {
-        items(vouchers, key = { it.localId }) { voucher ->
+        items(vouchers, key = { it.id.local }) { voucher ->
             val responsibleEmployeeId = when (voucher.party) {
-                is Client -> voucher.party.responsibleEmployee?.id
-                is Supplier -> voucher.party.responsibleEmployee?.id
+                is Client -> voucher.party.responsibleEmployee.id
+                is Supplier -> voucher.party.responsibleEmployee.id
                 else -> null
             }
 
@@ -221,9 +221,9 @@ fun VoucherItem(
         is Supplier -> voucher.party.name.displayName(LocalAppLocale.current)
         else -> ""
     }
-    val date = remember(voucher.date) {
+    val date = remember(voucher.updatedAt) {
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
-            Date(voucher.date)
+            Date(voucher.updatedAt)
         )
     }
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -241,7 +241,7 @@ fun VoucherItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (!voucher.notes.isNullOrBlank()) {
+                if (voucher.notes.isNotBlank()) {
                     Text(text = voucher.notes, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -307,8 +307,8 @@ fun EditVoucherDialog(
     onSave: (ReceivePayVoucher) -> Unit
 ) {
     var amount by remember { mutableStateOf(voucher.amount.toString()) }
-    var notes by remember { mutableStateOf(voucher.notes ?: "") }
-    var date by remember { mutableLongStateOf(voucher.date) }
+    var notes by remember { mutableStateOf(voucher.notes) }
+    var date by remember { mutableLongStateOf(voucher.createdAt) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card {
@@ -347,8 +347,8 @@ fun EditVoucherDialog(
                                 onSave(
                                     voucher.copy(
                                         amount = newAmount,
-                                        notes = notes.takeIf { it.isNotBlank() },
-                                        date = date
+                                        notes = notes,
+                                        createdAt = date
                                     )
                                 )
                             }

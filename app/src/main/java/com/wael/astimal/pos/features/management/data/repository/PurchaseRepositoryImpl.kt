@@ -56,7 +56,6 @@ class PurchaseRepositoryImpl(
             var insertedId: Long = -1
             database.withTransaction {
                 val employeeId = purchase.employeeLocalId
-                    ?: throw Exception("Employee ID is missing on the purchase record.")
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Could not find an assigned store for the employee.")
 
@@ -91,7 +90,7 @@ class PurchaseRepositoryImpl(
             database.withTransaction {
                 val oldPurchase = purchaseDao.getPurchaseWithDetails(purchaseId)
                     ?: throw NoSuchElementException("Original purchase not found")
-                val employeeId = purchase.employeeLocalId ?: throw Exception("Employee ID missing.")
+                val employeeId = purchase.employeeLocalId
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Store not found.")
 
@@ -112,7 +111,7 @@ class PurchaseRepositoryImpl(
 
                 // Update purchase and items
                 val entityToUpdate =
-                    purchase.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                    purchase.copy(isSynced = false, updatedAt = System.currentTimeMillis())
                 purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
 
                 // Apply new adjustments
@@ -144,7 +143,6 @@ class PurchaseRepositoryImpl(
 
                 if (!purchaseToDelete.purchase.isDeletedLocally) {
                     val employeeId = purchaseToDelete.purchase.employeeLocalId
-                        ?: throw Exception("Employee ID missing.")
                     val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                         ?: throw Exception("Store not found.")
 
@@ -166,7 +164,7 @@ class PurchaseRepositoryImpl(
                     val entityToMarkAsDeleted = purchaseToDelete.purchase.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        lastModified = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis()
                     )
                     purchaseDao.updatePurchase(entityToMarkAsDeleted)
                 }
@@ -178,31 +176,33 @@ class PurchaseRepositoryImpl(
     }
 
     private suspend fun addPurchaseLedgerEntries(purchase: PurchaseEntity, purchaseId: Long) {
-        if (purchase.supplierLocalId != null) {
+        partnerTransactionDao.insertTransaction(
+            PartnerTransactionEntity(
+                serverId = null,
+                clientId = null,
+                supplierId = purchase.supplierLocalId,
+                sourceTransactionId = purchaseId,
+                transactionType = TransactionType.PURCHASE,
+                createdAt = purchase.createdAt,
+                updatedAt = purchase.updatedAt,
+                debit = 0.0,
+                credit = purchase.totalAmount
+            )
+        )
+        if (purchase.amountPaid > 0) {
             partnerTransactionDao.insertTransaction(
                 PartnerTransactionEntity(
+                    serverId = null,
                     clientId = null,
                     supplierId = purchase.supplierLocalId,
                     sourceTransactionId = purchaseId,
-                    transactionType = TransactionType.PURCHASE,
-                    date = purchase.purchaseDate,
-                    debit = 0.0,
-                    credit = purchase.totalAmount
+                    transactionType = TransactionType.PAYMENT_SENT,
+                    createdAt = purchase.createdAt,
+                    updatedAt = purchase.updatedAt,
+                    debit = purchase.amountPaid,
+                    credit = 0.0
                 )
             )
-            if (purchase.amountPaid > 0) {
-                partnerTransactionDao.insertTransaction(
-                    PartnerTransactionEntity(
-                        clientId = null,
-                        supplierId = purchase.supplierLocalId,
-                        sourceTransactionId = purchaseId,
-                        transactionType = TransactionType.PAYMENT_SENT,
-                        date = purchase.purchaseDate,
-                        debit = purchase.amountPaid,
-                        credit = 0.0
-                    )
-                )
-            }
         }
     }
 }

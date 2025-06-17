@@ -56,7 +56,7 @@ class PurchaseReturnRepositoryImpl(
             var insertedId: Long = -1
             database.withTransaction {
                 val employeeId =
-                    purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
+                    purchaseReturn.employeeLocalId
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Store not found.")
 
@@ -94,7 +94,7 @@ class PurchaseReturnRepositoryImpl(
                 val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(returnId)
                     ?: throw NoSuchElementException("Original return not found")
                 val employeeId =
-                    purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
+                    purchaseReturn.employeeLocalId
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Store not found.")
 
@@ -111,7 +111,8 @@ class PurchaseReturnRepositoryImpl(
                     TransactionType.PAYMENT_RECEIVED
                 )
 
-                val entityToUpdate = purchaseReturn.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                val entityToUpdate =
+                    purchaseReturn.copy(isSynced = false, updatedAt = System.currentTimeMillis())
                 purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
 
                 items.forEach { newItem ->
@@ -139,7 +140,7 @@ class PurchaseReturnRepositoryImpl(
                     ?: throw NoSuchElementException("Return not found")
 
                 if (!returnToDelete.purchaseReturn.isDeletedLocally) {
-                    val employeeId = returnToDelete.purchaseReturn.employeeLocalId ?: throw Exception("Employee ID missing.")
+                    val employeeId = returnToDelete.purchaseReturn.employeeLocalId
                     val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                         ?: throw Exception("Store not found.")
 
@@ -160,7 +161,7 @@ class PurchaseReturnRepositoryImpl(
                     val entityToMarkAsDeleted = returnToDelete.purchaseReturn.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        lastModified = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis()
                     )
                     purchaseReturnDao.updatePurchaseReturn(entityToMarkAsDeleted)
                 }
@@ -175,31 +176,33 @@ class PurchaseReturnRepositoryImpl(
         purchaseReturn: PurchaseReturnEntity,
         returnId: Long
     ) {
-        if (purchaseReturn.supplierLocalId != null) {
+        partnerTransactionDao.insertTransaction(
+            PartnerTransactionEntity(
+                serverId = null,
+                clientId = null,
+                supplierId = purchaseReturn.supplierLocalId,
+                sourceTransactionId = returnId,
+                transactionType = TransactionType.PURCHASE_RETURN,
+                createdAt = purchaseReturn.createdAt,
+                updatedAt = purchaseReturn.updatedAt,
+                debit = purchaseReturn.totalAmount, // A purchase return reduces what you owe them
+                credit = 0.0
+            )
+        )
+        if (purchaseReturn.amountPaid > 0) {
             partnerTransactionDao.insertTransaction(
                 PartnerTransactionEntity(
+                    serverId = null,
                     clientId = null,
                     supplierId = purchaseReturn.supplierLocalId,
                     sourceTransactionId = returnId,
-                    transactionType = TransactionType.PURCHASE_RETURN,
-                    date = purchaseReturn.returnDate,
-                    debit = purchaseReturn.totalAmount, // A purchase return reduces what you owe them
-                    credit = 0.0
+                    transactionType = TransactionType.PAYMENT_RECEIVED,
+                    createdAt = purchaseReturn.createdAt,
+                    updatedAt = purchaseReturn.updatedAt,
+                    debit = 0.0,
+                    credit = purchaseReturn.amountPaid // Money received from a supplier is a credit
                 )
             )
-            if (purchaseReturn.amountPaid > 0) {
-                partnerTransactionDao.insertTransaction(
-                    PartnerTransactionEntity(
-                        clientId = null,
-                        supplierId = purchaseReturn.supplierLocalId,
-                        sourceTransactionId = returnId,
-                        transactionType = TransactionType.PAYMENT_RECEIVED,
-                        date = purchaseReturn.returnDate,
-                        debit = 0.0,
-                        credit = purchaseReturn.amountPaid // Money received from a supplier is a credit
-                    )
-                )
-            }
         }
     }
 }

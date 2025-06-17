@@ -22,7 +22,7 @@ interface EmployeeFinancesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEmployeeTransaction(transaction: EmployeeAccountTransactionEntity): Long
 
-    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId ORDER BY creationDate DESC")
+    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId")
     fun getTransactionsForEmployee(employeeId: Long): Flow<List<EmployeeAccountTransactionEntity>>
 
     @Transaction

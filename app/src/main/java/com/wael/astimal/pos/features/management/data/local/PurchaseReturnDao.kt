@@ -53,7 +53,7 @@ interface PurchaseReturnDao {
     }
 
     @Transaction
-    @Query("SELECT * FROM purchase_returns WHERE NOT isDeletedLocally ORDER BY returnDate DESC")
+    @Query("SELECT * FROM purchase_returns WHERE NOT isDeletedLocally")
     fun getAllPurchaseReturnsWithDetailsFlow(): Flow<List<PurchaseReturnWithDetailsEntity>>
 
     @Transaction

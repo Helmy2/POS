@@ -35,7 +35,7 @@ class BusinessPartnerViewModel(
     init {
         viewModelScope.launch {
             val user = sessionManager.getCurrentUser().firstOrNull()
-            _state.update { it.copy(isAdmin = user?.isAdmin == true) }
+            _state.update { it.copy(currentUser = user) }
         }
         onEvent(BusinessPartnerInfoEvent.SearchBusinessPartners(_state.value.query))
     }
@@ -51,18 +51,22 @@ class BusinessPartnerViewModel(
                     )
                 }
             }
+
             is BusinessPartnerInfoEvent.UpdateQuery -> {
                 _state.update { it.copy(query = event.query) }
                 searchBusinessPartnersList(event.query)
             }
+
             is BusinessPartnerInfoEvent.AddNewPartnerClicked -> {
-                _state.update {
-                    it.copy(
-                        showEditDialog = true,
-                        partnerToEdit = createBlankBusinessPartner()
-                    )
+                _state.value.currentUser?.let { user ->
+                    _state.update {
+                        it.copy(
+                            showEditDialog = true, partnerToEdit = createBlankBusinessPartner(user)
+                        )
+                    }
                 }
             }
+
             is BusinessPartnerInfoEvent.EditPartnerClicked -> {
                 _state.update {
                     it.copy(
@@ -72,20 +76,23 @@ class BusinessPartnerViewModel(
                     )
                 }
             }
+
             is BusinessPartnerInfoEvent.SavePartnerClicked -> {
                 // The partner object from the dialog state is combined with the opening balances
                 val finalPartner = event.partner.copy(
-                    clientDebt = event.openingDebt,
-                    supplierIndebtedness = event.openingIndebtedness
+                    clientDebt = event.openingDebt, supplierIndebtedness = event.openingIndebtedness
                 )
                 savePartner(finalPartner)
             }
+
             is BusinessPartnerInfoEvent.DeletePartnerClicked -> {
                 deletePartner(event.partner)
             }
+
             BusinessPartnerInfoEvent.DismissEditDialog -> {
                 _state.update { it.copy(showEditDialog = false, partnerToEdit = null) }
             }
+
             BusinessPartnerInfoEvent.DismissDetailDialog -> {
                 _state.update { it.copy(showDetailDialog = false, selectedBusinessPartner = null) }
             }
@@ -98,7 +105,11 @@ class BusinessPartnerViewModel(
             val result = businessPartnerRepository.saveBusinessPartner(partner)
             if (result.isSuccess) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.partner_saved_successfully))
-                _state.update { it.copy(isSaving = false, showEditDialog = false, partnerToEdit = null) }
+                _state.update {
+                    it.copy(
+                        isSaving = false, showEditDialog = false, partnerToEdit = null
+                    )
+                }
             } else {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_partner))
                 _state.update { it.copy(isSaving = false) }
@@ -110,7 +121,11 @@ class BusinessPartnerViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
             val result = businessPartnerRepository.deleteBusinessPartner(partner)
-            _state.update { it.copy(isSaving = false, showDetailDialog = false, selectedBusinessPartner = null) }
+            _state.update {
+                it.copy(
+                    isSaving = false, showDetailDialog = false, selectedBusinessPartner = null
+                )
+            }
             if (result.isSuccess) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.partner_deleted_successfully))
             } else {

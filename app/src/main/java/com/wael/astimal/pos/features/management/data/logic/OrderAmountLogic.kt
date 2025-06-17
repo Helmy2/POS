@@ -56,7 +56,6 @@ class OrderAmountLogic(
                 employeeId = sellingEmployeeId,
                 orderId = orderId,
                 commissionAmount = commissionAmount * 2,
-                isMain = true,
                 invoiceNumber = order.invoiceNumber,
                 createdByEmployeeId = sellingEmployeeId
             )
@@ -65,7 +64,6 @@ class OrderAmountLogic(
                 employeeId = sellingEmployeeId,
                 orderId = orderId,
                 commissionAmount = commissionAmount,
-                isMain = true,
                 invoiceNumber = order.invoiceNumber,
                 createdByEmployeeId = order.employeeLocalId
             )
@@ -74,7 +72,6 @@ class OrderAmountLogic(
                     employeeId = responsibleEmployeeId,
                     orderId = orderId,
                     commissionAmount = commissionAmount,
-                    isMain = false,
                     invoiceNumber = order.invoiceNumber,
                     createdByEmployeeId = order.employeeLocalId
                 )
@@ -87,7 +84,6 @@ class OrderAmountLogic(
         employeeId: Long,
         orderId: Long,
         commissionAmount: Double,
-        isMain: Boolean,
         invoiceNumber: String,
         createdByEmployeeId: Long
     ) {
@@ -96,8 +92,6 @@ class OrderAmountLogic(
             sourceTransactionId = orderId,
             sourceTransactionType = SourceTransactionType.SALE,
             commissionAmount = commissionAmount,
-            isMain = isMain,
-            date = System.currentTimeMillis(),
             serverId = null
         )
         val commissionId = employeeFinancesDao.insertSaleCommission(commission)
@@ -110,8 +104,11 @@ class OrderAmountLogic(
             amount = commissionAmount,
             relatedCommissionId = commissionId,
             notes = "Commission for order #$invoiceNumber",
-            lastModificationDate = System.currentTimeMillis(),
-            creationDate = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            createdAt = System.currentTimeMillis(),
+            localId = 0L,
+            isSynced = false,
+            isDeletedLocally = false
         )
         employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
     }
@@ -133,8 +130,11 @@ class OrderAmountLogic(
                     amount = -commission.commissionAmount,
                     relatedCommissionId = commission.localId,
                     notes = "Reversal for order #${invoiceNumber}",
-                    lastModificationDate = System.currentTimeMillis(),
-                    creationDate = commission.date
+                    updatedAt = System.currentTimeMillis(),
+                    createdAt = System.currentTimeMillis(),
+                    localId = 0L,
+                    isSynced = false,
+                    isDeletedLocally = false
                 )
             )
         }

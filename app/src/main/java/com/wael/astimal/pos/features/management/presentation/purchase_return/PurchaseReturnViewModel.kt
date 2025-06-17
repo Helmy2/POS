@@ -183,7 +183,7 @@ class PurchaseReturnViewModel(
 
     private fun deleteReturn() {
         viewModelScope.launch {
-            _state.value.selectedReturn?.localId?.let {
+            _state.value.selectedReturn?.id?.local?.let {
                 purchaseReturnRepository.deletePurchaseReturn(it).fold(onSuccess = {
                     clearState(snackbarMessage = R.string.purchase_return_deleted)
                 }, onFailure = {
@@ -205,15 +205,15 @@ class PurchaseReturnViewModel(
                 currentReturnInput = if (purchaseReturn == null) EditableItemList(
                     selectedEmployeeId = it.currentUser?.id,
                 ) else EditableItemList(
-                    selectedEmployeeId = purchaseReturn.employee?.id,
+                    selectedEmployeeId = purchaseReturn.employee.id,
                     paymentType = purchaseReturn.paymentType,
                     date = purchaseReturn.data,
                     items = purchaseReturn.items.map { item ->
-                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
+                        val conversionFactor = item.product.subUnitsPerMainUnit
                         EditableItem(
-                            tempEditorId = item.localId.toString(),
+                            tempEditorId = item.id.local.toString(),
                             product = item.product,
-                            isSelectedUnitIsMax = item.productUnit?.id?.local == item.product?.maximumProductUnit?.id?.local,
+                            isSelectedUnitIsMax = true,
                             maxUnitPrice = item.purchasePrice.toString(),
                             minUnitPrice = (item.purchasePrice / conversionFactor).toString(),
                             maxUnitQuantity = item.quantity.toString(),
@@ -277,7 +277,6 @@ class PurchaseReturnViewModel(
 
                 PurchaseReturnProductEntity(
                     productLocalId = it.product.id.local,
-                    unitLocalId = it.product.maximumProductUnit.id.local,
                     quantity = quantity,
                     purchasePrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                     itemTotalPrice = it.lineTotal,
@@ -292,16 +291,16 @@ class PurchaseReturnViewModel(
             }
 
             val returnEntity = PurchaseReturnEntity(
-                localId = _state.value.selectedReturn?.localId ?: 0L,
+                localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.id,
+                supplierLocalId = selectedSupplier.id.local,
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,
                 totalAmount = returnInput.totalAmount,
                 paymentType = returnInput.paymentType,
-                returnDate = returnInput.date
+                createdAt = returnInput.date
             )
 
             _state.update { it.copy(loading = true) }

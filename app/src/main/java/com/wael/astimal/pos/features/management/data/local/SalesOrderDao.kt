@@ -44,11 +44,11 @@ interface SalesOrderDao {
     fun getOrderWithDetailsFlow(localId: Long): Flow<OrderWithDetailsEntity?>
 
     @Transaction
-    @Query("SELECT * FROM orders WHERE NOT isDeletedLocally ORDER BY orderDate DESC")
+    @Query("SELECT * FROM orders WHERE NOT isDeletedLocally")
     fun getAllOrdersWithDetailsFlow(): Flow<List<OrderWithDetailsEntity>>
 
     @Transaction
-    @Query("SELECT * FROM orders WHERE clientLocalId = :clientId AND NOT isDeletedLocally ORDER BY orderDate DESC")
+    @Query("SELECT * FROM orders WHERE clientLocalId = :clientId AND NOT isDeletedLocally")
     fun getSalesOrdersByClientId(clientId: Long): Flow<List<OrderWithDetailsEntity>>
 
     @Query("SELECT * FROM order_products WHERE orderLocalId = :orderLocalId")
@@ -57,11 +57,11 @@ interface SalesOrderDao {
     @Query(
         """
         SELECT 
-            date(orderDate / 1000, 'unixepoch') as saleDate,
+            date(createdAt / 1000, 'unixepoch') as saleDate,
             SUM(totalAmount) as totalRevenue,
             COUNT(localId) as numberOfSales
         FROM orders 
-        WHERE NOT isDeletedLocally AND orderDate BETWEEN :startDate AND :endDate
+        WHERE NOT isDeletedLocally AND createdAt BETWEEN :startDate AND :endDate
         GROUP BY saleDate
     """
     )

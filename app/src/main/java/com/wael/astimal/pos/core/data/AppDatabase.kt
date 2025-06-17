@@ -71,7 +71,7 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         ReceivePayVoucherEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 

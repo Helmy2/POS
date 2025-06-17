@@ -100,7 +100,7 @@ fun BusinessPartnerScreen(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                state.isAdmin
+                state.canEdit
             ) {
                 FloatingActionButton(
                     onClick = { onEvent(BusinessPartnerInfoEvent.AddNewPartnerClicked) },
@@ -127,7 +127,7 @@ fun BusinessPartnerScreen(
             Card {
                 BusinessPartnerDetailView(
                     partner = state.selectedBusinessPartner,
-                    isAdmin = state.isAdmin,
+                    isAdmin = state.canEdit,
                     onEvent = onEvent
                 )
             }
@@ -197,13 +197,12 @@ fun BusinessPartnerDetailView(
         }
         Text(stringResource(R.string.phones), fontWeight = FontWeight.Bold)
         partner.phone.forEach { phone -> Text("- $phone") }
-        partner.responsibleEmployee?.let {
-            Text(
-                stringResource(
-                    R.string.responsible_employee, it.localizedName.displayName(language)
-                )
+        Text(
+            stringResource(
+                R.string.responsible_employee,
+                partner.responsibleEmployee.localizedName.displayName(language)
             )
-        }
+        )
 
         // Admin Action Buttons
         AnimatedVisibility(visible = isAdmin) {

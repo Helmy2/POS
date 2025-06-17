@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
@@ -13,57 +15,48 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 
 @Entity(
-    tableName = "suppliers",
-    foreignKeys = [
-        ForeignKey(
-            entity = UserEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["responsibleEmployeeLocalId"],
-            onDelete = ForeignKey.SET_NULL
-        )
-    ],
-    indices = [Index(value = ["responsibleEmployeeLocalId"])]
+    tableName = "suppliers", foreignKeys = [ForeignKey(
+        entity = UserEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["responsibleEmployeeLocalId"],
+        onDelete = ForeignKey.SET_NULL
+    )], indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
 data class SupplierEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: Int? = null,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
+
     val arName: String,
     val enName: String,
-    val phone: String?,
-    val address: String?,
-    val indebtedness: Double?,
-    val responsibleEmployeeLocalId: Long?,
+    val phone: String,
+    val address: String,
+    val indebtedness: Double,
+    val responsibleEmployeeLocalId: Long,
     val isClient: Boolean,
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+) : ItemEntity
 
 data class SupplierWithDetailsEntity(
-    @Embedded
-    val supplier: SupplierEntity,
-    @Relation(
-        parentColumn = "responsibleEmployeeLocalId",
-        entityColumn = "id",
-        entity = UserEntity::class
-    )
-    val responsibleEmployeeUser: UserEntity?
+    @Embedded val supplier: SupplierEntity, @Relation(
+        parentColumn = "responsibleEmployeeLocalId", entityColumn = "id", entity = UserEntity::class
+    ) val responsibleEmployeeUser: UserEntity?
 )
 
 fun SupplierWithDetailsEntity.toDomain(): Supplier {
     return Supplier(
-        id = this.supplier.localId,
+        id = Id(supplier.localId, supplier.serverId),
         name = LocalizedString(
-            arName = this.supplier.arName,
-            enName = this.supplier.enName
+            arName = supplier.arName, enName = supplier.enName
         ),
-        phone = this.supplier.phone.orEmpty(),
-        address = this.supplier.address.orEmpty(),
-        isAlsoClient = this.supplier.isClient,
-        responsibleEmployee = this.responsibleEmployeeUser?.toDomain(),
-        isSynced = this.supplier.isSynced,
-        lastModified = this.supplier.lastModified,
-        isDeletedLocally = this.supplier.isDeletedLocally
+        phone = supplier.phone,
+        address = supplier.address,
+        isAlsoClient = supplier.isClient,
+        responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
+        isSynced = supplier.isSynced,
+        updatedAt = supplier.updatedAt,
+        createdAt = supplier.createdAt
     )
 }

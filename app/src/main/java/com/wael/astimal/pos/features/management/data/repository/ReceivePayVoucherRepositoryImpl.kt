@@ -7,9 +7,7 @@ import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEnt
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
-import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
-import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
 import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
@@ -28,10 +26,10 @@ class ReceivePayVoucherRepositoryImpl(
         }
     }
 
-    override suspend fun addVoucher(voucher: ReceivePayVoucher): Result<Unit> {
+    override suspend fun addVoucher(voucher: ReceivePayVoucherEntity): Result<Unit> {
         return try {
             database.withTransaction {
-                val voucherEntity = voucher.toEntity()
+                val voucherEntity = voucher
                 val voucherId = voucherDao.insertVoucher(voucherEntity)
                 partnerTransactionDao.insertTransaction(voucher.toLedgerEntry(voucherId))
             }
@@ -41,10 +39,10 @@ class ReceivePayVoucherRepositoryImpl(
         }
     }
 
-    override suspend fun updateVoucher(voucher: ReceivePayVoucher): Result<Unit> {
+    override suspend fun updateVoucher(voucher: ReceivePayVoucherEntity): Result<Unit> {
         return try {
             database.withTransaction {
-                val voucherEntity = voucher.toEntity()
+                val voucherEntity = voucher
                 voucherDao.updateVoucher(voucherEntity)
 
                 // Delete the old ledger entry and insert the updated one
@@ -81,47 +79,39 @@ class ReceivePayVoucherRepositoryImpl(
     }
 }
 
-// Helper mapper functions
-private fun ReceivePayVoucher.toEntity(): ReceivePayVoucherEntity {
-    return ReceivePayVoucherEntity(
-        localId = this.localId,
-        serverId = this.serverId,
-        amount = this.amount,
-        clientLocalId = if (this.party is Client) this.party.id else null,
-        supplierLocalId = if (this.party is Supplier) this.party.id else null,
-        date = this.date,
-        notes = this.notes,
-        employeeLocalId = this.createdBy.id,
-        isReceipt = this.partyType == VoucherPartyType.CLIENT,
-        isSynced = false // Always mark as unsynced on create/update
-    )
-}
-
-private fun ReceivePayVoucher.toLedgerEntry(voucherId: Long): PartnerTransactionEntity {
-    return when (this.partyType) {
-        VoucherPartyType.CLIENT -> PartnerTransactionEntity(
-            clientId = (this.party as Client).id,
+private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTransactionEntity {
+    return when (isReceipt) {
+        true -> PartnerTransactionEntity(
+            serverId = null,
+            clientId = clientLocalId,
             supplierId = null,
             sourceTransactionId = voucherId,
             transactionType = TransactionType.PAYMENT_RECEIVED,
-            date = this.date,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
             debit = 0.0,
-            credit = this.amount
+            credit = amount
         )
 
-        VoucherPartyType.SUPPLIER -> PartnerTransactionEntity(
+        false -> PartnerTransactionEntity(
+            serverId = null,
             clientId = null,
-            supplierId = (this.party as Supplier).id,
+            supplierId = supplierLocalId,
             sourceTransactionId = voucherId,
             transactionType = TransactionType.PAYMENT_SENT,
-            date = this.date,
-            debit = this.amount,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            debit = amount,
             credit = 0.0
         )
     }
 }
 
 private fun ReceivePayVoucher.getTransactionType(): TransactionType {
-    return if (this.partyType == VoucherPartyType.CLIENT) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
+    return if (partyType == VoucherPartyType.CLIENT) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
+}
+
+private fun ReceivePayVoucherEntity.getTransactionType(): TransactionType {
+    return if (isReceipt) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
 }
 

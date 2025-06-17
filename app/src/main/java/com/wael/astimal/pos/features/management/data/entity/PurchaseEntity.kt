@@ -6,9 +6,10 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
@@ -39,24 +40,23 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     ]
 )
 data class PurchaseEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
+
     var invoiceNumber: String,
 
-    val supplierLocalId: Long?,
-    val employeeLocalId: Long?,
+    val supplierLocalId: Long,
+    val employeeLocalId: Long,
 
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalAmount: Double,
     val paymentType: PaymentType,
-    val purchaseDate: Long,
-
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+) : ItemEntity
 
 @Entity(
     tableName = "purchase_products",
@@ -72,23 +72,16 @@ data class PurchaseEntity(
             parentColumns = ["localId"],
             childColumns = ["productLocalId"],
             onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = UnitEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["unitLocalId"],
-            onDelete = ForeignKey.RESTRICT
         )
     ],
-    indices = [Index(value = ["purchaseLocalId"]), Index(value = ["productLocalId"]), Index(value = ["unitLocalId"])]
+    indices = [Index(value = ["purchaseLocalId"]), Index(value = ["productLocalId"])]
 )
 data class PurchaseProductEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0L,
-    val serverId: Int?,
+    val serverId: Long?,
     val purchaseLocalId: Long,
     val productLocalId: Long,
-    val unitLocalId: Long,
     val quantity: Double,
     val purchasePrice: Double,
     val itemTotalPrice: Double
@@ -99,7 +92,11 @@ data class PurchaseWithDetailsEntity(
     @Embedded
     val purchase: PurchaseEntity,
 
-    @Relation(parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class)
+    @Relation(
+        parentColumn = "supplierLocalId",
+        entityColumn = "localId",
+        entity = SupplierEntity::class
+    )
     val supplier: SupplierWithDetailsEntity?,
 
     @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
@@ -123,39 +120,33 @@ data class PurchaseProductItemWithDetails(
         entity = ProductEntity::class
     )
     val product: ProductWithDetailsEntity?,
-
-    @Relation(parentColumn = "unitLocalId", entityColumn = "localId", entity = UnitEntity::class)
-    val unit: UnitEntity?
 )
 
 fun PurchaseWithDetailsEntity.toDomain(): PurchaseOrder {
     return PurchaseOrder(
-        localId = this.purchase.localId,
-        serverId = this.purchase.serverId,
-        invoiceNumber = this.purchase.invoiceNumber,
-        supplier = this.supplier?.toDomain(),
-        user = this.user?.toDomain(),
-        amountRemaining = this.purchase.amountRemaining,
-        totalAmount = this.purchase.totalAmount,
-        amountPaid = this.purchase.amountPaid,
-        paymentType = this.purchase.paymentType,
-        data = this.purchase.purchaseDate,
-        items = this.itemsWithProductDetails.map { it.toDomain() },
-        isSynced = this.purchase.isSynced,
-        lastModified = this.purchase.lastModified,
-        isDeletedLocally = this.purchase.isDeletedLocally
+        id = Id(purchase.localId, purchase.serverId),
+        invoiceNumber = purchase.invoiceNumber,
+        supplier = supplier?.toDomain() ?: throw NullPointerException(),
+        user = user?.toDomain() ?: throw NullPointerException(),
+        amountRemaining = purchase.amountRemaining,
+        totalAmount = purchase.totalAmount,
+        amountPaid = purchase.amountPaid,
+        paymentType = purchase.paymentType,
+        data = purchase.createdAt,
+        items = itemsWithProductDetails.map { it.toDomain() },
+        isSynced = purchase.isSynced,
+        createdAt = purchase.createdAt,
+        updatedAt = purchase.updatedAt
     )
 }
 
 fun PurchaseProductItemWithDetails.toDomain(): PurchaseOrderItem {
     return PurchaseOrderItem(
-        localId = this.purchaseItem.localId,
-        serverId = this.purchaseItem.serverId,
-        purchaseLocalId = this.purchaseItem.purchaseLocalId,
-        product = this.product?.toDomain(),
-        productUnit = this.unit?.toDomain(),
-        quantity = this.purchaseItem.quantity,
-        purchasePrice = this.purchaseItem.purchasePrice,
-        itemTotalPrice = this.purchaseItem.itemTotalPrice
+        id = Id(purchaseItem.localId, purchaseItem.serverId),
+        purchaseLocalId = purchaseItem.purchaseLocalId,
+        product = product?.toDomain() ?: throw NullPointerException(),
+        quantity = purchaseItem.quantity,
+        purchasePrice = purchaseItem.purchasePrice,
+        itemTotalPrice = purchaseItem.itemTotalPrice
     )
 }

@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
@@ -33,24 +35,20 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     )]
 )
 data class OrderEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
     var invoiceNumber: String,
-
     val clientLocalId: Long,
     val employeeLocalId: Long,
-
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalAmount: Double,
-
     val paymentType: PaymentType,
-    val orderDate: Long,
-
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+) : ItemEntity
 
 @Entity(
     tableName = "order_products",
@@ -69,7 +67,7 @@ data class OrderEntity(
 )
 data class OrderProductEntity(
     @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: Int?,
+    val serverId: Long?,
     val orderLocalId: Long,
     val productLocalId: Long,
     val quantity: Double,
@@ -104,32 +102,29 @@ data class OrderProductItemWithDetails(
 
 fun OrderWithDetailsEntity.toDomain(): SalesOrder {
     return SalesOrder(
-        localId = this.order.localId,
-        serverId = this.order.serverId,
-        invoiceNumber = this.order.invoiceNumber,
-        amountPaid = this.order.amountPaid,
-        amountRemaining = this.order.amountRemaining,
-        totalAmount = this.order.totalAmount,
-        paymentType = this.order.paymentType,
-        data = this.order.orderDate,
-        items = this.itemsWithProductDetails.map { it.toDomain() },
-        isSynced = this.order.isSynced,
-        lastModified = this.order.lastModified,
-        isDeletedLocally = this.order.isDeletedLocally,
-        client = this.clientWithUser?.toDomain(),
-        employee = this.employeeUser?.toDomain(),
+        id = Id(order.localId, order.serverId),
+        invoiceNumber = order.invoiceNumber,
+        amountPaid = order.amountPaid,
+        amountRemaining = order.amountRemaining,
+        totalAmount = order.totalAmount,
+        paymentType = order.paymentType,
+        items = itemsWithProductDetails.map { it.toDomain() },
+        isSynced = order.isSynced,
+        client = clientWithUser?.toDomain() ?: throw NullPointerException(),
+        employee = employeeUser?.toDomain() ?: throw NullPointerException(),
+        createdAt = order.createdAt,
+        updatedAt = order.updatedAt
     )
 }
 
 fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
     return SalesOrderItem(
-        localId = this.orderItem.localId,
-        serverId = this.orderItem.serverId,
-        orderLocalId = this.orderItem.orderLocalId,
-        product = this.product?.toDomain(),
-        quantity = this.orderItem.quantity,
-        unitSellingPrice = this.orderItem.unitSellingPrice,
-        itemTotalPrice = this.orderItem.itemTotalPrice,
+        id = Id(orderItem.localId, orderItem.serverId),
+        orderLocalId = orderItem.orderLocalId,
+        product = product?.toDomain() ?: throw NullPointerException(),
+        quantity = orderItem.quantity,
+        unitSellingPrice = orderItem.unitSellingPrice,
+        itemTotalPrice = orderItem.itemTotalPrice,
     )
 }
 

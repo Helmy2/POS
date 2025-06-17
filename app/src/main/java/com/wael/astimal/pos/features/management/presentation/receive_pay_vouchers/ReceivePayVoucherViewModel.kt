@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
@@ -104,23 +105,26 @@ class ReceivePayVoucherViewModel(
                     return@launch
                 }
             }
-
-            val newVoucher = ReceivePayVoucher(
-                localId = 0,
-                serverId = null,
-                amount = amount,
-                party = party,
-                partyType = currentState.partyType,
-                date = currentState.date,
-                notes = currentState.notes.takeIf { it.isNotBlank() },
-                createdBy = currentUser,
-                isSynced = false
-            )
-            saveVoucher(newVoucher)
+            // todo
+//            val newVoucher = ReceivePayVoucherEntity(
+//                localId = 0,
+//                serverId = null,
+//                amount = amount,
+//                notes = currentState.notes,
+//                employeeLocalId = currentUser.id,
+//                isReceipt = party == PartnerType.CLIENT,
+//                clientLocalId = if (party ==  PartnerType.CLIENT) party.id,
+//                supplierLocalId = ,
+//            )
+//            saveVoucher(newVoucher)
         }
     }
 
     private fun saveVoucher(voucher: ReceivePayVoucher) {
+        // todo
+    }
+
+    private fun saveVoucher(voucher: ReceivePayVoucherEntity) {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
             val result = if (voucher.localId == 0L) {
@@ -152,7 +156,7 @@ class ReceivePayVoucherViewModel(
 
     private fun deleteVoucher(voucher: ReceivePayVoucher) {
         viewModelScope.launch {
-            val result = voucherRepository.deleteVoucher(voucher.localId)
+            val result = voucherRepository.deleteVoucher(voucher.id.local)
             if (result.isSuccess) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.voucher_deleted_successfully))
             } else {

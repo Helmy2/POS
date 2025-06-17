@@ -16,7 +16,7 @@ data class BusinessPartner(
     val name: LocalizedString,
     val address: String,
     val phone: String,
-    val responsibleEmployee: User?,
+    val responsibleEmployee: User,
     var type: PartnerType,
 
     val clientDebt: Double = 0.0,

@@ -54,9 +54,9 @@ fun SalesScreen(
         onSearch = { onEvent(OrderEvent.SearchOrders(it)) },
         onSearchActiveChange = { onEvent(OrderEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedOrder?.lastModified,
+        lastModifiedDate = state.selectedOrder?.updatedAt,
         onDelete = {
-            state.selectedOrder?.let { onEvent(OrderEvent.DeleteOrder(it.localId)) }
+            state.selectedOrder?.let { onEvent(OrderEvent.DeleteOrder(it.id.local)) }
         },
         onCreate = { onEvent(OrderEvent.SaveOrder) },
         onUpdate = { onEvent(OrderEvent.SaveOrder) },
@@ -66,9 +66,9 @@ fun SalesScreen(
                 list = state.orders,
                 onItemClick = { onEvent(OrderEvent.SelectOrderToView(it)) },
                 label = {
-                    Label("Order to ${it.client?.name?.displayName(language)}: ${it.invoiceNumber}")
+                    Label("Order to ${it.client.name.displayName(language)}: ${it.invoiceNumber}")
                 },
-                isSelected = { product -> product.localId == state.selectedOrder?.localId },
+                isSelected = { product -> product.id.local == state.selectedOrder?.id?.local },
             )
         },
         mainContent = {
@@ -98,10 +98,10 @@ fun OrderForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
-            selectedItemId = state.selectedClient?.id,
+            selectedItemId = state.selectedClient?.id?.local,
             onItemSelected = { onEvent(OrderEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id },
+            itemToId = { it.id.local },
             canClearSelection = false,
         )
 

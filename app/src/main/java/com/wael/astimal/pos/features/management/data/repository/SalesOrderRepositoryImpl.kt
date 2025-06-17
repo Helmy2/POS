@@ -75,9 +75,11 @@ class SalesOrderRepositoryImpl(
                         supplierId = null,
                         sourceTransactionId = insertedOrderLocalId,
                         transactionType = TransactionType.SALE,
-                        date = orderWithInvoice.orderDate,
+                        createdAt = orderWithInvoice.createdAt,
+                        updatedAt = orderWithInvoice.updatedAt,
                         debit = orderWithInvoice.totalAmount,
-                        credit = 0.0
+                        credit = 0.0,
+                        serverId = null,
                     )
                 )
                 if (orderWithInvoice.amountPaid > 0) {
@@ -87,9 +89,10 @@ class SalesOrderRepositoryImpl(
                             supplierId = null,
                             sourceTransactionId = insertedOrderLocalId,
                             transactionType = TransactionType.PAYMENT_RECEIVED,
-                            date = orderWithInvoice.orderDate,
-                            debit = 0.0,
-                            credit = orderWithInvoice.amountPaid
+                            createdAt = orderWithInvoice.createdAt,
+                            updatedAt = orderWithInvoice.updatedAt, debit = 0.0,
+                            credit = orderWithInvoice.amountPaid,
+                            serverId = null,
                         )
                     )
                 }
@@ -126,7 +129,8 @@ class SalesOrderRepositoryImpl(
                 )
 
                 // Update the order and its items
-                val entityToUpdate = order.copy(isSynced = false, lastModified = System.currentTimeMillis())
+                val entityToUpdate =
+                    order.copy(isSynced = false, updatedAt = System.currentTimeMillis())
                 salesOrderDao.updateOrderWithItems(entityToUpdate, items)
 
                 // Re-process the non-financial logic
@@ -163,7 +167,7 @@ class SalesOrderRepositoryImpl(
                     val orderToMarkAsDeleted = orderEntity.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        lastModified = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis()
                     )
                     salesOrderDao.updateOrder(orderToMarkAsDeleted)
                 }
@@ -181,9 +185,11 @@ class SalesOrderRepositoryImpl(
                 supplierId = null,
                 sourceTransactionId = orderId,
                 transactionType = TransactionType.SALE,
-                date = order.orderDate,
+                createdAt = order.createdAt,
+                updatedAt = order.updatedAt,
                 debit = order.totalAmount,
-                credit = 0.0
+                credit = 0.0,
+                serverId = null,
             )
         )
         if (order.amountPaid > 0) {
@@ -193,9 +199,11 @@ class SalesOrderRepositoryImpl(
                     supplierId = null,
                     sourceTransactionId = orderId,
                     transactionType = TransactionType.PAYMENT_RECEIVED,
-                    date = order.orderDate,
+                    createdAt = order.createdAt,
+                    updatedAt = order.updatedAt,
                     debit = 0.0,
-                    credit = order.amountPaid
+                    credit = order.amountPaid,
+                    serverId = null,
                 )
             )
         }

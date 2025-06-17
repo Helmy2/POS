@@ -1,6 +1,8 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 enum class VoucherPartyType {
@@ -16,13 +18,13 @@ enum class VoucherPartyType {
 }
 
 data class ReceivePayVoucher(
-    val localId: Long,
-    val serverId: Int?,
     val amount: Double,
     val party: Any,
     val partyType: VoucherPartyType,
-    val date: Long,
-    val notes: String?,
+    val notes: String,
     val createdBy: User,
-    val isSynced: Boolean
-)
+    override val id: Id,
+    override val createdAt: Long,
+    override val updatedAt: Long,
+    override val isSynced: Boolean,
+) : Item

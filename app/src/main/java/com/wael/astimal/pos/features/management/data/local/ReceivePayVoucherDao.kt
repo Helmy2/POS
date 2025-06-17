@@ -16,16 +16,16 @@ interface ReceivePayVoucherDao {
     suspend fun insertVoucher(voucher: ReceivePayVoucherEntity): Long
 
     @Transaction
-    @Query("SELECT * FROM receive_pay_vouchers WHERE NOT isDeletedLocally ORDER BY date DESC")
+    @Query("SELECT * FROM receive_pay_vouchers WHERE NOT isDeletedLocally")
     fun getAllVouchersWithDetails(): Flow<List<ReceivePayVoucherWithDetails>>
 
     @Transaction
-    @Query("SELECT * FROM receive_pay_vouchers WHERE clientLocalId = :clientId AND isReceipt = 1 AND NOT isDeletedLocally ORDER BY date DESC")
+    @Query("SELECT * FROM receive_pay_vouchers WHERE clientLocalId = :clientId AND isReceipt = 1 AND NOT isDeletedLocally")
     fun getVouchersByClientId(clientId: Long): Flow<List<ReceivePayVoucherWithDetails>>
 
 
     @Transaction
-    @Query("SELECT * FROM receive_pay_vouchers WHERE supplierLocalId = :supplierId AND isReceipt = 0 AND NOT isDeletedLocally ORDER BY date DESC")
+    @Query("SELECT * FROM receive_pay_vouchers WHERE supplierLocalId = :supplierId AND isReceipt = 0 AND NOT isDeletedLocally")
     fun getVouchersBySupplierId(supplierId: Long): Flow<List<ReceivePayVoucherWithDetails>>
 
     @Transaction
@@ -34,7 +34,6 @@ interface ReceivePayVoucherDao {
         WHERE ((clientLocalId = :clientId AND isReceipt = 1)
         OR (supplierLocalId = :supplierId AND isReceipt = 0))
         AND NOT isDeletedLocally
-        ORDER BY date DESC
     """)
     fun getVouchersByPartnerIds(clientId: Long, supplierId: Long): Flow<List<ReceivePayVoucherWithDetails>>
 

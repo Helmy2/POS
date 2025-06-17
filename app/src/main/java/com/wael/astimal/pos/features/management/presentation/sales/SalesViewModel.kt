@@ -203,13 +203,13 @@ class SalesViewModel(
                 currentOrderInput = if (order == null) EditableItemList(
                     selectedEmployeeId = it.currentUser?.id,
                 ) else EditableItemList(
-                    selectedEmployeeId = order.employee?.id,
+                    selectedEmployeeId = order.employee.id,
                     paymentType = order.paymentType,
-                    date = order.data,
+                    date = order.createdAt,
                     items = order.items.map { item ->
-                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
+                        val conversionFactor = item.product.subUnitsPerMainUnit
                         EditableItem(
-                            tempEditorId = item.localId.toString(),
+                            tempEditorId = item.id.local.toString(),
                             product = item.product,
                             isSelectedUnitIsMax = true,
                             maxUnitPrice = item.unitSellingPrice.toString(),
@@ -287,16 +287,16 @@ class SalesViewModel(
             }
 
             val orderEntity = OrderEntity(
-                localId = _state.value.selectedOrder?.localId ?: 0L,
+                localId = _state.value.selectedOrder?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                clientLocalId = selectedClient.id,
+                clientLocalId = selectedClient.id.local,
                 employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = orderInput.amountRemaining,
                 totalAmount = orderInput.totalAmount,
                 paymentType = orderInput.paymentType,
-                orderDate = orderInput.date
+                createdAt = orderInput.date
             )
 
             _state.update { it.copy(loading = true) }

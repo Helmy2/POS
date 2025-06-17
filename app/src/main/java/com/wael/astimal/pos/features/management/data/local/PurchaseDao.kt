@@ -26,11 +26,11 @@ interface PurchaseDao {
     suspend fun deleteItemsForPurchase(purchaseId: Long)
 
     @Transaction
-    @Query("SELECT * FROM purchases WHERE NOT isDeletedLocally ORDER BY purchaseDate DESC")
+    @Query("SELECT * FROM purchases WHERE NOT isDeletedLocally")
     fun getAllPurchasesWithDetailsFlow(): Flow<List<PurchaseWithDetailsEntity>>
 
     @Transaction
-    @Query("SELECT * FROM purchases WHERE supplierLocalId = :supplierId AND NOT isDeletedLocally ORDER BY purchaseDate DESC")
+    @Query("SELECT * FROM purchases WHERE supplierLocalId = :supplierId AND NOT isDeletedLocally")
     fun getPurchasesBySupplierId(supplierId: Long): Flow<List<PurchaseWithDetailsEntity>>
 
     @Transaction

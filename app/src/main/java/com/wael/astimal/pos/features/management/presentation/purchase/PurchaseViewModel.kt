@@ -183,7 +183,7 @@ class PurchaseViewModel(
 
     private fun deletePurchase() {
         viewModelScope.launch {
-            _state.value.selectedPurchase?.localId?.let {
+            _state.value.selectedPurchase?.id?.local?.let {
                 purchaseRepository.deletePurchase(it).fold(onSuccess = {
                     clearState(snackbarMessage = R.string.purchase_deleted)
                 }, onFailure = {
@@ -205,15 +205,15 @@ class PurchaseViewModel(
                 currentPurchaseInput = if (purchase == null) EditableItemList(
                     selectedEmployeeId = it.currentUser?.id,
                 ) else EditableItemList(
-                    selectedEmployeeId = purchase.user?.id,
+                    selectedEmployeeId = purchase.user.id,
                     paymentType = purchase.paymentType,
                     date = purchase.data,
                     items = purchase.items.map { item ->
-                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
+                        val conversionFactor = item.product.subUnitsPerMainUnit
                         EditableItem(
-                            tempEditorId = item.localId.toString(),
+                            tempEditorId = item.id.local.toString(),
                             product = item.product,
-                            isSelectedUnitIsMax = item.productUnit?.id?.local == item.product?.maximumProductUnit?.id?.local,
+                            isSelectedUnitIsMax = true,
                             maxUnitPrice = item.purchasePrice.toString(),
                             minUnitPrice = (item.purchasePrice / conversionFactor).toString(),
                             maxUnitQuantity = item.quantity.toString(),
@@ -275,7 +275,6 @@ class PurchaseViewModel(
                 if (it.product == null || quantity <= 0) return@mapNotNull null
                 PurchaseProductEntity(
                     productLocalId = it.product.id.local,
-                    unitLocalId = it.product.maximumProductUnit.id.local,
                     quantity = quantity,
                     purchasePrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                     itemTotalPrice = it.lineTotal,
@@ -290,16 +289,16 @@ class PurchaseViewModel(
             }
 
             val purchaseEntity = PurchaseEntity(
-                localId = _state.value.selectedPurchase?.localId ?: 0L,
+                localId = _state.value.selectedPurchase?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.id,
+                supplierLocalId = selectedSupplier.id.local,
                 employeeLocalId = purchaseInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = purchaseInput.amountRemaining,
                 totalAmount = purchaseInput.totalAmount,
                 paymentType = purchaseInput.paymentType,
-                purchaseDate = purchaseInput.date
+                createdAt = purchaseInput.date
             )
 
             _state.update { it.copy(loading = true) }

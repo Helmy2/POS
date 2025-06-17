@@ -7,6 +7,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.SaleCommission
@@ -27,16 +29,17 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     indices = [Index(value = ["employeeId"]), Index(value = ["sourceTransactionId", "sourceTransactionType"])]
 )
 data class SaleCommissionEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
     val employeeId: Long,
     val sourceTransactionId: Long,
     val sourceTransactionType: SourceTransactionType,
     val commissionAmount: Double,
-    val isMain: Boolean = false,
-    val date: Long,
-    var isSynced: Boolean = false,
-)
+) : ItemEntity
 
 @Entity(
     tableName = "employee_account_transactions",
@@ -63,18 +66,20 @@ data class SaleCommissionEntity(
     indices = [Index(value = ["employeeId"]), Index(value = ["createdByEmployeeId"])]
 )
 data class EmployeeAccountTransactionEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: Int?,
     val employeeId: Long,
     val createdByEmployeeId: Long,
     val type: EmployeeTransactionType,
     val amount: Double,
     @ColumnInfo(index = true) val relatedCommissionId: Long?,
     val notes: String?,
-    val creationDate: Long,
-    val lastModificationDate: Long,
-    var isSynced: Boolean = false
-)
+    @PrimaryKey(autoGenerate = true)
+    override val localId: Long,
+    override val serverId: Long?,
+    override val createdAt: Long,
+    override val updatedAt: Long,
+    override val isSynced: Boolean,
+    override val isDeletedLocally: Boolean,
+) : ItemEntity
 
 
 data class EmployeeAccountTransactionWithDetailsEntity(
@@ -98,30 +103,28 @@ data class EmployeeAccountTransactionWithDetailsEntity(
 
 fun SaleCommissionEntity.toDomain(): SaleCommission {
     return SaleCommission(
-        localId = this.localId,
-        serverId = this.serverId,
-        employeeId = this.employeeId,
-        sourceTransactionId = this.sourceTransactionId,
-        sourceTransactionType = this.sourceTransactionType,
-        commissionAmount = this.commissionAmount,
-        isMain = this.isMain,
-        date = this.date,
-        isSynced = this.isSynced
+        id = Id(localId, serverId),
+        employeeId = employeeId,
+        sourceTransactionId = sourceTransactionId,
+        sourceTransactionType = sourceTransactionType,
+        commissionAmount = commissionAmount,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        isSynced = isSynced
     )
 }
 
 fun EmployeeAccountTransactionWithDetailsEntity.toDomain(): EmployeeAccountTransaction {
     return EmployeeAccountTransaction(
-        localId = transactionEntity.localId,
-        serverId = transactionEntity.serverId,
+        id = Id(transactionEntity.localId, transactionEntity.serverId),
         employee = employee?.toDomain(),
         createdByEmployee = createdByEmployee?.toDomain(),
         type = transactionEntity.type,
         amount = transactionEntity.amount,
         relatedCommissionId = transactionEntity.relatedCommissionId,
         notes = transactionEntity.notes,
-        creationDate = transactionEntity.creationDate,
+        createdAt = transactionEntity.createdAt,
         isSynced = transactionEntity.isSynced,
-        lastModificationDate = transactionEntity.lastModificationDate
+        updatedAt = transactionEntity.updatedAt
     )
 }

@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
@@ -39,21 +41,20 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     ]
 )
 data class OrderReturnEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
     val invoiceNumber: String,
     val clientLocalId: Long,
-    val employeeLocalId: Long?,
+    val employeeLocalId: Long,
     val amountPaid: Double,
     val amountRemaining: Double,
     val totalAmount: Double,
     val paymentType: PaymentType,
-    val returnDate: Long,
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+) : ItemEntity
 
 @Entity(
     tableName = "order_return_products",
@@ -76,7 +77,7 @@ data class OrderReturnEntity(
 data class OrderReturnProductEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0L,
-    val serverId: Int?,
+    val serverId: Long?,
     val orderReturnLocalId: Long,
     val productLocalId: Long,
     val quantity: Double,
@@ -113,31 +114,29 @@ data class OrderReturnItemWithDetails(
 
 fun OrderReturnWithDetailsEntity.toDomain(): SalesReturn {
     return SalesReturn(
-        localId = this.orderReturn.localId,
-        serverId = this.orderReturn.serverId,
-        invoiceNumber = this.orderReturn.invoiceNumber,
-        client = this.clientWithUser?.toDomain(),
-        employee = this.employeeUser?.toDomain(),
-        amountPaid = this.orderReturn.amountPaid,
-        amountRemaining = this.orderReturn.amountRemaining,
-        totalAmount = this.orderReturn.totalAmount,
-        paymentType = this.orderReturn.paymentType,
-        data = this.orderReturn.returnDate,
-        items = this.itemsWithProductDetails.map { it.toDomain() },
-        isSynced = this.orderReturn.isSynced,
-        lastModified = this.orderReturn.lastModified,
-        isDeletedLocally = this.orderReturn.isDeletedLocally
+        id = Id(orderReturn.localId, orderReturn.serverId),
+        invoiceNumber = orderReturn.invoiceNumber,
+        client = clientWithUser?.toDomain() ?: throw NullPointerException(),
+        employee = employeeUser?.toDomain() ?: throw NullPointerException(),
+        amountPaid = orderReturn.amountPaid,
+        amountRemaining = orderReturn.amountRemaining,
+        totalAmount = orderReturn.totalAmount,
+        paymentType = orderReturn.paymentType,
+        data = orderReturn.createdAt,
+        items = itemsWithProductDetails.map { it.toDomain() },
+        isSynced = orderReturn.isSynced,
+        createdAt = orderReturn.createdAt,
+        updatedAt = orderReturn.updatedAt
     )
 }
 
 fun OrderReturnItemWithDetails.toDomain(): SalesReturnItem {
     return SalesReturnItem(
-        localId = this.returnItem.localId,
-        serverId = this.returnItem.serverId,
-        returnLocalId = this.returnItem.orderReturnLocalId,
-        product = this.product?.toDomain(),
-        quantity = this.returnItem.quantity,
-        priceAtReturn = this.returnItem.priceAtReturn,
-        itemTotalValue = this.returnItem.itemTotalValue,
+        id = Id(returnItem.localId, returnItem.serverId),
+        returnLocalId = returnItem.orderReturnLocalId,
+        product = product?.toDomain() ?: throw NullPointerException(),
+        quantity = returnItem.quantity,
+        priceAtReturn = returnItem.priceAtReturn,
+        itemTotalValue = returnItem.itemTotalValue,
     )
 }

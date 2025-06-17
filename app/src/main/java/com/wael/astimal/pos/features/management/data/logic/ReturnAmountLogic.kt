@@ -42,7 +42,7 @@ class ReturnAmountLogic(
         isReverting: Boolean
     ) {
         val employeeId =
-            returnEntity.employeeLocalId ?: throw Exception("Employee not found for return")
+            returnEntity.employeeLocalId
         val storeId = employeeDao.getStoreIdForEmployee(employeeId)
             ?: throw Exception("Could not find a store for the employee.")
 
@@ -56,7 +56,6 @@ class ReturnAmountLogic(
         val client = clientRepository.getClient(returnEntity.clientLocalId)
         val responsibleEmployeeId = client?.responsibleEmployee?.id
         val returningEmployeeId = returnEntity.employeeLocalId
-            ?: throw IllegalStateException("Returning employee ID is null")
 
         val commissionAmount = returnEntity.totalAmount * ORDER_COMMISSION_PERCENTAGE
 
@@ -65,7 +64,6 @@ class ReturnAmountLogic(
                 employeeId = returningEmployeeId,
                 returnId = returnId,
                 commissionAmount = -commissionAmount * 2, // Negative for return
-                isMain = true,
                 invoiceNumber = returnEntity.invoiceNumber,
                 createdByEmployeeId = returningEmployeeId
             )
@@ -74,7 +72,6 @@ class ReturnAmountLogic(
                 employeeId = returningEmployeeId,
                 returnId = returnId,
                 commissionAmount = -commissionAmount, // Negative for return
-                isMain = true,
                 invoiceNumber = returnEntity.invoiceNumber,
                 createdByEmployeeId = returningEmployeeId
             )
@@ -83,7 +80,6 @@ class ReturnAmountLogic(
                     employeeId = responsibleEmployeeId,
                     returnId = returnId,
                     commissionAmount = -commissionAmount, // Negative for return
-                    isMain = false,
                     invoiceNumber = returnEntity.invoiceNumber,
                     createdByEmployeeId = returningEmployeeId
                 )
@@ -95,7 +91,6 @@ class ReturnAmountLogic(
         employeeId: Long,
         returnId: Long,
         commissionAmount: Double,
-        isMain: Boolean,
         invoiceNumber: String,
         createdByEmployeeId: Long
     ) {
@@ -104,8 +99,6 @@ class ReturnAmountLogic(
             sourceTransactionId = returnId,
             sourceTransactionType = SourceTransactionType.SALE_RETURN,
             commissionAmount = commissionAmount,
-            isMain = isMain,
-            date = System.currentTimeMillis(),
             serverId = null
         )
         val commissionId = employeeFinancesDao.insertSaleCommission(commission)
@@ -118,8 +111,11 @@ class ReturnAmountLogic(
             amount = commissionAmount, // Already negative
             relatedCommissionId = commissionId,
             notes = "Commission for return #$invoiceNumber",
-            lastModificationDate = System.currentTimeMillis(),
-            creationDate = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            createdAt = System.currentTimeMillis(),
+            localId = 0L,
+            isSynced = false,
+            isDeletedLocally = false
         )
         employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
     }
@@ -143,8 +139,11 @@ class ReturnAmountLogic(
                     amount = -commission.commissionAmount, // Revert the negative amount
                     relatedCommissionId = commission.localId,
                     notes = "Reversal for return #${invoiceNumber}",
-                    lastModificationDate = System.currentTimeMillis(),
-                    creationDate = commission.date
+                    updatedAt = System.currentTimeMillis(),
+                    createdAt = System.currentTimeMillis(),
+                    localId = 0L,
+                    isSynced = false,
+                    isDeletedLocally = false
                 )
             )
         }
