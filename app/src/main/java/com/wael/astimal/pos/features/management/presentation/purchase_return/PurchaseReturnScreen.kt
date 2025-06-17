@@ -102,10 +102,10 @@ fun PurchaseReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
-            selectedItemId = state.selectedSupplier?.id?.local,
+            selectedItemId = state.selectedSupplier?.supplierLocalId?.local,
             onItemSelected = { onEvent(PurchaseReturnEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id.local },
+            itemToId = { it.supplierLocalId?.local },
             canClearSelection = false,
         )
 

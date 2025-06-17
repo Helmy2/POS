@@ -5,32 +5,34 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.entity.ClientEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
+import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.ClientDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
-import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
-import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 class BusinessPartnerRepositoryImpl(
     private val db: AppDatabase,
     private val clientDao: ClientDao,
     private val supplierDao: SupplierDao,
     private val partnerTransactionDao: PartnerTransactionDao,
-    private val clientRepository: ClientRepository,
-    private val supplierRepository: SupplierRepository
 ) : BusinessPartnerRepository {
 
-    override fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
-        val clientsFlow = clientRepository.searchClients(query)
-        val suppliersFlow = supplierRepository.getSuppliers(query)
+    override fun getBusinessPartners(
+        query: String
+    ): Flow<List<BusinessPartner>> {
+        val clientsFlow = clientDao.searchClientsWithDetailsFlow(query).map {
+            it.map { it -> it.toDomain() }
+        }
+        val suppliersFlow = supplierDao.searchSuppliersFlow(query).map {
+            it.map { it -> it.toDomain() }
+        }
 
         return combine(clientsFlow, suppliersFlow) { clients, suppliers ->
             val partnerMap = mutableMapOf<String, BusinessPartner>()
@@ -38,9 +40,7 @@ class BusinessPartnerRepositoryImpl(
             clients.forEach { client ->
                 val mapKey =
                     (client.name.enName.orEmpty() + client.name.arName.orEmpty()).lowercase()
-                partnerMap[mapKey] = client.toBusinessPartner(
-                    partnerTransactionDao.getClientBalance(client.id.local) ?: 0.0
-                )
+                partnerMap[mapKey] = client
             }
 
             suppliers.forEach { supplier ->
@@ -50,14 +50,11 @@ class BusinessPartnerRepositoryImpl(
                 if (existingPartner != null) {
                     partnerMap[mapKey] = existingPartner.copy(
                         type = PartnerType.BOTH,
-                        supplierLocalId = supplier.id.local,
-                        supplierIndebtedness = partnerTransactionDao.getSupplierBalance(supplier.id.local)
-                            ?: 0.0,
+                        supplierLocalId = supplier.supplierLocalId,
+                        supplierIndebtedness = supplier.supplierIndebtedness
                     )
                 } else {
-                    partnerMap[mapKey] = supplier.toBusinessPartner(
-                        partnerTransactionDao.getSupplierBalance(supplier.id.local) ?: 0.0
-                    )
+                    partnerMap[mapKey] = supplier
                 }
             }
             partnerMap.values.toList().sortedBy { it.name.enName }
@@ -110,14 +107,36 @@ class BusinessPartnerRepositoryImpl(
         return try {
             db.withTransaction {
                 val timestamp = System.currentTimeMillis()
-                partner.clientLocalId?.let { clientDao.softDeleteClient(it, timestamp) }
-                partner.supplierLocalId?.let { supplierDao.softDeleteSupplier(it, timestamp) }
+                partner.clientLocalId?.let { clientDao.softDeleteClient(it.local, timestamp) }
+                partner.supplierLocalId?.let { supplierDao.softDeleteSupplier(it.local, timestamp) }
             }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    override fun getSuppliers(query: String): Flow<List<BusinessPartner>> {
+        return getBusinessPartners(query).map {
+            it.filter { it -> it.type != PartnerType.CLIENT }
+        }
+    }
+
+    override suspend fun getSupplier(localId: Long): BusinessPartner? {
+        return supplierDao.getSupplierById(localId)?.toDomain()
+    }
+
+
+    override fun searchClients(query: String): Flow<List<BusinessPartner>> {
+        return getBusinessPartners(query).map {
+            it.filter { it -> it.type != PartnerType.SUPPLIER }
+        }
+    }
+
+    override suspend fun getClient(clientId: Long): BusinessPartner? {
+        return clientDao.getClientWithDetails(clientId)?.toDomain()
+    }
+
 
     private suspend fun createOpeningBalanceTransaction(
         clientId: Long? = null,
@@ -143,45 +162,10 @@ class BusinessPartnerRepositoryImpl(
     }
 }
 
-// Helper mapper functions
-private fun Client.toBusinessPartner(
-    clientDebt: Double
-): BusinessPartner {
-    return BusinessPartner(
-        clientLocalId = this.id.local,
-        supplierLocalId = null,
-        name = this.name,
-        address = this.address,
-        phone = this.phone,
-        responsibleEmployee = this.responsibleEmployee,
-        type = PartnerType.CLIENT,
-        clientDebt = clientDebt,
-        supplierIndebtedness = 0.0,
-        isSynced = this.isSynced
-    )
-}
-
-private fun Supplier.toBusinessPartner(
-    supplierIndebtedness: Double
-): BusinessPartner {
-    return BusinessPartner(
-        clientLocalId = null,
-        supplierLocalId = this.id.local,
-        name = this.name,
-        address = this.address,
-        phone = this.phone,
-        responsibleEmployee = this.responsibleEmployee,
-        type = PartnerType.SUPPLIER,
-        clientDebt = 0.0,
-        supplierIndebtedness = supplierIndebtedness,
-        isSynced = this.isSynced
-    )
-}
-
 private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
     return ClientEntity(
         serverId = null,
-        localId = this.clientLocalId ?: 0L,
+        localId = this.clientLocalId?.local ?: 0L,
         arName = this.name.arName.orEmpty(),
         enName = this.name.enName.orEmpty(),
         phone = this.phone,
@@ -196,7 +180,7 @@ private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
 private fun BusinessPartner.toSupplierEntity(isClient: Boolean): SupplierEntity {
     return SupplierEntity(
         serverId = null,
-        localId = this.supplierLocalId ?: 0L,
+        localId = this.supplierLocalId?.local ?: 0L,
         arName = this.name.arName.orEmpty(),
         enName = this.name.enName.orEmpty(),
         phone = this.phone,

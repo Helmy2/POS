@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -10,8 +11,8 @@ enum class PartnerType {
 }
 
 data class BusinessPartner(
-    val clientLocalId: Long?,
-    val supplierLocalId: Long?,
+    val clientLocalId: Id?,
+    val supplierLocalId: Id?,
 
     val name: LocalizedString,
     val address: String,
@@ -23,6 +24,5 @@ data class BusinessPartner(
     val supplierIndebtedness: Double = 0.0,
     val isSynced: Boolean
 ) {
-    val id: String get() = "$clientLocalId,$supplierLocalId"
     val netBalance: Double get() = supplierIndebtedness - clientDebt
 }

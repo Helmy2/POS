@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.sales
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.management.domain.entity.Client
+import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
@@ -12,9 +12,9 @@ data class OrderState(
     var currentUser: User? = null,
     val orders: List<SalesOrder> = emptyList(),
     val selectedOrder: SalesOrder? = null,
-    val selectedClient: Client? = null,
+    val selectedClient: BusinessPartner? = null,
     val currentOrderInput: EditableItemList = EditableItemList(),
-    val availableClients: List<Client> = emptyList(),
+    val availableClients: List<BusinessPartner> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
     val query: String = "",
@@ -32,7 +32,7 @@ sealed interface OrderEvent {
     data class SelectOrderToView(val order: SalesOrder?) : OrderEvent
     data class UpdateIsQueryActive(val isActive: Boolean) : OrderEvent
     data class UpdateQuery(val query: String) : OrderEvent
-    data class SelectClient(val client: Client?) : OrderEvent
+    data class SelectClient(val client: BusinessPartner?) : OrderEvent
     data class SelectEmployee(val employeeId: Long?) : OrderEvent
     data class DeleteOrder(val localId: Long) : OrderEvent
     data object AddItemToOrder : OrderEvent

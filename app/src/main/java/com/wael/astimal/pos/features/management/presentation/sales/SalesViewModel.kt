@@ -12,7 +12,7 @@ import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 
 class SalesViewModel(
     private val orderRepository: SalesOrderRepository,
-    private val clientRepository: ClientRepository,
+    private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
@@ -58,7 +58,7 @@ class SalesViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            clientRepository.searchClients()
+            partnerRepository.searchClients()
                 .collect { result -> _state.update { it.copy(availableClients = result) } }
         }
         viewModelScope.launch {
@@ -290,7 +290,7 @@ class SalesViewModel(
                 localId = _state.value.selectedOrder?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                clientLocalId = selectedClient.id.local,
+                clientLocalId = selectedClient.clientLocalId?.local ?: throw Exception(),
                 employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = orderInput.amountRemaining,

@@ -12,7 +12,7 @@ import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 
 class SalesReturnViewModel(
     private val salesReturnRepository: SalesReturnRepository,
-    private val clientRepository: ClientRepository,
+    private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
@@ -58,7 +58,7 @@ class SalesReturnViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            clientRepository.searchClients()
+            partnerRepository.searchClients()
                 .collect { result -> _state.update { it.copy(availableClients = result) } }
         }
         viewModelScope.launch {
@@ -285,7 +285,7 @@ class SalesReturnViewModel(
                 localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                clientLocalId = selectedClient.id.local,
+                clientLocalId = selectedClient.clientLocalId?.local ?: throw Exception(),
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,

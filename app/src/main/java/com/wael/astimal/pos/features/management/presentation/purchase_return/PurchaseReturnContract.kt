@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.management.presentation.purchase_return
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
-import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class PurchaseReturnState(
@@ -12,9 +12,9 @@ data class PurchaseReturnState(
     var currentUser: User? = null,
     val returns: List<PurchaseReturn> = emptyList(),
     val selectedReturn: PurchaseReturn? = null,
-    val selectedSupplier: Supplier? = null,
+    val selectedSupplier: BusinessPartner? = null,
     val currentReturnInput: EditableItemList = EditableItemList(),
-    val availableSuppliers: List<Supplier> = emptyList(),
+    val availableSuppliers: List<BusinessPartner> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
     val query: String = "",
@@ -32,7 +32,7 @@ sealed interface PurchaseReturnEvent {
     data class SelectReturnToView(val purchaseReturn: PurchaseReturn?) : PurchaseReturnEvent
     data class UpdateIsQueryActive(val isActive: Boolean) : PurchaseReturnEvent
     data class UpdateQuery(val query: String) : PurchaseReturnEvent
-    data class SelectSupplier(val supplier: Supplier?) : PurchaseReturnEvent
+    data class SelectSupplier(val supplier: BusinessPartner?) : PurchaseReturnEvent
     data class SelectEmployee(val employeeId: Long?) : PurchaseReturnEvent
     data object DeleteReturn : PurchaseReturnEvent
     data object AddItemToReturn : PurchaseReturnEvent

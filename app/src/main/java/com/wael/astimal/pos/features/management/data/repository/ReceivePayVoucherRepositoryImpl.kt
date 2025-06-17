@@ -68,7 +68,7 @@ class ReceivePayVoucherRepositoryImpl(
                     )
                 partnerTransactionDao.deleteTransactionsBySource(
                     voucherId,
-                    voucherToDelete.toDomain().getTransactionType()
+                    voucherToDelete.voucher.getTransactionType()
                 )
                 voucherDao.deleteVoucher(voucherId)
             }
@@ -80,8 +80,8 @@ class ReceivePayVoucherRepositoryImpl(
 }
 
 private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTransactionEntity {
-    return when (isReceipt) {
-        true -> PartnerTransactionEntity(
+    return when (partyType) {
+        VoucherPartyType.CLIENT -> PartnerTransactionEntity(
             serverId = null,
             clientId = clientLocalId,
             supplierId = null,
@@ -93,7 +93,7 @@ private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTrans
             credit = amount
         )
 
-        false -> PartnerTransactionEntity(
+        VoucherPartyType.SUPPLIER -> PartnerTransactionEntity(
             serverId = null,
             clientId = null,
             supplierId = supplierLocalId,
@@ -107,11 +107,6 @@ private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTrans
     }
 }
 
-private fun ReceivePayVoucher.getTransactionType(): TransactionType {
+private fun ReceivePayVoucherEntity.getTransactionType(): TransactionType {
     return if (partyType == VoucherPartyType.CLIENT) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
 }
-
-private fun ReceivePayVoucherEntity.getTransactionType(): TransactionType {
-    return if (isReceipt) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
-}
-

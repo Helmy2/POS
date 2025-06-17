@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.management.presentation.purchase
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
-import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class PurchaseState(
@@ -12,9 +12,9 @@ data class PurchaseState(
     var currentUser: User? = null,
     val purchases: List<PurchaseOrder> = emptyList(),
     val selectedPurchase: PurchaseOrder? = null,
-    val selectedSupplier: Supplier? = null,
+    val selectedSupplier: BusinessPartner? = null,
     val currentPurchaseInput: EditableItemList = EditableItemList(),
-    val availableSuppliers: List<Supplier> = emptyList(),
+    val availableSuppliers: List<BusinessPartner> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
     val query: String = "",
@@ -32,7 +32,7 @@ sealed interface PurchaseEvent {
     data class SelectPurchaseToView(val purchase: PurchaseOrder?) : PurchaseEvent
     data class UpdateIsQueryActive(val isActive: Boolean) : PurchaseEvent
     data class UpdateQuery(val query: String) : PurchaseEvent
-    data class SelectSupplier(val supplier: Supplier?) : PurchaseEvent
+    data class SelectSupplier(val supplier: BusinessPartner?) : PurchaseEvent
     data class SelectEmployee(val employeeId: Long?) : PurchaseEvent
     data object DeletePurchase : PurchaseEvent
     data object AddItemToPurchase : PurchaseEvent

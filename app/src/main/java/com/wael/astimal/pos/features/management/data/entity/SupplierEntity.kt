@@ -9,7 +9,8 @@ import androidx.room.Relation
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
-import com.wael.astimal.pos.features.management.domain.entity.Supplier
+import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
 
@@ -45,18 +46,16 @@ data class SupplierWithDetailsEntity(
     ) val responsibleEmployeeUser: UserEntity?
 )
 
-fun SupplierWithDetailsEntity.toDomain(): Supplier {
-    return Supplier(
-        id = Id(supplier.localId, supplier.serverId),
-        name = LocalizedString(
-            arName = supplier.arName, enName = supplier.enName
-        ),
-        phone = supplier.phone,
+fun SupplierWithDetailsEntity.toDomain(): BusinessPartner {
+    return BusinessPartner(
+        clientLocalId = null,
+        supplierLocalId = Id(supplier.localId, supplier.serverId),
+        name = LocalizedString(arName = supplier.arName, enName = supplier.enName),
         address = supplier.address,
-        isAlsoClient = supplier.isClient,
-        responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
+        phone = supplier.phone,
+        type = PartnerType.SUPPLIER,
+        supplierIndebtedness = supplier.indebtedness,
         isSynced = supplier.isSynced,
-        updatedAt = supplier.updatedAt,
-        createdAt = supplier.createdAt
+        responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
     )
 }

@@ -12,8 +12,8 @@ import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 
 class PurchaseReturnViewModel(
     private val purchaseReturnRepository: PurchaseReturnRepository,
-    private val supplierRepository: SupplierRepository,
+    private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
@@ -58,7 +58,7 @@ class PurchaseReturnViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            supplierRepository.getSuppliers()
+            partnerRepository.getSuppliers()
                 .collect { result -> _state.update { it.copy(availableSuppliers = result) } }
         }
         viewModelScope.launch {
@@ -294,7 +294,7 @@ class PurchaseReturnViewModel(
                 localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.id.local,
+                supplierLocalId = selectedSupplier.supplierLocalId?.local ?: throw Exception(),
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,

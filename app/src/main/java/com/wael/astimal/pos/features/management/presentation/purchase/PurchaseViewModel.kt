@@ -12,8 +12,8 @@ import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 
 class PurchaseViewModel(
     private val purchaseRepository: PurchaseRepository,
-    private val supplierRepository: SupplierRepository,
+    private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
@@ -58,7 +58,7 @@ class PurchaseViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            supplierRepository.getSuppliers()
+            partnerRepository.getSuppliers()
                 .collect { result -> _state.update { it.copy(availableSuppliers = result) } }
         }
         viewModelScope.launch {
@@ -292,7 +292,7 @@ class PurchaseViewModel(
                 localId = _state.value.selectedPurchase?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.id.local,
+                supplierLocalId = selectedSupplier.supplierLocalId?.local ?: throw Exception(),
                 employeeLocalId = purchaseInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = purchaseInput.amountRemaining,

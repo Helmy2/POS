@@ -7,9 +7,8 @@ import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
-import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +24,7 @@ import kotlinx.coroutines.launch
 
 class ReceivePayVoucherViewModel(
     private val voucherRepository: ReceivePayVoucherRepository,
-    private val clientRepository: ClientRepository,
-    private val supplierRepository: SupplierRepository,
+    private val partnerRepository: BusinessPartnerRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -94,7 +92,7 @@ class ReceivePayVoucherViewModel(
                 return@launch
             }
 
-            val party: Any = when (currentState.partyType) {
+            when (currentState.partyType) {
                 VoucherPartyType.CLIENT -> currentState.selectedClient ?: run {
                     viewModelScope.launch { _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_a_party)) }
                     return@launch
@@ -105,23 +103,44 @@ class ReceivePayVoucherViewModel(
                     return@launch
                 }
             }
-            // todo
-//            val newVoucher = ReceivePayVoucherEntity(
-//                localId = 0,
-//                serverId = null,
-//                amount = amount,
-//                notes = currentState.notes,
-//                employeeLocalId = currentUser.id,
-//                isReceipt = party == PartnerType.CLIENT,
-//                clientLocalId = if (party ==  PartnerType.CLIENT) party.id,
-//                supplierLocalId = ,
-//            )
-//            saveVoucher(newVoucher)
+            val newVoucher = ReceivePayVoucherEntity(
+                localId = 0,
+                serverId = null,
+                amount = amount,
+                notes = currentState.notes,
+                employeeLocalId = currentUser.id,
+                clientLocalId = when (currentState.partyType) {
+                    VoucherPartyType.CLIENT -> currentState.selectedClient?.clientLocalId?.local
+                    VoucherPartyType.SUPPLIER -> null
+                },
+                partyType = currentState.partyType,
+                supplierLocalId = when (currentState.partyType) {
+                    VoucherPartyType.CLIENT -> null
+                    VoucherPartyType.SUPPLIER -> currentState.selectedSupplier?.supplierLocalId?.local
+                }
+
+            )
+            saveVoucher(newVoucher)
         }
     }
 
     private fun saveVoucher(voucher: ReceivePayVoucher) {
-        // todo
+        saveVoucher(
+            ReceivePayVoucherEntity(
+                localId = voucher.id.local,
+                serverId = voucher.id.server,
+                isSynced = voucher.isSynced,
+                createdAt = voucher.createdAt,
+                updatedAt = voucher.updatedAt,
+                isDeletedLocally = false,
+                partyType = voucher.partyType,
+                clientLocalId = voucher.party.clientLocalId?.local,
+                supplierLocalId = voucher.party.supplierLocalId?.local,
+                employeeLocalId = voucher.createdBy.id,
+                amount = voucher.amount,
+                notes = voucher.notes
+            )
+        )
     }
 
     private fun saveVoucher(voucher: ReceivePayVoucherEntity) {
@@ -169,8 +188,8 @@ class ReceivePayVoucherViewModel(
         _state.update { it.copy(isLoading = true) }
         combine(
             voucherRepository.getVouchers(),
-            clientRepository.searchClients(""),
-            supplierRepository.getSuppliers("")
+            partnerRepository.searchClients(""),
+            partnerRepository.getSuppliers("")
         ) { vouchers, clients, suppliers ->
             _state.update {
                 it.copy(

@@ -9,12 +9,12 @@ import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
-import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.user.data.local.UserDao
 
 class OrderAmountLogic(
     private val stockRepository: StockRepository,
-    private val clientRepository: ClientRepository,
+    private val partnerRepository: BusinessPartnerRepository,
     private val employeeFinancesDao: EmployeeFinancesDao,
     private val employeeDao: UserDao
 ) {
@@ -45,7 +45,7 @@ class OrderAmountLogic(
     }
 
     private suspend fun handleCommissions(order: OrderEntity, orderId: Long) {
-        val client = clientRepository.getClient(order.clientLocalId)
+        val client = partnerRepository.getClient(order.clientLocalId)
         val responsibleEmployeeId = client?.responsibleEmployee?.id
         val sellingEmployeeId = order.employeeLocalId
 

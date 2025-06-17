@@ -196,7 +196,7 @@ fun BusinessPartnerDetailView(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
         Text(stringResource(R.string.phones), fontWeight = FontWeight.Bold)
-        partner.phone.forEach { phone -> Text("- $phone") }
+        Text(partner.phone, fontWeight = FontWeight.Bold)
         Text(
             stringResource(
                 R.string.responsible_employee,
@@ -273,60 +273,60 @@ fun BusinessPartnerList(
             Card {
                 ListItem(
                     headlineContent = {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            partner.name.displayName(language), fontWeight = FontWeight.Bold
-                        )
-                        PartnerTypeChip(partnerType = partner.type)
-                    }
-                }, supportingContent = {
-                    Column {
-                        Text(
-                            stringResource(
-                                R.string.address_placeholder,
-                                partner.address
+                        FlowRow(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                partner.name.displayName(language), fontWeight = FontWeight.Bold
                             )
-                        )
-                        when (partner.type) {
-                            PartnerType.BOTH -> {
-                                val balanceText = if (partner.netBalance >= 0) {
-                                    stringResource(
-                                        R.string.net_balance_positive, partner.netBalance
-                                    )
-                                } else {
-                                    stringResource(
-                                        R.string.net_balance_negative, abs(partner.netBalance)
+                            PartnerTypeChip(partnerType = partner.type)
+                        }
+                    }, supportingContent = {
+                        Column {
+                            Text(
+                                stringResource(
+                                    R.string.address_placeholder,
+                                    partner.address
+                                )
+                            )
+                            when (partner.type) {
+                                PartnerType.BOTH -> {
+                                    val balanceText = if (partner.netBalance >= 0) {
+                                        stringResource(
+                                            R.string.net_balance_positive, partner.netBalance
+                                        )
+                                    } else {
+                                        stringResource(
+                                            R.string.net_balance_negative, abs(partner.netBalance)
+                                        )
+                                    }
+                                    Text(
+                                        text = balanceText,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (partner.netBalance >= 0) PositiveBalanceColor else NegativeBalanceColor
                                     )
                                 }
-                                Text(
-                                    text = balanceText,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (partner.netBalance >= 0) PositiveBalanceColor else NegativeBalanceColor
-                                )
-                            }
 
-                            PartnerType.CLIENT -> {
-                                Text(
-                                    stringResource(
-                                        R.string.debt, partner.clientDebt.toString()
+                                PartnerType.CLIENT -> {
+                                    Text(
+                                        stringResource(
+                                            R.string.debt, partner.clientDebt.toString()
+                                        )
                                     )
-                                )
-                            }
+                                }
 
-                            else -> {
-                                Text(
-                                    stringResource(
-                                        R.string.indebtedness,
-                                        partner.supplierIndebtedness.toString()
+                                else -> {
+                                    Text(
+                                        stringResource(
+                                            R.string.indebtedness,
+                                            partner.supplierIndebtedness.toString()
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
-                    }
-                }, modifier = Modifier
+                    }, modifier = Modifier
                         .clickable { onPartnerClick(partner) }
                         .background(
                             if (partner.getCompositeId() == selectedPartnerId) MaterialTheme.colorScheme.inversePrimary

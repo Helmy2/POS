@@ -8,7 +8,7 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class SalesReturn(
     val invoiceNumber: String,
-    val client: Client,
+    val client: BusinessPartner,
     val employee: User,
     val amountPaid: Double,
     val amountRemaining: Double,

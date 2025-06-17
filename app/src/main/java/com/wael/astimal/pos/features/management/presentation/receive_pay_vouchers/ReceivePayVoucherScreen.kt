@@ -48,9 +48,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.domain.entity.Client
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
-import com.wael.astimal.pos.features.management.domain.entity.Supplier
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
@@ -135,20 +133,20 @@ fun AddVoucherForm(
                 VoucherPartyType.CLIENT -> CustomExposedDropdownMenu(
                     label = stringResource(R.string.client),
                     items = state.clients,
-                    selectedItemId = state.selectedClient?.id?.local,
+                    selectedItemId = state.selectedClient?.clientLocalId?.local,
                     onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
                     itemToDisplayString = { it.name.displayName(currentLanguage) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.clientLocalId?.local },
                     canClearSelection = true,
                 )
 
                 VoucherPartyType.SUPPLIER -> CustomExposedDropdownMenu(
                     label = stringResource(R.string.supplier),
                     items = state.suppliers,
-                    selectedItemId = state.selectedSupplier?.id?.local,
+                    selectedItemId = state.selectedSupplier?.supplierLocalId?.local,
                     onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
                     itemToDisplayString = { it.name.displayName(currentLanguage) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.supplierLocalId?.local },
                     canClearSelection = true
                 )
             }
@@ -196,15 +194,9 @@ fun VoucherList(
 ) {
     LazyColumn {
         items(vouchers, key = { it.id.local }) { voucher ->
-            val responsibleEmployeeId = when (voucher.party) {
-                is Client -> voucher.party.responsibleEmployee.id
-                is Supplier -> voucher.party.responsibleEmployee.id
-                else -> null
-            }
-
             VoucherItem(
                 voucher = voucher,
-                canEdit = state.currentUser?.isAdmin == true || state.currentUser?.id == responsibleEmployeeId,
+                canEdit = state.currentUser?.isAdmin == true || state.currentUser?.id == voucher.party.responsibleEmployee.id,
                 onEdit = { onEvent(ReceivePayVoucherEvent.EditVoucherClicked(voucher)) },
                 onDelete = { onEvent(ReceivePayVoucherEvent.DeleteVoucherClicked(voucher)) },
             )
@@ -216,11 +208,6 @@ fun VoucherList(
 fun VoucherItem(
     voucher: ReceivePayVoucher, canEdit: Boolean, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
-    val partyName = when (voucher.party) {
-        is Client -> voucher.party.name.displayName(LocalAppLocale.current)
-        is Supplier -> voucher.party.name.displayName(LocalAppLocale.current)
-        else -> ""
-    }
     val date = remember(voucher.updatedAt) {
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
             Date(voucher.updatedAt)
@@ -235,7 +222,10 @@ fun VoucherItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = partyName, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = voucher.party.name.displayName(LocalAppLocale.current),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Text(
                     text = stringResource(voucher.partyType.getStringRes()),
                     style = MaterialTheme.typography.bodySmall,

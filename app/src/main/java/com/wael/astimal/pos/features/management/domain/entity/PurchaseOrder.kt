@@ -7,7 +7,7 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class PurchaseOrder(
     val invoiceNumber: String,
-    val supplier: Supplier,
+    val supplier: BusinessPartner,
     val user: User,
     val amountPaid: Double,
     val amountRemaining: Double,

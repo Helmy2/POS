@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.sales_return
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.management.domain.entity.Client
+import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
@@ -12,9 +12,9 @@ data class SalesReturnState(
     var currentUser: User? = null,
     val returns: List<SalesReturn> = emptyList(),
     val selectedReturn: SalesReturn? = null,
-    val selectedClient: Client? = null,
+    val selectedClient: BusinessPartner? = null,
     val currentReturnInput: EditableItemList = EditableItemList(),
-    val availableClients: List<Client> = emptyList(),
+    val availableClients: List<BusinessPartner> = emptyList(),
     val availableProducts: List<Product> = emptyList(),
     val availableEmployees: List<User> = emptyList(),
     val query: String = "",
@@ -32,7 +32,7 @@ sealed interface SalesReturnEvent {
     data class SelectReturnToView(val salesReturn: SalesReturn?) : SalesReturnEvent
     data class UpdateIsQueryActive(val isActive: Boolean) : SalesReturnEvent
     data class UpdateQuery(val query: String) : SalesReturnEvent
-    data class SelectClient(val client: Client?) : SalesReturnEvent
+    data class SelectClient(val client: BusinessPartner?) : SalesReturnEvent
     data class SelectEmployee(val employeeId: Long?) : SalesReturnEvent
     data object DeleteReturn : SalesReturnEvent
     data object AddItemToReturn : SalesReturnEvent

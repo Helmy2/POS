@@ -18,8 +18,8 @@ enum class VoucherPartyType {
 }
 
 data class ReceivePayVoucher(
+    val party: BusinessPartner,
     val amount: Double,
-    val party: Any,
     val partyType: VoucherPartyType,
     val notes: String,
     val createdBy: User,
