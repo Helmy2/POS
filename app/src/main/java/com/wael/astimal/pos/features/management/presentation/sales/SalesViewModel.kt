@@ -14,7 +14,6 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -38,7 +37,6 @@ class SalesViewModel(
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
-    private val employeeDao: EmployeeDao,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -175,7 +173,7 @@ class SalesViewModel(
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
             val employeeId = _state.value.currentUser?.id ?: return@launch
-            val storeId = employeeDao.getStoreIdForEmployee(employeeId) ?: return@launch
+            val storeId = userRepository.getStoreIdForEmployee(employeeId) ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
                     updateOrderItem(tempId) { it.copy(currentStock = stock) }

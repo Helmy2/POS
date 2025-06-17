@@ -14,7 +14,6 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
 import com.wael.astimal.pos.features.management.domain.repository.SupplierRepository
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -38,7 +37,6 @@ class PurchaseReturnViewModel(
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
-    private val employeeDao: EmployeeDao,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -175,7 +173,7 @@ class PurchaseReturnViewModel(
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
             val employeeId = _state.value.currentUser?.id ?: return@launch
-            val storeId = employeeDao.getStoreIdForEmployee(employeeId) ?: return@launch
+            val storeId = userRepository.getStoreIdForEmployee(employeeId) ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
                     updateReturnItem(tempId) { it.copy(currentStock = stock) }

@@ -12,17 +12,16 @@ data class User(
     val isSynced: Boolean = false,
     val lastModified: Long,
     val name: String,
-){
+) {
     val isEmployee: Boolean get() = userType == UserType.EMPLOYEE
     val isAdmin: Boolean get() = userType == UserType.ADMIN
 }
 
 enum class UserType {
-    CLIENT, EMPLOYEE, UNKNOWN, ADMIN;
+    ADMIN, EMPLOYEE, UNKNOWN;
 
     fun stringResource(type: UserType = this): Int {
         return when (type) {
-            CLIENT -> com.wael.astimal.pos.R.string.client
             EMPLOYEE -> com.wael.astimal.pos.R.string.employee
             ADMIN -> com.wael.astimal.pos.R.string.admin
             UNKNOWN -> com.wael.astimal.pos.R.string.unknown

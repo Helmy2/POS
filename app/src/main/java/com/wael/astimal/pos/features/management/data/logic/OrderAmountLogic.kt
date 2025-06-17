@@ -10,13 +10,13 @@ import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
+import com.wael.astimal.pos.features.user.data.local.UserDao
 
 class OrderAmountLogic(
     private val stockRepository: StockRepository,
     private val clientRepository: ClientRepository,
     private val employeeFinancesDao: EmployeeFinancesDao,
-    private val employeeDao: EmployeeDao
+    private val employeeDao: UserDao
 ) {
 
     suspend fun processNewOrder(

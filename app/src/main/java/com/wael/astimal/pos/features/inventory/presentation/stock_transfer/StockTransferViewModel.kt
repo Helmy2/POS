@@ -11,7 +11,6 @@ import com.wael.astimal.pos.features.inventory.domain.repository.ProductReposito
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// todo remove employeeDao
 
 class StockTransferViewModel(
     private val stockTransferRepository: StockTransferRepository,
@@ -37,7 +35,6 @@ class StockTransferViewModel(
     private val userRepository: UserRepository,
     private val stockRepository: StockRepository,
     private val sessionManager: SessionManager,
-    private val employeeDao: EmployeeDao
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StockTransferScreenState())
@@ -61,7 +58,7 @@ class StockTransferViewModel(
             if (user != null) {
                 var fromStore = _state.value.currentTransferInput.fromStore
                 if (user.userType != UserType.ADMIN) {
-                    val storeId = employeeDao.getStoreIdForEmployee(user.id)
+                    val storeId = userRepository.getStoreIdForEmployee(user.id)
                     fromStore = storeId?.let { storeRepository.getStoreByLocalId(it) }
                 }
                 _state.update {

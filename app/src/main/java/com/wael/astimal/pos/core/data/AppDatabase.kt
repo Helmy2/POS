@@ -42,7 +42,6 @@ import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.data.local.UserDao
 
 @Database(
@@ -90,7 +89,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun purchaseOrderDao(): PurchaseDao
     abstract fun purchaseReturnDao(): PurchaseReturnDao
     abstract fun storeProductStockDao(): StoreProductStockDao
-    abstract fun employeeDao(): EmployeeDao
     abstract fun employeeFinancesDao(): EmployeeFinancesDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
     abstract fun receivePayVoucherDao(): ReceivePayVoucherDao

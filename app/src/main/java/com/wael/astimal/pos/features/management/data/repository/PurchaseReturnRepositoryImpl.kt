@@ -12,7 +12,7 @@ import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
 import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
+import com.wael.astimal.pos.features.user.data.local.UserDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 class PurchaseReturnRepositoryImpl(
     private val database: AppDatabase,
     private val purchaseReturnDao: PurchaseReturnDao,
-    private val employeeDao: EmployeeDao,
+    private val employeeDao: UserDao,
     private val stockRepository: StockRepository,
     private val partnerTransactionDao: PartnerTransactionDao
 ) : PurchaseReturnRepository {

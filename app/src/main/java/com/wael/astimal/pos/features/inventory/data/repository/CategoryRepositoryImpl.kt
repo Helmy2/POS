@@ -43,7 +43,7 @@ class CategoryRepositoryImpl(
                 arName = arName,
                 enName = enName,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
             categoryDao.insert(listOf(newCategoryEntity))
@@ -70,7 +70,7 @@ class CategoryRepositoryImpl(
                 arName = newArName,
                 enName = newEnName,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isDeletedLocally = category.isDeletedLocally
             )
             categoryDao.updateCategory(entityToUpdate)
@@ -88,7 +88,7 @@ class CategoryRepositoryImpl(
             val categoryToMarkAsDeleted = entityToDelete.copy(
                 isDeletedLocally = true,
                 isSynced = false,
-                lastModified = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis()
             )
             categoryDao.updateCategory(categoryToMarkAsDeleted)
             Result.success(Unit)

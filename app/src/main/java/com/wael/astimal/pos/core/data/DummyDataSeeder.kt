@@ -16,8 +16,8 @@ import com.wael.astimal.pos.features.management.domain.repository.BusinessPartne
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
-import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import com.wael.astimal.pos.features.user.data.local.UserDao
+import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +28,6 @@ class DummyDataSeeder(
     private val storeDao: StoreDao,
     private val unitDao: UnitDao,
     private val categoryDao: CategoryDao,
-    private val employeeDao: EmployeeDao,
     private val sessionManager: SessionManager,
     private val productRep: ProductRepository,
     private val businessPartnerRepository: BusinessPartnerRepository,
@@ -43,8 +42,7 @@ class DummyDataSeeder(
             enName = "Super Admin",
             email = "super_admin@example.com",
             phone = "5551234567",
-            isAdminFlag = true,
-            isSynced = false
+            userType = UserType.ADMIN
         ), UserEntity(
             id = 2,
             name = "Default Employee One",
@@ -52,8 +50,7 @@ class DummyDataSeeder(
             enName = "Default Employee One",
             email = "employee1@example.com",
             phone = "555000111",
-            isEmployeeFlag = true,
-            isSynced = false
+            userType = UserType.EMPLOYEE
         ), UserEntity(
             id = 3,
             name = "Employee Two",
@@ -61,8 +58,7 @@ class DummyDataSeeder(
             enName = "Employee Two",
             email = "employee2@example.com",
             phone = "555000222",
-            isEmployeeFlag = true,
-            isSynced = false
+            userType = UserType.EMPLOYEE
         )
     )
 
@@ -120,12 +116,12 @@ class DummyDataSeeder(
     }
 
     private suspend fun assignEmployeesToStores() {
-        employeeDao.assignStoreToEmployee(
+        userDao.assignStoreToEmployee(
             EmployeeStoreEntity(
                 employeeLocalId = users.elementAt(1).id, storeLocalId = stores.elementAt(1).localId
             )
         )
-        employeeDao.assignStoreToEmployee(
+        userDao.assignStoreToEmployee(
             EmployeeStoreEntity(
                 employeeLocalId = users.elementAt(2).id, storeLocalId = stores.elementAt(2).localId
             )
@@ -216,7 +212,12 @@ class DummyDataSeeder(
 
     private suspend fun populateDummyCategories(): Map<String, Long> {
         val lensesId = categoryDao.insertOrUpdate(
-            CategoryEntity(serverId = -1, arName = "عدسات", enName = "Lenses", isSynced = false)
+            CategoryEntity(
+                serverId = -1,
+                arName = "عدسات",
+                enName = "Lenses",
+                isSynced = false
+            )
         )
         val solutionsId = categoryDao.insertOrUpdate(
             CategoryEntity(

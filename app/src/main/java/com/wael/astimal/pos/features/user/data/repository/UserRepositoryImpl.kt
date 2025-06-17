@@ -21,4 +21,8 @@ class UserRepositoryImpl(
         return userDao.getUserById(localId)?.toDomain()
     }
 
+    override suspend fun getStoreIdForEmployee(employeeId: Long): Long? {
+        return userDao.getStoreIdForEmployee(employeeId)
+    }
+
 }

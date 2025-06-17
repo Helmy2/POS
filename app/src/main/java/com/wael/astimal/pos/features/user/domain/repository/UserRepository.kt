@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface UserRepository {
     fun getEmployeesFlow(): Flow<List<User>>
     suspend fun getUser(localId: Long): User?
+    suspend fun getStoreIdForEmployee(employeeId: Long): Long?
 }

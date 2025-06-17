@@ -15,9 +15,7 @@ data class UserEntity(
     val enName: String?,
     val email: String?,
     val phone: String?,
-    val isAdminFlag: Boolean = false,
-    val isClientFlag: Boolean = false,
-    val isEmployeeFlag: Boolean = false,
+    val userType: UserType,
     var isSynced: Boolean = false,
     var lastModified: Long = System.currentTimeMillis()
 )
@@ -29,12 +27,7 @@ fun UserEntity.toDomain(): User {
         localizedName = LocalizedString(arName ?: "", enName ?: ""),
         email = email ?: "",
         phone = phone ?: "",
-        userType = when {
-            isClientFlag -> UserType.CLIENT
-            isEmployeeFlag -> UserType.EMPLOYEE
-            isAdminFlag -> UserType.ADMIN
-            else -> UserType.UNKNOWN
-        },
+        userType = userType,
         isSynced = isSynced,
         lastModified = lastModified,
     )
