@@ -139,9 +139,7 @@ class DummyDataSeeder(
                     enName = "Universal Partner",
                 ),
                 address = "1 El Tahrir Square, Cairo",
-                phones = listOf(
-                    "0123456789"
-                ),
+                phone = "0123456789",
                 responsibleEmployee = users.elementAt(2).toDomain(),
                 supplierIndebtedness = 350.0,
                 type = PartnerType.BOTH,
@@ -154,9 +152,7 @@ class DummyDataSeeder(
                     enName = "Supplier Two (Only)",
                 ),
                 address = "1 El Tahrir Square, Cairo",
-                phones = listOf(
-                    "6667778880"
-                ),
+                phone = "6667778880",
                 responsibleEmployee = users.elementAt(1).toDomain(),
                 supplierIndebtedness = 150.0,
                 type = PartnerType.SUPPLIER,
@@ -169,9 +165,7 @@ class DummyDataSeeder(
                     enName = "Client One (Only)",
                 ),
                 address = "1 El Tahrir Square, Cairo",
-                phones = listOf(
-                    "0123412352235"
-                ),
+                phone = "0123412352235",
                 responsibleEmployee = users.elementAt(1).toDomain(),
                 clientDebt = 250.50,
                 type = PartnerType.CLIENT,

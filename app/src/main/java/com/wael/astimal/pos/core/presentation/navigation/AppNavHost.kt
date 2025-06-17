@@ -25,7 +25,6 @@ import com.wael.astimal.pos.features.management.presentation.sales_return.SalesR
 import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
-import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 
 @Composable
 fun AppNavHost(
@@ -42,7 +41,6 @@ fun AppNavHost(
         ) {
             // Top-level destinations
             composable<Destination.Dashboard> { DashboardRoute() }
-            composable<Destination.Settings> { SettingsRoute(navController = navController) }
 
             // Inventory Hub
             composable<Destination.Inventory> {

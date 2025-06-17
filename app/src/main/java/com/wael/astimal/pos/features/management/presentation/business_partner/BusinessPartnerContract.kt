@@ -39,7 +39,7 @@ fun createBlankBusinessPartner(): BusinessPartner {
         supplierLocalId = null,
         name = LocalizedString(),
         address = "",
-        phones = listOf(""),
+        phone = "",
         responsibleEmployee = null,
         type = PartnerType.CLIENT,
         clientDebt = 0.0,

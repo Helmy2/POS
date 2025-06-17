@@ -22,9 +22,6 @@ sealed class Destination {
     @Serializable
     data object Dashboard : Destination()
 
-    @Serializable
-    data object Settings : Destination()
-
     // Inventory Feature Graph
     @Serializable
     data object Inventory : Destination() // The main landing/hub screen for inventory

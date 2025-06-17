@@ -6,8 +6,8 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 data class Supplier(
     val id: Long,
     val name: LocalizedString,
-    val phones: List<String>,
-    val address: String?,
+    val phone: String,
+    val address: String,
     val isAlsoClient: Boolean,
     val responsibleEmployee: User?,
     val isSynced: Boolean,

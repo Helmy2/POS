@@ -14,8 +14,8 @@ data class BusinessPartner(
     val supplierLocalId: Long?,
 
     val name: LocalizedString,
-    val address: String?,
-    val phones: List<String>,
+    val address: String,
+    val phone: String,
     val responsibleEmployee: User?,
     var type: PartnerType,
 

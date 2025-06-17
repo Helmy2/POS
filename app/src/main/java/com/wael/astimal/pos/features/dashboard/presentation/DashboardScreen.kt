@@ -42,9 +42,13 @@ import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
 import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.sharePdf
 import org.koin.androidx.compose.koinViewModel
+import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.math.abs
 
 @Composable
 fun DashboardRoute(
@@ -94,12 +98,17 @@ fun DashboardScreen(
 
 @Composable
 fun KpiCards(kpiData: KpiData) {
+    val language = LocalAppLocale.current
+    val numberFormat =
+        remember { NumberFormat.getCurrencyInstance(Locale(language.code, language.country)) }
+    val formattedTotalRevenue = numberFormat.format(abs(kpiData.totalRevenue))
+
     Row(
         modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         KpiCard(
             title = stringResource(R.string.total_revenue),
-            value = "$${"%,.2f".format(kpiData.totalRevenue)}",
+            value = formattedTotalRevenue,
             modifier = Modifier.weight(1f)
         )
         KpiCard(
@@ -156,9 +165,10 @@ fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit
                 chart = rememberCartesianChart(
                     rememberColumnCartesianLayer(
                         ColumnCartesianLayer.ColumnProvider.series(
-                        vicoTheme.columnCartesianLayerColors.map { color ->
-                            rememberLineComponent(fill(MaterialTheme.colorScheme.primary))
-                        })),
+                            vicoTheme.columnCartesianLayerColors.map { color ->
+                                rememberLineComponent(fill(MaterialTheme.colorScheme.primary))
+                            })
+                    ),
                     startAxis = VerticalAxis.rememberStart(),
                     bottomAxis = HorizontalAxis.rememberBottom(
                         valueFormatter = { _, value, _ ->

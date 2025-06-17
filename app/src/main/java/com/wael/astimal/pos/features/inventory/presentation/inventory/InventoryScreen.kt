@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.inventory
 
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -42,7 +43,8 @@ fun InventoryScreen(
             },
             modifier = Modifier
                 .padding(8.dp)
-                .consumeWindowInsets(paddingValues),
+                .consumeWindowInsets(paddingValues)
+                .fillMaxSize(),
             isSelected = { false }
         )
     }

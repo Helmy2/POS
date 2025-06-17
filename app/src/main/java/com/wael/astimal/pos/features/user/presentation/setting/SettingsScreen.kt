@@ -3,7 +3,6 @@ package com.wael.astimal.pos.features.user.presentation.setting
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
@@ -52,9 +51,7 @@ fun SettingsScreen(
     state: SettingsState,
     onEvent: (SettingsEvent) -> Unit,
 ) {
-    Box(
-        contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
-    ) {
+    Box() {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())

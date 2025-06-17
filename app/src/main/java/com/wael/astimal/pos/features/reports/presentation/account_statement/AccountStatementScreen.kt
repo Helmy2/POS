@@ -166,7 +166,7 @@ fun PartnerSelectionView(
                                 fontWeight = FontWeight.Bold
                             )
                         },
-                        supportingContent = { Text(partner.address ?: "") },
+                        supportingContent = { Text(partner.address) },
                         modifier = Modifier.clickable { onPartnerSelected(partner) })
                     HorizontalDivider()
                 }
@@ -322,7 +322,10 @@ fun TransactionRow(transaction: AccountTransaction) {
 fun StatementFooter(finalBalance: Double?) {
     if (finalBalance == null) return
 
-    val numberFormat = remember { NumberFormat.getCurrencyInstance(Locale("ar", "EG")) }
+    val language = LocalAppLocale.current
+
+    val numberFormat =
+        remember { NumberFormat.getCurrencyInstance(Locale(language.code, language.country)) }
     val formattedBalance = numberFormat.format(abs(finalBalance))
 
     val (summaryText, summaryColor) = when {

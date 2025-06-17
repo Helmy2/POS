@@ -170,7 +170,7 @@ fun BusinessPartnerDetailView(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             stringResource(
-                R.string.address_placeholder, partner.address ?: stringResource(R.string.n_a)
+                R.string.address_placeholder, partner.address
             )
         )
 
@@ -196,7 +196,7 @@ fun BusinessPartnerDetailView(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
         Text(stringResource(R.string.phones), fontWeight = FontWeight.Bold)
-        partner.phones.forEach { phone -> Text("- $phone") }
+        partner.phone.forEach { phone -> Text("- $phone") }
         partner.responsibleEmployee?.let {
             Text(
                 stringResource(
@@ -288,7 +288,7 @@ fun BusinessPartnerList(
                         Text(
                             stringResource(
                                 R.string.address_placeholder,
-                                partner.address ?: stringResource(R.string.n_a)
+                                partner.address
                             )
                         )
                         when (partner.type) {
@@ -347,8 +347,8 @@ fun BusinessPartnerEditDialog(
 ) {
     var enName by remember { mutableStateOf(partner.name.enName ?: "") }
     var arName by remember { mutableStateOf(partner.name.arName ?: "") }
-    var address by remember { mutableStateOf(partner.address ?: "") }
-    var phone by remember { mutableStateOf(partner.phones.firstOrNull() ?: "") }
+    var address by remember { mutableStateOf(partner.address) }
+    var phone by remember { mutableStateOf(partner.phone) }
     var isClient by remember { mutableStateOf(partner.type == PartnerType.CLIENT || partner.type == PartnerType.BOTH) }
     var isSupplier by remember { mutableStateOf(partner.type == PartnerType.SUPPLIER || partner.type == PartnerType.BOTH) }
 
@@ -461,7 +461,7 @@ fun BusinessPartnerEditDialog(
                             val updatedPartner = partner.copy(
                                 name = partner.name.copy(enName = enName, arName = arName),
                                 address = address,
-                                phones = listOf(phone),
+                                phone = phone,
                                 type = type
                             )
                             onSave(

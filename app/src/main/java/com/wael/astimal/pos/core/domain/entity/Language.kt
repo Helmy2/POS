@@ -3,8 +3,8 @@ package com.wael.astimal.pos.core.domain.entity
 import androidx.compose.ui.unit.LayoutDirection
 import com.wael.astimal.pos.R
 
-enum class Language(val code: String, val layoutDirection: LayoutDirection) {
-    English("en", LayoutDirection.Ltr), Arabic("ar", LayoutDirection.Rtl);
+enum class Language(val code: String, val country: String, val layoutDirection: LayoutDirection) {
+    English("en", "us", LayoutDirection.Ltr), Arabic("ar", "eg", LayoutDirection.Rtl);
 
     fun resource(): Int {
         return when (this) {
