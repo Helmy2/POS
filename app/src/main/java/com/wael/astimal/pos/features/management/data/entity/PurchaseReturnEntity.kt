@@ -6,13 +6,13 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
-import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturnItem
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
+import com.wael.astimal.pos.features.management.domain.entity.PaymentType
+import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
+import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturnItem
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
 
@@ -42,7 +42,7 @@ data class PurchaseReturnEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0L,
     val serverId: Int?,
-    var invoiceNumber: String?,
+    var invoiceNumber: String,
     val supplierLocalId: Long?,
     val employeeLocalId: Long?, // from 'employee_id'
     val amountPaid: Double,

@@ -35,7 +35,7 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 data class OrderEntity(
     @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
     val serverId: Int?,
-    var invoiceNumber: String?,
+    var invoiceNumber: String,
 
     val clientLocalId: Long,
     val employeeLocalId: Long,

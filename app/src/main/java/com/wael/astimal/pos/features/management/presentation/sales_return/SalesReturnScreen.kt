@@ -66,7 +66,7 @@ fun SalesReturnScreen(
                 onItemClick = { onEvent(SalesReturnEvent.SelectReturnToView(it)) },
                 label = {
                     Text(
-                        "Return to ${it.client?.name?.displayName(LocalAppLocale.current)}",
+                        "Return to ${it.client?.name?.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}",
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

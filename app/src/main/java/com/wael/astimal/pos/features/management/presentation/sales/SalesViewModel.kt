@@ -291,7 +291,7 @@ class SalesViewModel(
             val orderEntity = OrderEntity(
                 localId = _state.value.selectedOrder?.localId ?: 0L,
                 serverId = null,
-                invoiceNumber = null,
+                invoiceNumber = "",
                 clientLocalId = selectedClient.id,
                 employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,

@@ -294,7 +294,7 @@ class PurchaseViewModel(
             val purchaseEntity = PurchaseEntity(
                 localId = _state.value.selectedPurchase?.localId ?: 0L,
                 serverId = null,
-                invoiceNumber = null,
+                invoiceNumber = "",
                 supplierLocalId = selectedSupplier.id,
                 employeeLocalId = purchaseInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,

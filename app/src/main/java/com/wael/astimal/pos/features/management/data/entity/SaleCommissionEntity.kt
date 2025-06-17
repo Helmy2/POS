@@ -35,7 +35,7 @@ data class SaleCommissionEntity(
     val commissionAmount: Double,
     val isMain: Boolean = false,
     val date: Long,
-    var isSynced: Boolean = false
+    var isSynced: Boolean = false,
 )
 
 @Entity(

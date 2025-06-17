@@ -66,7 +66,7 @@ fun SalesScreen(
                 list = state.orders,
                 onItemClick = { onEvent(OrderEvent.SelectOrderToView(it)) },
                 label = {
-                    Label("Order to ${it.client?.name?.displayName(language)}")
+                    Label("Order to ${it.client?.name?.displayName(language)}: ${it.invoiceNumber}")
                 },
                 isSelected = { product -> product.localId == state.selectedOrder?.localId },
             )

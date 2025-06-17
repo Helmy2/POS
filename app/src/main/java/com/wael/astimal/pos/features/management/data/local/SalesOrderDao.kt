@@ -66,4 +66,7 @@ interface SalesOrderDao {
     """
     )
     fun getDailySales(startDate: Long, endDate: Long): Flow<List<DailySaleData>>
+
+    @Query("SELECT MAX(invoiceNumber) FROM orders WHERE invoiceNumber LIKE :pattern")
+    suspend fun getLastInvoiceNumber(pattern: String): String?
 }

@@ -8,7 +8,6 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
@@ -43,7 +42,7 @@ data class OrderReturnEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0L,
     val serverId: Int?,
-    val invoiceNumber: String?,
+    val invoiceNumber: String,
     val clientLocalId: Long,
     val employeeLocalId: Long?,
     val amountPaid: Double,
@@ -70,15 +69,9 @@ data class OrderReturnEntity(
             parentColumns = ["localId"],
             childColumns = ["productLocalId"],
             onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = UnitEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["unitLocalId"],
-            onDelete = ForeignKey.RESTRICT
         )
     ],
-    indices = [Index(value = ["orderReturnLocalId"]), Index(value = ["productLocalId"]), Index(value = ["unitLocalId"])]
+    indices = [Index(value = ["orderReturnLocalId"]), Index(value = ["productLocalId"])]
 )
 data class OrderReturnProductEntity(
     @PrimaryKey(autoGenerate = true)
@@ -86,7 +79,6 @@ data class OrderReturnProductEntity(
     val serverId: Int?,
     val orderReturnLocalId: Long,
     val productLocalId: Long,
-    val unitLocalId: Long,
     val quantity: Double,
     val priceAtReturn: Double,
     val itemTotalValue: Double,
@@ -116,9 +108,6 @@ data class OrderReturnItemWithDetails(
 
     @Relation(parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class)
     val product: ProductWithDetailsEntity?,
-
-    @Relation(parentColumn = "unitLocalId", entityColumn = "localId", entity = UnitEntity::class)
-    val unit: UnitEntity?
 )
 
 
@@ -147,7 +136,6 @@ fun OrderReturnItemWithDetails.toDomain(): SalesReturnItem {
         serverId = this.returnItem.serverId,
         returnLocalId = this.returnItem.orderReturnLocalId,
         product = this.product?.toDomain(),
-        productUnit= this.unit?.toDomain(),
         quantity = this.returnItem.quantity,
         priceAtReturn = this.returnItem.priceAtReturn,
         itemTotalValue = this.returnItem.itemTotalValue,

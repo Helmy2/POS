@@ -296,7 +296,7 @@ class PurchaseReturnViewModel(
             val returnEntity = PurchaseReturnEntity(
                 localId = _state.value.selectedReturn?.localId ?: 0L,
                 serverId = null,
-                invoiceNumber = null,
+                invoiceNumber = "",
                 supplierLocalId = selectedSupplier.id,
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,

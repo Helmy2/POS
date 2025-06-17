@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.management.data.logic
 
-import com.wael.astimal.pos.core.util.RETURN_COMMISSION_PERCENTAGE
+import com.wael.astimal.pos.core.util.ORDER_COMMISSION_PERCENTAGE
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
+import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
@@ -12,51 +12,125 @@ import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionT
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 
-
 class ReturnAmountLogic(
     private val stockRepository: StockRepository,
     private val clientRepository: ClientRepository,
     private val employeeFinancesDao: EmployeeFinancesDao,
     private val employeeDao: EmployeeDao
 ) {
-
     suspend fun processNewReturn(
         returnEntity: OrderReturnEntity,
-        items: List<OrderProductEntity>,
+        items: List<OrderReturnProductEntity>,
         returnId: Long
     ) {
-        val employeeStoreId = employeeDao.getStoreIdForEmployee(returnEntity.employeeLocalId)
-            ?: throw Exception("Could not find an assigned store for the employee.")
-
-        items.forEach { item ->
-            stockRepository.adjustStock(
-                storeId = employeeStoreId,
-                productId = item.productLocalId,
-                transactionQuantity = item.quantity
-            )
-        }
-
+        handleStockUpdate(returnEntity, items, isReverting = false)
         handleCommissions(returnEntity, returnId)
     }
 
     suspend fun revertReturn(
         returnEntity: OrderReturnEntity,
-        items: List<OrderProductEntity>,
+        items: List<OrderReturnProductEntity>,
         currentUserId: Long
     ) {
-        val employeeStoreId = employeeDao.getStoreIdForEmployee(returnEntity.employeeLocalId)
-            ?: throw Exception("Could not find an assigned store for the employee.")
+        handleStockUpdate(returnEntity, items, isReverting = true)
+        revertCommissions(returnEntity.localId, currentUserId, returnEntity.invoiceNumber)
+    }
+
+    private suspend fun handleStockUpdate(
+        returnEntity: OrderReturnEntity,
+        items: List<OrderReturnProductEntity>,
+        isReverting: Boolean
+    ) {
+        val employeeId =
+            returnEntity.employeeLocalId ?: throw Exception("Employee not found for return")
+        val storeId = employeeDao.getStoreIdForEmployee(employeeId)
+            ?: throw Exception("Could not find a store for the employee.")
 
         items.forEach { item ->
-            stockRepository.adjustStock(
-                storeId = employeeStoreId,
-                productId = item.productLocalId,
-                transactionQuantity = -item.quantity
-            )
+            val quantityChange = if (isReverting) -item.quantity else item.quantity
+            stockRepository.adjustStock(storeId, item.productLocalId, quantityChange)
         }
+    }
 
+    private suspend fun handleCommissions(returnEntity: OrderReturnEntity, returnId: Long) {
+        val client = clientRepository.getClient(returnEntity.clientLocalId)
+        val responsibleEmployeeId = client?.responsibleEmployee?.id
+        val returningEmployeeId = returnEntity.employeeLocalId
+            ?: throw IllegalStateException("Returning employee ID is null")
+
+        val commissionAmount = returnEntity.totalAmount * ORDER_COMMISSION_PERCENTAGE
+
+        if (responsibleEmployeeId == returningEmployeeId) {
+            createCommission(
+                employeeId = returningEmployeeId,
+                returnId = returnId,
+                commissionAmount = -commissionAmount * 2, // Negative for return
+                isMain = true,
+                invoiceNumber = returnEntity.invoiceNumber,
+                createdByEmployeeId = returningEmployeeId
+            )
+        } else {
+            createCommission(
+                employeeId = returningEmployeeId,
+                returnId = returnId,
+                commissionAmount = -commissionAmount, // Negative for return
+                isMain = true,
+                invoiceNumber = returnEntity.invoiceNumber,
+                createdByEmployeeId = returningEmployeeId
+            )
+            if (responsibleEmployeeId != null) {
+                createCommission(
+                    employeeId = responsibleEmployeeId,
+                    returnId = returnId,
+                    commissionAmount = -commissionAmount, // Negative for return
+                    isMain = false,
+                    invoiceNumber = returnEntity.invoiceNumber,
+                    createdByEmployeeId = returningEmployeeId
+                )
+            }
+        }
+    }
+
+    private suspend fun createCommission(
+        employeeId: Long,
+        returnId: Long,
+        commissionAmount: Double,
+        isMain: Boolean,
+        invoiceNumber: String,
+        createdByEmployeeId: Long
+    ) {
+        val commission = SaleCommissionEntity(
+            employeeId = employeeId,
+            sourceTransactionId = returnId,
+            sourceTransactionType = SourceTransactionType.SALE_RETURN,
+            commissionAmount = commissionAmount,
+            isMain = isMain,
+            date = System.currentTimeMillis(),
+            serverId = null
+        )
+        val commissionId = employeeFinancesDao.insertSaleCommission(commission)
+
+        val commissionTransaction = EmployeeAccountTransactionEntity(
+            serverId = null,
+            employeeId = employeeId,
+            createdByEmployeeId = createdByEmployeeId,
+            type = EmployeeTransactionType.COMMISSION,
+            amount = commissionAmount, // Already negative
+            relatedCommissionId = commissionId,
+            notes = "Commission for return #$invoiceNumber",
+            lastModificationDate = System.currentTimeMillis(),
+            creationDate = System.currentTimeMillis()
+        )
+        employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
+    }
+
+    private suspend fun revertCommissions(
+        returnId: Long,
+        currentUserId: Long,
+        invoiceNumber: String
+    ) {
         val oldCommissions = employeeFinancesDao.getAllCommissionsBySource(
-            returnEntity.localId,
+            returnId,
             SourceTransactionType.SALE_RETURN
         )
         oldCommissions.forEach { commission ->
@@ -66,75 +140,17 @@ class ReturnAmountLogic(
                     employeeId = commission.employeeId,
                     createdByEmployeeId = currentUserId,
                     type = EmployeeTransactionType.COMMISSION,
-                    amount = -commission.commissionAmount,
+                    amount = -commission.commissionAmount, // Revert the negative amount
                     relatedCommissionId = commission.localId,
-                    notes = "Reversal for deleted return #${returnEntity.localId}",
-                    creationDate = commission.date,
+                    notes = "Reversal for return #${invoiceNumber}",
                     lastModificationDate = System.currentTimeMillis(),
+                    creationDate = commission.date
                 )
             )
         }
         employeeFinancesDao.deleteAllCommissionsBySource(
-            returnEntity.localId,
+            returnId,
             SourceTransactionType.SALE_RETURN
         )
-    }
-
-    private suspend fun handleCommissions(returnEntity: OrderReturnEntity, returnId: Long) {
-        val client = clientRepository.getClient(returnEntity.clientLocalId)
-        val responsibleEmployeeId = client?.responsibleEmployee?.id
-        val returningEmployeeId = returnEntity.employeeLocalId
-
-        val commissionAmount = returnEntity.totalAmount * RETURN_COMMISSION_PERCENTAGE
-
-        createCommission(
-            employeeId = returningEmployeeId!!,
-            returnId = returnId,
-            commissionAmount = -commissionAmount,
-            isMain = true,
-            createdByEmployeeId = returningEmployeeId
-        )
-
-        if (responsibleEmployeeId != null && responsibleEmployeeId != returningEmployeeId) {
-            createCommission(
-                employeeId = responsibleEmployeeId,
-                returnId = returnId,
-                commissionAmount = -commissionAmount,
-                isMain = false,
-                createdByEmployeeId = returningEmployeeId
-            )
-        }
-    }
-
-    private suspend fun createCommission(
-        employeeId: Long,
-        returnId: Long,
-        commissionAmount: Double,
-        isMain: Boolean,
-        createdByEmployeeId: Long
-    ) {
-        val commissionEntity = SaleCommissionEntity(
-            serverId = null,
-            employeeId = employeeId,
-            sourceTransactionId = returnId,
-            sourceTransactionType = SourceTransactionType.SALE_RETURN,
-            commissionAmount = commissionAmount,
-            isMain = isMain,
-            date = System.currentTimeMillis()
-        )
-        val commissionId = employeeFinancesDao.insertSaleCommission(commissionEntity)
-
-        val commissionTransaction = EmployeeAccountTransactionEntity(
-            serverId = null,
-            employeeId = employeeId,
-            createdByEmployeeId = createdByEmployeeId,
-            type = EmployeeTransactionType.COMMISSION,
-            amount = commissionAmount,
-            relatedCommissionId = commissionId,
-            notes = "Commission reversal for return #$returnId",
-            creationDate = System.currentTimeMillis(),
-            lastModificationDate = System.currentTimeMillis(),
-        )
-        employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
     }
 }

@@ -12,7 +12,6 @@ import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionT
 import com.wael.astimal.pos.features.management.domain.repository.ClientRepository
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 
-
 class OrderAmountLogic(
     private val stockRepository: StockRepository,
     private val clientRepository: ClientRepository,
@@ -21,59 +20,28 @@ class OrderAmountLogic(
 ) {
 
     suspend fun processNewOrder(
-        order: OrderEntity,
-        items: List<OrderProductEntity>,
-        orderId: Long
+        order: OrderEntity, items: List<OrderProductEntity>, orderId: Long
     ) {
-        val employeeStoreId = employeeDao.getStoreIdForEmployee(order.employeeLocalId)
-            ?: throw Exception("Could not find an assigned store for the employee.")
-
-        items.forEach { item ->
-            stockRepository.adjustStock(
-                storeId = employeeStoreId,
-                productId = item.productLocalId,
-                transactionQuantity = -item.quantity
-            )
-        }
-
+        handleStockUpdate(order.employeeLocalId, items, isReturn = false)
         handleCommissions(order, orderId)
     }
 
     suspend fun revertOrder(
-        order: OrderEntity,
-        items: List<OrderProductEntity>,
-        currentUserId: Long
+        order: OrderEntity, items: List<OrderProductEntity>, currentUserId: Long
     ) {
-        val employeeStoreId = employeeDao.getStoreIdForEmployee(order.employeeLocalId)
-            ?: throw Exception("Could not find an assigned store for the employee.")
+        handleStockUpdate(order.employeeLocalId, items, isReturn = true)
+        revertCommissions(order.localId, currentUserId, order.invoiceNumber)
+    }
 
+    private suspend fun handleStockUpdate(
+        employeeId: Long, items: List<OrderProductEntity>, isReturn: Boolean
+    ) {
+        val storeId = employeeDao.getStoreIdForEmployee(employeeId)
+            ?: throw Exception("Could not find a store for the employee.")
         items.forEach { item ->
-            stockRepository.adjustStock(
-                storeId = employeeStoreId,
-                productId = item.productLocalId,
-                transactionQuantity = item.quantity
-            )
+            val quantityChange = if (isReturn) item.quantity else -item.quantity
+            stockRepository.adjustStock(storeId, item.productLocalId, quantityChange)
         }
-
-
-        val oldCommissions =
-            employeeFinancesDao.getAllCommissionsBySource(order.localId, SourceTransactionType.SALE)
-        oldCommissions.forEach { commission ->
-            employeeFinancesDao.insertEmployeeTransaction(
-                EmployeeAccountTransactionEntity(
-                    serverId = null,
-                    employeeId = commission.employeeId,
-                    createdByEmployeeId = currentUserId,
-                    type = EmployeeTransactionType.COMMISSION,
-                    amount = -commission.commissionAmount,
-                    relatedCommissionId = commission.localId,
-                    notes = "Reversal for order #${order.localId}",
-                    lastModificationDate = System.currentTimeMillis(),
-                    creationDate = commission.date
-                )
-            )
-        }
-        employeeFinancesDao.deleteAllCommissionsBySource(order.localId, SourceTransactionType.SALE)
     }
 
     private suspend fun handleCommissions(order: OrderEntity, orderId: Long) {
@@ -83,42 +51,56 @@ class OrderAmountLogic(
 
         val commissionAmount = order.totalAmount * ORDER_COMMISSION_PERCENTAGE
 
-        createCommission(
-            employeeId = sellingEmployeeId,
-            orderId = orderId,
-            commissionAmount = commissionAmount,
-            isMain = true,
-            createdByEmployeeId = sellingEmployeeId
-        )
-
-        if (responsibleEmployeeId != null && responsibleEmployeeId != sellingEmployeeId) {
+        if (responsibleEmployeeId == sellingEmployeeId) {
             createCommission(
-                employeeId = responsibleEmployeeId,
+                employeeId = sellingEmployeeId,
                 orderId = orderId,
-                commissionAmount = commissionAmount,
-                isMain = false,
+                commissionAmount = commissionAmount * 2,
+                isMain = true,
+                invoiceNumber = order.invoiceNumber,
                 createdByEmployeeId = sellingEmployeeId
             )
+        } else {
+            createCommission(
+                employeeId = sellingEmployeeId,
+                orderId = orderId,
+                commissionAmount = commissionAmount,
+                isMain = true,
+                invoiceNumber = order.invoiceNumber,
+                createdByEmployeeId = order.employeeLocalId
+            )
+            if (responsibleEmployeeId != null) {
+                createCommission(
+                    employeeId = responsibleEmployeeId,
+                    orderId = orderId,
+                    commissionAmount = commissionAmount,
+                    isMain = false,
+                    invoiceNumber = order.invoiceNumber,
+                    createdByEmployeeId = order.employeeLocalId
+                )
+            }
         }
     }
+
 
     private suspend fun createCommission(
         employeeId: Long,
         orderId: Long,
         commissionAmount: Double,
         isMain: Boolean,
+        invoiceNumber: String,
         createdByEmployeeId: Long
     ) {
-        val commissionEntity = SaleCommissionEntity(
-            serverId = null,
+        val commission = SaleCommissionEntity(
             employeeId = employeeId,
             sourceTransactionId = orderId,
             sourceTransactionType = SourceTransactionType.SALE,
             commissionAmount = commissionAmount,
             isMain = isMain,
-            date = System.currentTimeMillis()
+            date = System.currentTimeMillis(),
+            serverId = null
         )
-        val commissionId = employeeFinancesDao.insertSaleCommission(commissionEntity)
+        val commissionId = employeeFinancesDao.insertSaleCommission(commission)
 
         val commissionTransaction = EmployeeAccountTransactionEntity(
             serverId = null,
@@ -127,10 +109,36 @@ class OrderAmountLogic(
             type = EmployeeTransactionType.COMMISSION,
             amount = commissionAmount,
             relatedCommissionId = commissionId,
-            notes = "Commission for order #$orderId",
+            notes = "Commission for order #$invoiceNumber",
             lastModificationDate = System.currentTimeMillis(),
             creationDate = System.currentTimeMillis()
         )
         employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
     }
+
+    private suspend fun revertCommissions(
+        orderId: Long,
+        currentUserId: Long,
+        invoiceNumber: String,
+    ) {
+        val oldCommissions =
+            employeeFinancesDao.getAllCommissionsBySource(orderId, SourceTransactionType.SALE)
+        oldCommissions.forEach { commission ->
+            employeeFinancesDao.insertEmployeeTransaction(
+                EmployeeAccountTransactionEntity(
+                    serverId = null,
+                    employeeId = commission.employeeId,
+                    createdByEmployeeId = currentUserId,
+                    type = EmployeeTransactionType.COMMISSION,
+                    amount = -commission.commissionAmount,
+                    relatedCommissionId = commission.localId,
+                    notes = "Reversal for order #${invoiceNumber}",
+                    lastModificationDate = System.currentTimeMillis(),
+                    creationDate = commission.date
+                )
+            )
+        }
+        employeeFinancesDao.deleteAllCommissionsBySource(orderId, SourceTransactionType.SALE)
+    }
+
 }

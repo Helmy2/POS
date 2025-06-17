@@ -15,6 +15,8 @@ import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class PurchaseRepositoryImpl(
     private val database: AppDatabase,
@@ -34,6 +36,18 @@ class PurchaseRepositoryImpl(
         return purchaseDao.getPurchaseWithDetails(localId)?.toDomain()
     }
 
+    private suspend fun generateNextInvoiceNumber(): String {
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val prefix = "INV-PUR-$today-"
+        val lastInvoice = purchaseDao.getLastInvoiceNumber("$prefix%")
+        val nextSeq = if (lastInvoice == null) {
+            1
+        } else {
+            lastInvoice.substringAfter(prefix).toIntOrNull()?.plus(1) ?: 1
+        }
+        return "$prefix${String.format("%03d", nextSeq)}"
+    }
+
     override suspend fun addPurchase(
         purchase: PurchaseEntity,
         items: List<PurchaseProductEntity>
@@ -46,7 +60,10 @@ class PurchaseRepositoryImpl(
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Could not find an assigned store for the employee.")
 
-                insertedId = purchaseDao.insertPurchaseWithItems(purchase, items)
+                val newInvoiceNumber = generateNextInvoiceNumber()
+                val purchaseWithInvoice = purchase.copy(invoiceNumber = newInvoiceNumber)
+
+                insertedId = purchaseDao.insertPurchaseWithItems(purchaseWithInvoice, items)
 
                 items.forEach { item ->
                     stockRepository.adjustStock(
@@ -55,7 +72,7 @@ class PurchaseRepositoryImpl(
                         transactionQuantity = item.quantity
                     )
                 }
-                addPurchaseLedgerEntries(purchase, insertedId)
+                addPurchaseLedgerEntries(purchaseWithInvoice, insertedId)
             }
             val createdPurchase = getPurchaseDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase after insert."))

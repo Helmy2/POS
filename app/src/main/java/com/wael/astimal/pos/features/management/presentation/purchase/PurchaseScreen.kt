@@ -64,7 +64,7 @@ fun PurchaseScreen(
                 list = state.purchases,
                 onItemClick = { onEvent(PurchaseEvent.SelectPurchaseToView(it)) },
                 label = {
-                    Label("Purchase from ${it.supplier?.name?.displayName(LocalAppLocale.current)}")
+                    Label("Purchase from ${it.supplier?.name?.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}")
                 },
                 isSelected = { purchase -> purchase.localId == state.selectedPurchase?.localId },
             )

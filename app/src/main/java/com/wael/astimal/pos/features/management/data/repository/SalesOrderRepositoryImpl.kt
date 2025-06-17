@@ -40,6 +40,19 @@ class SalesOrderRepositoryImpl(
         }
     }
 
+    private suspend fun generateNextInvoiceNumber(): String {
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val prefix = "INV-$today-"
+        val lastInvoice = salesOrderDao.getLastInvoiceNumber("$prefix%")
+        val nextSeq = if (lastInvoice == null) {
+            1
+        } else {
+            lastInvoice.substringAfter(prefix).toIntOrNull()?.plus(1) ?: 1
+        }
+        return "$prefix${String.format("%03d", nextSeq)}"
+    }
+
+
     override suspend fun addOrder(
         order: OrderEntity,
         items: List<OrderProductEntity>
@@ -47,34 +60,36 @@ class SalesOrderRepositoryImpl(
         return try {
             var insertedOrderLocalId: Long = -1
             database.withTransaction {
-                insertedOrderLocalId = salesOrderDao.insertOrUpdateOrder(order)
+                val newInvoiceNumber = generateNextInvoiceNumber()
+                val orderWithInvoice = order.copy(invoiceNumber = newInvoiceNumber)
+                insertedOrderLocalId = salesOrderDao.insertOrUpdateOrder(orderWithInvoice)
                 val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
                 salesOrderDao.insertOrderItems(itemsWithCorrectId)
 
-                orderAmountLogic.processNewOrder(order, items, insertedOrderLocalId)
+                orderAmountLogic.processNewOrder(orderWithInvoice, items, insertedOrderLocalId)
 
                 // Create ledger entry for the sale
                 partnerTransactionDao.insertTransaction(
                     PartnerTransactionEntity(
-                        clientId = order.clientLocalId,
+                        clientId = orderWithInvoice.clientLocalId,
                         supplierId = null,
                         sourceTransactionId = insertedOrderLocalId,
                         transactionType = TransactionType.SALE,
-                        date = order.orderDate,
-                        debit = order.totalAmount,
+                        date = orderWithInvoice.orderDate,
+                        debit = orderWithInvoice.totalAmount,
                         credit = 0.0
                     )
                 )
-                if (order.amountPaid > 0) {
+                if (orderWithInvoice.amountPaid > 0) {
                     partnerTransactionDao.insertTransaction(
                         PartnerTransactionEntity(
-                            clientId = order.clientLocalId,
+                            clientId = orderWithInvoice.clientLocalId,
                             supplierId = null,
                             sourceTransactionId = insertedOrderLocalId,
                             transactionType = TransactionType.PAYMENT_RECEIVED,
-                            date = order.orderDate,
+                            date = orderWithInvoice.orderDate,
                             debit = 0.0,
-                            credit = order.amountPaid
+                            credit = orderWithInvoice.amountPaid
                         )
                     )
                 }

@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 
@@ -27,7 +26,6 @@ data class SalesReturnItem(
     val serverId: Int?,
     val returnLocalId: Long,
     val product: Product?,
-    val productUnit: ProductUnit?,
     val quantity: Double,
     val priceAtReturn: Double,
     val itemTotalValue: Double,

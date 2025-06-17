@@ -15,6 +15,8 @@ import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import com.wael.astimal.pos.features.user.data.local.EmployeeDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class PurchaseReturnRepositoryImpl(
     private val database: AppDatabase,
@@ -34,6 +36,18 @@ class PurchaseReturnRepositoryImpl(
         return purchaseReturnDao.getPurchaseReturnWithDetails(localId)?.toDomain()
     }
 
+    private suspend fun generateNextInvoiceNumber(): String {
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val prefix = "INV-PUR-RET-$today-"
+        val lastInvoice = purchaseReturnDao.getLastInvoiceNumber("$prefix%")
+        val nextSeq = if (lastInvoice == null) {
+            1
+        } else {
+            lastInvoice.substringAfter(prefix).toIntOrNull()?.plus(1) ?: 1
+        }
+        return "$prefix${String.format("%03d", nextSeq)}"
+    }
+
     override suspend fun addPurchaseReturn(
         purchaseReturn: PurchaseReturnEntity,
         items: List<PurchaseReturnProductEntity>
@@ -46,7 +60,11 @@ class PurchaseReturnRepositoryImpl(
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Store not found.")
 
-                insertedId = purchaseReturnDao.insertPurchaseReturnWithItems(purchaseReturn, items)
+                val newInvoiceNumber = generateNextInvoiceNumber()
+                val returnWithInvoice = purchaseReturn.copy(invoiceNumber = newInvoiceNumber)
+
+                insertedId =
+                    purchaseReturnDao.insertPurchaseReturnWithItems(returnWithInvoice, items)
 
                 items.forEach { item ->
                     stockRepository.adjustStock(
@@ -56,7 +74,7 @@ class PurchaseReturnRepositoryImpl(
                     )
                 }
 
-                addPurchaseReturnLedgerEntries(purchaseReturn, insertedId)
+                addPurchaseReturnLedgerEntries(returnWithInvoice, insertedId)
             }
             val createdReturn = getPurchaseReturnDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase return after insert."))

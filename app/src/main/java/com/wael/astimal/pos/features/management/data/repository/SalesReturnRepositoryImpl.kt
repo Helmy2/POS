@@ -2,8 +2,8 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
+import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
@@ -16,6 +16,8 @@ import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class SalesReturnRepositoryImpl(
     private val database: AppDatabase,
@@ -37,19 +39,35 @@ class SalesReturnRepositoryImpl(
         }
     }
 
+    private suspend fun generateNextInvoiceNumber(): String {
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val prefix = "INV-RET-$today-"
+        val lastInvoice = orderReturnDao.getLastInvoiceNumber("$prefix%")
+        val nextSeq = if (lastInvoice == null) {
+            1
+        } else {
+            lastInvoice.substringAfter(prefix).toIntOrNull()?.plus(1) ?: 1
+        }
+        return "$prefix${String.format("%03d", nextSeq)}"
+    }
+
     override suspend fun addReturn(
         returnEntity: OrderReturnEntity,
-        items: List<OrderProductEntity>
+        items: List<OrderReturnProductEntity>
     ): Result<SalesReturn> {
         return try {
             var insertedReturnLocalId: Long = -1
             database.withTransaction {
-                insertedReturnLocalId = orderReturnDao.insertOrUpdateReturn(returnEntity)
-                val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedReturnLocalId) }
+                val newInvoiceNumber = generateNextInvoiceNumber()
+                val returnWithInvoice = returnEntity.copy(invoiceNumber = newInvoiceNumber)
+
+                insertedReturnLocalId = orderReturnDao.insertOrUpdateReturn(returnWithInvoice)
+                val itemsWithCorrectId =
+                    items.map { it.copy(orderReturnLocalId = insertedReturnLocalId) }
                 orderReturnDao.insertReturnItems(itemsWithCorrectId)
 
-                returnAmountLogic.processNewReturn(returnEntity, items, insertedReturnLocalId)
-                addReturnLedgerEntries(returnEntity, insertedReturnLocalId)
+                returnAmountLogic.processNewReturn(returnWithInvoice, items, insertedReturnLocalId)
+                addReturnLedgerEntries(returnWithInvoice, insertedReturnLocalId)
             }
             val createdReturn = getReturnDetailsFlow(insertedReturnLocalId).first()
                 ?: return Result.failure(IllegalStateException("Failed to retrieve return after insert."))
@@ -61,7 +79,7 @@ class SalesReturnRepositoryImpl(
 
     override suspend fun updateReturn(
         returnEntity: OrderReturnEntity,
-        items: List<OrderProductEntity>
+        items: List<OrderReturnProductEntity>
     ): Result<SalesReturn> {
         return try {
             val returnId = returnEntity.localId

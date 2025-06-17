@@ -56,4 +56,7 @@ interface PurchaseDao {
             insertPurchaseItems(itemsWithId)
         }
     }
+
+    @Query("SELECT MAX(invoiceNumber) FROM purchases WHERE invoiceNumber LIKE :pattern")
+    suspend fun getLastInvoiceNumber(pattern: String): String?
 }

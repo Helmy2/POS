@@ -6,8 +6,8 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
+import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
@@ -214,7 +214,7 @@ class SalesReturnViewModel(
                         EditableItem(
                             tempEditorId = item.localId.toString(),
                             product = item.product,
-                            isSelectedUnitIsMax = item.productUnit?.localId == item.product?.maximumProductUnit?.localId,
+                            isSelectedUnitIsMax = true,
                             maxUnitPrice = item.priceAtReturn.toString(),
                             minUnitPrice = (item.priceAtReturn / conversionFactor).toString(),
                             maxUnitQuantity = item.quantity.toString(),
@@ -268,13 +268,13 @@ class SalesReturnViewModel(
             val itemEntities = returnInput.items.mapNotNull {
                 val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
                 if (it.product == null || quantity <= 0) return@mapNotNull null
-                OrderProductEntity(
+                OrderReturnProductEntity(
                     productLocalId = it.product.localId,
                     quantity = quantity,
-                    unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
-                    itemTotalPrice = it.lineTotal,
+                    priceAtReturn = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
+                    itemTotalValue = it.lineTotal,
                     serverId = null,
-                    orderLocalId = 0L
+                    orderReturnLocalId = 0L,
                 )
             }
 
@@ -286,7 +286,7 @@ class SalesReturnViewModel(
             val returnEntity = OrderReturnEntity(
                 localId = _state.value.selectedReturn?.localId ?: 0L,
                 serverId = null,
-                invoiceNumber = null,
+                invoiceNumber = "",
                 clientLocalId = selectedClient.id,
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,

@@ -6,8 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
+import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnWithDetailsEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -18,7 +18,7 @@ interface OrderReturnDao {
     suspend fun insertOrUpdateReturn(orderReturn: OrderReturnEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertReturnItems(items: List<OrderProductEntity>)
+    suspend fun insertReturnItems(items: List<OrderReturnProductEntity>)
 
     @Query("SELECT * FROM order_returns WHERE localId = :localId")
     suspend fun getReturnEntityByLocalId(localId: Long): OrderReturnEntity?
@@ -29,11 +29,11 @@ interface OrderReturnDao {
     @Transaction
     suspend fun updateReturnWithItems(
         orderReturn: OrderReturnEntity,
-        items: List<OrderProductEntity>
+        items: List<OrderReturnProductEntity>
     ) {
         updateReturn(orderReturn)
         deleteItemsForReturn(orderReturn.localId)
-        val itemsWithCorrectId = items.map { it.copy(orderLocalId = orderReturn.localId) }
+        val itemsWithCorrectId = items.map { it.copy(orderReturnLocalId = orderReturn.localId) }
         if (itemsWithCorrectId.isNotEmpty()) {
             insertReturnItems(itemsWithCorrectId)
         }
@@ -55,6 +55,9 @@ interface OrderReturnDao {
     fun getReturnsByClientId(clientId: Long): Flow<List<OrderReturnWithDetailsEntity>>
 
 
-    @Query("SELECT * FROM order_products WHERE orderLocalId = :orderReturnLocalId")
-    suspend fun getItemsForReturn(orderReturnLocalId: Long): List<OrderProductEntity>
+    @Query("SELECT * FROM order_return_products WHERE orderReturnLocalId = :orderReturnLocalId")
+    suspend fun getItemsForReturn(orderReturnLocalId: Long): List<OrderReturnProductEntity>
+
+    @Query("SELECT MAX(invoiceNumber) FROM order_returns WHERE invoiceNumber LIKE :pattern")
+    suspend fun getLastInvoiceNumber(pattern: String): String?
 }
