@@ -3,12 +3,12 @@ package com.wael.astimal.pos.features.inventory.presentation.stock_management
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -78,13 +78,15 @@ fun StockManagementScreen(
         },
         loading = state.loading,
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(200.dp),
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Adaptive(150.dp),
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalItemSpacing = 8.dp,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item {
+            item(
+                span = StaggeredGridItemSpan.FullLine
+            ) {
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.filter_by_store),
                     items = state.stores,
@@ -98,21 +100,22 @@ fun StockManagementScreen(
             items(
                 state.stocks,
                 key = { "${it.store.id.local}-${it.product.id.local}" }) { stockItem ->
-                StockItemCard(stockItem = stockItem, onEvent = onEvent)
+                StockItemCard(stockItem = stockItem, onEvent = onEvent, canEdit = state.canEdit)
             }
         }
     }
 }
 
 @Composable
-fun StockItemCard(stockItem: StoreStock, onEvent: (StockManagementEvent) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun StockItemCard(
+    stockItem: StoreStock,
+    onEvent: (StockManagementEvent) -> Unit,
+    canEdit: Boolean
+) {
+    Card(modifier = Modifier) {
         Box {
             Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(16.dp),
             ) {
                 Text(
                     text = stockItem.product.localizedName.displayName(LocalAppLocale.current),
@@ -134,10 +137,9 @@ fun StockItemCard(stockItem: StoreStock, onEvent: (StockManagementEvent) -> Unit
             IconButton(
                 onClick = { onEvent(StockManagementEvent.ShowAdjustmentDialog(stockItem)) },
                 modifier = Modifier
-                    .align(
-                        Alignment.TopEnd
-                    )
-                    .padding(8.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+                enabled = canEdit,
             ) {
                 Icon(
                     Icons.Default.Settings,

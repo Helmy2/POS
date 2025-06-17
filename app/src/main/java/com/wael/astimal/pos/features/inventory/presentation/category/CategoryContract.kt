@@ -1,9 +1,11 @@
 package com.wael.astimal.pos.features.inventory.presentation.category
 
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class CategoryScreenState(
     val loading: Boolean = false,
+    val currentUser: User? = null,
     val searchResults: List<Category> = emptyList(),
     val selectedCategory: Category? = null,
     val inputArName: String = "",
@@ -12,6 +14,7 @@ data class CategoryScreenState(
     val isQueryActive: Boolean = false,
 ) {
     val isNew: Boolean get() = selectedCategory == null
+    val canEdit get() = currentUser?.isAdmin == true
 }
 
 sealed interface CategoryScreenEvent {

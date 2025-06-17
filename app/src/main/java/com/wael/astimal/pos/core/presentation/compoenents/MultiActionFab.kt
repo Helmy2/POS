@@ -44,13 +44,13 @@ data class FabAction(
  *
  * @param modifier The modifier to be applied to the component.
  * @param actions A list of [FabAction]s to be displayed when the FAB is expanded.
- * @param isEnabled Whether the main FAB can be interacted with.
+ * @param enabled Whether the main FAB can be interacted with.
  */
 @Composable
 fun MultiActionFab(
     modifier: Modifier = Modifier,
     actions: List<FabAction>,
-    isEnabled: Boolean = true
+    enabled: Boolean = true
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -108,10 +108,10 @@ fun MultiActionFab(
             if (it) {
                 FloatingActionButton(
                     onClick = {
-                        actions.first().onClick()
+                        if (enabled) actions.first().onClick()
                     },
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 ) {
                     Icon(
                         imageVector = actions.first().icon,
@@ -120,9 +120,9 @@ fun MultiActionFab(
                 }
             } else {
                 FloatingActionButton(
-                    onClick = { if (isEnabled) isExpanded = !isExpanded },
-                    containerColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    onClick = { if (enabled) isExpanded = !isExpanded },
+                    containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,

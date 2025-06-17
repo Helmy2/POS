@@ -7,6 +7,7 @@ import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,7 +20,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class StoreViewModel(
-    private val storeRepository: StoreRepository
+    private val storeRepository: StoreRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StoreState())
@@ -31,6 +33,11 @@ class StoreViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            sessionManager.getCurrentUser().collect { user ->
+                _state.update { it.copy(currentUser = user) }
+            }
+        }
         onEvent(StoreEvent.Search(""))
     }
 

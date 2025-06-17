@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.CategoryReposit
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,6 +28,7 @@ class ProductViewModel(
     private val categoryRepository: CategoryRepository,
     private val unitRepository: UnitRepository,
     private val storeRepository: StoreRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProductState())
@@ -38,6 +40,11 @@ class ProductViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            sessionManager.getCurrentUser().collect { user ->
+                _state.update { it.copy(currentUser = user) }
+            }
+        }
         searchProducts("")
         loadDropdownData()
     }

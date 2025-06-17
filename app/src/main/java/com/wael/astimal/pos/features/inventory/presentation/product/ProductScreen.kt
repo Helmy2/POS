@@ -67,6 +67,7 @@ fun ProductScreen(
         onCreate = { onEvent(ProductEvent.SaveProduct) },
         onUpdate = { onEvent(ProductEvent.SaveProduct) },
         onNew = { onEvent(ProductEvent.SelectProduct(null)) },
+        canEdit = state.canEdit,
         searchResults = {
             ItemGrid(
                 list = state.searchResults,
@@ -87,13 +88,15 @@ fun ProductScreen(
                     value = state.inputArName,
                     onValueChange = { onEvent(ProductEvent.UpdateInputArName(it)) },
                     label = stringResource(id = R.string.ar_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit
                 )
                 LabeledTextField(
                     value = state.inputEnName,
                     onValueChange = { onEvent(ProductEvent.UpdateInputEnName(it)) },
                     label = stringResource(id = R.string.en_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit
                 )
 
 
@@ -105,6 +108,7 @@ fun ProductScreen(
                     itemToDisplayString = { it.localizedName.displayName(language) },
                     itemToId = { it.id.local },
                     canClearSelection = false,
+                    enabled = state.canEdit
                 )
 
                 LabeledTextField(
@@ -113,7 +117,8 @@ fun ProductScreen(
                     label = stringResource(R.string.average_cost_price),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next
-                    )
+                    ),
+                    enabled = state.canEdit
                 )
                 LabeledTextField(
                     value = state.inputSellingPrice,
@@ -121,7 +126,8 @@ fun ProductScreen(
                     label = stringResource(R.string.selling_price),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next
-                    )
+                    ),
+                    enabled = state.canEdit
                 )
                 LabeledTextField(
                     value = state.inputOpeningBalance,
@@ -129,7 +135,8 @@ fun ProductScreen(
                     label = stringResource(R.string.opening_balance_qty),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next
-                    )
+                    ),
+                    enabled = state.canEdit
                 )
 
                 CustomExposedDropdownMenu(
@@ -140,6 +147,7 @@ fun ProductScreen(
                     itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     canClearSelection = false,
+                    enabled = state.canEdit
                 )
 
                 CustomExposedDropdownMenu(
@@ -150,10 +158,12 @@ fun ProductScreen(
                     itemToDisplayString = { "${it.enName}: ${it.arName}" },
                     itemToId = { it.localId },
                     canClearSelection = true,
+                    enabled = state.canEdit
                 )
 
                 LabeledTextField(
-                    value = state.subUnitsPerMainUnit, onValueChange = { value ->
+                    value = state.subUnitsPerMainUnit,
+                    onValueChange = { value ->
                         value.toDoubleOrNull()?.let {
                             onEvent(ProductEvent.UpdateSubUnitsPerMainUnit(value))
                         }
@@ -161,7 +171,8 @@ fun ProductScreen(
                     label = stringResource(R.string.min_unit_per_max_unit),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
-                    )
+                    ),
+                    enabled = state.canEdit
                 )
 
                 CustomExposedDropdownMenu(
@@ -172,6 +183,7 @@ fun ProductScreen(
                     itemToDisplayString = { "${it.enName}: ${it.arName}" },
                     itemToId = { it.localId },
                     canClearSelection = false,
+                    enabled = state.canEdit
                 )
             }
         },

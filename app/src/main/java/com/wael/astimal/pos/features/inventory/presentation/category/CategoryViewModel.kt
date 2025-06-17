@@ -6,6 +6,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 
 class CategoryViewModel(
     private val categoryRepository: CategoryRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CategoryScreenState())
@@ -30,6 +32,11 @@ class CategoryViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            sessionManager.getCurrentUser().collect { user ->
+                _state.update { it.copy(currentUser = user) }
+            }
+        }
         onEvent(CategoryScreenEvent.Search(""))
     }
 

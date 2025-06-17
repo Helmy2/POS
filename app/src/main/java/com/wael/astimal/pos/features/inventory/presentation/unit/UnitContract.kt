@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.unit
 
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class UnitDetailsState(
     val loading: Boolean = false,
@@ -10,8 +11,10 @@ data class UnitDetailsState(
     val enName: String = "",
     val query: String = "",
     val isQueryActive: Boolean = false,
+    val currentUser: User? = null,
 ) {
     val isNew: Boolean get() = selectedProductUnit == null
+    val canEdit get() = currentUser?.isAdmin == true
 }
 
 sealed interface UnitEvent {

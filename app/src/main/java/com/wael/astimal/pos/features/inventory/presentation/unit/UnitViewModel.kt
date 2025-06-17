@@ -8,6 +8,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
+import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,7 +22,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UnitViewModel(
-    private val unitRepository: UnitRepository
+    private val unitRepository: UnitRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UnitDetailsState())
@@ -33,6 +35,11 @@ class UnitViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            sessionManager.getCurrentUser().collect { user ->
+                _state.update { it.copy(currentUser = user) }
+            }
+        }
         handleEvent(UnitEvent.Search(""))
     }
 

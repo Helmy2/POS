@@ -160,7 +160,7 @@
     <string name="stock_management">Stock management</string>
     <string name="error_missing_data">Error missing data</string>
     <string name="store">Store</string>
-    <string name="current_quantity">Current quantity</string>
+    <string name="current_quantity">Quantity</string>
     <string name="adjust">Adjust</string>
     <string name="adjust_stock">Adjust stock</string>
     <string name="quantity_change_by">Quantity chang by</string>

@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.presentation.store
 
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class StoreState(
     val loading: Boolean = false,
@@ -12,8 +13,10 @@ data class StoreState(
     val inputType: StoreType? = null,
     val query: String = "",
     val isQueryActive: Boolean = false,
+    val currentUser: User? = null,
 ) {
     val isNew: Boolean get() = selectedStore == null
+    val canEdit get() = currentUser?.isAdmin == true
 }
 
 sealed interface StoreEvent {

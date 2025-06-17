@@ -37,7 +37,19 @@ class StockManagementViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
-        loadInitialData()
+        viewModelScope.launch {
+            storeRepository.getStores().catch {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stores))
+            }.collect { stores ->
+                _state.update { it.copy(stores = stores) }
+            }
+        }
+        viewModelScope.launch {
+            sessionManager.getCurrentUser().collect { user ->
+                _state.update { it.copy(currentUser = user) }
+            }
+        }
+        loadStocks()
     }
 
     fun onEvent(event: StockManagementEvent) {
@@ -84,17 +96,6 @@ class StockManagementViewModel(
                 saveStockAdjustment()
             }
         }
-    }
-
-    private fun loadInitialData() {
-        viewModelScope.launch {
-            storeRepository.getStores().catch {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stores))
-                }.collect { stores ->
-                    _state.update { it.copy(stores = stores) }
-                }
-        }
-        loadStocks()
     }
 
     private fun loadStocks() {

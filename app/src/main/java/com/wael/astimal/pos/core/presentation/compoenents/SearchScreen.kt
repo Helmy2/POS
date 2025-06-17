@@ -178,7 +178,7 @@ fun SearchScreen(
         floatingActionButton = {
             MultiActionFab(
                 actions = fabActions,
-                isEnabled = true
+                enabled = canEdit
             )
         }
     ) {

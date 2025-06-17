@@ -63,6 +63,7 @@ fun UnitScreen(
         onCreate = { onEvent(UnitEvent.CreateUnit) },
         onUpdate = { onEvent(UnitEvent.UpdateUnit) },
         onNew = { onEvent(UnitEvent.NewUnit) },
+        canEdit = state.canEdit,
         searchResults = {
             ItemGrid(
                 list = state.searchResults,
@@ -83,13 +84,15 @@ fun UnitScreen(
                     value = state.arName,
                     onValueChange = { onEvent(UnitEvent.UpdateArName(it)) },
                     label = stringResource(R.string.ar_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit,
                 )
                 LabeledTextField(
                     value = state.enName,
                     onValueChange = { onEvent(UnitEvent.UpdateArName(it)) },
                     label = stringResource(R.string.en_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit,
                 )
             }
         },

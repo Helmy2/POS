@@ -18,6 +18,7 @@ fun LabeledTextField(
     numberOfLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    enabled: Boolean
 ) {
     Column(
         modifier = modifier,
@@ -30,7 +31,8 @@ fun LabeledTextField(
             numberOfLines = numberOfLines,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
-            modifier = modifier
+            modifier = modifier,
+            enabled = enabled
         )
     }
 }

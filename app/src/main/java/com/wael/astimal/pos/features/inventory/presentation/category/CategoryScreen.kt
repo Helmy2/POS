@@ -65,6 +65,7 @@ fun CategoryScreen(
         onCreate = { onEvent(CategoryScreenEvent.CreateCategory) },
         onUpdate = { onEvent(CategoryScreenEvent.UpdateCategory) },
         onNew = { onEvent(CategoryScreenEvent.SelectCategory(null)) },
+        canEdit = state.canEdit,
         searchResults = {
             ItemGrid(
                 list = state.searchResults,
@@ -85,13 +86,15 @@ fun CategoryScreen(
                     value = state.inputArName,
                     onValueChange = { onEvent(CategoryScreenEvent.UpdateInputArName(it)) },
                     label = stringResource(id = R.string.ar_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit,
                 )
                 LabeledTextField(
                     value = state.inputEnName,
                     onValueChange = { onEvent(CategoryScreenEvent.UpdateInputEnName(it)) },
                     label = stringResource(id = R.string.en_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    enabled = state.canEdit,
                 )
             }
         },

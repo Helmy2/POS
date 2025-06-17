@@ -110,8 +110,8 @@ fun StockTransferScreen(
                 availableProducts = state.availableProducts,
                 availableEmployees = state.availableEmployees,
                 onEvent = onEvent,
-                canChangeFromStore = state.canChangeFromStore,
-                canEditEmployee = state.canEditEmployee,
+                canChangeFromStore = state.canEdit,
+                canEditEmployee = state.canEdit,
                 canEditTheRest = state.canEdit
             )
         },

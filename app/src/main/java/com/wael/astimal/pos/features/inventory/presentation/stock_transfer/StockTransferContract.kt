@@ -19,9 +19,7 @@ data class StockTransferScreenState(
     val currentUser: User? = null,
 ) {
     val isNew: Boolean get() = selectedTransfer == null
-    val canEditEmployee: Boolean get() = currentUser?.isAdmin == true
-    val canEdit: Boolean get() = currentUser?.isAdmin == true || currentTransferInput.selectedEmployeeId == currentUser?.id
-    val canChangeFromStore: Boolean get() = currentUser?.isAdmin == true
+    val canEdit get() = currentUser?.isAdmin == true
 }
 
 data class EditableStockTransfer(

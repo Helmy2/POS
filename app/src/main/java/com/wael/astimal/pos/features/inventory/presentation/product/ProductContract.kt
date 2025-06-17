@@ -4,11 +4,13 @@ import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class ProductState(
     val loading: Boolean = false,
     val searchResults: List<Product> = emptyList(),
     val selectedProduct: Product? = null,
+    val currentUser: User? = null,
 
     // Input fields for Add/Edit
     val inputArName: String = "",
@@ -31,6 +33,7 @@ data class ProductState(
     val isQueryActive: Boolean = false,
 ) {
     val isNew: Boolean get() = selectedProduct == null
+    val canEdit get() = currentUser?.isAdmin == true
 }
 
 sealed interface ProductEvent {

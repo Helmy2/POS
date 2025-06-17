@@ -69,6 +69,7 @@ fun StoreScreen(
         onCreate = { onEvent(StoreEvent.CreateStore) },
         onUpdate = { onEvent(StoreEvent.UpdateStore) },
         onNew = { onEvent(StoreEvent.SelectStore(null)) },
+        canEdit = state.canEdit,
         searchResults = {
             ItemGrid(
                 list = state.searchResults,
@@ -89,13 +90,15 @@ fun StoreScreen(
                     value = state.inputArName,
                     onValueChange = { onEvent(StoreEvent.UpdateInputArName(it)) },
                     label = stringResource(id = R.string.ar_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit,
                 )
                 LabeledTextField(
                     value = state.inputEnName,
                     onValueChange = { onEvent(StoreEvent.UpdateInputEnName(it)) },
                     label = stringResource(id = R.string.en_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canEdit,
                 )
 
                 CustomExposedDropdownMenu(
@@ -106,6 +109,7 @@ fun StoreScreen(
                     itemToDisplayString = { it.name },
                     itemToId = { it.ordinal.toLong() },
                     canClearSelection = false,
+                    enabled = state.canEdit,
                 )
             }
         },
