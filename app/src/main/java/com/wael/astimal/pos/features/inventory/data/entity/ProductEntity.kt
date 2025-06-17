@@ -6,8 +6,11 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+
 
 @Entity(
     tableName = "products",
@@ -45,8 +48,14 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Product
     ]
 )
 data class ProductEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0,
-    val serverId: Int?,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
+
+
     val arName: String,
     val enName: String,
     val categoryId: Long?,
@@ -57,55 +66,40 @@ data class ProductEntity(
     val minimumUnitId: Long?,
     val maximumUnitId: Long?,
     val subUnitsPerMainUnit: Double,
-
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+) : ItemEntity
 
 data class ProductWithDetailsEntity(
-    @Embedded
-    val product: ProductEntity,
+    @Embedded val product: ProductEntity,
     @Relation(
-        parentColumn = "categoryId",
-        entityColumn = "localId"
-    )
-    val category: CategoryEntity?,
+        parentColumn = "categoryId", entityColumn = "localId"
+    ) val category: CategoryEntity?,
     @Relation(
-        parentColumn = "storeId",
-        entityColumn = "localId"
-    )
-    val store: StoreEntity?,
+        parentColumn = "storeId", entityColumn = "localId"
+    ) val store: StoreEntity?,
     @Relation(
-        parentColumn = "minimumUnitId",
-        entityColumn = "localId"
-    )
-    val minimumUnit: UnitEntity?,
+        parentColumn = "minimumUnitId", entityColumn = "localId"
+    ) val minimumUnit: UnitEntity?,
     @Relation(
-        parentColumn = "maximumUnitId",
-        entityColumn = "localId"
-    )
-    val maximumUnit: UnitEntity?
+        parentColumn = "maximumUnitId", entityColumn = "localId"
+    ) val maximumUnit: UnitEntity?,
 )
 
 fun ProductWithDetailsEntity.toDomain(): Product {
     return Product(
-        localId = this.product.localId,
-        serverId = this.product.serverId,
         localizedName = LocalizedString(
-            arName = this.product.arName,
-            enName = this.product.enName
+            arName = product.arName, enName = product.enName
         ),
-        category = this.category?.toDomain(),
-        store = this.store?.toDomain(),
-        averagePrice = this.product.averagePrice,
-        sellingPrice = this.product.sellingPrice,
-        minimumProductUnit = this.minimumUnit?.toDomain(),
-        maximumProductUnit = this.maximumUnit?.toDomain()
-            ?: throw IllegalStateException("Maximum unit cannot be null"),
-        subUnitsPerMainUnit = this.product.subUnitsPerMainUnit,
-        isSynced = this.product.isSynced,
-        openingBalanceQuantity = this.product.openingBalanceQuantity,
-        lastModified = this.product.lastModified,
+        category = category?.toDomain() ?: throw NullPointerException(),
+        store = store?.toDomain() ?: throw NullPointerException(),
+        averagePrice = product.averagePrice,
+        sellingPrice = product.sellingPrice,
+        minimumProductUnit = minimumUnit?.toDomain(),
+        maximumProductUnit = maximumUnit?.toDomain() ?: throw NullPointerException(),
+        subUnitsPerMainUnit = product.subUnitsPerMainUnit,
+        isSynced = product.isSynced,
+        openingBalanceQuantity = product.openingBalanceQuantity,
+        updatedAt = product.updatedAt,
+        createdAt = product.createdAt,
+        id = Id(product.localId, product.serverId)
     )
 }

@@ -114,7 +114,7 @@ class SalesReturnViewModel(
                     )
                 }
                 event.product?.let {
-                    observeStockForItem(event.tempEditorId, it.localId)
+                    observeStockForItem(event.tempEditorId, it.id.local)
                 }
             }
 
@@ -267,7 +267,7 @@ class SalesReturnViewModel(
                 val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
                 if (it.product == null || quantity <= 0) return@mapNotNull null
                 OrderReturnProductEntity(
-                    productLocalId = it.product.localId,
+                    productLocalId = it.product.id.local,
                     quantity = quantity,
                     priceAtReturn = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                     itemTotalValue = it.lineTotal,

@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.management.presentation.business_partner
 
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 

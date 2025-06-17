@@ -60,7 +60,7 @@ fun CategoryScreen(
         onSearch = { onEvent(CategoryScreenEvent.Search(it)) },
         onSearchActiveChange = { onEvent(CategoryScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedCategory?.lastModified,
+        lastModifiedDate = state.selectedCategory?.updatedAt,
         onDelete = { onEvent(CategoryScreenEvent.DeleteCategory) },
         onCreate = { onEvent(CategoryScreenEvent.CreateCategory) },
         onUpdate = { onEvent(CategoryScreenEvent.UpdateCategory) },
@@ -73,7 +73,7 @@ fun CategoryScreen(
                     onEvent(CategoryScreenEvent.SelectCategory(category))
                 },
                 label = { Label(it.localizedName.displayName(language)) },
-                isSelected = { category -> category.localId == state.selectedCategory?.localId },
+                isSelected = { category -> category.id.local == state.selectedCategory?.id?.local },
             )
         },
         mainContent = {

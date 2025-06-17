@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
@@ -139,13 +140,13 @@ class ProductViewModel(
                     selectedProduct = product,
                     inputArName = product.localizedName.arName ?: "",
                     inputEnName = product.localizedName.enName ?: "",
-                    selectedCategoryId = product.category?.localId,
+                    selectedCategoryId = product.category.id.local,
                     inputAveragePrice = product.averagePrice.toString(),
                     inputSellingPrice = product.sellingPrice.toString(),
                     inputOpeningBalance = product.openingBalanceQuantity?.toString() ?: "",
-                    selectedStoreId = product.store?.localId,
-                    selectedMinStockUnitId = product.minimumProductUnit?.localId,
-                    selectedMaxStockUnitId = product.maximumProductUnit.localId,
+                    selectedStoreId = product.store.id.local,
+                    selectedMinStockUnitId = product.minimumProductUnit?.id?.local,
+                    selectedMaxStockUnitId = product.maximumProductUnit.id.local,
                 )
             }
         }
@@ -159,12 +160,17 @@ class ProductViewModel(
                 return@launch
             }
 
+            if (currentState.selectedCategoryId == null || currentState.selectedStoreId == null || currentState.selectedMaxStockUnitId == null) {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.some_field_are_required))
+                return@launch
+            }
+
             _state.update { it.copy(loading = true) }
 
             // Construct ProductEntity from current state
             val productEntity = ProductEntity(
-                localId = currentState.selectedProduct?.localId ?: 0L,
-                serverId = currentState.selectedProduct?.serverId,
+                localId = currentState.selectedProduct?.id?.local ?: 0L,
+                serverId = currentState.selectedProduct?.id?.server,
                 arName = currentState.inputArName,
                 enName = currentState.inputEnName,
                 categoryId = currentState.selectedCategoryId,
@@ -175,9 +181,11 @@ class ProductViewModel(
                 minimumUnitId = currentState.selectedMinStockUnitId,
                 maximumUnitId = currentState.selectedMaxStockUnitId,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 subUnitsPerMainUnit = currentState.subUnitsPerMainUnit.toDoubleOrNull() ?: 1.0,
             )
+
+            Log.d("TAG", "saveProduct: $productEntity")
 
             val result = if (currentState.isNew || currentState.selectedProduct == null) {
                 productRepository.addProduct(productEntity)
@@ -202,6 +210,7 @@ class ProductViewModel(
                     )
                 }
             }, onFailure = { e ->
+                Log.d("TAG", "saveProduct: $e")
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_product))
             })
         }
@@ -211,7 +220,7 @@ class ProductViewModel(
         val productToDelete = _state.value.selectedProduct ?: return
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
-            val result = productRepository.deleteProduct(productToDelete.localId)
+            val result = productRepository.deleteProduct(productToDelete.id.local)
             result.fold(onSuccess = {
                 _state.update {
                     it.copy(

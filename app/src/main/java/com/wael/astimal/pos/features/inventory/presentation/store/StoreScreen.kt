@@ -64,7 +64,7 @@ fun StoreScreen(
         onSearch = { onEvent(StoreEvent.Search(it)) },
         onSearchActiveChange = { onEvent(StoreEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedStore?.lastModified,
+        lastModifiedDate = state.selectedStore?.updatedAt,
         onDelete = { onEvent(StoreEvent.DeleteStore) },
         onCreate = { onEvent(StoreEvent.CreateStore) },
         onUpdate = { onEvent(StoreEvent.UpdateStore) },
@@ -77,7 +77,7 @@ fun StoreScreen(
                     onEvent(StoreEvent.SelectStore(store))
                 },
                 label = { Label(it.name.displayName(language)) },
-                isSelected = { store -> store.localId == state.selectedStore?.localId },
+                isSelected = { store -> store.id.local == state.selectedStore?.id?.local },
             )
         },
         mainContent = {

@@ -2,36 +2,34 @@ package com.wael.astimal.pos.features.inventory.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 
 @Entity(tableName = "stores")
 data class StoreEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    override val serverId: Long?,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
 
-    val serverId: Int?,
-    val arName: String?,
-    val enName: String?,
+    val arName: String,
+    val enName: String,
     val type: StoreType,
-    var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis(),
-    var isDeletedLocally: Boolean = false
-)
+) : ItemEntity
 
 enum class StoreType { MAIN, SUB }
 
-fun StoreEntity.toDomain() : Store {
+fun StoreEntity.toDomain(): Store {
     return Store(
-        localId = this.localId,
-        serverId = this.serverId,
-        name = LocalizedString(
-            arName = this.arName ?: "",
-            enName = this.enName ?: ""
-        ),
-        type = this.type,
-        isSynced = this.isSynced,
-        lastModified = this.lastModified,
-        isDeletedLocally = this.isDeletedLocally
+        id = Id(localId, serverId),
+        name = LocalizedString(arName = arName, enName = enName),
+        type = type,
+        isSynced = isSynced,
+        updatedAt = updatedAt,
+        createdAt = createdAt
     )
 }

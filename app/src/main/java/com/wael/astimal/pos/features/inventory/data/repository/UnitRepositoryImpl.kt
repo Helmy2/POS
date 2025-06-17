@@ -27,7 +27,7 @@ class UnitRepositoryImpl(
             val unitToInsert = unit.copy(
                 serverId = null,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
             unitDao.insert(listOf(unitToInsert))
@@ -41,7 +41,7 @@ class UnitRepositoryImpl(
         return try {
             val unitToUpdate = unit.copy(
                 isSynced = false,
-                lastModified = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis()
             )
             unitDao.insert(listOf(unitToUpdate))
             Result.success(unitToUpdate)
@@ -55,7 +55,7 @@ class UnitRepositoryImpl(
             val unitToDelete = unit.copy(
                 isDeletedLocally = true,
                 isSynced = false,
-                lastModified = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis()
             )
             unitDao.insert(listOf(unitToDelete))
             Result.success(Unit)

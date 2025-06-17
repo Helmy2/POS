@@ -65,13 +65,11 @@ class CategoryRepositoryImpl(
             }
 
             val entityToUpdate = CategoryEntity(
-                localId = category.localId,
-                serverId = category.serverId,
+                localId = category.id.local,
+                serverId = category.id.server,
                 arName = newArName,
                 enName = newEnName,
-                isSynced = false,
                 updatedAt = System.currentTimeMillis(),
-                isDeletedLocally = category.isDeletedLocally
             )
             categoryDao.updateCategory(entityToUpdate)
             Result.success(entityToUpdate.toDomain())
@@ -82,7 +80,7 @@ class CategoryRepositoryImpl(
 
     override suspend fun deleteCategory(category: Category): Result<Unit> {
         return try {
-            val entityToDelete = categoryDao.getCategoryByLocalId(category.localId)
+            val entityToDelete = categoryDao.getCategoryByLocalId(category.id.local)
                 ?: return Result.failure(NoSuchElementException("Category not found for deletion"))
 
             val categoryToMarkAsDeleted = entityToDelete.copy(

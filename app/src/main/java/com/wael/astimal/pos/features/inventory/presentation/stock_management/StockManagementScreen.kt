@@ -88,15 +88,16 @@ fun StockManagementScreen(
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.filter_by_store),
                     items = state.stores,
-                    selectedItemId = state.selectedStore?.localId,
+                    selectedItemId = state.selectedStore?.id?.local,
                     onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     canClearSelection = true,
                 )
             }
             items(
-                state.stocks, key = { "${it.store.localId}-${it.product.localId}" }) { stockItem ->
+                state.stocks,
+                key = { "${it.store.id.local}-${it.product.id.local}" }) { stockItem ->
                 StockItemCard(stockItem = stockItem, onEvent = onEvent)
             }
         }

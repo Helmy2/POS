@@ -1,20 +1,22 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class StockAdjustment(
-    val localId: Long,
-    val serverId: Int?,
     val store: Store,
     val product: Product,
     val user: User,
     val reason: StockAdjustmentReason,
     val notes: String?,
     val quantityChange: Double,
-    val date: Long,
-    val isSynced: Boolean
-)
+    override val id: Id,
+    override val isSynced: Boolean,
+    override val createdAt: Long,
+    override val updatedAt: Long
+) : Item
 
 enum class StockAdjustmentReason {
     INITIAL_COUNT,

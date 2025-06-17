@@ -52,9 +52,9 @@ class StockTransferRepositoryImpl(
                 fromStoreId = fromStoreId,
                 toStoreId = toStoreId,
                 initiatedByUserId = initiatedByUserId,
-                transferDate = transferDate ?: System.currentTimeMillis(),
+                createdAt = transferDate ?: System.currentTimeMillis(),
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
 
@@ -135,8 +135,8 @@ class StockTransferRepositoryImpl(
                     toStoreId = toStoreId,
                     initiatedByUserId = initiatedByUserId,
                     isSynced = false,
-                    transferDate = transferDate ?: System.currentTimeMillis(),
-                    lastModified = System.currentTimeMillis()
+                    createdAt = transferDate ?: System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
                 )
                 stockTransferDao.updateTransferWithItems(updatedTransferEntity, items)
             }
@@ -174,7 +174,7 @@ class StockTransferRepositoryImpl(
                     val transferToMarkAsDeleted = transferToDelete.transfer.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        lastModified = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis()
                     )
                     stockTransferDao.updateStockTransfer(transferToMarkAsDeleted)
                 }

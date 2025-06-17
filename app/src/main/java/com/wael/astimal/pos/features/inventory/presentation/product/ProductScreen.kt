@@ -62,7 +62,7 @@ fun ProductScreen(
         onSearch = { onEvent(ProductEvent.Search(it)) },
         onSearchActiveChange = { onEvent(ProductEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedProduct?.lastModified,
+        lastModifiedDate = state.selectedProduct?.updatedAt,
         onDelete = { onEvent(ProductEvent.DeleteProduct) },
         onCreate = { onEvent(ProductEvent.SaveProduct) },
         onUpdate = { onEvent(ProductEvent.SaveProduct) },
@@ -75,7 +75,7 @@ fun ProductScreen(
                     onEvent(ProductEvent.SelectProduct(product))
                 },
                 label = { Label(it.localizedName.displayName(language)) },
-                isSelected = { product -> product.localId == state.selectedProduct?.localId },
+                isSelected = { product -> product.id.local == state.selectedProduct?.id?.local },
             )
         },
         mainContent = {
@@ -101,9 +101,9 @@ fun ProductScreen(
                     label = stringResource(R.string.categories),
                     items = state.categories,
                     selectedItemId = state.selectedCategoryId,
-                    onItemSelected = { category -> onEvent(ProductEvent.SelectCategoryId(category?.localId)) },
+                    onItemSelected = { category -> onEvent(ProductEvent.SelectCategoryId(category?.id?.local)) },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     canClearSelection = false,
                 )
 
@@ -136,9 +136,9 @@ fun ProductScreen(
                     label = stringResource(R.string.stores),
                     items = state.stores,
                     selectedItemId = state.selectedStoreId,
-                    onItemSelected = { store -> onEvent(ProductEvent.SelectStoreId(store?.localId)) },
+                    onItemSelected = { store -> onEvent(ProductEvent.SelectStoreId(store?.id?.local)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     canClearSelection = false,
                 )
 

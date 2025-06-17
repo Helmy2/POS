@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
-import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
+import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -100,7 +100,7 @@ class StockManagementViewModel(
     private fun loadStocks() {
         stockJob?.cancel()
         stockJob = stockRepository.getStoreStocks(
-            query = _state.value.query, selectedStoreId = _state.value.selectedStore?.localId
+            query = _state.value.query, selectedStoreId = _state.value.selectedStore?.id?.local
         ).onEach { stocks ->
                 _state.update { it.copy(stocks = stocks, loading = false) }
             }.catch {
@@ -126,16 +126,16 @@ class StockManagementViewModel(
                 return@launch
             }
 
-            val adjustment = StockAdjustment(
+            val adjustment = StockAdjustmentEntity(
                 localId = 0L,
                 serverId = null,
-                store = target.store,
-                product = target.product,
-                user = currentUser,
+                storeId = target.store.id.local,
+                productId = target.product.id.local,
+                userId = currentUser.id,
                 reason = _state.value.adjustmentReason,
                 notes = _state.value.adjustmentNotes.takeIf { it.isNotBlank() },
                 quantityChange = quantityChange,
-                date = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isSynced = false
             )
 

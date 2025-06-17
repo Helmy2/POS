@@ -32,12 +32,12 @@ class StoreRepositoryImpl(
     }
 
     override suspend fun addStore(
-        arName: String?,
-        enName: String?,
+        arName: String,
+        enName: String,
         type: StoreType
     ): Result<Unit> {
         return try {
-            if (arName.isNullOrBlank() && enName.isNullOrBlank()) {
+            if (arName.isBlank() && enName.isBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided."))
             }
 
@@ -48,7 +48,7 @@ class StoreRepositoryImpl(
                 enName = enName,
                 type = type,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
             storeDao.insert(listOf(newStoreEntity))
@@ -60,24 +60,23 @@ class StoreRepositoryImpl(
 
     override suspend fun updateStore(
         store: Store,
-        newArName: String?,
-        newEnName: String?,
+        newArName: String,
+        newEnName: String,
         newType: StoreType
     ): Result<Unit> {
         return try {
-            if (newArName.isNullOrBlank() && newEnName.isNullOrBlank()) {
+            if (newArName.isBlank() && newEnName.isBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided."))
             }
 
             val entityToUpdate = StoreEntity(
-                localId = store.localId,
-                serverId = store.serverId,
+                localId = store.id.local,
+                serverId = store.id.server,
                 arName = newArName,
                 enName = newEnName,
                 type = newType,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
-                isDeletedLocally = store.isDeletedLocally
+                updatedAt = System.currentTimeMillis(),
             )
             storeDao.updateStore(entityToUpdate)
             Result.success(Unit)
@@ -88,14 +87,14 @@ class StoreRepositoryImpl(
 
     override suspend fun deleteStore(store: Store): Result<Unit> { // Takes domain model
         return try {
-            val entityToDelete = storeDao.getStoreByLocalId(store.localId)
+            val entityToDelete = storeDao.getStoreByLocalId(store.id.local)
             if (entityToDelete == null) {
                 return Result.failure(NoSuchElementException("Store not found for deletion"))
             }
             val storeToMarkAsDeleted = entityToDelete.copy(
                 isDeletedLocally = true,
                 isSynced = false,
-                lastModified = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis()
             )
             storeDao.updateStore(storeToMarkAsDeleted)
             Result.success(Unit)

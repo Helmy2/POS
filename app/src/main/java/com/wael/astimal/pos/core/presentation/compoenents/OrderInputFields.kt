@@ -124,10 +124,10 @@ private fun OrderItemRow(
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.product),
                     items = availableProducts,
-                    selectedItemId = item.product?.localId,
+                    selectedItemId = item.product?.id?.local,
                     onItemSelected = { onUpdateSelectedItem(item.tempEditorId, it) },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     canClearSelection = false,
                 )
             }
@@ -149,18 +149,18 @@ private fun OrderItemRow(
                         item.product?.minimumProductUnit, item.product?.maximumProductUnit
                     ),
                     selectedItemId = if (item.isSelectedUnitIsMax) {
-                        item.product?.maximumProductUnit?.localId
+                        item.product?.maximumProductUnit?.id?.local
                     } else {
-                        item.product?.minimumProductUnit?.localId
+                        item.product?.minimumProductUnit?.id?.local
                     },
                     onItemSelected = { unit ->
                         onUpdateItemUnit(
                             item.tempEditorId,
-                            unit?.localId == item.product?.maximumProductUnit?.localId
+                            unit?.id?.local == item.product?.maximumProductUnit?.id?.local
                         )
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     canClearSelection = false,
                 )
                 Row(

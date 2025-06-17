@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.user.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 

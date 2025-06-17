@@ -3,10 +3,10 @@ package com.wael.astimal.pos.features.inventory.data.repository
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -56,7 +56,7 @@ class ProductRepositoryImpl(
                     localId = 0L,
                     serverId = null,
                     isSynced = false,
-                    lastModified = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
                     isDeletedLocally = false
                 )
                 val newProductId = productDao.insertOrUpdate(entityToInsert)
@@ -66,17 +66,14 @@ class ProductRepositoryImpl(
                 val fullProduct = productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
 
                 if (openingBalance != null && openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
-                    val adjustment = StockAdjustment(
-                        localId = 0L,
+                    val adjustment = StockAdjustmentEntity(
                         serverId = null,
-                        store = fullProduct.store,
-                        product = fullProduct,
-                        user = currentUser,
+                        storeId = fullProduct.store.id.local,
+                        productId = newProductId,
+                        userId = currentUser.id,
                         reason = StockAdjustmentReason.INITIAL_COUNT,
                         notes = "Opening Balance",
                         quantityChange = openingBalance,
-                        date = System.currentTimeMillis(),
-                        isSynced = false
                     )
                     stockRepository.addStockAdjustment(adjustment)
                 }
@@ -98,39 +95,40 @@ class ProductRepositoryImpl(
                     ?: throw NoSuchElementException("Product not found for update with localId: ${productEntity.localId}")
 
                 val entityToUpdate = productEntity.copy(
-                    isSynced = false,
-                    lastModified = System.currentTimeMillis()
+                    isSynced = false, updatedAt = System.currentTimeMillis()
                 )
                 productDao.updateProduct(entityToUpdate)
 
-                val openingBalanceDifference = (productEntity.openingBalanceQuantity ?: 0.0) - (oldProductEntity.openingBalanceQuantity ?: 0.0)
+                val openingBalanceDifference = (productEntity.openingBalanceQuantity
+                    ?: 0.0) - (oldProductEntity.openingBalanceQuantity ?: 0.0)
 
                 if (openingBalanceDifference != 0.0) {
                     val currentUser = sessionManager.getCurrentUser().first()
                         ?: throw Exception("User not authenticated for stock adjustment.")
-                    val fullProduct = getProductByLocalId(productEntity.localId)
-                        ?: throw Exception("Could not retrieve full product details for adjustment.")
+                    val fullProduct = getProductByLocalId(productEntity.localId) ?: throw Exception(
+                        "Could not retrieve full product details for adjustment."
+                    )
                     val store = fullProduct.store
-                        ?: throw Exception("Product must be assigned to a store to adjust stock.")
 
-                    val adjustment = StockAdjustment(
+                    val adjustment = StockAdjustmentEntity(
                         localId = 0L,
                         serverId = null,
-                        store = store,
-                        product = fullProduct,
-                        user = currentUser,
+                        storeId = store.id.local,
+                        productId = fullProduct.id.local,
+                        userId = currentUser.id,
                         reason = StockAdjustmentReason.RECOUNT,
                         notes = "Opening balance updated.",
                         quantityChange = openingBalanceDifference,
-                        date = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis(),
                         isSynced = false
                     )
                     stockRepository.addStockAdjustment(adjustment)
                 }
             }
 
-            val updatedProductWithDetails = productDao.getProductWithDetailsByLocalId(productEntity.localId)
-                ?: return Result.failure(IllegalStateException("Failed to retrieve product after update"))
+            val updatedProductWithDetails =
+                productDao.getProductWithDetailsByLocalId(productEntity.localId)
+                    ?: return Result.failure(IllegalStateException("Failed to retrieve product after update"))
 
             Result.success(updatedProductWithDetails.toDomain())
         } catch (e: Exception) {
@@ -148,21 +146,22 @@ class ProductRepositoryImpl(
                     ?: throw NoSuchElementException("Product not found with localId: $productLocalId")
 
                 // Fetch all stock entries for this product to zero them out
-                val allStocks = stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
-                val productStocks = allStocks.filter { it.product.localId == productLocalId }
+                val allStocks =
+                    stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
+                val productStocks = allStocks.filter { it.product.id.local == productLocalId }
 
                 for (stockItem in productStocks) {
                     if (stockItem.quantity != 0.0) {
-                        val adjustment = StockAdjustment(
+                        val adjustment = StockAdjustmentEntity(
                             localId = 0L,
                             serverId = null,
-                            store = stockItem.store,
-                            product = stockItem.product,
-                            user = currentUser,
+                            storeId = stockItem.store.id.local,
+                            productId = stockItem.product.id.local,
+                            userId = currentUser.id,
                             reason = StockAdjustmentReason.OTHER,
                             notes = "Product ${productToDelete.localizedName.arName} deleted.",
                             quantityChange = -stockItem.quantity, // Reverse the quantity
-                            date = System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis(),
                             isSynced = false
                         )
                         stockRepository.addStockAdjustment(adjustment)
@@ -176,7 +175,7 @@ class ProductRepositoryImpl(
                 val productToMarkAsDeleted = productEntityFromDb.copy(
                     isDeletedLocally = true,
                     isSynced = false,
-                    lastModified = System.currentTimeMillis()
+                    updatedAt = System.currentTimeMillis()
                 )
                 productDao.updateProduct(productToMarkAsDeleted)
             }

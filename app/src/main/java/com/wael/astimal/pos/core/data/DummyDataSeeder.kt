@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.core.data
 
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
@@ -8,7 +9,6 @@ import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
@@ -213,7 +213,8 @@ class DummyDataSeeder(
     private suspend fun populateDummyCategories(): Map<String, Long> {
         val lensesId = categoryDao.insertOrUpdate(
             CategoryEntity(
-                serverId = -1,
+                localId = -1,
+                serverId = null,
                 arName = "عدسات",
                 enName = "Lenses",
                 isSynced = false
@@ -221,12 +222,14 @@ class DummyDataSeeder(
         )
         val solutionsId = categoryDao.insertOrUpdate(
             CategoryEntity(
-                serverId = -2, arName = "محاليل", enName = "Solutions", isSynced = false
+                localId = -2,
+                serverId = null, arName = "محاليل", enName = "Solutions", isSynced = false
             )
         )
         val accessoriesId = categoryDao.insertOrUpdate(
             CategoryEntity(
-                serverId = -3, arName = "اكسسوارات", enName = "Accessories", isSynced = false
+                localId = -3,
+                serverId = null, arName = "اكسسوارات", enName = "Accessories", isSynced = false
             )
         )
         return mapOf(
@@ -238,52 +241,52 @@ class DummyDataSeeder(
         categories: Map<String, Long>, units: Map<String, Long>
     ): Map<String, Long> {
         val product1 = ProductEntity(
-            localId = 1,
+            localId = -1,
             serverId = -1,
             arName = "عدسات ديزيو الشهرية",
             enName = "Desio Monthly Lenses",
-            categoryId = categories["lenses"],
+            categoryId = categories["lenses"]!!,
             averagePrice = 120.0,
             sellingPrice = 180.0,
             openingBalanceQuantity = 50.0,
             storeId = stores.elementAt(1).localId,
             isSynced = false,
             minimumUnitId = null,
-            maximumUnitId = units["box"],
+            maximumUnitId = units["box"]!!,
             subUnitsPerMainUnit = 1.0,
         )
         productRep.addProduct(product1)
 
         val product2 = ProductEntity(
-            localId = 2,
+            localId = -2,
             serverId = -2,
             arName = "محلول أوبتي-فري",
             enName = "Opti-Free Solution",
-            categoryId = categories["solutions"],
+            categoryId = categories["solutions"]!!,
             averagePrice = 35.5,
             sellingPrice = 55.0,
             openingBalanceQuantity = 100.0,
             storeId = stores.elementAt(1).localId,
             isSynced = false,
             minimumUnitId = null,
-            maximumUnitId = units["piece"],
+            maximumUnitId = units["piece"]!!,
             subUnitsPerMainUnit = 1.0,
         )
         productRep.addProduct(product2)
 
         val product3 = ProductEntity(
-            localId = 3,
+            localId = -3,
             serverId = -3,
             arName = "حافظة عدسات",
             enName = "Lens Case",
-            categoryId = categories["accessories"],
+            categoryId = categories["accessories"]!!,
             averagePrice = 5.0,
             sellingPrice = 15.0,
             openingBalanceQuantity = 200.0,
             storeId = stores.elementAt(1).localId,
             isSynced = false,
             minimumUnitId = units["piece"],
-            maximumUnitId = units["dozen"],
+            maximumUnitId = units["dozen"]!!,
             subUnitsPerMainUnit = 12.0,
         )
         productRep.addProduct(product3)

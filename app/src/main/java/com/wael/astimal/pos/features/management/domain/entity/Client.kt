@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
-import com.wael.astimal.pos.features.inventory.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class Client(

@@ -20,7 +20,7 @@ data class ProductState(
     val selectedStoreId: Long? = null,
     val selectedMinStockUnitId: Long? = null,
     val selectedMaxStockUnitId: Long? = null,
-    val subUnitsPerMainUnit: String = "1.0",
+    val subUnitsPerMainUnit: String = "",
 
     // Lists for dropdowns/pickers
     val categories: List<Category> = emptyList(),

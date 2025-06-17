@@ -23,7 +23,7 @@ fun <T> CustomExposedDropdownMenu(
     selectedItemId: Long?,
     onItemSelected: (T?) -> Unit,
     itemToDisplayString: (T) -> String,
-    itemToId: (T) -> Long,
+    itemToId: (T) -> Long?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     canClearSelection: Boolean

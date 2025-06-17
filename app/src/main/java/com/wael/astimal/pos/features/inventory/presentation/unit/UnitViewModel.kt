@@ -103,7 +103,7 @@ class UnitViewModel(
                 arName = currentState.arName,
                 enName = currentState.enName,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 isDeletedLocally = false
             )
             val result = unitRepository.addUnit(newUnitEntity)
@@ -134,13 +134,12 @@ class UnitViewModel(
 
             _state.update { it.copy(loading = true) }
             val updatedUnitEntity = UnitEntity(
-                localId = unitToUpdate.localId,
-                serverId = unitToUpdate.serverId,
+                localId = unitToUpdate.id.local,
+                serverId = unitToUpdate.id.server,
                 arName = currentState.arName,
                 enName = currentState.enName,
                 isSynced = false,
-                lastModified = System.currentTimeMillis(),
-                isDeletedLocally = unitToUpdate.isDeletedLocally
+                updatedAt = System.currentTimeMillis(),
             )
             val result = unitRepository.updateUnit(updatedUnitEntity)
             result.fold(onSuccess = {
@@ -168,8 +167,8 @@ class UnitViewModel(
 
             _state.update { it.copy(loading = true) }
             val unitEntityToDelete = UnitEntity(
-                localId = unitToDeleteDetails.localId,
-                serverId = unitToDeleteDetails.serverId,
+                localId = unitToDeleteDetails.id.local,
+                serverId = unitToDeleteDetails.id.server,
                 arName = unitToDeleteDetails.localizedName.arName,
                 enName = unitToDeleteDetails.localizedName.enName,
             )

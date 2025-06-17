@@ -43,20 +43,20 @@ data class StoreStockWithDetails(
         parentColumn = "storeLocalId",
         entityColumn = "localId"
     )
-    val store: StoreEntity,
+    val store: StoreEntity?,
 
     @Relation(
         parentColumn = "productLocalId",
         entityColumn = "localId",
         entity = ProductEntity::class
     )
-    val productWithDetails: ProductWithDetailsEntity
+    val productWithDetails: ProductWithDetailsEntity?
 )
 
 fun StoreStockWithDetails.toDomain(): StoreStock {
     return StoreStock(
-        store = this.store.toDomain(),
-        product = this.productWithDetails.toDomain(),
-        quantity = this.stock.quantity
+        store = store?.toDomain() ?: throw NullPointerException(),
+        product = productWithDetails?.toDomain() ?: throw NullPointerException(),
+        quantity = stock.quantity
     )
 }

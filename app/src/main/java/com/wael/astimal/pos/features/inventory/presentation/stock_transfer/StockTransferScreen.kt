@@ -78,10 +78,10 @@ fun StockTransferScreen(
         onSearch = { onEvent(StockTransferScreenEvent.SearchTransfers(it)) },
         onSearchActiveChange = { onEvent(StockTransferScreenEvent.UpdateIsQueryActive(it)) },
         onBack = onBack,
-        lastModifiedDate = state.selectedTransfer?.transferDate,
+        lastModifiedDate = state.selectedTransfer?.updatedAt,
         onDelete = {
             state.selectedTransfer?.let {
-                onEvent(StockTransferScreenEvent.DeleteTransfer(it.localId))
+                onEvent(StockTransferScreenEvent.DeleteTransfer(it.id.local))
             }
         },
         onCreate = { onEvent(StockTransferScreenEvent.SaveTransfer) },
@@ -95,12 +95,12 @@ fun StockTransferScreen(
                 },
                 label = {
                     Label(
-                        "${it.fromStore?.name?.displayName(language)} -> ${
-                            it.toStore?.name?.displayName(language)
+                        "${it.fromStore.name.displayName(language)} -> ${
+                            it.toStore.name.displayName(language)
                         }"
                     )
                 },
-                isSelected = { product -> product.localId == state.selectedTransfer?.localId },
+                isSelected = { product -> product.id.local == state.selectedTransfer?.id?.local },
             )
         },
         mainContent = {
@@ -145,21 +145,21 @@ fun StockTransferForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.from_store),
             items = availableStores,
-            selectedItemId = editableTransfer.fromStore?.localId,
+            selectedItemId = editableTransfer.fromStore?.id?.local,
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateFromStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
-            itemToId = { it.localId },
+            itemToId = { it.id.local },
             enabled = canChangeFromStore,
             canClearSelection = false,
         )
 
         CustomExposedDropdownMenu(
             label = stringResource(R.string.to_store),
-            items = availableStores.filter { it.localId != editableTransfer.fromStore?.localId },
-            selectedItemId = editableTransfer.toStore?.localId,
+            items = availableStores.filter { it.id.local != editableTransfer.fromStore?.id?.local },
+            selectedItemId = editableTransfer.toStore?.id?.local,
             onItemSelected = { store -> onEvent(StockTransferScreenEvent.UpdateToStore(store)) },
             itemToDisplayString = { it.name.displayName(localAppLocale) },
-            itemToId = { it.localId },
+            itemToId = { it.id.local },
             enabled = canEditTheRest,
             canClearSelection = false,
         )
@@ -215,7 +215,7 @@ fun StockTransferItemRow(
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.product),
                     items = availableProducts,
-                    selectedItemId = item.product?.localId,
+                    selectedItemId = item.product?.id?.local,
                     onItemSelected = { product ->
                         onEvent(
                             StockTransferScreenEvent.UpdateItemProduct(
@@ -224,7 +224,7 @@ fun StockTransferItemRow(
                         )
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     enabled = enabled,
                     canClearSelection = false,
                 )
@@ -250,20 +250,20 @@ fun StockTransferItemRow(
                         item.product?.minimumProductUnit, item.product?.maximumProductUnit
                     ),
                     selectedItemId = if (item.isSelectedUnitIsMax) {
-                        item.product?.maximumProductUnit?.localId
+                        item.product?.maximumProductUnit?.id?.local
                     } else {
-                        item.product?.minimumProductUnit?.localId
+                        item.product?.minimumProductUnit?.id?.local
                     },
                     onItemSelected = { unit ->
                         onEvent(
                             StockTransferScreenEvent.UpdateItemUnit(
                                 item.tempEditorId,
-                                unit?.localId == item.product?.maximumProductUnit?.localId
+                                unit?.id?.local == item.product?.maximumProductUnit?.id?.local
                             )
                         )
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.localId },
+                    itemToId = { it.id.local },
                     enabled = enabled,
                     canClearSelection = false,
                 )

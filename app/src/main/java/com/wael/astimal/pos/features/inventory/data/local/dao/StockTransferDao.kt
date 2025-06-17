@@ -56,7 +56,7 @@ interface StockTransferDao {
     suspend fun getStockTransferWithDetails(localId: Long): StockTransferWithItemsAndDetails?
 
     @androidx.room.Transaction
-    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally ORDER BY transferDate DESC")
+    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally")
     fun getAllStockTransfersWithDetailsFlow(): Flow<List<StockTransferWithItemsAndDetails>>
 
     @Query("DELETE FROM stock_transfers WHERE localId IN (:localIds)")

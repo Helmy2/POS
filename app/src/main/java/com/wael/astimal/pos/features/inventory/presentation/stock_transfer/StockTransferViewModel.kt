@@ -138,7 +138,7 @@ class StockTransferViewModel(
                         maxUnitQuantity = "1.0",
                     )
                 }
-                event.product?.let { observeStockForItem(event.itemEditorId, it.localId) }
+                event.product?.let { observeStockForItem(event.itemEditorId, it.id.local) }
             }
 
             is StockTransferScreenEvent.UpdateItemUnit -> updateTransferItem(event.itemEditorId) {
@@ -188,7 +188,7 @@ class StockTransferViewModel(
 
     private fun observeStockForItem(tempId: String, productId: Long) {
         stockObservationJobs[tempId]?.cancel()
-        val fromStoreId = _state.value.currentTransferInput.fromStore?.localId ?: return
+        val fromStoreId = _state.value.currentTransferInput.fromStore?.id?.local ?: return
         stockObservationJobs[tempId] =
             stockRepository.getStockQuantityFlow(fromStoreId, productId).onEach { stock ->
                     updateTransferItem(tempId) { it.copy(currentStock = stock) }
@@ -198,7 +198,7 @@ class StockTransferViewModel(
     private fun resubscribeAllStockObservers() {
         _state.value.currentTransferInput.items.forEach { item ->
             item.product?.let { product ->
-                observeStockForItem(item.tempEditorId, product.localId)
+                observeStockForItem(item.tempEditorId, product.id.local)
             }
         }
     }
@@ -214,17 +214,17 @@ class StockTransferViewModel(
                 currentTransferInput = if (transfer == null) EditableStockTransfer(
                     selectedEmployeeId = it.currentUser?.id
                 ) else EditableStockTransfer(
-                    localId = transfer.localId,
+                    localId = transfer.id.local,
                     fromStore = transfer.fromStore,
                     toStore = transfer.toStore,
-                    transferDate = transfer.transferDate,
-                    selectedEmployeeId = transfer.initiatedByUser?.id,
+                    transferDate = transfer.createdAt,
+                    selectedEmployeeId = transfer.initiatedByUser.id,
                     items = transfer.items.map { item ->
-                        val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
+                        val conversionFactor = item.product.subUnitsPerMainUnit
                         EditableStockTransferItem(
-                            tempEditorId = item.localId.toString(),
+                            tempEditorId = item.id.local.toString(),
                             product = item.product,
-                            isSelectedUnitIsMax = item.productUnit?.localId == item.product?.maximumProductUnit?.localId,
+                            isSelectedUnitIsMax = true,
                             maxUnitQuantity = item.quantity.toString(),
                             minUnitQuantity = (item.quantity * conversionFactor).toString(),
                         )
@@ -257,9 +257,9 @@ class StockTransferViewModel(
                     } else {
                         transfers.filter { transfer ->
                             val fromStoreName =
-                                transfer.fromStore?.name?.displayName(Language.Arabic) ?: ""
+                                transfer.fromStore.name.displayName(Language.Arabic)
                             val toStoreName =
-                                transfer.toStore?.name?.displayName(Language.English) ?: ""
+                                transfer.toStore.name.displayName(Language.English)
                             fromStoreName.contains(query, true) || toStoreName.contains(query, true)
                         }
                     }
@@ -277,7 +277,7 @@ class StockTransferViewModel(
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.from_and_to_stores_must_be_selected))
                 return@launch
             }
-            if (currentInput.fromStore.localId == currentInput.toStore.localId) {
+            if (currentInput.fromStore.id.local == currentInput.toStore.id.local) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.from_and_to_stores_cannot_be_the_same))
                 return@launch
             }
@@ -305,8 +305,7 @@ class StockTransferViewModel(
                 }
                 StockTransferItemEntity(
                     stockTransferLocalId = 0L,
-                    productLocalId = editableItem.product.localId,
-                    unitLocalId = editableItem.product.maximumProductUnit.localId,
+                    productLocalId = editableItem.product.id.local,
                     quantity = quantity,
                     serverId = null,
                 )
@@ -320,8 +319,8 @@ class StockTransferViewModel(
             _state.update { it.copy(loading = true) }
             val result = if (_state.value.isNew) {
                 stockTransferRepository.addStockTransfer(
-                    fromStoreId = currentInput.fromStore.localId,
-                    toStoreId = currentInput.toStore.localId,
+                    fromStoreId = currentInput.fromStore.id.local,
+                    toStoreId = currentInput.toStore.id.local,
                     transferDate = currentInput.transferDate,
                     initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
                         ?: loggedInUserId,
@@ -330,8 +329,8 @@ class StockTransferViewModel(
             } else {
                 stockTransferRepository.updateStockTransfer(
                     transferLocalId = currentInput.localId,
-                    fromStoreId = currentInput.fromStore.localId,
-                    toStoreId = currentInput.toStore.localId,
+                    fromStoreId = currentInput.fromStore.id.local,
+                    toStoreId = currentInput.toStore.id.local,
                     transferDate = currentInput.transferDate,
                     initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
                         ?: loggedInUserId,

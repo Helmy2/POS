@@ -114,7 +114,7 @@ class PurchaseReturnViewModel(
                     )
                 }
                 event.product?.let {
-                    observeStockForItem(event.tempEditorId, it.localId)
+                    observeStockForItem(event.tempEditorId, it.id.local)
                 }
             }
 
@@ -213,7 +213,7 @@ class PurchaseReturnViewModel(
                         EditableItem(
                             tempEditorId = item.localId.toString(),
                             product = item.product,
-                            isSelectedUnitIsMax = item.productUnit?.localId == item.product?.maximumProductUnit?.localId,
+                            isSelectedUnitIsMax = item.productUnit?.id?.local == item.product?.maximumProductUnit?.id?.local,
                             maxUnitPrice = item.purchasePrice.toString(),
                             minUnitPrice = (item.purchasePrice / conversionFactor).toString(),
                             maxUnitQuantity = item.quantity.toString(),
@@ -276,8 +276,8 @@ class PurchaseReturnViewModel(
                 }
 
                 PurchaseReturnProductEntity(
-                    productLocalId = it.product.localId,
-                    unitLocalId = it.product.maximumProductUnit.localId,
+                    productLocalId = it.product.id.local,
+                    unitLocalId = it.product.maximumProductUnit.id.local,
                     quantity = quantity,
                     purchasePrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                     itemTotalPrice = it.lineTotal,

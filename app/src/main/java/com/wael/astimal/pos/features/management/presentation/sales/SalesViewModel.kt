@@ -114,7 +114,7 @@ class SalesViewModel(
                     )
                 }
                 event.product?.let {
-                    observeStockForItem(event.tempEditorId, it.localId)
+                    observeStockForItem(event.tempEditorId, it.id.local)
                 }
             }
 
@@ -272,7 +272,7 @@ class SalesViewModel(
                 }
 
                 OrderProductEntity(
-                    productLocalId = it.product.localId,
+                    productLocalId = it.product.id.local,
                     quantity = quantity,
                     unitSellingPrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
                     itemTotalPrice = it.lineTotal,
