@@ -280,4 +280,5 @@
     <string name="voucher_deleted_successfully">Voucher deleted successfully</string>
     <string name="error_deleting_voucher">Error deleting voucher</string>
     <string name="edit_voucher">Edit voucher</string>
+    <string name="error_loading_transactione">error loading transactione</string>
 </resources>

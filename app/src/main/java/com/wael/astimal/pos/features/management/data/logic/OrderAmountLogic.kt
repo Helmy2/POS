@@ -68,7 +68,8 @@ class OrderAmountLogic(
                     amount = -commission.commissionAmount,
                     relatedCommissionId = commission.localId,
                     notes = "Reversal for order #${order.localId}",
-                    date = System.currentTimeMillis()
+                    lastModificationDate = System.currentTimeMillis(),
+                    creationDate = commission.date
                 )
             )
         }
@@ -127,7 +128,8 @@ class OrderAmountLogic(
             amount = commissionAmount,
             relatedCommissionId = commissionId,
             notes = "Commission for order #$orderId",
-            date = System.currentTimeMillis()
+            lastModificationDate = System.currentTimeMillis(),
+            creationDate = System.currentTimeMillis()
         )
         employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
     }

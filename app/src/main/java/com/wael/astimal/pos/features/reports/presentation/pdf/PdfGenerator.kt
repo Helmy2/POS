@@ -51,7 +51,7 @@ class PdfGenerator(private val context: Context) {
         color = Color.BLACK
     }
     private val debitPaint = Paint(rowPaint).apply { color = Color.RED }
-    private val creditPaint = Paint(rowPaint).apply { color = Color.rgb(0, 100, 0) } // Dark Green
+    private val creditPaint = Paint(rowPaint).apply { color = Color.GREEN }
 
     fun generateStatementPdf(
         partner: BusinessPartner,
@@ -70,7 +70,7 @@ class PdfGenerator(private val context: Context) {
 
         // --- Draw Table Header ---
         drawTableHeader(canvas, yPosition)
-        yPosition += 25
+        yPosition += 40
 
         // --- Draw Table Rows ---
         for (transaction in transactions) {

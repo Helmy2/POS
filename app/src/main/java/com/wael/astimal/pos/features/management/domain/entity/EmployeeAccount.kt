@@ -43,18 +43,13 @@ enum class EmployeeTransactionType {
 data class EmployeeAccountTransaction(
     val localId: Long,
     val serverId: Int?,
-    val employeeId: Long,
-    val createdByEmployeeId: Long,
+    val employee: User?,
+    val createdByEmployee: User?,
     val type: EmployeeTransactionType,
     val amount: Double,
     val relatedCommissionId: Long?,
     val notes: String?,
-    val date: Long,
+    val creationDate: Long,
+    val lastModificationDate: Long = System.currentTimeMillis(),
     val isSynced: Boolean
-)
-
-data class EmployeeAccount(
-    val employee: User,
-    val balance: Double,
-    val transactions: List<EmployeeAccountTransaction>
 )

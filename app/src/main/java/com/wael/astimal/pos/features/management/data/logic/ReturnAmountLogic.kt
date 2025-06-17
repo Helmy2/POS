@@ -69,7 +69,8 @@ class ReturnAmountLogic(
                     amount = -commission.commissionAmount,
                     relatedCommissionId = commission.localId,
                     notes = "Reversal for deleted return #${returnEntity.localId}",
-                    date = System.currentTimeMillis()
+                    creationDate = commission.date,
+                    lastModificationDate = System.currentTimeMillis(),
                 )
             )
         }
@@ -131,7 +132,8 @@ class ReturnAmountLogic(
             amount = commissionAmount,
             relatedCommissionId = commissionId,
             notes = "Commission reversal for return #$returnId",
-            date = System.currentTimeMillis()
+            creationDate = System.currentTimeMillis(),
+            lastModificationDate = System.currentTimeMillis(),
         )
         employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
     }

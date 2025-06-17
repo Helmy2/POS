@@ -1,15 +1,18 @@
 package com.wael.astimal.pos.features.management.data.entity
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.SaleCommission
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 @Entity(
     tableName = "employee_sale_commissions",
@@ -68,8 +71,29 @@ data class EmployeeAccountTransactionEntity(
     val amount: Double,
     @ColumnInfo(index = true) val relatedCommissionId: Long?,
     val notes: String?,
-    val date: Long,
+    val creationDate: Long,
+    val lastModificationDate: Long,
     var isSynced: Boolean = false
+)
+
+
+data class EmployeeAccountTransactionWithDetailsEntity(
+    @Embedded
+    val transactionEntity: EmployeeAccountTransactionEntity,
+
+    @Relation(
+        parentColumn = "createdByEmployeeId",
+        entityColumn = "id",
+        entity = UserEntity::class
+    )
+    val createdByEmployee: UserEntity?,
+
+    @Relation(
+        parentColumn = "employeeId",
+        entityColumn = "id",
+        entity = UserEntity::class
+    )
+    val employee: UserEntity?
 )
 
 fun SaleCommissionEntity.toDomain(): SaleCommission {
@@ -86,17 +110,18 @@ fun SaleCommissionEntity.toDomain(): SaleCommission {
     )
 }
 
-fun EmployeeAccountTransactionEntity.toDomain(): EmployeeAccountTransaction {
+fun EmployeeAccountTransactionWithDetailsEntity.toDomain(): EmployeeAccountTransaction {
     return EmployeeAccountTransaction(
-        localId = this.localId,
-        serverId = this.serverId,
-        employeeId = this.employeeId,
-        createdByEmployeeId = this.createdByEmployeeId,
-        type = this.type,
-        amount = this.amount,
-        relatedCommissionId = this.relatedCommissionId,
-        notes = this.notes,
-        date = this.date,
-        isSynced = this.isSynced
+        localId = transactionEntity.localId,
+        serverId = transactionEntity.serverId,
+        employee = employee?.toDomain(),
+        createdByEmployee = createdByEmployee?.toDomain(),
+        type = transactionEntity.type,
+        amount = transactionEntity.amount,
+        relatedCommissionId = transactionEntity.relatedCommissionId,
+        notes = transactionEntity.notes,
+        creationDate = transactionEntity.creationDate,
+        isSynced = transactionEntity.isSynced,
+        lastModificationDate = transactionEntity.lastModificationDate
     )
 }

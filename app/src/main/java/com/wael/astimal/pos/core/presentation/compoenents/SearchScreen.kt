@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Search
@@ -91,16 +91,14 @@ fun SearchScreen(
 
     val fabActions = remember(isNew, loading, canEdit) {
         buildList {
-            if (canEdit) {
+            if (isNew.not()) {
                 add(
                     FabAction(
-                        icon = Icons.Default.Create,
-                        label = context.getString(if (isNew) R.string.create else R.string.update),
-                        onClick = if (isNew) onCreate else onUpdate
+                        icon = Icons.Default.FileCopy,
+                        label = context.getString(R.string.new_),
+                        onClick = onNew
                     )
                 )
-            }
-            if (isNew.not()) {
                 if (canEdit) {
                     add(
                         FabAction(
@@ -110,11 +108,13 @@ fun SearchScreen(
                         )
                     )
                 }
+            }
+            if (canEdit) {
                 add(
                     FabAction(
-                        icon = Icons.Default.FileCopy,
-                        label = context.getString(R.string.new_),
-                        onClick = onNew
+                        icon = Icons.Default.Check,
+                        label = context.getString(if (isNew) R.string.create else R.string.update),
+                        onClick = if (isNew) onCreate else onUpdate
                     )
                 )
             }

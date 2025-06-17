@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -31,62 +29,112 @@ class EmployeeAccountViewModel(
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
+    private var transactions: List<EmployeeAccountTransaction> = emptyList()
 
     init {
         viewModelScope.launch {
             val currentUser = sessionManager.getCurrentUser().first()
-            _state.update {
-                it.copy(
-                    isAdmin = currentUser?.isAdmin == true,
-                    currentUserId = currentUser?.id
-                )
+            _state.update { it.copy(currentUser = currentUser) }
+        }
+        viewModelScope.launch {
+            userRepository.getEmployeesFlow().catch {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_employees))
+            }.collect { employees ->
+                _state.update { it.copy(employees = employees) }
             }
         }
-        loadEmployees()
+        viewModelScope.launch {
+            employeeAccountRepository.getAllTransaction().catch {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_transactione))
+            }.collect { result ->
+                transactions = result
+                _state.update { it.copy(transactions = result) }
+            }
+        }
     }
 
     fun onEvent(event: EmployeeAccountEvent) {
         when (event) {
-            is EmployeeAccountEvent.SelectEmployee -> {
-                _state.update { it.copy(selectedEmployee = event.employee, loading = true) }
-                fetchAccountDetails(event.employee.id)
-            }
-
             is EmployeeAccountEvent.SelectTransactionType -> _state.update { it.copy(transactionType = event.type) }
             is EmployeeAccountEvent.UpdateAmount -> _state.update { it.copy(amount = event.amount) }
             is EmployeeAccountEvent.UpdateNotes -> _state.update { it.copy(notes = event.notes) }
-            is EmployeeAccountEvent.AddTransaction -> addTransaction()
+            is EmployeeAccountEvent.OpenNewTransaction -> _state.update {
+                it.copy(
+                    showEditDialog = true, selectedEmployee = null
+                )
+            }
+
             is EmployeeAccountEvent.EditTransactionClicked -> {
                 _state.update {
                     it.copy(
-                        transactionToEdit = event.transaction,
-                        showEditDialog = true
+                        selectedTransaction = event.transaction,
+                        showEditDialog = true,
+                        notes = event.transaction.notes ?: "",
+                        amount = event.transaction.amount.toString(),
+                        selectedEmployee = event.transaction.employee,
                     )
                 }
             }
 
             is EmployeeAccountEvent.DeleteTransactionClicked -> deleteTransaction(event.transaction)
-            is EmployeeAccountEvent.SaveTransaction -> saveTransaction(event.transaction)
+            is EmployeeAccountEvent.SaveTransaction -> addTransaction()
             is EmployeeAccountEvent.DismissEditDialog -> {
-                _state.update { it.copy(showEditDialog = false, transactionToEdit = null) }
+                _state.update { it.copy(showEditDialog = false, selectedTransaction = null) }
+            }
+
+            is EmployeeAccountEvent.SelectEmployee -> {
+                _state.update { it.copy(selectedEmployee = event.employee) }
+            }
+
+            is EmployeeAccountEvent.UpdateQuery -> {
+                _state.update { it.copy(query = event.query) }
+                filterByQuery(query = event.query)
             }
         }
     }
 
+    private fun filterByQuery(query: String) {
+        _state.update {
+            it.copy(
+                transactions = transactions.filter { transaction ->
+                    transaction.employee?.localizedName?.enName?.contains(
+                        query,
+                        ignoreCase = true
+                    ) == true ||
+                            transaction.employee?.localizedName?.arName?.contains(
+                                query,
+                                ignoreCase = true
+                            ) == true
+                            || transaction.createdByEmployee?.localizedName?.enName?.contains(
+                        query,
+                        ignoreCase = true
+                    ) == true ||
+                            transaction.createdByEmployee?.localizedName?.arName?.contains(
+                                query,
+                                ignoreCase = true
+                            ) == true ||
+                            transaction.notes?.contains(query, ignoreCase = true) == true ||
+                            transaction.type.name.contains(query, ignoreCase = true)
+                }
+            )
+        }
+    }
+
+
     private fun addTransaction() {
         viewModelScope.launch {
             // Admins can add transactions for any selected employee.
-            if (!_state.value.isAdmin) {
+            if (_state.value.currentUser?.isAdmin != true) {
                 viewModelScope.launch { _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_admin_only)) }
                 return@launch
             }
 
             val currentState = _state.value
             val selectedEmployee = currentState.selectedEmployee
-            val currentUserId = _state.value.currentUserId
+            val currentUser = _state.value.currentUser
             val amount = currentState.amount.toDoubleOrNull()
 
-            if (currentUserId == null) {
+            if (currentUser == null) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
                 return@launch
             }
@@ -99,16 +147,23 @@ class EmployeeAccountViewModel(
                 return@launch
             }
 
-            val newTransaction = EmployeeAccountTransaction(
+            val newTransaction = _state.value.selectedTransaction?.copy(
+                employee = selectedEmployee,
+                createdByEmployee = currentUser,
+                type = currentState.transactionType,
+                amount = amount,
+                notes = currentState.notes,
+                isSynced = false
+            ) ?: EmployeeAccountTransaction(
                 localId = 0,
                 serverId = null,
-                employeeId = selectedEmployee.id,
-                createdByEmployeeId = currentUserId,
+                employee = selectedEmployee,
+                createdByEmployee = currentUser,
                 type = currentState.transactionType,
                 amount = amount,
                 relatedCommissionId = null,
                 notes = currentState.notes,
-                date = System.currentTimeMillis(),
+                creationDate = System.currentTimeMillis(),
                 isSynced = false
             )
             saveTransaction(newTransaction)
@@ -124,24 +179,22 @@ class EmployeeAccountViewModel(
                 employeeAccountRepository.updateManualPayment(transaction)
             }
 
-            result.fold(
-                onSuccess = {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
-                    _state.update {
-                        it.copy(
-                            isSaving = false,
-                            showEditDialog = false,
-                            transactionToEdit = null,
-                            amount = "",
-                            notes = ""
-                        )
-                    }
-                },
-                onFailure = {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
-                    _state.update { it.copy(isSaving = false) }
+            result.fold(onSuccess = {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        showEditDialog = false,
+                        selectedTransaction = null,
+                        amount = "",
+                        notes = "",
+                        loading = false,
+                    )
                 }
-            )
+            }, onFailure = {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
+                _state.update { it.copy(isSaving = false) }
+            })
         }
     }
 
@@ -154,33 +207,5 @@ class EmployeeAccountViewModel(
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_transaction))
             }
         }
-    }
-
-    private fun loadEmployees() {
-        viewModelScope.launch {
-            userRepository.getEmployeesFlow()
-                .catch {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_employees))
-                }
-                .collect { employees ->
-                    _state.update { it.copy(employees = employees) }
-                }
-        }
-    }
-
-    private fun fetchAccountDetails(employeeId: Long) {
-        employeeAccountRepository.getEmployeeAccount(employeeId)
-            .onEach { account ->
-                _state.update {
-                    it.copy(
-                        employeeAccount = account,
-                        loading = false
-                    )
-                }
-            }
-            .catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_account_details))
-            }
-            .launchIn(viewModelScope)
     }
 }

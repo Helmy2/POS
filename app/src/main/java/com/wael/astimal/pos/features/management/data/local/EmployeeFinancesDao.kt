@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionWithDetailsEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import kotlinx.coroutines.flow.Flow
@@ -20,8 +22,12 @@ interface EmployeeFinancesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEmployeeTransaction(transaction: EmployeeAccountTransactionEntity): Long
 
-    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId ORDER BY date DESC")
+    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId ORDER BY creationDate DESC")
     fun getTransactionsForEmployee(employeeId: Long): Flow<List<EmployeeAccountTransactionEntity>>
+
+    @Transaction
+    @Query("SELECT * FROM employee_account_transactions")
+    fun getAllTransactions(): Flow<List<EmployeeAccountTransactionWithDetailsEntity>>
 
     @Query("SELECT SUM(amount) FROM employee_account_transactions WHERE employeeId = :employeeId")
     fun getEmployeeBalance(employeeId: Long): Flow<Double?>

@@ -53,7 +53,7 @@ val managementModule = module {
     single<PurchaseReturnRepository> {
         PurchaseReturnRepositoryImpl(get(), get(), get(), get(), get())
     }
-    single<EmployeeAccountRepository> { EmployeeAccountRepositoryImpl(get(), get()) }
+    single<EmployeeAccountRepository> { EmployeeAccountRepositoryImpl(get()) }
     single<ReceivePayVoucherRepository> {
         ReceivePayVoucherRepositoryImpl(get(), get(), get())
     }
