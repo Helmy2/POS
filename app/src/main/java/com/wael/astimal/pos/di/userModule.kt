@@ -25,6 +25,6 @@ val userModule = module {
         UserRepositoryImpl(get(), get())
     }
 
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { LoginViewModel(get(), get(), get()) }
 }

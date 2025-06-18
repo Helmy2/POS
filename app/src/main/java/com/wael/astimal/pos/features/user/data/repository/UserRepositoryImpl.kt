@@ -28,10 +28,10 @@ class UserRepositoryImpl(
     }
 
     override suspend fun login(
-        name: String,
+        email: String,
         password: String
     ): Result<User> {
-        name.toLongOrNull()?.let {
+        email.toLongOrNull()?.let {
             sessionManager.saveSession(it, "")
             userDao.getUserById(it)?.toDomain()?.let {
                 return Result.success(it)

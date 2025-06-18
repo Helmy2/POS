@@ -8,8 +8,8 @@ class LoginReducer : Reducer<LoginContract.State, LoginContract.Event, Nothing> 
         event: LoginContract.Event
     ): Pair<LoginContract.State, Nothing?> {
         return when (event) {
-            is LoginContract.Event.UsernameChanged ->
-                previousState.copy(username = event.value) to null
+            is LoginContract.Event.EmailChanged ->
+                previousState.copy(email = event.value) to null
 
             is LoginContract.Event.PasswordChanged ->
                 previousState.copy(password = event.value) to null

@@ -18,7 +18,7 @@ data class EmployeeAccountState(
     val showEditDialog: Boolean = false,
     val query: String = "",
 ) {
-    val canEdit = currentUser?.isAdmin == true
+    val canEdit = true
 }
 
 sealed interface EmployeeAccountEvent {

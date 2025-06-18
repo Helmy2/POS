@@ -16,7 +16,7 @@ data class BusinessPartnerInfoState(
     val partnerToEdit: BusinessPartner? = null,
     val isSaving: Boolean = false
 ) {
-    val canEdit get() = currentUser?.isAdmin == true
+    val canEdit get() = true
 }
 
 sealed interface BusinessPartnerInfoEvent {

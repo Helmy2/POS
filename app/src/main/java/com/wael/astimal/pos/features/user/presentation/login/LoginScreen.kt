@@ -1,17 +1,12 @@
 package com.wael.astimal.pos.features.user.presentation.login
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -20,6 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.features.user.presentation.components.AuthTextField
 import com.wael.astimal.pos.features.user.presentation.components.CredentialsHeader
 import com.wael.astimal.pos.features.user.presentation.components.PasswordTextField
@@ -42,13 +38,7 @@ fun LoginRoute(
 @Composable
 fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) -> Unit) {
     val focus = LocalFocusManager.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Screen {
         CredentialsHeader(
             title = stringResource(R.string.welcome_back),
             body = stringResource(R.string.login_to_your_account)
@@ -56,12 +46,12 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
         Spacer(modifier = Modifier.height(32.dp))
 
         AuthTextField(
-            value = state.username,
-            label = stringResource(R.string.name),
+            value = state.email,
+            label = stringResource(R.string.email),
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
+                keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
             ),
-            onValueChange = { processEvent(LoginContract.Event.UsernameChanged(it)) },
+            onValueChange = { processEvent(LoginContract.Event.EmailChanged(it)) },
             modifier = Modifier
                 .sizeIn(maxWidth = 600.dp)
                 .fillMaxWidth()

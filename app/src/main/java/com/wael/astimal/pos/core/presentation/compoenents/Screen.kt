@@ -1,18 +1,21 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
@@ -22,7 +25,6 @@ import com.wael.astimal.pos.core.util.sharePdf
 import kotlinx.coroutines.flow.Flow
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun Screen(
     loading: Boolean,
@@ -47,18 +49,14 @@ fun Screen(
 
             is UiEvent.ShareFile -> {
                 sharePdf(
-                    context = context,
-                    uri = it.fileUri,
-                    title = context.getString(it.fileTitle)
+                    context = context, uri = it.fileUri, title = context.getString(it.fileTitle)
                 )
             }
         }
     }
 
     Scaffold(
-        modifier = modifier,
-        topBar = topBar,
-        floatingActionButton = floatingActionButton
+        modifier = modifier, topBar = topBar, floatingActionButton = floatingActionButton
     ) {
         Column(
             modifier = Modifier
@@ -76,6 +74,29 @@ fun Screen(
                     content()
                 }
             }
+        }
+    }
+}
+
+
+@Composable
+fun Screen(
+    modifier: Modifier = Modifier,
+    floatingActionButton: @Composable () -> Unit = {},
+    topBar: @Composable () -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Scaffold(
+        modifier = modifier, topBar = topBar, floatingActionButton = floatingActionButton
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            content()
         }
     }
 }

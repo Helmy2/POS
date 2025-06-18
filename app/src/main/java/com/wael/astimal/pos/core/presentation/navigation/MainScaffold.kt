@@ -171,10 +171,7 @@ fun MainScaffold(
             AnimatedVisibility(showSetting) {
                 Dialog(onDismissRequest = { showSetting = false }) {
                     Card {
-                        SettingsRoute(
-                            navController = navController,
-                            onDismiss = { showSetting = false }
-                        )
+                        SettingsRoute()
                     }
                 }
             }

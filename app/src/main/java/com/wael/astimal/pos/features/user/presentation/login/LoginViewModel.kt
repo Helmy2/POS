@@ -29,7 +29,7 @@ class LoginViewModel(
         setState(LoginContract.Event.LoginClicked)
 
         viewModelScope.launch {
-            userRepository.login(state.value.username, state.value.password).fold(
+            userRepository.login(state.value.email, state.value.password).fold(
                 onSuccess = {
                     setState(LoginContract.Event.LoginSuccess(it.name))
                     navigationController.navigate(
