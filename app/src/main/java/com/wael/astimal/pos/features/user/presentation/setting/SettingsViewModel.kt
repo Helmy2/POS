@@ -6,6 +6,7 @@ import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,6 +93,8 @@ class SettingsViewModel(
 
     private fun logout() {
         viewModelScope.launch {
+            _effect.emit(SettingsEffect.NavigateToLogin)
+            delay(100)
             sessionManager.clearSession()
         }
     }

@@ -75,10 +75,10 @@ data class EmployeeAccountTransactionEntity(
     @PrimaryKey(autoGenerate = true)
     override val localId: Long,
     override val serverId: Long?,
-    override val createdAt: Long,
-    override val updatedAt: Long,
-    override val isSynced: Boolean,
-    override val isDeletedLocally: Boolean,
+    override var isSynced: Boolean = false,
+    override val createdAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override var isDeletedLocally: Boolean = false,
 ) : ItemEntity
 
 
@@ -117,8 +117,8 @@ fun SaleCommissionEntity.toDomain(): SaleCommission {
 fun EmployeeAccountTransactionWithDetailsEntity.toDomain(): EmployeeAccountTransaction {
     return EmployeeAccountTransaction(
         id = Id(transactionEntity.localId, transactionEntity.serverId),
-        employee = employee?.toDomain(),
-        createdByEmployee = createdByEmployee?.toDomain(),
+        employee = employee?.toDomain() ?: throw NullPointerException(),
+        createdByEmployee = createdByEmployee?.toDomain() ?: throw NullPointerException(),
         type = transactionEntity.type,
         amount = transactionEntity.amount,
         relatedCommissionId = transactionEntity.relatedCommissionId,

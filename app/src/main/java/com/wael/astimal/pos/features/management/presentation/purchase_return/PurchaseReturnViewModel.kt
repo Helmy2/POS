@@ -110,7 +110,7 @@ class PurchaseReturnViewModel(
                         minUnitPrice = (event.product?.averagePrice?.div(conversionFactor)).toString(),
                         maxUnitPrice = event.product?.averagePrice.toString(),
                         minUnitQuantity = conversionFactor.toString(),
-                        maxUnitQuantity = "1.0",
+                        maxUnitQuantity = "1",
                     )
                 }
                 event.product?.let {
@@ -136,7 +136,7 @@ class PurchaseReturnViewModel(
                 it.copy(
                     maxUnitPrice = event.price,
                     minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString()
-                        ?: "0.0"
+                        ?: "0"
                 )
             }
 
@@ -145,7 +145,7 @@ class PurchaseReturnViewModel(
                 it.copy(
                     minUnitPrice = event.price,
                     maxUnitPrice = (event.price.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
+                        ?.times(conversionFactor))?.toString() ?: "0"
                 )
             }
 
@@ -154,7 +154,7 @@ class PurchaseReturnViewModel(
                 it.copy(
                     maxUnitQuantity = event.quantity,
                     minUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
+                        ?.times(conversionFactor))?.toString() ?: "0"
                 )
             }
 
@@ -163,7 +163,7 @@ class PurchaseReturnViewModel(
                 it.copy(
                     minUnitQuantity = event.quantity,
                     maxUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.div(conversionFactor))?.toString() ?: "0.0"
+                        ?.div(conversionFactor))?.toString() ?: "0"
                 )
             }
         }
@@ -172,7 +172,7 @@ class PurchaseReturnViewModel(
     private fun observeStockForItem(tempId: String, productId: Long) {
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
-            val employeeId = _state.value.currentUser?.id ?: return@launch
+            val employeeId = _state.value.currentReturnInput.selectedEmployeeId ?: return@launch
             val storeId = userRepository.getStoreIdForEmployee(employeeId) ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
@@ -285,7 +285,7 @@ class PurchaseReturnViewModel(
                 )
             }
 
-            if (itemEntities.size != returnInput.items.size) {
+            if (itemEntities.size != returnInput.items.size || returnInput.selectedEmployeeId == null || selectedSupplier.supplierLocalId == null) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
                 return@launch
             }
@@ -294,8 +294,8 @@ class PurchaseReturnViewModel(
                 localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.supplierLocalId?.local ?: throw Exception(),
-                employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
+                supplierLocalId = selectedSupplier.supplierLocalId.local,
+                employeeLocalId = returnInput.selectedEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,
                 totalAmount = returnInput.totalAmount,

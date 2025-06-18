@@ -145,7 +145,7 @@ class PurchaseViewModel(
                 it.copy(
                     minUnitPrice = event.price,
                     maxUnitPrice = (event.price.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
+                        ?.times(conversionFactor))?.toString() ?: "0"
                 )
             }
 
@@ -154,7 +154,7 @@ class PurchaseViewModel(
                 it.copy(
                     maxUnitQuantity = event.quantity,
                     minUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
+                        ?.times(conversionFactor))?.toString() ?: "0"
                 )
             }
 
@@ -163,7 +163,7 @@ class PurchaseViewModel(
                 it.copy(
                     minUnitQuantity = event.quantity,
                     maxUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.div(conversionFactor))?.toString() ?: "0.0"
+                        ?.div(conversionFactor))?.toString() ?: "0"
                 )
             }
         }
@@ -172,7 +172,7 @@ class PurchaseViewModel(
     private fun observeStockForItem(tempId: String, productId: Long) {
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
-            val employeeId = _state.value.currentUser?.id ?: return@launch
+            val employeeId = _state.value.currentPurchaseInput.selectedEmployeeId ?: return@launch
             val storeId = userRepository.getStoreIdForEmployee(employeeId) ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->

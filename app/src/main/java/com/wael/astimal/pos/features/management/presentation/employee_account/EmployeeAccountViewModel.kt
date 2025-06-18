@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
@@ -72,6 +73,7 @@ class EmployeeAccountViewModel(
                         notes = event.transaction.notes ?: "",
                         amount = event.transaction.amount.toString(),
                         selectedEmployee = event.transaction.employee,
+                        transactionType = event.transaction.type
                     )
                 }
             }
@@ -97,19 +99,19 @@ class EmployeeAccountViewModel(
         _state.update {
             it.copy(
                 transactions = transactions.filter { transaction ->
-                    transaction.employee?.localizedName?.enName?.contains(
+                    transaction.employee.localizedName.enName?.contains(
                         query,
                         ignoreCase = true
                     ) == true ||
-                            transaction.employee?.localizedName?.arName?.contains(
+                            transaction.employee.localizedName.arName?.contains(
                                 query,
                                 ignoreCase = true
                             ) == true
-                            || transaction.createdByEmployee?.localizedName?.enName?.contains(
+                            || transaction.createdByEmployee.localizedName.enName?.contains(
                         query,
                         ignoreCase = true
                     ) == true ||
-                            transaction.createdByEmployee?.localizedName?.arName?.contains(
+                            transaction.createdByEmployee.localizedName.arName?.contains(
                                 query,
                                 ignoreCase = true
                             ) == true ||
@@ -119,7 +121,6 @@ class EmployeeAccountViewModel(
             )
         }
     }
-
 
     private fun addTransaction() {
         viewModelScope.launch {
@@ -146,55 +147,57 @@ class EmployeeAccountViewModel(
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_amount))
                 return@launch
             }
-//todo
-//            val newTransaction = _state.value.selectedTransaction?.copy(
-//                employee = selectedEmployee,
-//                createdByEmployee = currentUser,
-//                type = currentState.transactionType,
-//                amount = amount,
-//                notes = currentState.notes,
-//                isSynced = false
-//            ) ?: EmployeeAccountTransaction(
-//                id = ,
-//                employee = selectedEmployee,
-//                createdByEmployee = currentUser,
-//                type = currentState.transactionType,
-//                amount = amount,
-//                relatedCommissionId = null,
-//                notes = currentState.notes,
-//
-//            )
-//            saveTransaction(newTransaction)
+
+            val newTransaction = _state.value.selectedTransaction?.copy(
+                employee = selectedEmployee,
+                createdByEmployee = currentUser,
+                type = currentState.transactionType,
+                amount = amount,
+                notes = currentState.notes,
+                isSynced = false
+            ).toEntity() ?: EmployeeAccountTransactionEntity(
+                employeeId = selectedEmployee.id,
+                createdByEmployeeId = currentUser.id,
+                type = currentState.transactionType,
+                amount = amount,
+                relatedCommissionId = null,
+                notes = currentState.notes,
+                localId = 0L,
+                serverId = null,
+                isSynced = false,
+                isDeletedLocally = false,
+
+                )
+            saveTransaction(newTransaction)
         }
     }
 
-    private fun saveTransaction(transaction: EmployeeAccountTransaction) {
-        //todo
-//        viewModelScope.launch {
-//            _state.update { it.copy(isSaving = true) }
-//            val result = if (transaction.localId == 0L) {
-//                employeeAccountRepository.addManualPayment(transaction)
-//            } else {
-//                employeeAccountRepository.updateManualPayment(transaction)
-//            }
-//
-//            result.fold(onSuccess = {
-//                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
-//                _state.update {
-//                    it.copy(
-//                        isSaving = false,
-//                        showEditDialog = false,
-//                        selectedTransaction = null,
-//                        amount = "",
-//                        notes = "",
-//                        loading = false,
-//                    )
-//                }
-//            }, onFailure = {
-//                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
-//                _state.update { it.copy(isSaving = false) }
-//            })
-//        }
+    private fun saveTransaction(transaction: EmployeeAccountTransactionEntity) {
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val result = if (transaction.localId == 0L) {
+                employeeAccountRepository.addManualPayment(transaction)
+            } else {
+                employeeAccountRepository.updateManualPayment(transaction)
+            }
+
+            result.fold(onSuccess = {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        showEditDialog = false,
+                        selectedTransaction = null,
+                        amount = "",
+                        notes = "",
+                        loading = false,
+                    )
+                }
+            }, onFailure = {
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
+                _state.update { it.copy(isSaving = false) }
+            })
+        }
     }
 
     private fun deleteTransaction(transaction: EmployeeAccountTransaction) {
@@ -207,4 +210,21 @@ class EmployeeAccountViewModel(
             }
         }
     }
+}
+
+private fun EmployeeAccountTransaction?.toEntity(): EmployeeAccountTransactionEntity? {
+    return if (this == null) null else EmployeeAccountTransactionEntity(
+        employeeId = employee.id,
+        createdByEmployeeId = createdByEmployee.id,
+        type = type,
+        amount = amount,
+        relatedCommissionId = relatedCommissionId,
+        notes = notes,
+        localId = id.local,
+        serverId = id.server,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        isSynced = isSynced,
+        isDeletedLocally = false
+    )
 }

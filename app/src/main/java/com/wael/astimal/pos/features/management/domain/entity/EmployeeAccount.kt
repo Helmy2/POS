@@ -42,8 +42,8 @@ enum class EmployeeTransactionType {
 }
 
 data class EmployeeAccountTransaction(
-    val employee: User?,
-    val createdByEmployee: User?,
+    val employee: User,
+    val createdByEmployee: User,
     val type: EmployeeTransactionType,
     val amount: Double,
     val relatedCommissionId: Long?,

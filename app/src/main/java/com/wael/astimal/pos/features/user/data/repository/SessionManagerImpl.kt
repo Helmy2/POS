@@ -13,6 +13,7 @@ import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -21,7 +22,7 @@ class SessionManagerImpl(
     private val userDao: UserDao,
 ) : SessionManager {
 
-    override fun isUserLoggedInFlow(): Flow<Boolean> {
+    override suspend fun isUserLoggedIn(): Boolean {
         return dataStore.data.catch { exception ->
             if (exception is IOException) {
                 emit(emptyPreferences())
@@ -30,7 +31,7 @@ class SessionManagerImpl(
             }
         }.map { preferences ->
             preferences[SessionManager.USER_ID] != null
-        }
+        }.first()
     }
 
     override fun getCurrentUser(): Flow<User?> {

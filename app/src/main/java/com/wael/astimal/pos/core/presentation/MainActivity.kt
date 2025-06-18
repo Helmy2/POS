@@ -19,7 +19,6 @@ import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
 import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -32,7 +31,7 @@ class MainActivity : ComponentActivity() {
         val sessionManager: SessionManager by inject()
 
         lifecycleScope.launch {
-            sessionManager.isUserLoggedInFlow().collectLatest {
+            sessionManager.isUserLoggedIn().let {
                 startDestination.value = if (it) {
                     Result.success(Destination.Main)
                 } else {

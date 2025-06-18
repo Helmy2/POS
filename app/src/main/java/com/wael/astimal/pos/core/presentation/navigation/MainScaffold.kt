@@ -82,11 +82,11 @@ fun MainScaffold(
         }
     }
 
-    // Use our new delayed state holder instead of the immediate one
+
     val navBackStackEntry by rememberDelayedDestination(navController)
     val currentDestination = navBackStackEntry?.destination
 
-    // All UI decisions are now based on the DELAYED destination
+
     val isOnTopLevelRoute = isTopLevelRoute(currentDestination)
 
     val currentTopLevelRoute = TopLevelRoutes.routes.find {
@@ -145,7 +145,10 @@ fun MainScaffold(
             AnimatedVisibility(showSetting) {
                 Dialog(onDismissRequest = { showSetting = false }) {
                     Card {
-                        SettingsRoute(navController = navController)
+                        SettingsRoute(
+                            navController = navController,
+                            onDismiss = { showSetting = false }
+                        )
                     }
                 }
             }

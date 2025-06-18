@@ -24,11 +24,13 @@ import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
 import com.wael.astimal.pos.features.user.presentation.components.LabeledRow
 import com.wael.astimal.pos.features.user.presentation.components.LanguageSettingRow
 import com.wael.astimal.pos.features.user.presentation.components.ThemeSettingsRow
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SettingsRoute(
     navController: NavHostController,
+    onDismiss: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -36,6 +38,8 @@ fun SettingsRoute(
     ObserveEffect(viewModel.effect, viewModel.effect) {
         when (it) {
             SettingsEffect.NavigateToLogin -> {
+                onDismiss()
+                delay(100)
                 navController.navigate(Destination.Auth) {
                     popUpTo(0)
                 }

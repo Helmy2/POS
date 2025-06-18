@@ -6,7 +6,7 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.Flow
 
 interface SessionManager {
-    fun isUserLoggedInFlow(): Flow<Boolean>
+    suspend fun isUserLoggedIn(): Boolean
     fun getCurrentUser(): Flow<User?>
     suspend fun saveSession(
         userId: Long,

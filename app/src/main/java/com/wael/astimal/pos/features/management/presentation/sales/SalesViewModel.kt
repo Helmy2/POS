@@ -110,7 +110,7 @@ class SalesViewModel(
                         minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
                         maxUnitPrice = event.product?.sellingPrice.toString(),
                         minUnitQuantity = conversionFactor.toString(),
-                        maxUnitQuantity = "1.0",
+                        maxUnitQuantity = "1",
                     )
                 }
                 event.product?.let {
@@ -145,7 +145,7 @@ class SalesViewModel(
                 it.copy(
                     minUnitPrice = event.price,
                     maxUnitPrice = (event.price.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
+                        ?.times(conversionFactor))?.toString() ?: "0"
                 )
             }
 
@@ -154,7 +154,7 @@ class SalesViewModel(
                 it.copy(
                     maxUnitQuantity = event.quantity,
                     minUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
+                        ?.times(conversionFactor))?.toString() ?: "0"
                 )
             }
 
@@ -163,7 +163,7 @@ class SalesViewModel(
                 it.copy(
                     minUnitQuantity = event.quantity,
                     maxUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.div(conversionFactor))?.toString() ?: "0.0"
+                        ?.div(conversionFactor))?.toString() ?: "0"
                 )
             }
         }
@@ -172,7 +172,7 @@ class SalesViewModel(
     private fun observeStockForItem(tempId: String, productId: Long) {
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
-            val employeeId = _state.value.currentUser?.id ?: return@launch
+            val employeeId = _state.value.currentOrderInput.selectedEmployeeId ?: return@launch
             val storeId = userRepository.getStoreIdForEmployee(employeeId) ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->

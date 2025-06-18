@@ -58,10 +58,12 @@ class BusinessPartnerViewModel(
             }
 
             is BusinessPartnerInfoEvent.AddNewPartnerClicked -> {
+                // TODO add admin to AddNewPartnerClicked (it use the currant user)
                 _state.value.currentUser?.let { user ->
                     _state.update {
                         it.copy(
-                            showEditDialog = true, partnerToEdit = createBlankBusinessPartner(user)
+                            showEditDialog = true,
+                            partnerToEdit = createBlankBusinessPartner(user)
                         )
                     }
                 }
