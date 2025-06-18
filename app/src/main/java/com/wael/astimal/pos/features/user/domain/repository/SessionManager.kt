@@ -13,6 +13,10 @@ interface SessionManager {
         authToken: String,
     ): Result<Unit>
 
+    suspend fun saveUserId(
+        userId: Long,
+    ): Result<Unit>
+
     suspend fun clearSession()
     fun getAuthToken(): Flow<String?>
 

@@ -168,7 +168,7 @@ fun MainScaffold(
                 )
             }
 
-            AnimatedVisibility(showSetting) {
+            if (isOnTopLevelRoute) AnimatedVisibility(showSetting) {
                 Dialog(onDismissRequest = { showSetting = false }) {
                     Card {
                         SettingsRoute()

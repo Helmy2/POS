@@ -54,4 +54,8 @@ interface UserDao {
     """
     )
     suspend fun getStoreIdForEmployee(employeeId: Long?): Long?
+
+    //findByEmail
+    @Query("SELECT * FROM users WHERE email = :email")
+    suspend fun findByEmail(email: String): UserEntity?
 }

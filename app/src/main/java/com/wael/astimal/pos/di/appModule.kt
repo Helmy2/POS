@@ -5,6 +5,7 @@ import org.koin.dsl.module
 
 val appModule = module {
     includes(coreModule)
+    includes(apiModule)
     includes(userModule)
     includes(inventoryModule)
     includes(managementModule)

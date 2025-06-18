@@ -279,4 +279,5 @@
     <string name="edit_voucher">Edit voucher</string>
     <string name="error_loading_transactione">error loading transactione</string>
     <string name="some_field_are_required">Some field are required</string>
+    <string name="account_avatar_image">Account avatar image</string>
 </resources>

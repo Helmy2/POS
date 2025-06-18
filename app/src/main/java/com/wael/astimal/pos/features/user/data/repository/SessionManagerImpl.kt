@@ -44,6 +44,7 @@ class SessionManagerImpl(
         }.map { preferences ->
             val userId = preferences[SessionManager.USER_ID]
             userId ?: return@map null
+            // Fetch the full user details from the database using the stored ID
             userDao.getUserById(userId)?.toDomain()
         }
     }
@@ -56,8 +57,20 @@ class SessionManagerImpl(
             runCatching {
                 dataStore.edit { preferences ->
                     preferences[SessionManager.USER_ID] = userId
+                    // Encrypt the token before saving
                     preferences[SessionManager.AUTH_TOKEN] =
                         Crypto.encrypt(authToken.toByteArray())
+                }
+                Unit
+            }
+        }
+    }
+
+    override suspend fun saveUserId(userId: Long): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                dataStore.edit { preferences ->
+                    preferences[SessionManager.USER_ID] = userId
                 }
                 Unit
             }
@@ -80,9 +93,10 @@ class SessionManagerImpl(
                 throw exception
             }
         }.map { preferences ->
-            preferences[SessionManager.AUTH_TOKEN]?.let {
-                Crypto.decrypt(it)
-            }.toString()
+            preferences[SessionManager.AUTH_TOKEN]?.let { encryptedToken ->
+                // Decrypt the token and correctly convert the resulting ByteArray to a String
+                String(Crypto.decrypt(encryptedToken))
+            }
         }
     }
 }

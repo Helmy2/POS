@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,9 +16,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.ImageLoader
+import coil3.compose.AsyncImage
+import coil3.request.crossfade
+import coil3.svg.SvgDecoder
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.features.user.presentation.components.LanguageSettingRow
 import com.wael.astimal.pos.features.user.presentation.components.ThemeSettingsRow
@@ -34,8 +40,7 @@ fun SettingsRoute(
     }
 
     SettingsScreen(
-        state = state,
-        onEvent = viewModel::processEvent
+        state = state, onEvent = viewModel::processEvent
     )
 }
 
@@ -52,10 +57,19 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        AsyncImage(
+            imageLoader = ImageLoader.Builder(LocalContext.current).crossfade(true)
+                .components {
+                    add(SvgDecoder.Factory())
+                }.build(),
+            model = state.user?.avatarUrl,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp)
+        )
+
         state.user?.let { user ->
             Text(
-                text = user.localizedName.displayName(state.language), modifier = Modifier
-                    .fillMaxWidth(),
+                text = user.localizedName.displayName(state.language),
                 style = MaterialTheme.typography.titleLarge
             )
         }
@@ -64,16 +78,14 @@ fun SettingsScreen(
             onShowDialog = { onEvent(SettingsContract.Event.ThemeDialogVisibilityChanged(it)) },
             themeMode = state.themeMode,
             onThemeChange = { onEvent(SettingsContract.Event.ThemeChanged(it)) },
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
         LanguageSettingRow(
             showDialog = state.showLanguageDialog,
             onShowDialog = { onEvent(SettingsContract.Event.LanguageDialogVisibilityChanged(it)) },
             language = state.language,
             onLanguageChange = { onEvent(SettingsContract.Event.LanguageChanged(it)) },
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
         Button(
             onClick = { onEvent(SettingsContract.Event.LogoutClicked) },

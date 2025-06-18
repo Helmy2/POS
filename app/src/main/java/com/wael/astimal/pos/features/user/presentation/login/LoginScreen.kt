@@ -43,7 +43,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
             title = stringResource(R.string.welcome_back),
             body = stringResource(R.string.login_to_your_account)
         )
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         AuthTextField(
             value = state.email,
@@ -56,7 +56,6 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
                 .sizeIn(maxWidth = 600.dp)
                 .fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(16.dp))
         PasswordTextField(
             value = state.password,
             isVisible = state.isPasswordVisible,
@@ -74,8 +73,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
                 .sizeIn(maxWidth = 600.dp)
                 .fillMaxWidth(),
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         ProgressiveButton(
             text = stringResource(R.string.login),

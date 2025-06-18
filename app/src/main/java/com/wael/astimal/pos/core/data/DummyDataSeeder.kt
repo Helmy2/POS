@@ -42,7 +42,9 @@ class DummyDataSeeder(
             enName = "Super Admin",
             email = "super_admin@example.com",
             phone = "5551234567",
-            userType = UserType.ADMIN
+            userType = UserType.ADMIN,
+            avatarUrl = "",
+            hashedPassword = ""
         ), UserEntity(
             id = 2,
             name = "Default Employee One",
@@ -50,7 +52,9 @@ class DummyDataSeeder(
             enName = "Default Employee One",
             email = "employee1@example.com",
             phone = "555000111",
-            userType = UserType.EMPLOYEE
+            userType = UserType.EMPLOYEE,
+            avatarUrl = "",
+            hashedPassword = ""
         ), UserEntity(
             id = 3,
             name = "Employee Two",
@@ -58,7 +62,9 @@ class DummyDataSeeder(
             enName = "Employee Two",
             email = "employee2@example.com",
             phone = "555000222",
-            userType = UserType.EMPLOYEE
+            userType = UserType.EMPLOYEE,
+            avatarUrl = "",
+            hashedPassword = ""
         )
     )
 

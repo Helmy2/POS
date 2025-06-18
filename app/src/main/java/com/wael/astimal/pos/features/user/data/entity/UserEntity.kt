@@ -15,9 +15,11 @@ data class UserEntity(
     val enName: String?,
     val email: String?,
     val phone: String?,
+    val hashedPassword: String?,
+    val avatarUrl: String?,
     val userType: UserType,
     var isSynced: Boolean = false,
-    var lastModified: Long = System.currentTimeMillis()
+    var lastModified: Long = System.currentTimeMillis(),
 )
 
 fun UserEntity.toDomain(): User {
@@ -30,5 +32,6 @@ fun UserEntity.toDomain(): User {
         userType = userType,
         isSynced = isSynced,
         lastModified = lastModified,
+        avatarUrl = avatarUrl
     )
 }

@@ -22,7 +22,7 @@ val userModule = module {
         SessionManagerImpl(get(), get())
     }
     single<UserRepository> {
-        UserRepositoryImpl(get(), get())
+        UserRepositoryImpl(get(), get(), get(), get())
     }
 
     viewModel { SettingsViewModel(get(), get(), get()) }

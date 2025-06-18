@@ -12,6 +12,7 @@ data class User(
     val isSynced: Boolean = false,
     val lastModified: Long,
     val name: String,
+    val avatarUrl: String?,
 ) {
     val isEmployee: Boolean get() = userType == UserType.EMPLOYEE
     val isAdmin: Boolean get() = userType == UserType.ADMIN

@@ -92,9 +92,11 @@ fun Screen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(horizontal = 16.dp)
                 .padding(it)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             content()
         }

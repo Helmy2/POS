@@ -79,5 +79,17 @@ dependencies {
 
     implementation(libs.vico.compose.m3)
 
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
+    implementation(libs.coil.network.okhttp)
+
+    // ktor
+    implementation(libs.ktor.core)
+    implementation(libs.ktor.android)
+    implementation(libs.ktor.auth)
+    implementation(libs.ktor.negotiation)
+    implementation(libs.ktor.json)
+    implementation(libs.ktor.logging)
+
     debugImplementation(libs.androidx.ui.tooling)
 }

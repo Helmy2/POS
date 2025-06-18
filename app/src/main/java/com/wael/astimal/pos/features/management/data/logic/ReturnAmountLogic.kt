@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.management.data.logic
 
-import com.wael.astimal.pos.core.util.ORDER_COMMISSION_PERCENTAGE
+import com.wael.astimal.pos.core.util.RETURN_COMMISSION_PERCENTAGE
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
@@ -57,7 +57,7 @@ class ReturnAmountLogic(
         val responsibleEmployeeId = client?.responsibleEmployee?.id
         val returningEmployeeId = returnEntity.employeeLocalId
 
-        val commissionAmount = returnEntity.totalAmount * ORDER_COMMISSION_PERCENTAGE
+        val commissionAmount = returnEntity.totalAmount * RETURN_COMMISSION_PERCENTAGE
 
         if (responsibleEmployeeId == returningEmployeeId) {
             createCommission(
