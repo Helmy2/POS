@@ -2,32 +2,24 @@ package com.wael.astimal.pos.features.user.presentation.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.domain.navigation.Destination
-import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
 import com.wael.astimal.pos.features.user.presentation.components.AuthTextField
 import com.wael.astimal.pos.features.user.presentation.components.CredentialsHeader
 import com.wael.astimal.pos.features.user.presentation.components.PasswordTextField
@@ -37,107 +29,69 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LoginRoute(
-    navController: NavHostController,
     viewModel: LoginViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    ObserveEffect(viewModel.effect, viewModel.effect) {
-        when (it) {
-            LoginEffect.NavigateToHome -> {
-                navController.navigate(Destination.Main) {
-                    popUpTo(0)
-                }
-            }
-
-            is LoginEffect.ShowError -> {
-                SnackbarController.sendEvent(
-                    event = SnackbarEvent(
-                        message = context.getString(it.message)
-                    )
-                )
-            }
-        }
-    }
-
-    LoginScreen(state = state, onEvent = viewModel::handleEvent)
+    LoginScreen(
+        state = state,
+        processEvent = viewModel::processEvent
+    )
 }
 
-
 @Composable
-fun LoginScreen(
-    state: LoginState,
-    onEvent: (LoginEvent) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val context = LocalContext.current
+fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) -> Unit) {
     val focus = LocalFocusManager.current
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CredentialsHeader(
-            title = context.getString(R.string.welcome_back),
-            body = context.getString(R.string.login_to_your_account),
+            title = stringResource(R.string.welcome_back),
+            body = stringResource(R.string.login_to_your_account)
         )
+        Spacer(modifier = Modifier.height(32.dp))
+
         AuthTextField(
             value = state.username,
             label = stringResource(R.string.name),
-            error = state.usernameError?.let { context.getString(it) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
             ),
-            onValueChange = { onEvent(LoginEvent.UsernameChanged(it)) },
+            onValueChange = { processEvent(LoginContract.Event.UsernameChanged(it)) },
             modifier = Modifier
                 .sizeIn(maxWidth = 600.dp)
                 .fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(16.dp))
         PasswordTextField(
             value = state.password,
-            error = state.passwordError?.let { stringResource(it) },
             isVisible = state.isPasswordVisible,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done,
             ),
-            onValueChange = { onEvent(LoginEvent.PasswordChanged(it)) },
-            onVisibilityToggle = { onEvent(LoginEvent.TogglePasswordVisibility) },
+            onValueChange = { processEvent(LoginContract.Event.PasswordChanged(it)) },
+            onVisibilityToggle = { processEvent(LoginContract.Event.TogglePasswordVisibility) },
             onDone = {
                 focus.clearFocus()
-                onEvent(LoginEvent.Login)
+                processEvent(LoginContract.Event.LoginClicked)
             },
             modifier = Modifier
                 .sizeIn(maxWidth = 600.dp)
                 .fillMaxWidth(),
-            supportingText = if (state.passwordError != null) {
-                {
-                    Text(
-                        text = stringResource(state.passwordError),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
-            } else {
-                null
-            },
         )
 
+        Spacer(modifier = Modifier.height(32.dp))
+
         ProgressiveButton(
-            isLoading = state.loading,
             text = stringResource(R.string.login),
-            onClick = {
-                focus.clearFocus()
-                onEvent(LoginEvent.Login)
-            },
-            modifier = Modifier
-                .sizeIn(maxWidth = 600.dp)
-                .fillMaxWidth(),
+            onClick = { processEvent(LoginContract.Event.LoginClicked) },
+            isLoading = state.loading,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

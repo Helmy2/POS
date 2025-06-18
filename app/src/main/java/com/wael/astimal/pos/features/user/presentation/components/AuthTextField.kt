@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 fun AuthTextField(
     value: String,
     label: String,
-    error: String?,
     keyboardOptions: KeyboardOptions,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -23,23 +22,10 @@ fun AuthTextField(
         placeholder = { Text(label) },
         keyboardOptions = keyboardOptions,
         singleLine = true,
-        isError = error != null,
         modifier = modifier,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
             unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
         ),
-        supportingText = when {
-            error != null -> {
-                {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-            }
-
-            else -> null
-        })
+    )
 }

@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.management.presentation.employee_account
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository

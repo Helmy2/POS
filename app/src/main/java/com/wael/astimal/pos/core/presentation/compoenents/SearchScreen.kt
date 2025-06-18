@@ -36,10 +36,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
-import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.core.base.ObserveEffect
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.util.convertToString
 import com.wael.astimal.pos.core.util.sharePdf
 import kotlinx.coroutines.flow.Flow
@@ -74,7 +75,7 @@ fun SearchScreen(
             is UiEvent.ShowSnackbar -> {
                 SnackbarController.sendEvent(
                     event = SnackbarEvent(
-                        message = context.getString(it.message)
+                        message = StringResource.FromResource(it.message)
                     )
                 )
             }

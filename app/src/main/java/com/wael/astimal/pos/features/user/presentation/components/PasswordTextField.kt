@@ -26,9 +26,7 @@ import com.wael.astimal.pos.R
 @Composable
 fun PasswordTextField(
     value: String,
-    error: String?,
     isVisible: Boolean,
-    supportingText: @Composable (() -> Unit)?,
     keyboardOptions: KeyboardOptions,
     onValueChange: (String) -> Unit,
     onVisibilityToggle: () -> Unit,
@@ -48,7 +46,6 @@ fun PasswordTextField(
         visualTransformation = if (isVisible) VisualTransformation.None
         else PasswordVisualTransformation(),
         singleLine = true,
-        isError = error != null,
         modifier = modifier,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
@@ -59,7 +56,6 @@ fun PasswordTextField(
                 isVisible = isVisible, onToggle = onVisibilityToggle
             )
         },
-        supportingText = supportingText
     )
 }
 

@@ -7,4 +7,5 @@ interface UserRepository {
     fun getEmployeesFlow(): Flow<List<User>>
     suspend fun getUser(localId: Long): User?
     suspend fun getStoreIdForEmployee(employeeId: Long): Long?
+    suspend fun login(name: String, password: String): Result<User>
 }

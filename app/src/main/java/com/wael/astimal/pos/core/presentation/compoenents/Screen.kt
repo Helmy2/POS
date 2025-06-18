@@ -13,10 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarEvent
-import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
+import com.wael.astimal.pos.core.base.ObserveEffect
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.util.sharePdf
 import kotlinx.coroutines.flow.Flow
 
@@ -39,7 +40,7 @@ fun Screen(
             is UiEvent.ShowSnackbar -> {
                 SnackbarController.sendEvent(
                     event = SnackbarEvent(
-                        message = context.getString(it.message)
+                        message = StringResource.FromResource(it.message)
                     )
                 )
             }

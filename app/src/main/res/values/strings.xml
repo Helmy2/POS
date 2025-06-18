@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">POS</string>
+    <string name="error_login">Can\'t login</string>
+
     <string name="login">Log In</string>
     <string name="welcome_back">Welcome Back</string>
     <string name="login_to_your_account">Log in to your account</string>
@@ -23,11 +25,6 @@
     <string name="create">Create</string>
     <string name="update">Update</string>
     <string name="delete">Delete</string>
-    <string name="error_invalid_email">Invalid email address</string>
-    <string name="error_invalid_password">Invalid password</string>
-    <string name="error_password_empty">Password is required</string>
-    <string name="error_password_weak">Password must be at least 8 characters and contain an uppercase letter and a special character.</string>
-    <string name="error_name_required">Name is required</string>
     <string name="logged_out_success">Logged out successfully</string>
     <string name="dashboard">Dashboard</string>
     <string name="inventory">Inventory</string>

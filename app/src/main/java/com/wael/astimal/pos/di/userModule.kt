@@ -19,12 +19,12 @@ val userModule = module {
         SettingsManagerImpl(get())
     }
     single<SessionManager> {
-        SessionManagerImpl(get(),get())
+        SessionManagerImpl(get(), get())
     }
     single<UserRepository> {
-        UserRepositoryImpl(get())
+        UserRepositoryImpl(get(), get())
     }
 
-    viewModel { SettingsViewModel( get(),get()) }
-    viewModel { LoginViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get()) }
 }

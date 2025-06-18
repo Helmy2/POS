@@ -1,25 +1,23 @@
 package com.wael.astimal.pos.features.user.presentation.login
 
-import androidx.annotation.StringRes
+import com.wael.astimal.pos.core.base.mvi.Reducer
 
-data class LoginState(
-    val username: String = "",
-    val password: String = "",
-    val loading: Boolean = false,
-    @StringRes val usernameError: Int? = null,
-    @StringRes val passwordError: Int? = null,
-    val isPasswordVisible: Boolean = false,
-)
+object LoginContract {
 
-sealed class LoginEvent {
-    data class UsernameChanged(val username: String) : LoginEvent()
-    data class PasswordChanged(val password: String) : LoginEvent()
-    data object TogglePasswordVisibility : LoginEvent()
-    data object Login : LoginEvent()
+    data class State(
+        val username: String = "",
+        val password: String = "",
+        val isPasswordVisible: Boolean = false,
+        val loading: Boolean = false,
+    ) : Reducer.ViewState
+
+    sealed interface Event : Reducer.ViewEvent {
+        data class UsernameChanged(val value: String) : Event
+        data class PasswordChanged(val value: String) : Event
+        data object TogglePasswordVisibility : Event
+        data object LoginClicked : Event
+
+        data class LoginSuccess(val username: String) : Event
+        data object LoginFailure : Event
+    }
 }
-
-sealed class LoginEffect {
-    data class ShowError(@StringRes val message: Int) : LoginEffect()
-    data object NavigateToHome : LoginEffect()
-}
-

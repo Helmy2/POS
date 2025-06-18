@@ -4,6 +4,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.data.DummyDataSeeder
 import com.wael.astimal.pos.core.util.Connectivity
@@ -17,9 +19,10 @@ import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
 val coreModule = module {
-    single<Connectivity> {
-        ConnectivityImp(context = androidApplication())
-    }
+    single<SnackbarController> { SnackbarController }
+    single<NavigationController> { NavigationController }
+
+    single<Connectivity> { ConnectivityImp(context = androidApplication()) }
     single<DataStore<Preferences>> {
         PreferenceDataStoreFactory.createWithPath(
             produceFile = {

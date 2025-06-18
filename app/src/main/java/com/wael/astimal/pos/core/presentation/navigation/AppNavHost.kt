@@ -90,7 +90,7 @@ fun AppNavHost(
             startDestination = Destination.Login
         ) {
             composable<Destination.Login> {
-                LoginRoute(navController = navController)
+                LoginRoute()
             }
         }
     }

@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavBackStackEntry
@@ -37,13 +38,17 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.NavigationEvent
+import com.wael.astimal.pos.core.base.ObserveEffect
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.getString
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.TopLevelRoutes
 import com.wael.astimal.pos.core.domain.navigation.isTopLevelRoute
-import com.wael.astimal.pos.core.presentation.snackbar.ObserveEffect
-import com.wael.astimal.pos.core.presentation.snackbar.SnackbarController
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 
 @Composable
@@ -66,18 +71,39 @@ fun MainScaffold(
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    ObserveEffect(SnackbarController.events, snackbarHostState) {
+    val snackbarController: SnackbarController = koinInject()
+    ObserveEffect(snackbarController.events, snackbarHostState) { event ->
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
-            if (it.message.isNotEmpty()) {
-                val result = snackbarHostState.showSnackbar(
-                    it.message,
-                    it.action?.name,
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    it.action?.action?.invoke()
+            val result = snackbarHostState.showSnackbar(
+                context.getString(event.message),
+                event.action?.name?.let {
+                    context.getString(it)
+                },
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                event.action?.action?.invoke()
+            }
+        }
+    }
+
+    val navigationController: NavigationController = koinInject()
+    ObserveEffect(navigationController.events, navController) { event ->
+        when (event) {
+            is NavigationEvent.NavigateTo -> {
+                navController.navigate(event.destination) {
+                    event.popUpToRoute?.let {
+                        popUpTo(it) {
+                            this.inclusive = event.inclusive
+                        }
+                    }
                 }
+            }
+
+            is NavigationEvent.NavigateBack -> {
+                navController.popBackStack()
             }
         }
     }

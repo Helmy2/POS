@@ -3,8 +3,8 @@ package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.domain.entity.Language
-import com.wael.astimal.pos.core.presentation.snackbar.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
