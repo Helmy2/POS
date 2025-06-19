@@ -28,9 +28,7 @@ data class UserDto(
     val isBlock: Int
 )
 
-fun UserDto.toEntity(
-    hashedPassword: String
-): UserEntity {
+fun UserDto.toEntity(): UserEntity {
     val role = when {
         isAdmin == 1 -> UserType.ADMIN
         isEmployee == 1 -> UserType.EMPLOYEE
@@ -45,6 +43,5 @@ fun UserDto.toEntity(
         email = email,
         phone = phone,
         avatarUrl = PROFILE_IMAGE_BASE_URL + avatar,
-        hashedPassword = hashedPassword
     )
 }

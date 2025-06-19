@@ -16,9 +16,9 @@ import com.wael.astimal.pos.features.management.domain.repository.BusinessPartne
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
+import com.wael.astimal.pos.features.user.data.local.SessionManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.domain.entity.UserType
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,7 +44,6 @@ class DummyDataSeeder(
             phone = "5551234567",
             userType = UserType.ADMIN,
             avatarUrl = "",
-            hashedPassword = ""
         ), UserEntity(
             id = 2,
             name = "Default Employee One",
@@ -54,7 +53,6 @@ class DummyDataSeeder(
             phone = "555000111",
             userType = UserType.EMPLOYEE,
             avatarUrl = "",
-            hashedPassword = ""
         ), UserEntity(
             id = 3,
             name = "Employee Two",
@@ -64,7 +62,6 @@ class DummyDataSeeder(
             phone = "555000222",
             userType = UserType.EMPLOYEE,
             avatarUrl = "",
-            hashedPassword = ""
         )
     )
 
@@ -111,7 +108,7 @@ class DummyDataSeeder(
         populateDummyStores()
         assignEmployeesToStores()
 
-        sessionManager.saveSession(users.elementAt(0).id, "")
+        sessionManager.saveUserSession(users.elementAt(0).id, "", "", "")
 
         val units = populateDummyUnits()
         val categories = populateDummyCategories()

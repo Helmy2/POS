@@ -6,7 +6,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,13 +15,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BusinessPartnerViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
-    private val sessionManager: SessionManager
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BusinessPartnerInfoState())
@@ -34,7 +33,7 @@ class BusinessPartnerViewModel(
 
     init {
         viewModelScope.launch {
-            val user = sessionManager.getCurrentUser().firstOrNull()
+            val user = userRepository.getCurrentUser()
             _state.update { it.copy(currentUser = user) }
         }
         onEvent(BusinessPartnerInfoEvent.SearchBusinessPartners(_state.value.query))

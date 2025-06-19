@@ -17,7 +17,7 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -28,10 +28,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val splashScreen = installSplashScreen()
         val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
-        val sessionManager: SessionManager by inject()
+        val userRepository: UserRepository by inject()
 
         lifecycleScope.launch {
-            sessionManager.isUserLoggedIn().let {
+            userRepository.isUserLoggedIn().let {
                 startDestination.value = if (it) {
                     Result.success(Destination.Main)
                 } else {

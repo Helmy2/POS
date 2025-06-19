@@ -8,7 +8,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -25,7 +24,7 @@ import kotlinx.coroutines.launch
 class StockManagementViewModel(
     private val stockRepository: StockRepository,
     private val storeRepository: StoreRepository,
-    private val sessionManager: SessionManager
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StockManagementState())
@@ -45,7 +44,7 @@ class StockManagementViewModel(
             }
         }
         viewModelScope.launch {
-            sessionManager.getCurrentUser().collect { user ->
+            userRepository.getCurrentUser()?.let { user ->
                 _state.update { it.copy(currentUser = user) }
             }
         }
@@ -112,7 +111,7 @@ class StockManagementViewModel(
     private fun saveStockAdjustment() {
         viewModelScope.launch {
             val target = _state.value.adjustmentTarget
-            val currentUser = sessionManager.getCurrentUser().first()
+            val currentUser = _state.value.currentUser
             val quantityChange = _state.value.adjustmentQuantityChange.toDoubleOrNull()
 
             if (target == null || currentUser == null) {

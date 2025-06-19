@@ -9,7 +9,7 @@ import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -25,7 +24,7 @@ import kotlinx.coroutines.launch
 class ReceivePayVoucherViewModel(
     private val voucherRepository: ReceivePayVoucherRepository,
     private val partnerRepository: BusinessPartnerRepository,
-    private val sessionManager: SessionManager
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReceivePayVoucherState())
@@ -36,10 +35,9 @@ class ReceivePayVoucherViewModel(
 
     init {
         viewModelScope.launch {
-            val currentUser = sessionManager.getCurrentUser().first()
             _state.update {
                 it.copy(
-                    currentUser = currentUser
+                    currentUser = userRepository.getCurrentUser()
                 )
             }
         }

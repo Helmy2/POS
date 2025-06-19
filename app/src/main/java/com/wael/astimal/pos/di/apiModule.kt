@@ -1,19 +1,28 @@
 package com.wael.astimal.pos.di
 
+import com.wael.astimal.pos.core.util.BASE_URL
+import com.wael.astimal.pos.features.user.data.local.SessionManager
 import com.wael.astimal.pos.features.user.data.remote.AuthApiService
 import com.wael.astimal.pos.features.user.data.remote.AuthApiServiceImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 
 val apiModule = module {
+    single<AuthApiService> { AuthApiServiceImpl(get()) }
+
     single {
+        val sessionManager = get<SessionManager>()
+
         HttpClient(Android) {
             install(Logging) {
                 level = LogLevel.ALL
@@ -25,8 +34,18 @@ val apiModule = module {
                     ignoreUnknownKeys = true
                 })
             }
+            install(Auth) {
+                bearer {
+                    loadTokens { sessionManager.getBearerTokens() }
+
+                    refreshTokens { sessionManager.refreshBearerTokens(client) }
+
+                    sendWithoutRequest { request ->
+                        request.url.host == BASE_URL &&
+                                !request.url.encodedPath.endsWith("/login")
+                    }
+                }
+            }
         }
     }
-
-    single<AuthApiService> { AuthApiServiceImpl(get()) }
 }

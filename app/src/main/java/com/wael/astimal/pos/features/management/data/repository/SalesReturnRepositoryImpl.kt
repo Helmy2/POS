@@ -12,7 +12,7 @@ import com.wael.astimal.pos.features.management.data.logic.ReturnAmountLogic
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -24,7 +24,7 @@ class SalesReturnRepositoryImpl(
     private val orderReturnDao: OrderReturnDao,
     private val returnAmountLogic: ReturnAmountLogic,
     private val partnerTransactionDao: PartnerTransactionDao,
-    private val sessionManager: SessionManager
+    private val userRepository: UserRepository
 ) : SalesReturnRepository {
 
     override fun getReturns(query: String): Flow<List<SalesReturn>> {
@@ -84,7 +84,7 @@ class SalesReturnRepositoryImpl(
         return try {
             val returnId = returnEntity.localId
             database.withTransaction {
-                val currentUserId = sessionManager.getCurrentUser().first()?.id
+                val currentUserId = userRepository.getCurrentUser()?.id
                     ?: throw Exception("User not authenticated")
 
                 val oldReturnEntity = orderReturnDao.getReturnEntityByLocalId(returnId)
@@ -116,7 +116,7 @@ class SalesReturnRepositoryImpl(
     override suspend fun deleteReturn(returnLocalId: Long): Result<Unit> {
         return try {
             database.withTransaction {
-                val currentUserId = sessionManager.getCurrentUser().first()?.id
+                val currentUserId = userRepository.getCurrentUser()?.id
                     ?: throw Exception("User not authenticated")
 
                 val returnEntity = orderReturnDao.getReturnEntityByLocalId(returnLocalId)

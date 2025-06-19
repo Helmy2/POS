@@ -13,7 +13,6 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRe
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,7 +33,6 @@ class StockTransferViewModel(
     private val productRepository: ProductRepository,
     private val userRepository: UserRepository,
     private val stockRepository: StockRepository,
-    private val sessionManager: SessionManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StockTransferScreenState())
@@ -47,7 +45,7 @@ class StockTransferViewModel(
 
     init {
         viewModelScope.launch {
-            sessionManager.getCurrentUser().collect { updateCurrentUser(it) }
+            userRepository.getCurrentUser()?.let { updateCurrentUser(it) }
         }
         onEvent(StockTransferScreenEvent.SearchTransfers(""))
         loadDropdownData()

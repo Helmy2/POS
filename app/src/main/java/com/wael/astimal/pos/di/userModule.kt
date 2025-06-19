@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.data.AppDatabase
-import com.wael.astimal.pos.features.user.data.repository.SessionManagerImpl
+import com.wael.astimal.pos.features.user.data.local.SessionManager
+import com.wael.astimal.pos.features.user.data.local.SessionManagerImpl
 import com.wael.astimal.pos.features.user.data.repository.SettingsManagerImpl
 import com.wael.astimal.pos.features.user.data.repository.UserRepositoryImpl
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import com.wael.astimal.pos.features.user.presentation.login.LoginViewModel
@@ -19,7 +19,7 @@ val userModule = module {
         SettingsManagerImpl(get())
     }
     single<SessionManager> {
-        SessionManagerImpl(get(), get())
+        SessionManagerImpl(get())
     }
     single<UserRepository> {
         UserRepositoryImpl(get(), get(), get(), get())

@@ -45,6 +45,6 @@ val inventoryModule = module {
     viewModel { StoreViewModel(get(), get()) }
     viewModel { CategoryViewModel(get(), get()) }
     viewModel { ProductViewModel(get(), get(), get(), get(), get()) }
-    viewModel { StockTransferViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { StockTransferViewModel(get(), get(), get(), get(), get()) }
     viewModel { StockManagementViewModel(get(), get(),get()) }
 }

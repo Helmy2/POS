@@ -13,7 +13,7 @@ import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -25,7 +25,7 @@ class SalesOrderRepositoryImpl(
     private val salesOrderDao: SalesOrderDao,
     private val orderAmountLogic: OrderAmountLogic,
     private val partnerTransactionDao: PartnerTransactionDao,
-    private val sessionManager: SessionManager
+    private val userRepository: UserRepository
 ) : SalesOrderRepository {
 
     override fun getOrders(query: String): Flow<List<SalesOrder>> {
@@ -112,7 +112,7 @@ class SalesOrderRepositoryImpl(
         return try {
             val orderId = order.localId
             database.withTransaction {
-                val currentUserId = sessionManager.getCurrentUser().first()?.id
+                val currentUserId = userRepository.getCurrentUser()?.id
                     ?: throw Exception("User not authenticated for update operation")
 
                 val oldOrderEntity = salesOrderDao.getOrderEntityByLocalId(orderId)
@@ -149,7 +149,7 @@ class SalesOrderRepositoryImpl(
     override suspend fun deleteOrder(orderLocalId: Long): Result<Unit> {
         return try {
             database.withTransaction {
-                val currentUserId = sessionManager.getCurrentUser().first()?.id
+                val currentUserId = userRepository.getCurrentUser()?.id
                     ?: throw Exception("User not authenticated for delete operation")
 
                 val orderEntity = salesOrderDao.getOrderEntityByLocalId(orderLocalId)

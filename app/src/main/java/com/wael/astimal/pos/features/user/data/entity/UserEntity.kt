@@ -15,7 +15,6 @@ data class UserEntity(
     val enName: String?,
     val email: String?,
     val phone: String?,
-    val hashedPassword: String?,
     val avatarUrl: String?,
     val userType: UserType,
     var isSynced: Boolean = false,

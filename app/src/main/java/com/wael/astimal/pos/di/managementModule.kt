@@ -63,10 +63,10 @@ val managementModule = module {
     viewModel { ManagementViewModel() }
 
     viewModel { BusinessPartnerViewModel(get(), get()) }
-    viewModel { SalesReturnViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { SalesViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { PurchaseViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { EmployeeAccountViewModel(get(), get(), get()) }
+    viewModel { SalesReturnViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SalesViewModel(get(), get(), get(), get(), get()) }
+    viewModel { PurchaseViewModel(get(), get(), get(), get(), get()) }
+    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get()) }
+    viewModel { EmployeeAccountViewModel(get(), get()) }
     viewModel { ReceivePayVoucherViewModel(get(), get(), get()) }
 }

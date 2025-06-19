@@ -6,15 +6,15 @@ import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.core.domain.navigation.Destination
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val settingsManager: SettingsManager,
-    private val sessionManager: SessionManager,
+    private val userRepository: UserRepository,
     private val navigationController: NavigationController
 ) : BaseViewModel<SettingsContract.State, SettingsContract.Event, Nothing>(
     reducer = SettingsReducer(),
@@ -34,7 +34,7 @@ class SettingsViewModel(
     private fun loadInitialData() {
         viewModelScope.launch {
             launch {
-                sessionManager.getCurrentUser().collectLatest { user ->
+                userRepository.getCurrentUser().let { user ->
                     setState(SettingsContract.Event.UserDataLoaded(user))
                     if (user == null) {
                         navigateToLogin()
@@ -70,7 +70,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             navigateToLogin()
             delay(100)
-            sessionManager.clearSession()
+            userRepository.logout()
         }
     }
 

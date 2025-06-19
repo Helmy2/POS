@@ -16,7 +16,6 @@ import com.wael.astimal.pos.features.management.domain.repository.BusinessPartne
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserType
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,7 +36,6 @@ class SalesViewModel(
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
-    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OrderState())
@@ -50,7 +48,7 @@ class SalesViewModel(
 
     init {
         viewModelScope.launch {
-            sessionManager.getCurrentUser().collect { updateCurrentUser(it) }
+            userRepository.getCurrentUser()?.let { updateCurrentUser(it) }
         }
         onEvent(OrderEvent.SearchOrders(""))
         loadDropdownData()

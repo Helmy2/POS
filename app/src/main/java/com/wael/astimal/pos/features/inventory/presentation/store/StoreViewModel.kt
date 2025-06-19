@@ -7,7 +7,7 @@ import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class StoreViewModel(
     private val storeRepository: StoreRepository,
-    private val sessionManager: SessionManager
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StoreState())
@@ -34,7 +34,7 @@ class StoreViewModel(
 
     init {
         viewModelScope.launch {
-            sessionManager.getCurrentUser().collect { user ->
+            userRepository.getCurrentUser()?.let { user ->
                 _state.update { it.copy(currentUser = user) }
             }
         }

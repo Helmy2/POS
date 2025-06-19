@@ -7,7 +7,6 @@ import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
-import com.wael.astimal.pos.features.user.domain.repository.SessionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,14 +14,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class EmployeeAccountViewModel(
     private val employeeAccountRepository: EmployeeAccountRepository,
     private val userRepository: UserRepository,
-    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(EmployeeAccountState())
@@ -34,8 +31,7 @@ class EmployeeAccountViewModel(
 
     init {
         viewModelScope.launch {
-            val currentUser = sessionManager.getCurrentUser().first()
-            _state.update { it.copy(currentUser = currentUser) }
+            _state.update { it.copy(currentUser = userRepository.getCurrentUser()) }
         }
         viewModelScope.launch {
             userRepository.getEmployeesFlow().catch {
