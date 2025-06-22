@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import kotlinx.coroutines.flow.Flow
 
 

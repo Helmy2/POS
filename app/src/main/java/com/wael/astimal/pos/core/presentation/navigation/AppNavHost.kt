@@ -55,11 +55,7 @@ fun AppNavHost(
                 )
             }
             // Reports Hub
-            composable<Destination.Reports> {
-                ReportsRoute(
-                    onNavigate = { navController.navigate(it) }
-                )
-            }
+            composable<Destination.Reports> { ReportsRoute() }
 
 
             // --- Inventory Sub-Screens ---

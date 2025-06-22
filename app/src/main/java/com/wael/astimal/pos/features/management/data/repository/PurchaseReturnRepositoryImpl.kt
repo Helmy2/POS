@@ -2,16 +2,17 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
-import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -45,7 +46,7 @@ class PurchaseReturnRepositoryImpl(
         } else {
             lastInvoice.substringAfter(prefix).toIntOrNull()?.plus(1) ?: 1
         }
-        return "$prefix${String.format("%03d", nextSeq)}"
+        return "$prefix${nextSeq.formatSequence()}"
     }
 
     override suspend fun addPurchaseReturn(

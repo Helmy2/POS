@@ -1,38 +1,31 @@
 package com.wael.astimal.pos.features.reports.presentation.account_statement
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.reports.domain.repository.AccountStatementRepository
 import com.wael.astimal.pos.features.reports.presentation.pdf.PdfGenerator
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AccountStatementViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
     private val accountStatementRepository: AccountStatementRepository,
-    private val pdfGenerator: PdfGenerator // Inject the generator
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(AccountStatementState())
-    val state: StateFlow<AccountStatementState> = _state.asStateFlow()
-
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
+    private val pdfGenerator: PdfGenerator,
+    private val snackbarController: SnackbarController
+) : BaseViewModel<AccountStatementContract.State, AccountStatementContract.Event, AccountStatementContract.Effect>(
+    reducer = AccountStatementReducer(),
+    initialState = AccountStatementContract.State()
+) {
 
     private var searchJob: Job? = null
     private var statementJob: Job? = null
@@ -41,46 +34,28 @@ class AccountStatementViewModel(
         searchPartners("")
     }
 
-    fun onEvent(event: AccountStatementEvent) {
+    override fun handleEvent(event: AccountStatementContract.Event) {
         when (event) {
-            is AccountStatementEvent.SearchPartner -> {
-                _state.update { it.copy(searchQuery = event.query) }
+            is AccountStatementContract.Event.SearchQueryChanged -> {
+                setState(event) // Update the query in the state immediately
                 searchPartners(event.query)
             }
-            is AccountStatementEvent.SelectPartner -> {
-                _state.update { it.copy(selectedPartner = event.partner) }
+
+            is AccountStatementContract.Event.PartnerSelected -> {
+                setState(event) // Set the selected partner immediately
                 loadAccountStatement(event.partner)
             }
-            is AccountStatementEvent.ClearPartnerSelection -> {
+
+            is AccountStatementContract.Event.ClearPartnerSelection -> {
                 statementJob?.cancel()
-                _state.update {
-                    it.copy(
-                        selectedPartner = null,
-                        transactions = emptyList(),
-                        isStatementLoading = false
-                    )
-                }
+                setState(event)
             }
-            is AccountStatementEvent.ExportToPdf -> {
+
+            is AccountStatementContract.Event.ExportToPdfClicked -> {
                 exportStatementToPdf()
             }
-        }
-    }
-
-    private fun exportStatementToPdf() {
-        val partner = _state.value.selectedPartner
-        val transactions = _state.value.transactions
-        if (partner == null || transactions.isEmpty()) {
-            return
-        }
-
-        viewModelScope.launch {
-            val fileUri = pdfGenerator.generateStatementPdf(partner, transactions)
-            if (fileUri != null) {
-                _eventFlow.emit(UiEvent.ShareFile(fileUri, R.string.share_statement_pdf))
-            } else {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_creating_pdf))
-            }
+            // Other events are for synchronous state updates only
+            else -> setState(event)
         }
     }
 
@@ -88,29 +63,41 @@ class AccountStatementViewModel(
     private fun searchPartners(query: String) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.update { it.copy(isPartnerListLoading = true) }
+            setState(AccountStatementContract.Event.PartnerListLoading)
             businessPartnerRepository.getBusinessPartners(query)
-                .debounce(300)
-                .catch { _state.update { it.copy(isPartnerListLoading = false) } }
+                .debounce(300) // Debounce to avoid excessive queries while typing
                 .collect { partners ->
-                    _state.update {
-                        it.copy(isPartnerListLoading = false, partners = partners)
-                    }
+                    setState(AccountStatementContract.Event.PartnersLoaded(partners))
                 }
         }
     }
 
     private fun loadAccountStatement(partner: BusinessPartner) {
         statementJob?.cancel()
+        setState(AccountStatementContract.Event.StatementLoading)
         statementJob = accountStatementRepository.getAccountStatement(partner)
             .onEach { transactions ->
-                _state.update {
-                    it.copy(isStatementLoading = false, transactions = transactions)
-                }
+                setState(AccountStatementContract.Event.StatementLoaded(transactions))
             }
-            .catch { _state.update { it.copy(isStatementLoading = false) } }
             .launchIn(viewModelScope)
+    }
 
-        _state.update { it.copy(isStatementLoading = true) }
+    private fun exportStatementToPdf() {
+        val partner = state.value.selectedPartner
+        val transactions = state.value.transactions
+        if (partner == null || transactions.isEmpty()) {
+            return
+        }
+
+        viewModelScope.launch {
+            val fileUri = pdfGenerator.generateStatementPdf(partner, transactions)
+            if (fileUri != null) {
+                setState(AccountStatementContract.Event.GenerateStatementPdfSuccessfully(fileUri))
+            } else {
+                snackbarController.sendEvent(
+                    SnackbarEvent(StringResource.FromResource(R.string.error_creating_pdf))
+                )
+            }
+        }
     }
 }

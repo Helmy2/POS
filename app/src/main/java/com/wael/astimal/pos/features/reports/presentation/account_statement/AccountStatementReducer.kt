@@ -1,0 +1,44 @@
+package com.wael.astimal.pos.features.reports.presentation.account_statement
+
+import com.wael.astimal.pos.core.base.mvi.Reducer
+
+class AccountStatementReducer :
+    Reducer<AccountStatementContract.State, AccountStatementContract.Event, AccountStatementContract.Effect> {
+    override fun reduce(
+        previousState: AccountStatementContract.State, event: AccountStatementContract.Event
+    ): Pair<AccountStatementContract.State, AccountStatementContract.Effect?> {
+        return when (event) {
+            is AccountStatementContract.Event.SearchQueryChanged -> previousState.copy(searchQuery = event.query) to null
+
+            is AccountStatementContract.Event.PartnerSelected -> previousState.copy(selectedPartner = event.partner) to null
+
+            is AccountStatementContract.Event.ClearPartnerSelection -> previousState.copy(
+                selectedPartner = null, transactions = emptyList(), isStatementLoading = false
+            ) to null
+
+            is AccountStatementContract.Event.PartnerListLoading -> previousState.copy(
+                isPartnerListLoading = true
+            ) to null
+
+            is AccountStatementContract.Event.PartnersLoaded -> previousState.copy(
+                isPartnerListLoading = false, partners = event.partners
+            ) to null
+
+            is AccountStatementContract.Event.StatementLoading -> previousState.copy(
+                isStatementLoading = true
+            ) to null
+
+            is AccountStatementContract.Event.StatementLoaded -> previousState.copy(
+                isStatementLoading = false, transactions = event.transactions
+            ) to null
+
+            is AccountStatementContract.Event.ExportToPdfClicked -> previousState to null
+
+            is AccountStatementContract.Event.GenerateStatementPdfSuccessfully -> {
+                previousState.copy(
+                    selectedPartner = null, transactions = emptyList(), isStatementLoading = false
+                ) to AccountStatementContract.Effect.SharePdf(event.fileUri)
+            }
+        }
+    }
+}

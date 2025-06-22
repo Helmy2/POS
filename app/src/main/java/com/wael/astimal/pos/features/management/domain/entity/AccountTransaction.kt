@@ -1,7 +1,7 @@
-package com.wael.astimal.pos.features.reports.domain.entity
+package com.wael.astimal.pos.features.management.domain.entity
 
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import java.time.LocalDateTime
-
 
 data class AccountTransaction(
     val date: LocalDateTime,
@@ -12,13 +12,3 @@ data class AccountTransaction(
     val credit: Double = 0.0,
     val balance: Double = 0.0
 )
-
-enum class TransactionType {
-    OPENING_BALANCE,
-    SALE,
-    PURCHASE,
-    SALE_RETURN,
-    PURCHASE_RETURN,
-    PAYMENT_RECEIVED,
-    PAYMENT_SENT
-}

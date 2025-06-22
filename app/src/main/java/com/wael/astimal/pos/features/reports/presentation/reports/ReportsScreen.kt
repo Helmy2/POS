@@ -10,39 +10,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import org.koin.androidx.compose.koinViewModel
 
-
 @Composable
 fun ReportsRoute(
-    onNavigate: (Destination) -> Unit,
     viewModel: ReportsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ReportsScreen(
         state = state,
-        onNavigate = onNavigate,
+        onEvent = viewModel::processEvent,
     )
 }
 
-
 @Composable
 fun ReportsScreen(
-    state: ReportsState,
-    onNavigate: (Destination) -> Unit,
+    state: ReportsContract.State,
+    onEvent: (ReportsContract.Event) -> Unit,
 ) {
     Scaffold { paddingValues ->
         ItemGrid(
             list = state.items,
-            onItemClick = { managementItem ->
-                onNavigate(managementItem.destination)
+            onItemClick = { reportItem ->
+                onEvent(ReportsContract.Event.ReportClicked(reportItem.destination))
             },
-            label = { managementItem ->
+            label = { reportItem ->
                 Label(
-                    stringResource(id = managementItem.label)
+                    stringResource(id = reportItem.label)
                 )
             },
             modifier = Modifier

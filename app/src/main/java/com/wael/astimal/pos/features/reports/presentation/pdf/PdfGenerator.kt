@@ -8,9 +8,9 @@ import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.core.content.FileProvider
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
-import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
-import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -58,7 +58,6 @@ class PdfGenerator(private val context: Context) {
         transactions: List<AccountTransaction>
     ): Uri? {
         val document = PdfDocument()
-        var yPosition = 0
 
         // Start the first page
         var pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
@@ -66,7 +65,7 @@ class PdfGenerator(private val context: Context) {
         var canvas = page.canvas
 
         // --- Draw Header ---
-        yPosition = drawReportHeader(canvas, partner)
+        var yPosition = drawReportHeader(canvas, partner)
 
         // --- Draw Table Header ---
         drawTableHeader(canvas, yPosition)
@@ -134,7 +133,7 @@ class PdfGenerator(private val context: Context) {
         y += 40
         canvas.drawText(partner.name.enName ?: "", margin, y.toFloat(), partnerPaint)
         y += 20
-        partner.address?.let {
+        partner.address.let {
             canvas.drawText(it, margin, y.toFloat(), addressPaint)
         }
         y += 40

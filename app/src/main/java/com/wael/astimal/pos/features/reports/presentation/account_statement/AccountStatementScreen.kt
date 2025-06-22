@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.reports.presentation.account_statement
 
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,22 +45,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.presentation.business_partner.getCompositeId
-import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
-import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
-import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 
-// Define colors for Debit and Credit for better readability in the statement
 val DebitColor = Color(0xFF388E3C)
 val CreditColor = Color(0xFFD32F2F)
 
@@ -67,30 +67,46 @@ fun AccountStatementRoute(
     onBack: () -> Unit, viewModel: AccountStatementViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    ObserveEffect(viewModel.effect) { effect ->
+        when (effect) {
+            is AccountStatementContract.Effect.SharePdf -> {
+                val shareIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, effect.fileUri)
+                    type = "application/pdf"
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(
+                    Intent.createChooser(
+                        shareIntent, context.getString(R.string.share_statement_pdf)
+                    )
+                )
+            }
+        }
+    }
+
     AccountStatementScreen(
         state = state,
-        onEvent = viewModel::onEvent,
+        onEvent = viewModel::processEvent,
         onBack = onBack,
-        eventFlow = viewModel.eventFlow
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountStatementScreen(
-    state: AccountStatementState,
-    onEvent: (AccountStatementEvent) -> Unit,
-    onBack: () -> Unit,
-    eventFlow: SharedFlow<UiEvent>
+    state: AccountStatementContract.State,
+    onEvent: (AccountStatementContract.Event) -> Unit,
+    onBack: () -> Unit
 ) {
 
     BackHandler(enabled = state.selectedPartner != null) {
-        onEvent(AccountStatementEvent.ClearPartnerSelection)
+        onEvent(AccountStatementContract.Event.ClearPartnerSelection)
     }
 
     Screen(
-        loading = state.isPartnerListLoading || state.isStatementLoading,
-        eventFlow = eventFlow,
         topBar = {
             AnimatedContent(
                 targetState = state.selectedPartner == null,
@@ -98,8 +114,10 @@ fun AccountStatementScreen(
                 if (isPartnerListVisible) {
                     SearchBarWithBackButton(
                         query = state.searchQuery,
-                        onQueryChange = { onEvent(AccountStatementEvent.SearchPartner(it)) },
-                        onSearch = { onEvent(AccountStatementEvent.SearchPartner(it)) },
+                        onQueryChange = {
+                            onEvent(AccountStatementContract.Event.SearchQueryChanged(it))
+                        },
+                        onSearch = { onEvent(AccountStatementContract.Event.SearchQueryChanged(it)) },
                         onBack = onBack,
                     )
                 } else {
@@ -117,7 +135,7 @@ fun AccountStatementScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(title, style = MaterialTheme.typography.titleLarge)
-                        IconButton(onClick = { onEvent(AccountStatementEvent.ExportToPdf) }) {
+                        IconButton(onClick = { onEvent(AccountStatementContract.Event.ExportToPdfClicked) }) {
                             Icon(
                                 Icons.Default.Share,
                                 contentDescription = stringResource(R.string.export_as_pdf)
@@ -129,13 +147,12 @@ fun AccountStatementScreen(
         }) {
         AnimatedContent(
             targetState = state.selectedPartner == null,
-            modifier = Modifier.padding(horizontal = 16.dp),
             transitionSpec = { fadeIn() togetherWith fadeOut() }) { isPartnerListVisible ->
             if (isPartnerListVisible) {
-                PartnerSelectionView(
+                PartnerSelectionList(
                     isLoading = state.isPartnerListLoading,
                     partners = state.partners,
-                    onPartnerSelected = { onEvent(AccountStatementEvent.SelectPartner(it)) })
+                    onPartnerSelected = { onEvent(AccountStatementContract.Event.PartnerSelected(it)) })
             } else {
                 StatementDetailView(
                     isLoading = state.isStatementLoading,
@@ -148,7 +165,7 @@ fun AccountStatementScreen(
 }
 
 @Composable
-fun PartnerSelectionView(
+fun PartnerSelectionList(
     isLoading: Boolean,
     partners: List<BusinessPartner>,
     onPartnerSelected: (BusinessPartner) -> Unit
@@ -157,7 +174,9 @@ fun PartnerSelectionView(
         if (isLoading && partners.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
                 items(partners, key = { it.getCompositeId() }) { partner ->
                     ListItem(
                         headlineContent = {
@@ -263,7 +282,7 @@ fun TransactionRow(transaction: AccountTransaction) {
     val description = if (isOpeningBalance) {
         stringResource(R.string.opening_balance)
     } else {
-        "${getTransactionTypeString(transaction.transactionType)} #${transaction.invoiceNumber}"
+        "${stringResource(transaction.transactionType.getStringRes())} #${transaction.invoiceNumber}"
     }
 
     Row(
@@ -331,10 +350,12 @@ fun StatementFooter(finalBalance: Double?) {
     val (summaryText, summaryColor) = when {
         finalBalance > 0.01 -> stringResource(
             R.string.balance_summary_negative, formattedBalance
-        ) to DebitColor // They Owe You
+        ) to DebitColor
+
         finalBalance < -0.01 -> stringResource(
             R.string.balance_summary_positive, formattedBalance
-        ) to CreditColor // You Owe Them
+        ) to CreditColor
+
         else -> stringResource(R.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
     }
 
@@ -352,18 +373,5 @@ fun StatementFooter(finalBalance: Double?) {
                 fontWeight = FontWeight.Bold
             )
         }
-    }
-}
-
-@Composable
-private fun getTransactionTypeString(type: TransactionType): String {
-    return when (type) {
-        TransactionType.OPENING_BALANCE -> stringResource(R.string.opening_balance)
-        TransactionType.SALE -> stringResource(R.string.sale)
-        TransactionType.PURCHASE -> stringResource(R.string.purchase)
-        TransactionType.SALE_RETURN -> stringResource(R.string.sale_return)
-        TransactionType.PURCHASE_RETURN -> stringResource(R.string.purchase_return)
-        TransactionType.PAYMENT_RECEIVED -> stringResource(R.string.payment_received)
-        TransactionType.PAYMENT_SENT -> stringResource(R.string.payment_sent)
     }
 }

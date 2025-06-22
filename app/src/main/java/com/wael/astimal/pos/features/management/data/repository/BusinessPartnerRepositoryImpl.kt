@@ -5,6 +5,7 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.entity.ClientEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.ClientDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
@@ -12,7 +13,6 @@ import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
-import com.wael.astimal.pos.features.reports.domain.entity.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map

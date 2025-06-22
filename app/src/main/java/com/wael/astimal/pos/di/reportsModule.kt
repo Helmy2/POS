@@ -13,6 +13,6 @@ val reportsModule = module {
     single { PdfGenerator(get()) }
     single<AccountStatementRepository> { AccountStatementRepositoryImpl(get()) }
 
-    viewModel { AccountStatementViewModel(get(), get(), get()) }
-    viewModel { ReportsViewModel() }
+    viewModel { AccountStatementViewModel(get(), get(), get(), get()) }
+    viewModel { ReportsViewModel(get()) }
 }

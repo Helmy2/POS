@@ -2,9 +2,9 @@ package com.wael.astimal.pos.features.reports.data.repository
 
 import com.wael.astimal.pos.core.util.toLocalDateTime
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
-import com.wael.astimal.pos.features.reports.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.reports.domain.repository.AccountStatementRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
