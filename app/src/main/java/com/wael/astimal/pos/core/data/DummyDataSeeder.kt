@@ -1,95 +1,42 @@
 package com.wael.astimal.pos.core.data
 
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
-import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
+import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.data.entity.toDomain
-import com.wael.astimal.pos.features.user.data.local.SessionManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
-import com.wael.astimal.pos.features.user.domain.entity.UserType
+import com.wael.astimal.pos.features.user.domain.entity.User
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class DummyDataSeeder(
+    private val navigator: NavigationController,
     private val userDao: UserDao,
-    private val storeDao: StoreDao,
-    private val unitDao: UnitDao,
-    private val categoryDao: CategoryDao,
-    private val sessionManager: SessionManager,
-    private val productRep: ProductRepository,
+    private val userRepository: UserRepository,
     private val businessPartnerRepository: BusinessPartnerRepository,
+    private val productRep: ProductRepository,
+    private val storeRepository: StoreRepository,
+    private val unitRepository: UnitRepository,
+    private val categoryRepository: CategoryRepository,
     private val applicationScope: CoroutineScope,
 ) {
-
-    val users = listOf(
-        UserEntity(
-            id = 1,
-            name = "Super Admin",
-            arName = "مدير النظام",
-            enName = "Super Admin",
-            email = "super_admin@example.com",
-            phone = "5551234567",
-            userType = UserType.ADMIN,
-            avatarUrl = "",
-        ), UserEntity(
-            id = 2,
-            name = "Default Employee One",
-            arName = "موظف افتراضي ١",
-            enName = "Default Employee One",
-            email = "employee1@example.com",
-            phone = "555000111",
-            userType = UserType.EMPLOYEE,
-            avatarUrl = "",
-        ), UserEntity(
-            id = 3,
-            name = "Employee Two",
-            arName = "موظف ٢",
-            enName = "Employee Two",
-            email = "employee2@example.com",
-            phone = "555000222",
-            userType = UserType.EMPLOYEE,
-            avatarUrl = "",
-        )
-    )
-
-    val stores = listOf(
-        StoreEntity(
-            localId = -1,
-            serverId = -1,
-            arName = "المخزن الرئيسي",
-            enName = "Main Warehouse",
-            type = StoreType.MAIN,
-            isSynced = false
-        ), StoreEntity(
-            localId = -2,
-            serverId = -2,
-            arName = "فرع أ",
-            enName = "Branch A",
-            type = StoreType.SUB,
-            isSynced = false
-        ), StoreEntity(
-            localId = -3,
-            serverId = -3,
-            arName = "فرع ب",
-            enName = "Branch B",
-            type = StoreType.SUB,
-            isSynced = false
-        )
-    )
-
     fun seedInitialDataIfNeeded() {
         applicationScope.launch(Dispatchers.IO) {
             val userCount = userDao.getUserCount()
@@ -104,64 +51,71 @@ class DummyDataSeeder(
     private suspend fun populateAllDummyData() {
         println("Populating all dummy data...")
 
-        populateDummyUsersAndEmployees()
-        populateDummyStores()
-        assignEmployeesToStores()
+        val user = userRepository.login(
+            "s@mail.com", "46554655"
+        ).onSuccess {
+            navigator.navigate(
+                Destination.Main,
+                Destination.Auth,
+                true
+            )
+        }.getOrElse {
+            println("Error logging in: ${it.message}")
+            return@populateAllDummyData
+        }
 
-        sessionManager.saveUserSession(users.elementAt(0).id, "", "", "")
+        val stores = populateDummyStores()
+        assignEmployeesToStores(stores, user)
 
         val units = populateDummyUnits()
         val categories = populateDummyCategories()
-        populateDummyBusinessPartner()
-        populateDummyProducts(categories, units)
+        populateDummyBusinessPartner(user)
+        populateDummyProducts(stores, categories, units)
 
         println("Dummy data population complete.")
     }
 
-    private suspend fun assignEmployeesToStores() {
-        userDao.assignStoreToEmployee(
-            EmployeeStoreEntity(
-                employeeLocalId = users.elementAt(1).id, storeLocalId = stores.elementAt(1).localId
+    private suspend fun assignEmployeesToStores(stores: List<StoreEntity>, user: User) {
+        stores.forEach {
+            userDao.assignStoreToEmployee(
+                EmployeeStoreEntity(
+                    employeeLocalId = user.id, storeLocalId = it.localId
+                )
             )
-        )
-        userDao.assignStoreToEmployee(
-            EmployeeStoreEntity(
-                employeeLocalId = users.elementAt(2).id, storeLocalId = stores.elementAt(2).localId
-            )
-        )
+        }
     }
 
 
-    private suspend fun populateDummyBusinessPartner() {
+    private suspend fun populateDummyBusinessPartner(user: User): List<BusinessPartner> {
         val businessPartners = listOf(
             BusinessPartner(
-                clientLocalId = null,
-                supplierLocalId = null,
+                clientLocalId = Id(1, 1),
+                supplierLocalId = Id(1, 1),
                 name = LocalizedString(
                     arName = "شريك عالمي",
                     enName = "Universal Partner",
                 ),
                 address = "1 El Tahrir Square, Cairo",
                 phone = "0123456789",
-                responsibleEmployee = users.elementAt(2).toDomain(),
+                responsibleEmployee = user,
                 supplierIndebtedness = 350.0,
                 type = PartnerType.BOTH,
                 isSynced = false
             ), BusinessPartner(
                 clientLocalId = null,
-                supplierLocalId = null,
+                supplierLocalId = Id(2, 2),
                 name = LocalizedString(
                     arName = "مورد ٢ (فقط)",
                     enName = "Supplier Two (Only)",
                 ),
                 address = "1 El Tahrir Square, Cairo",
                 phone = "6667778880",
-                responsibleEmployee = users.elementAt(1).toDomain(),
+                responsibleEmployee = user,
                 supplierIndebtedness = 150.0,
                 type = PartnerType.SUPPLIER,
                 isSynced = false
             ), BusinessPartner(
-                clientLocalId = null,
+                clientLocalId = Id(3, 3),
                 supplierLocalId = null,
                 name = LocalizedString(
                     arName = "عميل ١ (فقط)",
@@ -169,124 +123,140 @@ class DummyDataSeeder(
                 ),
                 address = "1 El Tahrir Square, Cairo",
                 phone = "0123412352235",
-                responsibleEmployee = users.elementAt(1).toDomain(),
+                responsibleEmployee = user,
                 clientDebt = 250.50,
                 type = PartnerType.CLIENT,
                 isSynced = false
             )
-
         )
 
         businessPartners.forEach {
             businessPartnerRepository.saveBusinessPartner(it)
         }
+
+        return businessPartners
     }
 
-    private suspend fun populateDummyUsersAndEmployees() {
-        users.forEach {
-            userDao.insertOrUpdate(it)
+    private suspend fun populateDummyUnits(): List<UnitEntity> {
+        val list = listOf(
+            UnitEntity(
+                localId = -1, serverId = -1, arName = "قطعة", enName = "Piece", isSynced = false
+            ), UnitEntity(
+                localId = -2, serverId = -2, arName = "دستة", enName = "Dozen", isSynced = false
+            ), UnitEntity(
+                localId = -3, serverId = -3, arName = "علبة", enName = "Box", isSynced = false
+            )
+        )
+        list.forEach {
+            unitRepository.saveUnit(it)
         }
+        return list
     }
 
-    private suspend fun populateDummyUnits(): Map<String, Long> {
-        val pieceId = unitDao.insertOrUpdate(
-            UnitEntity(serverId = -1, arName = "قطعة", enName = "Piece", isSynced = false)
-        )
-        val dozenId = unitDao.insertOrUpdate(
-            UnitEntity(serverId = -2, arName = "دستة", enName = "Dozen", isSynced = false)
-        )
-        val boxId = unitDao.insertOrUpdate(
-            UnitEntity(serverId = -3, arName = "علبة", enName = "Box", isSynced = false)
-        )
-        return mapOf("piece" to pieceId, "dozen" to dozenId, "box" to boxId)
-    }
-
-    private suspend fun populateDummyStores() {
-        stores.forEach {
-            storeDao.insertOrUpdate(it)
-        }
-    }
-
-    private suspend fun populateDummyCategories(): Map<String, Long> {
-        val lensesId = categoryDao.insertOrUpdate(
-            CategoryEntity(
+    private suspend fun populateDummyStores(): List<StoreEntity> {
+        val stores = listOf(
+            StoreEntity(
                 localId = -1,
-                serverId = null,
-                arName = "عدسات",
-                enName = "Lenses",
+                serverId = -1,
+                arName = "المخزن الرئيسي",
+                enName = "Main Warehouse",
+                type = StoreType.MAIN,
+                isSynced = false
+            ), StoreEntity(
+                localId = -2,
+                serverId = -2,
+                arName = "فرع أ",
+                enName = "Branch A",
+                type = StoreType.SUB,
+                isSynced = false
+            ), StoreEntity(
+                localId = -3,
+                serverId = -3,
+                arName = "فرع ب",
+                enName = "Branch B",
+                type = StoreType.SUB,
                 isSynced = false
             )
         )
-        val solutionsId = categoryDao.insertOrUpdate(
+
+        stores.forEach {
+            storeRepository.saveStore(it)
+        }
+        return stores
+    }
+
+    private suspend fun populateDummyCategories(): List<CategoryEntity> {
+        val list = listOf(
             CategoryEntity(
+                localId = -1, serverId = null, arName = "عدسات", enName = "Lenses", isSynced = false
+            ), CategoryEntity(
                 localId = -2,
-                serverId = null, arName = "محاليل", enName = "Solutions", isSynced = false
-            )
-        )
-        val accessoriesId = categoryDao.insertOrUpdate(
-            CategoryEntity(
+                serverId = null,
+                arName = "محاليل",
+                enName = "Solutions",
+                isSynced = false
+            ), CategoryEntity(
                 localId = -3,
-                serverId = null, arName = "اكسسوارات", enName = "Accessories", isSynced = false
+                serverId = null,
+                arName = "اكسسوارات",
+                enName = "Accessories",
+                isSynced = false
             )
         )
-        return mapOf(
-            "lenses" to lensesId, "solutions" to solutionsId, "accessories" to accessoriesId
-        )
+        list.forEach { categoryRepository.saveCategory(it) }
+        return list
     }
 
     private suspend fun populateDummyProducts(
-        categories: Map<String, Long>, units: Map<String, Long>
-    ): Map<String, Long> {
-        val product1 = ProductEntity(
-            localId = -1,
-            serverId = -1,
-            arName = "عدسات ديزيو الشهرية",
-            enName = "Desio Monthly Lenses",
-            categoryId = categories["lenses"]!!,
-            averagePrice = 120.0,
-            sellingPrice = 180.0,
-            openingBalanceQuantity = 50.0,
-            storeId = stores.elementAt(1).localId,
-            isSynced = false,
-            minimumUnitId = null,
-            maximumUnitId = units["box"]!!,
-            subUnitsPerMainUnit = 1.0,
+        stores: List<StoreEntity>, categories: List<CategoryEntity>, units: List<UnitEntity>
+    ): List<Product> {
+        val list = listOf(
+            ProductEntity(
+                localId = 0,
+                serverId = null,
+                arName = "عدسات ديزيو الشهرية",
+                enName = "Desio Monthly Lenses",
+                categoryId = categories[0].localId,
+                averagePrice = 120.0,
+                sellingPrice = 180.0,
+                openingBalanceQuantity = 50.0,
+                storeId = stores[1].localId,
+                minimumUnitId = null,
+                maximumUnitId = units[2].localId,
+                subUnitsPerMainUnit = 1.0
+            ), ProductEntity(
+                localId = 0,
+                serverId = -2,
+                arName = "محلول أوبتي-فري",
+                enName = "Opti-Free Solution",
+                categoryId = categories[1].localId,
+                averagePrice = 35.5,
+                sellingPrice = 55.0,
+                openingBalanceQuantity = 100.0,
+                storeId = stores[1].localId,
+                isSynced = false,
+                minimumUnitId = null,
+                maximumUnitId = units[0].localId,
+                subUnitsPerMainUnit = 1.0
+            ), ProductEntity(
+                localId = 0,
+                serverId = -3,
+                arName = "حافظة عدسات",
+                enName = "Lens Case",
+                categoryId = categories[2].localId,
+                averagePrice = 5.0,
+                sellingPrice = 15.0,
+                openingBalanceQuantity = 200.0,
+                storeId = stores[1].localId,
+                isSynced = false,
+                minimumUnitId = units[0].localId, // Piece
+                maximumUnitId = units[1].localId, // Dozen
+                subUnitsPerMainUnit = 12.0
+            )
         )
-        productRep.addProduct(product1)
-
-        val product2 = ProductEntity(
-            localId = -2,
-            serverId = -2,
-            arName = "محلول أوبتي-فري",
-            enName = "Opti-Free Solution",
-            categoryId = categories["solutions"]!!,
-            averagePrice = 35.5,
-            sellingPrice = 55.0,
-            openingBalanceQuantity = 100.0,
-            storeId = stores.elementAt(1).localId,
-            isSynced = false,
-            minimumUnitId = null,
-            maximumUnitId = units["piece"]!!,
-            subUnitsPerMainUnit = 1.0,
-        )
-        productRep.addProduct(product2)
-
-        val product3 = ProductEntity(
-            localId = -3,
-            serverId = -3,
-            arName = "حافظة عدسات",
-            enName = "Lens Case",
-            categoryId = categories["accessories"]!!,
-            averagePrice = 5.0,
-            sellingPrice = 15.0,
-            openingBalanceQuantity = 200.0,
-            storeId = stores.elementAt(1).localId,
-            isSynced = false,
-            minimumUnitId = units["piece"],
-            maximumUnitId = units["dozen"]!!,
-            subUnitsPerMainUnit = 12.0,
-        )
-        productRep.addProduct(product3)
-        return mapOf("desio" to 1, "optiFree" to 2, "lensCase" to 3)
+        list.forEach {
+            productRep.saveProduct(it)
+        }
+        return productRep.getProducts().first()
     }
 }

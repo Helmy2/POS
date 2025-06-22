@@ -49,6 +49,7 @@ val coreModule = module {
             get(),
             get(),
             get(),
+            get(),
             applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
         )
     }

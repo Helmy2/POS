@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -99,17 +100,17 @@ class CategoryViewModel(
 
             _state.update { it.copy(loading = true) }
 
-            val result = if (currentState.isNew || currentState.selectedCategory == null) {
-                categoryRepository.addCategory(
-                    arName = currentState.inputArName, enName = currentState.inputEnName
+            val result = categoryRepository.saveCategory(
+                CategoryEntity(
+                    localId = currentState.selectedCategory?.id?.local ?: 0,
+                    serverId = currentState.selectedCategory?.id?.server,
+                    arName = currentState.inputArName,
+                    enName = currentState.inputEnName,
+                    createdAt = currentState.selectedCategory?.createdAt
+                        ?: System.currentTimeMillis(),
                 )
-            } else {
-                categoryRepository.updateCategory(
-                    category = currentState.selectedCategory,
-                    newArName = currentState.inputArName,
-                    newEnName = currentState.inputEnName
-                )
-            }
+            )
+
 
             result.fold(onSuccess = {
                 _state.update {

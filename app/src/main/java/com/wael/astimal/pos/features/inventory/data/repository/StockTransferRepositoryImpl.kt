@@ -24,12 +24,6 @@ class StockTransferRepositoryImpl(
         }
     }
 
-    override fun getStockTransferWithDetailsFlow(localId: Long): Flow<StockTransfer?> {
-        return stockTransferDao.getStockTransferWithDetailsFlow(localId).map { entityWithDetails ->
-            entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
-        }
-    }
-
     override suspend fun getStockTransferWithDetails(localId: Long): StockTransfer? {
         val entityWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
         return entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
@@ -176,7 +170,7 @@ class StockTransferRepositoryImpl(
                         isSynced = false,
                         updatedAt = System.currentTimeMillis()
                     )
-                    stockTransferDao.updateStockTransfer(transferToMarkAsDeleted)
+                    stockTransferDao.insertStockOrUpdateTransfer(transferToMarkAsDeleted)
                 }
             }
             Result.success(Unit)

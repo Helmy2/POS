@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -26,62 +25,13 @@ class StoreRepositoryImpl(
         return if (entity?.isDeletedLocally == true) null else entity?.toDomain()
     }
 
-    override suspend fun getStoreByServerId(serverId: Int): Store? {
-        val entity = storeDao.getStoreByServerId(serverId)
-        return if (entity?.isDeletedLocally == true) null else entity?.toDomain()
-    }
-
-    override suspend fun addStore(
-        arName: String,
-        enName: String,
-        type: StoreType
-    ): Result<Unit> {
-        return try {
-            if (arName.isBlank() && enName.isBlank()) {
+    override suspend fun saveStore(store: StoreEntity): Result<Unit> {
+        return runCatching {
+            if (store.arName.isBlank() && store.enName.isBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided."))
             }
 
-            val newStoreEntity = StoreEntity(
-                localId = 0L,
-                serverId = null,
-                arName = arName,
-                enName = enName,
-                type = type,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
-                isDeletedLocally = false
-            )
-            storeDao.insert(listOf(newStoreEntity))
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun updateStore(
-        store: Store,
-        newArName: String,
-        newEnName: String,
-        newType: StoreType
-    ): Result<Unit> {
-        return try {
-            if (newArName.isBlank() && newEnName.isBlank()) {
-                return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided."))
-            }
-
-            val entityToUpdate = StoreEntity(
-                localId = store.id.local,
-                serverId = store.id.server,
-                arName = newArName,
-                enName = newEnName,
-                type = newType,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
-            )
-            storeDao.updateStore(entityToUpdate)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+            storeDao.insertOrUpdate(store)
         }
     }
 
@@ -96,7 +46,7 @@ class StoreRepositoryImpl(
                 isSynced = false,
                 updatedAt = System.currentTimeMillis()
             )
-            storeDao.updateStore(storeToMarkAsDeleted)
+            storeDao.insertOrUpdate(storeToMarkAsDeleted)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

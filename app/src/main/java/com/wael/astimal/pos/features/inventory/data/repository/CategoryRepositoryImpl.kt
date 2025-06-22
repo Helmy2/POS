@@ -19,76 +19,29 @@ class CategoryRepositoryImpl(
         }
     }
 
-    override suspend fun getCategoryByLocalId(localId: Long): Category? {
-        val entity = categoryDao.getCategoryByLocalId(localId)
-        return if (entity?.isDeletedLocally == true) null else entity?.toDomain()
-    }
-
-    override suspend fun getCategoryByServerId(serverId: Int): Category? {
-        val entity = categoryDao.getCategoryByServerId(serverId)
-        return if (entity?.isDeletedLocally == true) null else entity?.toDomain()
-    }
-
-    override suspend fun addCategory(
-        arName: String?,
-        enName: String?
+    override suspend fun saveCategory(
+        category: CategoryEntity
     ): Result<Unit> {
-        return try {
-            if (arName.isNullOrBlank() && enName.isNullOrBlank()) {
+        return runCatching {
+            if (category.enName.isNullOrBlank() && category.arName.isNullOrBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the category."))
             }
 
-            val newCategoryEntity = CategoryEntity(
-                serverId = null,
-                arName = arName,
-                enName = enName,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
-                isDeletedLocally = false
-            )
-            categoryDao.insert(listOf(newCategoryEntity))
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun updateCategory(
-        category: Category,
-        newArName: String?,
-        newEnName: String?
-    ): Result<Category> {
-        return try {
-            if (newArName.isNullOrBlank() && newEnName.isNullOrBlank()) {
-                return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the category."))
-            }
-
-            val entityToUpdate = CategoryEntity(
-                localId = category.id.local,
-                serverId = category.id.server,
-                arName = newArName,
-                enName = newEnName,
-                updatedAt = System.currentTimeMillis(),
-            )
-            categoryDao.updateCategory(entityToUpdate)
-            Result.success(entityToUpdate.toDomain())
-        } catch (e: Exception) {
-            Result.failure(e)
+            categoryDao.insertOrUpdate(category)
         }
     }
 
     override suspend fun deleteCategory(category: Category): Result<Unit> {
         return try {
-            val entityToDelete = categoryDao.getCategoryByLocalId(category.id.local)
-                ?: return Result.failure(NoSuchElementException("Category not found for deletion"))
+            val entityToDelete =
+                categoryDao.getCategoryByLocalId(category.id.local) ?: return Result.failure(
+                    NoSuchElementException("Category not found for deletion")
+                )
 
             val categoryToMarkAsDeleted = entityToDelete.copy(
-                isDeletedLocally = true,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis()
+                isDeletedLocally = true, isSynced = false, updatedAt = System.currentTimeMillis()
             )
-            categoryDao.updateCategory(categoryToMarkAsDeleted)
+            categoryDao.insertOrUpdate(categoryToMarkAsDeleted)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

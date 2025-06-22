@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface StockTransferRepository {
     fun getStockTransfersWithDetails(): Flow<List<StockTransfer>>
-    fun getStockTransferWithDetailsFlow(localId: Long): Flow<StockTransfer?>
     suspend fun getStockTransferWithDetails(localId: Long): StockTransfer?
     suspend fun addStockTransfer(
         fromStoreId: Long,

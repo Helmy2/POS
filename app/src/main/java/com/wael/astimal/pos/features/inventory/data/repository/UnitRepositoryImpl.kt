@@ -17,47 +17,18 @@ class UnitRepositoryImpl(
         }
     }
 
-    override suspend fun getUnitByServerId(serverId: Int): UnitEntity? {
-        val unit = unitDao.getByServerId(serverId)
-        return if (unit?.isDeletedLocally == true) null else unit
-    }
-
-    override suspend fun addUnit(unit: UnitEntity): Result<UnitEntity> {
-        return try {
-            val unitToInsert = unit.copy(
-                serverId = null,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
-                isDeletedLocally = false
-            )
-            unitDao.insert(listOf(unitToInsert))
-            Result.success(unitToInsert)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun updateUnit(unit: UnitEntity): Result<UnitEntity> {
-        return try {
-            val unitToUpdate = unit.copy(
-                isSynced = false,
-                updatedAt = System.currentTimeMillis()
-            )
-            unitDao.insert(listOf(unitToUpdate))
-            Result.success(unitToUpdate)
-        } catch (e: Exception) {
-            Result.failure(e)
+    override suspend fun saveUnit(unit: UnitEntity): Result<Unit> {
+        return runCatching {
+            unitDao.insertOrUpdate(unit)
         }
     }
 
     override suspend fun deleteUnit(unit: UnitEntity): Result<Unit> {
         return try {
             val unitToDelete = unit.copy(
-                isDeletedLocally = true,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis()
+                isDeletedLocally = true, isSynced = false, updatedAt = System.currentTimeMillis()
             )
-            unitDao.insert(listOf(unitToDelete))
+            unitDao.insertOrUpdate(unitToDelete)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

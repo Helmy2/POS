@@ -28,111 +28,73 @@ class ProductRepositoryImpl(
         }
     }
 
-    override fun getProductByLocalIdFlow(localId: Long): Flow<Product?> {
-        return productDao.getProductWithDetailsByLocalIdFlow(localId).map { entityWithDetails ->
-            entityWithDetails?.takeUnless { it.product.isDeletedLocally }?.toDomain()
-        }
-    }
-
 
     override suspend fun getProductByLocalId(localId: Long): Product? {
         val entity = productDao.getProductWithDetailsByLocalId(localId)
         return if (entity?.product?.isDeletedLocally == true) null else entity?.toDomain()
     }
 
-    override suspend fun getProductByServerId(serverId: Int): Product? {
-        val entity = productDao.getProductWithDetailsByServerId(serverId)
-        return if (entity?.product?.isDeletedLocally == true) null else entity?.toDomain()
-    }
-
-    override suspend fun addProduct(productEntity: ProductEntity): Result<Unit> {
-        return try {
+    override suspend fun saveProduct(productEntity: ProductEntity): Result<Unit> {
+        return runCatching {
             if (productEntity.arName.isBlank() && productEntity.enName.isBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the product."))
             }
 
             appDatabase.withTransaction {
-                val entityToInsert = productEntity.copy(
-                    localId = 0L,
-                    serverId = null,
-                    isSynced = false,
-                    updatedAt = System.currentTimeMillis(),
-                    isDeletedLocally = false
-                )
-                val newProductId = productDao.insertOrUpdate(entityToInsert)
+                if (productEntity.localId == 0L) {
+                    val newProductId = productDao.insertOrUpdate(productEntity)
 
-                val openingBalance = productEntity.openingBalanceQuantity
-                val currentUser = userRepository.getCurrentUser()
-                val fullProduct = productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
-
-                if (openingBalance != null && openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
-                    val adjustment = StockAdjustmentEntity(
-                        serverId = null,
-                        storeId = fullProduct.store.id.local,
-                        productId = newProductId,
-                        userId = currentUser.id,
-                        reason = StockAdjustmentReason.INITIAL_COUNT,
-                        notes = "Opening Balance",
-                        quantityChange = openingBalance,
-                    )
-                    stockRepository.addStockAdjustment(adjustment)
-                }
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun updateProduct(productEntity: ProductEntity): Result<Product> {
-        return try {
-            if (productEntity.arName.isBlank() && productEntity.enName.isBlank()) {
-                return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the product."))
-            }
-
-            appDatabase.withTransaction {
-                val oldProductEntity = productDao.getProductByLocalId(productEntity.localId)
-                    ?: throw NoSuchElementException("Product not found for update with localId: ${productEntity.localId}")
-
-                val entityToUpdate = productEntity.copy(
-                    isSynced = false, updatedAt = System.currentTimeMillis()
-                )
-                productDao.updateProduct(entityToUpdate)
-
-                val openingBalanceDifference = (productEntity.openingBalanceQuantity
-                    ?: 0.0) - (oldProductEntity.openingBalanceQuantity ?: 0.0)
-
-                if (openingBalanceDifference != 0.0) {
+                    val openingBalance = productEntity.openingBalanceQuantity
                     val currentUser = userRepository.getCurrentUser()
-                        ?: throw Exception("User not authenticated for stock adjustment.")
-                    val fullProduct = getProductByLocalId(productEntity.localId) ?: throw Exception(
-                        "Could not retrieve full product details for adjustment."
-                    )
-                    val store = fullProduct.store
+                    val fullProduct =
+                        productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
 
-                    val adjustment = StockAdjustmentEntity(
-                        localId = 0L,
-                        serverId = null,
-                        storeId = store.id.local,
-                        productId = fullProduct.id.local,
-                        userId = currentUser.id,
-                        reason = StockAdjustmentReason.RECOUNT,
-                        notes = "Opening balance updated.",
-                        quantityChange = openingBalanceDifference,
-                        updatedAt = System.currentTimeMillis(),
-                        isSynced = false
-                    )
-                    stockRepository.addStockAdjustment(adjustment)
+                    if (openingBalance != null && openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
+                        val adjustment = StockAdjustmentEntity(
+                            serverId = null,
+                            storeId = fullProduct.store.id.local,
+                            productId = newProductId,
+                            userId = currentUser.id,
+                            reason = StockAdjustmentReason.INITIAL_COUNT,
+                            notes = "Opening Balance",
+                            quantityChange = openingBalance,
+                        )
+                        stockRepository.addStockAdjustment(adjustment)
+                    }
+                } else {
+                    val oldProductEntity = productDao.getProductByLocalId(productEntity.localId)
+                        ?: throw NoSuchElementException("Product not found for update with localId: ${productEntity.localId}")
+
+                    productDao.insertOrUpdate(productEntity)
+
+                    val openingBalanceDifference = (productEntity.openingBalanceQuantity
+                        ?: 0.0) - (oldProductEntity.openingBalanceQuantity ?: 0.0)
+
+                    if (openingBalanceDifference != 0.0) {
+                        val currentUser = userRepository.getCurrentUser()
+                            ?: throw Exception("User not authenticated for stock adjustment.")
+                        val fullProduct =
+                            getProductByLocalId(productEntity.localId) ?: throw Exception(
+                                "Could not retrieve full product details for adjustment."
+                            )
+                        val store = fullProduct.store
+
+                        val adjustment = StockAdjustmentEntity(
+                            localId = 0L,
+                            serverId = null,
+                            storeId = store.id.local,
+                            productId = fullProduct.id.local,
+                            userId = currentUser.id,
+                            reason = StockAdjustmentReason.RECOUNT,
+                            notes = "Opening balance updated.",
+                            quantityChange = openingBalanceDifference,
+                            updatedAt = System.currentTimeMillis(),
+                            isSynced = false
+                        )
+                        stockRepository.addStockAdjustment(adjustment)
+                    }
                 }
             }
-
-            val updatedProductWithDetails =
-                productDao.getProductWithDetailsByLocalId(productEntity.localId)
-                    ?: return Result.failure(IllegalStateException("Failed to retrieve product after update"))
-
-            Result.success(updatedProductWithDetails.toDomain())
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -177,7 +139,7 @@ class ProductRepositoryImpl(
                     isSynced = false,
                     updatedAt = System.currentTimeMillis()
                 )
-                productDao.updateProduct(productToMarkAsDeleted)
+                productDao.insertOrUpdate(productToMarkAsDeleted)
             }
             Result.success(Unit)
         } catch (e: Exception) {

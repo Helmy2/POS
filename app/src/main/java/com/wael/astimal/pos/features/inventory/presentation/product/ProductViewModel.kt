@@ -152,6 +152,7 @@ class ProductViewModel(
                     selectedStoreId = product.store.id.local,
                     selectedMinStockUnitId = product.minimumProductUnit?.id?.local,
                     selectedMaxStockUnitId = product.maximumProductUnit.id.local,
+                    subUnitsPerMainUnit = product.subUnitsPerMainUnit.toString()
                 )
             }
         }
@@ -185,18 +186,13 @@ class ProductViewModel(
                 storeId = currentState.selectedStoreId,
                 minimumUnitId = currentState.selectedMinStockUnitId,
                 maximumUnitId = currentState.selectedMaxStockUnitId,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
                 subUnitsPerMainUnit = currentState.subUnitsPerMainUnit.toDoubleOrNull() ?: 1.0,
+                createdAt = currentState.selectedProduct?.createdAt ?: System.currentTimeMillis(),
             )
 
             Log.d("TAG", "saveProduct: $productEntity")
 
-            val result = if (currentState.isNew || currentState.selectedProduct == null) {
-                productRepository.addProduct(productEntity)
-            } else {
-                productRepository.updateProduct(productEntity)
-            }
+            val result = productRepository.saveProduct(productEntity)
 
             result.fold(onSuccess = {
                 _state.update {
@@ -212,6 +208,7 @@ class ProductViewModel(
                         selectedStoreId = null,
                         selectedMinStockUnitId = null,
                         selectedMaxStockUnitId = null,
+                        subUnitsPerMainUnit = "",
                     )
                 }
             }, onFailure = { e ->

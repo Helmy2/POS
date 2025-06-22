@@ -45,25 +45,21 @@ class UserRepositoryImpl(
 
 
     override suspend fun login(email: String, password: String): Result<User> {
-        if (connectivity.statusUpdates.first().isConnected) {
-            val apiResult = authApiService.login(LoginRequest(email = email, password = password))
-            apiResult.onSuccess { response ->
-                val userEntity = response.user.toEntity()
-                sessionManager.saveUserSession(
-                    userId = userEntity.id,
-                    email = email,
-                    password = password,
-                    accessToken = response.token,
-                )
-                userDao.insertOrUpdate(userEntity)
+        return runCatching {
+            if (connectivity.statusUpdates.first().isDisconnected) throw Exception("No internet connection")
 
-                return Result.success(userEntity.toDomain())
-            }
-            apiResult.onFailure {
-                return Result.failure(it)
-            }
+            val response =
+                authApiService.login(LoginRequest(email = email, password = password)).getOrThrow()
+            val userEntity = response.user.toEntity()
+            sessionManager.saveUserSession(
+                userId = userEntity.id,
+                email = email,
+                password = password,
+                accessToken = response.token,
+            )
+            userDao.insertOrUpdate(userEntity)
+
+            userEntity.toDomain()
         }
-
-        return Result.failure(Exception("No internet connection"))
     }
 }

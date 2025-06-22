@@ -22,8 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UnitViewModel(
-    private val unitRepository: UnitRepository,
-    private val userRepository: UserRepository
+    private val unitRepository: UnitRepository, private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UnitDetailsState())
@@ -45,8 +44,8 @@ class UnitViewModel(
 
     fun handleEvent(event: UnitEvent) {
         when (event) {
-            is UnitEvent.CreateUnit -> createUnitFromState()
-            is UnitEvent.UpdateUnit -> updateUnitFromState()
+            is UnitEvent.CreateUnit -> saveUnit()
+            is UnitEvent.UpdateUnit -> saveUnit()
             is UnitEvent.DeleteUnit -> deleteSelectedUnit()
             is UnitEvent.NewUnit -> handleSelectUnit(null)
             is UnitEvent.Search -> searchUnits(event.query)
@@ -96,7 +95,7 @@ class UnitViewModel(
         }
     }
 
-    private fun createUnitFromState() {
+    private fun saveUnit() {
         viewModelScope.launch {
             val currentState = _state.value
             if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
@@ -105,15 +104,16 @@ class UnitViewModel(
             }
 
             _state.update { it.copy(loading = true) }
-            val newUnitEntity = UnitEntity(
-                serverId = null,
-                arName = currentState.arName,
-                enName = currentState.enName,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
-                isDeletedLocally = false
+            val result = unitRepository.saveUnit(
+                UnitEntity(
+                    localId = currentState.selectedProductUnit?.id?.local ?: 0L,
+                    serverId = currentState.selectedProductUnit?.id?.server ?: 0L,
+                    arName = currentState.arName,
+                    enName = currentState.enName,
+                    createdAt = currentState.selectedProductUnit?.createdAt
+                        ?: System.currentTimeMillis(),
+                )
             )
-            val result = unitRepository.addUnit(newUnitEntity)
             result.fold(onSuccess = {
                 _state.update {
                     it.copy(
@@ -122,44 +122,6 @@ class UnitViewModel(
                 }
             }, onFailure = { e ->
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_create_unit))
-            })
-        }
-    }
-
-    private fun updateUnitFromState() {
-        viewModelScope.launch {
-            val currentState = _state.value
-            val unitToUpdate = currentState.selectedProductUnit
-            if (unitToUpdate == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.no_unit_selected_for_update))
-                return@launch
-            }
-            if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_name_arabic_or_english_is_required))
-                return@launch
-            }
-
-            _state.update { it.copy(loading = true) }
-            val updatedUnitEntity = UnitEntity(
-                localId = unitToUpdate.id.local,
-                serverId = unitToUpdate.id.server,
-                arName = currentState.arName,
-                enName = currentState.enName,
-                isSynced = false,
-                updatedAt = System.currentTimeMillis(),
-            )
-            val result = unitRepository.updateUnit(updatedUnitEntity)
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        selectedProductUnit = null,
-                        arName = "",
-                        enName = "",
-                    )
-                }
-            }, onFailure = { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_update_unit))
             })
         }
     }

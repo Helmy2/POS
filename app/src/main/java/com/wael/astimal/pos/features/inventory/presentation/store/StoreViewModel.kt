@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -107,20 +108,16 @@ class StoreViewModel(
 
             _state.update { it.copy(loading = true) }
 
-            val result = if (currentState.isNew || currentState.selectedStore == null) {
-                storeRepository.addStore(
+            val result = storeRepository.saveStore(
+                StoreEntity(
+                    localId = currentState.selectedStore?.id?.local ?: 0L,
+                    serverId = currentState.selectedStore?.id?.server ?: 0L,
                     arName = currentState.inputArName,
                     enName = currentState.inputEnName,
-                    type = currentState.inputType ?: StoreType.SUB
+                    type = currentState.inputType ?: StoreType.SUB,
+                    createdAt = currentState.selectedStore?.createdAt ?: System.currentTimeMillis(),
                 )
-            } else {
-                storeRepository.updateStore(
-                    store = currentState.selectedStore,
-                    newArName = currentState.inputArName,
-                    newEnName = currentState.inputEnName,
-                    newType = currentState.inputType ?: StoreType.SUB
-                )
-            }
+            )
 
             result.fold(onSuccess = { savedStore ->
                 _state.update {
