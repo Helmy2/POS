@@ -1,33 +1,45 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
+import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 
-data class StoreState(
-    val loading: Boolean = false,
-    val searchResults: List<Store> = emptyList(),
-    val selectedStore: Store? = null,
-    val inputArName: String = "",
-    val inputEnName: String = "",
-    val inputType: StoreType? = null,
-    val query: String = "",
-    val isQueryActive: Boolean = false,
-    val currentUser: User? = null,
-) {
-    val isNew: Boolean get() = selectedStore == null
-    val canEdit get() = currentUser?.isAdmin == true
-}
+object StoreContract {
 
-sealed interface StoreEvent {
-    data object CreateStore : StoreEvent
-    data object UpdateStore : StoreEvent
-    data object DeleteStore : StoreEvent
-    data class UpdateInputArName(val name: String) : StoreEvent
-    data class UpdateInputEnName(val name: String) : StoreEvent
-    data class UpdateInputType(val type: StoreType?) : StoreEvent
-    data class UpdateQuery(val query: String) : StoreEvent
-    data class UpdateIsQueryActive(val isQueryActive: Boolean) : StoreEvent
-    data class Search(val query: String) : StoreEvent
-    data class SelectStore(val store: Store?) : StoreEvent
+    data class State(
+        val isLoading: Boolean = false,
+        val stores: List<Store> = emptyList(),
+        val selectedStore: Store? = null,
+        val searchQuery: String = "",
+        val isSearchActive: Boolean = false,
+        val currentUser: User? = null,
+        val inputArName: String = "",
+        val inputEnName: String = "",
+        val inputType: StoreType = StoreType.SUB
+    ) : Reducer.ViewState {
+        val isEditing: Boolean get() = selectedStore != null
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+    }
+
+    sealed interface Event : Reducer.ViewEvent {
+        data class SearchQueryChanged(val query: String) : Event
+        data class SearchActiveChanged(val isActive: Boolean) : Event
+        data class StoreSelected(val store: Store) : Event
+        data object NewStoreClicked : Event
+        data object SaveClicked : Event
+        data object DeleteClicked : Event
+        data object BackClicked : Event
+
+        data class ArNameChanged(val name: String) : Event
+        data class EnNameChanged(val name: String) : Event
+        data class TypeChanged(val type: StoreType) : Event
+
+        data class UserLoaded(val user: User?) : Event
+        data class StoresLoaded(val stores: List<Store>) : Event
+        data object SaveSucceeded : Event
+        data object DeleteSucceeded : Event
+        data object LoadingStarted : Event
+        data object LoadingFinished : Event
+    }
 }

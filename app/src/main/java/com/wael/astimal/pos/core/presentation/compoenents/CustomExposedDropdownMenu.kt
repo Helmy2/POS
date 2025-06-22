@@ -21,12 +21,13 @@ fun <T> CustomExposedDropdownMenu(
     label: String,
     items: List<T>,
     selectedItemId: Long?,
-    onItemSelected: (T?) -> Unit,
+    onItemSelected: (T) -> Unit,
     itemToDisplayString: (T) -> String,
     itemToId: (T) -> Long?,
     modifier: Modifier = Modifier,
+    onClearItem: () -> Unit = {},
+    canClearSelection: Boolean = false,
     enabled: Boolean = true,
-    canClearSelection: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedItem = items.find { itemToId(it) == selectedItemId }
@@ -64,7 +65,7 @@ fun <T> CustomExposedDropdownMenu(
                 DropdownMenuItem(
                     text = { Text(stringResource(id = R.string.clear_selection)) },
                     onClick = {
-                        onItemSelected(null)
+                        onClearItem()
                         expanded = false
                     }
                 )

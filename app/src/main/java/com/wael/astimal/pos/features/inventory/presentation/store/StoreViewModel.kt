@@ -1,163 +1,121 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StoreType
-import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class StoreViewModel(
     private val storeRepository: StoreRepository,
-    private val userRepository: UserRepository
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(StoreState())
-    val state: StateFlow<StoreState> = _state.asStateFlow()
-
+    private val userRepository: UserRepository,
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController
+) : BaseViewModel<StoreContract.State, StoreContract.Event, Nothing>(
+    reducer = StoreReducer(),
+    initialState = StoreContract.State()
+) {
     private var searchJob: Job? = null
 
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
-
     init {
-        viewModelScope.launch {
-            userRepository.getCurrentUser()?.let { user ->
-                _state.update { it.copy(currentUser = user) }
-            }
-        }
-        onEvent(StoreEvent.Search(""))
+        loadCurrentUser()
+        searchStores("")
     }
 
-    fun onEvent(event: StoreEvent) {
+    override fun handleEvent(event: StoreContract.Event) {
         when (event) {
-            is StoreEvent.CreateStore -> saveStore()
-            is StoreEvent.UpdateStore -> saveStore()
-            is StoreEvent.DeleteStore -> deleteSelectedStore()
-            is StoreEvent.Search -> searchStores(event.query)
-            is StoreEvent.SelectStore -> handleSelectStore(event.store)
-            is StoreEvent.UpdateQuery -> {
-                _state.update { it.copy(query = event.query) }
+            is StoreContract.Event.SearchQueryChanged -> {
+                setState(event)
                 searchStores(event.query)
             }
 
-            is StoreEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
-            is StoreEvent.UpdateInputArName -> _state.update { it.copy(inputArName = event.name) }
-            is StoreEvent.UpdateInputEnName -> _state.update { it.copy(inputEnName = event.name) }
-            is StoreEvent.UpdateInputType -> _state.update { it.copy(inputType = event.type) }
+            is StoreContract.Event.SaveClicked -> saveStore()
+            is StoreContract.Event.DeleteClicked -> deleteStore()
+            is StoreContract.Event.BackClicked -> navigateBack()
+            else -> setState(event)
         }
     }
 
+    private fun navigateBack() {
+        viewModelScope.launch {
+            navigationController.navigateBack()
+            setState(StoreContract.Event.LoadingFinished)
+        }
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            setState(StoreContract.Event.UserLoaded(userRepository.getCurrentUser()))
+        }
+    }
+
+    @OptIn(FlowPreview::class)
     private fun searchStores(query: String) {
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            if (query.length > 1 || query.isEmpty()) {
-                delay(300)
+        setState(StoreContract.Event.LoadingStarted)
+        searchJob = storeRepository.getStores(query)
+            .debounce(300L)
+            .onEach { stores ->
+                setState(StoreContract.Event.StoresLoaded(stores))
             }
-            storeRepository.getStores(query).catch { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_stores))
-            }.collect { stores ->
-                _state.update { it.copy(loading = false, searchResults = stores) }
-            }
-        }
-    }
-
-    private fun handleSelectStore(store: Store?) {
-        if (store == null) {
-            _state.update {
-                it.copy(
-                    selectedStore = null,
-                    inputArName = "",
-                    inputEnName = "",
-                    inputType = StoreType.SUB
-                )
-            }
-        } else { // Select existing for editing
-            _state.update {
-                it.copy(
-                    selectedStore = store,
-                    inputArName = store.name.arName ?: "",
-                    inputEnName = store.name.enName ?: "",
-                    inputType = store.type
-                )
-            }
-        }
+            .launchIn(viewModelScope)
     }
 
     private fun saveStore() {
         viewModelScope.launch {
-            val currentState = _state.value
+            val currentState = state.value
             if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_name_arabic_or_english_is_required))
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.at_least_one_name_arabic_or_english_is_required)))
                 return@launch
             }
-
-            _state.update { it.copy(loading = true) }
-
-            val result = storeRepository.saveStore(
-                StoreEntity(
+            setState(StoreContract.Event.LoadingStarted)
+            viewModelScope.launch {
+                val storeToSave = StoreEntity(
                     localId = currentState.selectedStore?.id?.local ?: 0L,
-                    serverId = currentState.selectedStore?.id?.server ?: 0L,
+                    serverId = currentState.selectedStore?.id?.server,
                     arName = currentState.inputArName,
                     enName = currentState.inputEnName,
-                    type = currentState.inputType ?: StoreType.SUB,
-                    createdAt = currentState.selectedStore?.createdAt ?: System.currentTimeMillis(),
+                    type = currentState.inputType,
+                    createdAt = currentState.selectedStore?.createdAt ?: System.currentTimeMillis()
                 )
-            )
 
-            result.fold(onSuccess = { savedStore ->
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        selectedStore = null,
-                        inputArName = "",
-                        inputEnName = "",
-                        inputType = StoreType.SUB
-                    )
+                val result = storeRepository.saveStore(storeToSave)
+
+                result.onSuccess {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.store_saved_successfully)))
+                    setState(StoreContract.Event.SaveSucceeded)
+                    searchStores("")
+                }.onFailure {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_save_store)))
+                    setState(StoreContract.Event.LoadingFinished)
                 }
-            }, onFailure = { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_store))
-            })
+            }
         }
     }
 
-    private fun deleteSelectedStore() {
+    private fun deleteStore() {
+        val storeToDelete = state.value.selectedStore ?: return
+        setState(StoreContract.Event.LoadingStarted)
         viewModelScope.launch {
-            val storeToDelete = _state.value.selectedStore
-            if (storeToDelete == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.no_store_selected_for_deletion))
-                return@launch
+            storeRepository.deleteStore(storeToDelete).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.store_deleted_successfully)))
+                setState(StoreContract.Event.DeleteSucceeded)
+                searchStores("")
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_delete_store)))
+                setState(StoreContract.Event.LoadingFinished)
             }
-
-            _state.update { it.copy(loading = true) }
-            val result = storeRepository.deleteStore(storeToDelete)
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        selectedStore = null,
-                        inputArName = "",
-                        inputEnName = "",
-                        inputType = StoreType.SUB
-                    )
-                }
-            }, onFailure = { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_store))
-            })
         }
     }
 }

@@ -212,3 +212,151 @@ fun SearchScreen(
         }
     }
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(
+    query: String,
+    isSearchActive: Boolean,
+    loading: Boolean,
+    isNew: Boolean,
+    lastModifiedDate: Long?,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onSearchActiveChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
+    onDelete: () -> Unit,
+    onCreate: () -> Unit,
+    onUpdate: () -> Unit,
+    onNew: () -> Unit,
+    modifier: Modifier = Modifier,
+    canEdit: Boolean = true,
+    searchResults: @Composable () -> Unit,
+    mainContent: @Composable () -> Unit,
+) {
+
+    val context = LocalContext.current
+
+    val fabActions = remember(isNew, loading, canEdit) {
+        buildList {
+            if (isNew.not()) {
+                add(
+                    FabAction(
+                        icon = Icons.Default.FileCopy,
+                        label = context.getString(R.string.new_),
+                        onClick = onNew
+                    )
+                )
+                if (canEdit) {
+                    add(
+                        FabAction(
+                            icon = Icons.Default.Delete,
+                            label = context.getString(R.string.delete),
+                            onClick = onDelete
+                        )
+                    )
+                }
+            }
+            if (canEdit) {
+                add(
+                    FabAction(
+                        icon = Icons.Default.Check,
+                        label = context.getString(if (isNew) R.string.create else R.string.update),
+                        onClick = if (isNew) onCreate else onUpdate
+                    )
+                )
+            }
+        }
+    }
+
+    BackHandler {
+        if (isSearchActive) onSearchActiveChange(false)
+        else onBack()
+    }
+    Scaffold(
+        topBar = {
+            DockedSearchBar(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .semantics { traversalIndex = 0f },
+                inputField = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BackButton(
+                            onClick = {
+                                if (isSearchActive) onSearchActiveChange(false)
+                                else onBack()
+                            },
+                        )
+                        SearchBarDefaults.InputField(
+                            query = query,
+                            onQueryChange = onQueryChange,
+                            onSearch = onSearch,
+                            expanded = isSearchActive,
+                            onExpandedChange = onSearchActiveChange,
+                            placeholder = { Text(stringResource(R.string.search)) },
+                            trailingIcon = {
+                                IconButton(onClick = { onSearch(query) }) {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                },
+                expanded = isSearchActive,
+                onExpandedChange = onSearchActiveChange,
+            ) {
+                AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
+                    if (it) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        searchResults()
+                    }
+                }
+            }
+        },
+        floatingActionButton = {
+            MultiActionFab(
+                actions = fabActions,
+                enabled = canEdit
+            )
+        }
+    ) {
+        Box(
+            modifier
+                .padding(it)
+                .fillMaxSize()
+                .semantics { isTraversalGroup = true }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                mainContent()
+                AnimatedVisibility(visible = !isNew && !loading) {
+                    Row {
+                        Text(
+                            text = stringResource(R.string.last_modification_date),
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = lastModifiedDate?.convertToString()
+                                ?: stringResource(R.string.last_modified_date_not_available),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
