@@ -12,13 +12,11 @@ import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["employeeLocalId"],
-            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = StoreEntity::class,
             parentColumns = ["localId"],
             childColumns = ["storeLocalId"],
-            onDelete = ForeignKey.CASCADE
         )
     ]
 )

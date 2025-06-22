@@ -6,10 +6,17 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -82,9 +89,7 @@ fun SearchScreen(
 
             is UiEvent.ShareFile -> {
                 sharePdf(
-                    context = context,
-                    uri = it.fileUri,
-                    title = context.getString(it.fileTitle)
+                    context = context, uri = it.fileUri, title = context.getString(it.fileTitle)
                 )
             }
         }
@@ -126,63 +131,58 @@ fun SearchScreen(
         if (isSearchActive) onSearchActiveChange(false)
         else onBack()
     }
-    Scaffold(
-        topBar = {
-            DockedSearchBar(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-                    .semantics { traversalIndex = 0f },
-                inputField = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+    Scaffold(topBar = {
+        DockedSearchBar(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .semantics { traversalIndex = 0f },
+            inputField = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BackButton(
+                        onClick = {
+                            if (isSearchActive) onSearchActiveChange(false)
+                            else onBack()
+                        },
+                    )
+                    SearchBarDefaults.InputField(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        onSearch = onSearch,
+                        expanded = isSearchActive,
+                        onExpandedChange = onSearchActiveChange,
+                        placeholder = { Text(stringResource(R.string.search)) },
+                        trailingIcon = {
+                            IconButton(onClick = { onSearch(query) }) {
+                                Icon(Icons.Default.Search, contentDescription = null)
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            },
+            expanded = isSearchActive,
+            onExpandedChange = onSearchActiveChange,
+        ) {
+            AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
+                if (it) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
                     ) {
-                        BackButton(
-                            onClick = {
-                                if (isSearchActive) onSearchActiveChange(false)
-                                else onBack()
-                            },
-                        )
-                        SearchBarDefaults.InputField(
-                            query = query,
-                            onQueryChange = onQueryChange,
-                            onSearch = onSearch,
-                            expanded = isSearchActive,
-                            onExpandedChange = onSearchActiveChange,
-                            placeholder = { Text(stringResource(R.string.search)) },
-                            trailingIcon = {
-                                IconButton(onClick = { onSearch(query) }) {
-                                    Icon(Icons.Default.Search, contentDescription = null)
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
+                        CircularProgressIndicator()
                     }
-                },
-                expanded = isSearchActive,
-                onExpandedChange = onSearchActiveChange,
-            ) {
-                AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
-                    if (it) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else {
-                        searchResults()
-                    }
+                } else {
+                    searchResults()
                 }
             }
-        },
-        floatingActionButton = {
-            MultiActionFab(
-                actions = fabActions,
-                enabled = canEdit
-            )
         }
-    ) {
+    }, floatingActionButton = {
+        MultiActionFab(
+            actions = fabActions, enabled = canEdit
+        )
+    }) {
         Box(
             modifier
                 .padding(it)
@@ -219,7 +219,6 @@ fun SearchScreen(
 fun SearchScreen(
     query: String,
     isSearchActive: Boolean,
-    loading: Boolean,
     isNew: Boolean,
     lastModifiedDate: Long?,
     onQueryChange: (String) -> Unit,
@@ -232,13 +231,13 @@ fun SearchScreen(
     onNew: () -> Unit,
     modifier: Modifier = Modifier,
     canEdit: Boolean = true,
+    canSave: Boolean = true,
     searchResults: @Composable () -> Unit,
-    mainContent: @Composable () -> Unit,
+    mainContent: LazyGridScope.() -> Unit,
 ) {
-
     val context = LocalContext.current
 
-    val fabActions = remember(isNew, loading, canEdit) {
+    val fabActions = remember(isNew, canEdit) {
         buildList {
             if (isNew.not()) {
                 add(
@@ -274,11 +273,13 @@ fun SearchScreen(
         if (isSearchActive) onSearchActiveChange(false)
         else onBack()
     }
-    Scaffold(
+
+    Screen(
         topBar = {
             DockedSearchBar(
-                modifier = Modifier
-                    .padding(16.dp)
+                modifier = modifier
+                    .statusBarsPadding()
+                    .padding(top = 16.dp, end = 16.dp, start = 16.dp)
                     .fillMaxWidth()
                     .semantics { traversalIndex = 0f },
                 inputField = {
@@ -310,44 +311,34 @@ fun SearchScreen(
                 expanded = isSearchActive,
                 onExpandedChange = onSearchActiveChange,
             ) {
-                AnimatedContent(loading, modifier = Modifier.padding(8.dp)) { it ->
-                    if (it) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else {
-                        searchResults()
-                    }
-                }
+                searchResults()
             }
         },
         floatingActionButton = {
             MultiActionFab(
-                actions = fabActions,
-                enabled = canEdit
+                actions = fabActions, enabled = canEdit && canSave
             )
-        }
+        },
     ) {
-        Box(
-            modifier
-                .padding(it)
-                .fillMaxSize()
-                .semantics { isTraversalGroup = true }) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 300.dp),
+            contentPadding = PaddingValues(8.dp),
+
             ) {
-                mainContent()
-                AnimatedVisibility(visible = !isNew && !loading) {
+            mainContent()
+            item(
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                AnimatedVisibility(
+                    visible = !isNew,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                ) {
                     Row {
+                        Spacer(Modifier.weight(1f))
                         Text(
-                            text = stringResource(R.string.last_modification_date),
+                            text = stringResource(R.string.update_at),
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(

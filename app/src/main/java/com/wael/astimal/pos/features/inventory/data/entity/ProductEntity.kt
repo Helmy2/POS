@@ -19,25 +19,21 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Product
             entity = CategoryEntity::class,
             parentColumns = ["localId"],
             childColumns = ["categoryId"],
-            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = StoreEntity::class,
             parentColumns = ["localId"],
             childColumns = ["storeId"],
-            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = UnitEntity::class,
             parentColumns = ["localId"],
             childColumns = ["minimumUnitId"],
-            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = UnitEntity::class,
             parentColumns = ["localId"],
             childColumns = ["maximumUnitId"],
-            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [

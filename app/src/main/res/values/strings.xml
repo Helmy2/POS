@@ -170,7 +170,6 @@
     <string name="stock_adjustment_reason_other">stock adjustment reason other</string>
     <string name="error_loading_dashboard_data">Error loading dashboard data</string>
     <string name="total_revenue">Total revenue</string>
-    <string name="total_sales">Total sales</string>
     <string name="todays_sales">Today\'s sales</string>
     <string name="sales_analytics">Sales analytics</string>
     <string name="today">Today</string>
@@ -202,7 +201,7 @@
     <string name="employee_payment">Employee payment</string>
     <string name="withdrawal">Withdrawal</string>
     <string name="error_fetching_categories">Error fetching categories</string>
-    <string name="at_least_one_name_arabic_or_english_is_required">At least one name (Arabic or English) is required.</string>
+    <string name="error_some_field_are_required">Some field are required</string>
     <string name="no_category_selected_for_deletion">No category selected for deletion.</string>
     <string name="failed_to_save_category">Failed to save category</string>
     <string name="failed_to_delete_category">Failed to delete category</string>
@@ -283,4 +282,10 @@
     <string name="account_avatar_image">Account avatar image</string>
     <string name="store_deleted_successfully">Store deleted successfully</string>
     <string name="store_saved_successfully">Store saved successfully</string>
+    <string name="update_at">Update at</string>
+    <string name="store_type_main">Main store</string>
+    <string name="store_type_sub">Sub store</string>
+    <string name="total_sales">Total sales</string>
+    <string name="unknown_user">Unknown user</string>
+
 </resources>

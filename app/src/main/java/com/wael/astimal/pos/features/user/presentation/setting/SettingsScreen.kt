@@ -22,9 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
-import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.domain.entity.Language
+import com.wael.astimal.pos.core.domain.entity.ThemeMode
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.user.presentation.components.LanguageSettingRow
 import com.wael.astimal.pos.features.user.presentation.components.ThemeSettingsRow
 import org.koin.androidx.compose.koinViewModel
@@ -34,20 +36,52 @@ fun SettingsRoute(
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val language = LocalAppLocale.current
 
     LaunchedEffect(key1 = Unit) {
         viewModel.processEvent(SettingsContract.Event.LoadSettings)
     }
 
     SettingsScreen(
-        state = state, onEvent = viewModel::processEvent
+        userName = state.user?.localizedName?.displayName(language)
+            ?: stringResource(R.string.unknown_user),
+        avatarUrl = state.user?.avatarUrl ?: "",
+        themeMode = state.themeMode,
+        showThemeDialog = state.showThemeDialog,
+        language = state.language,
+        showLanguageDialog = state.showLanguageDialog,
+        onShowThemeDialog = {
+            viewModel.processEvent(SettingsContract.Event.ThemeDialogVisibilityChanged(it))
+        },
+        onThemeChange = {
+            viewModel.processEvent(SettingsContract.Event.ThemeChanged(it))
+        },
+        onShowLanguageDialog = {
+            viewModel.processEvent(SettingsContract.Event.LanguageDialogVisibilityChanged(it))
+        },
+        onLanguageChange = {
+            viewModel.processEvent(SettingsContract.Event.LanguageChanged(it))
+        },
+        onLogoutClicked = {
+            viewModel.processEvent(SettingsContract.Event.LogoutClicked)
+        }
     )
 }
 
+
 @Composable
 fun SettingsScreen(
-    state: SettingsContract.State,
-    onEvent: (SettingsContract.Event) -> Unit,
+    userName: String,
+    avatarUrl: String,
+    themeMode: ThemeMode,
+    showThemeDialog: Boolean,
+    onShowThemeDialog: (Boolean) -> Unit,
+    onThemeChange: (ThemeMode) -> Unit,
+    language: Language,
+    showLanguageDialog: Boolean,
+    onShowLanguageDialog: (Boolean) -> Unit,
+    onLanguageChange: (Language) -> Unit,
+    onLogoutClicked: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -58,37 +92,37 @@ fun SettingsScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            imageLoader = ImageLoader.Builder(LocalContext.current).crossfade(true)
+            imageLoader = ImageLoader.Builder(LocalContext.current)
                 .components {
                     add(SvgDecoder.Factory())
-                }.build(),
-            model = state.user?.avatarUrl,
+                }
+                .build(),
+            model = avatarUrl,
             contentDescription = null,
             modifier = Modifier.size(80.dp)
         )
 
-        state.user?.let { user ->
-            Text(
-                text = user.localizedName.displayName(state.language),
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
+        Text(
+            text = userName,
+            style = MaterialTheme.typography.titleLarge
+        )
+
         ThemeSettingsRow(
-            showDialog = state.showThemeDialog,
-            onShowDialog = { onEvent(SettingsContract.Event.ThemeDialogVisibilityChanged(it)) },
-            themeMode = state.themeMode,
-            onThemeChange = { onEvent(SettingsContract.Event.ThemeChanged(it)) },
+            showDialog = showThemeDialog,
+            onShowDialog = onShowThemeDialog,
+            themeMode = themeMode,
+            onThemeChange = onThemeChange,
             modifier = Modifier.fillMaxWidth()
         )
         LanguageSettingRow(
-            showDialog = state.showLanguageDialog,
-            onShowDialog = { onEvent(SettingsContract.Event.LanguageDialogVisibilityChanged(it)) },
-            language = state.language,
-            onLanguageChange = { onEvent(SettingsContract.Event.LanguageChanged(it)) },
+            showDialog = showLanguageDialog,
+            onShowDialog = onShowLanguageDialog,
+            language = language,
+            onLanguageChange = onLanguageChange,
             modifier = Modifier.fillMaxWidth()
         )
         Button(
-            onClick = { onEvent(SettingsContract.Event.LogoutClicked) },
+            onClick = onLogoutClicked,
         ) {
             Text(text = stringResource(R.string.logout))
         }

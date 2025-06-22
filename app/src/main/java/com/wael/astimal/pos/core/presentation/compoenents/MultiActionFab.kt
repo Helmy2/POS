@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -102,34 +101,30 @@ fun MultiActionFab(
             }
         }
 
-        AnimatedContent(
-            actions.size == 1
-        ) {
-            if (it) {
-                FloatingActionButton(
-                    onClick = {
-                        if (enabled) actions.first().onClick()
-                    },
-                    containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                ) {
-                    Icon(
-                        imageVector = actions.first().icon,
-                        contentDescription = actions.first().label
-                    )
-                }
-            } else {
-                FloatingActionButton(
-                    onClick = { if (enabled) isExpanded = !isExpanded },
-                    containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Actions",
-                        modifier = Modifier.rotate(rotationAngle)
-                    )
-                }
+        if (actions.size == 1) {
+            FloatingActionButton(
+                onClick = {
+                    if (enabled) actions.first().onClick()
+                },
+                containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+            ) {
+                Icon(
+                    imageVector = actions.first().icon,
+                    contentDescription = actions.first().label
+                )
+            }
+        } else {
+            FloatingActionButton(
+                onClick = { if (enabled) isExpanded = !isExpanded },
+                containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Actions",
+                    modifier = Modifier.rotate(rotationAngle)
+                )
             }
         }
     }

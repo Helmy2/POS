@@ -20,7 +20,6 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
         entity = UserEntity::class,
         parentColumns = ["id"],
         childColumns = ["responsibleEmployeeLocalId"],
-        onDelete = ForeignKey.SET_NULL
     )], indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
 data class SupplierEntity(

@@ -1,20 +1,12 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
@@ -26,15 +18,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -44,9 +32,7 @@ import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.getString
 import com.wael.astimal.pos.core.domain.navigation.Destination
-import com.wael.astimal.pos.core.domain.navigation.TopLevelRoutes
 import com.wael.astimal.pos.core.domain.navigation.isTopLevelRoute
-import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -115,14 +101,6 @@ fun MainScaffold(
 
     val isOnTopLevelRoute = isTopLevelRoute(currentDestination)
 
-    val currentTopLevelRoute = TopLevelRoutes.routes.find {
-        currentDestination?.hasRoute(it.route::class) == true
-    }
-    val topBarTitle = currentTopLevelRoute?.let { stringResource(id = it.name) } ?: ""
-    var showSetting by rememberSaveable {
-        mutableStateOf(false)
-    }
-
     NavigationSuiteScaffold(
         layoutType = if (isOnTopLevelRoute) {
             NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
@@ -147,34 +125,14 @@ fun MainScaffold(
         },
     ) {
         Scaffold(
-            topBar = {
-                if (isOnTopLevelRoute) {
-                    TopAppBar(title = { Text(topBarTitle) }, actions = {
-                        IconButton(onClick = { showSetting = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(id = com.wael.astimal.pos.R.string.settings)
-                            )
-                        }
-                    })
-                }
-            },
-            modifier = Modifier.animateContentSize(),
+            contentWindowInsets = WindowInsets(0.dp),
             snackbarHost = { SnackbarHost(snackbarHostState) },
-        ) { paddingValues ->
+        ) { it ->
             AppNavHost(
                 startDestination = startDestination,
                 navController = navController,
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier.padding(it)
             )
-        }
-    }
-
-    if (isOnTopLevelRoute) AnimatedVisibility(showSetting) {
-        Dialog(onDismissRequest = { showSetting = false }) {
-            Card {
-                SettingsRoute()
-            }
         }
     }
 }

@@ -19,19 +19,16 @@ import com.wael.astimal.pos.features.user.data.entity.UserEntity
             entity = StoreEntity::class,
             parentColumns = ["localId"],
             childColumns = ["fromStoreId"],
-            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = StoreEntity::class,
             parentColumns = ["localId"],
             childColumns = ["toStoreId"],
-            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["initiatedByUserId"],
-            onDelete = ForeignKey.SET_NULL
         )
     ]
 )

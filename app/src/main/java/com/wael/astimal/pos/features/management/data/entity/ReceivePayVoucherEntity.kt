@@ -18,17 +18,14 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
         entity = ClientEntity::class,
         parentColumns = ["localId"],
         childColumns = ["clientLocalId"],
-        onDelete = ForeignKey.SET_NULL
     ), ForeignKey(
         entity = SupplierEntity::class,
         parentColumns = ["localId"],
         childColumns = ["supplierLocalId"],
-        onDelete = ForeignKey.SET_NULL
     ), ForeignKey(
         entity = UserEntity::class,
         parentColumns = ["id"],
         childColumns = ["employeeLocalId"],
-        onDelete = ForeignKey.RESTRICT
     )], indices = [Index("clientLocalId"), Index("supplierLocalId"), Index("employeeLocalId")]
 )
 data class ReceivePayVoucherEntity(

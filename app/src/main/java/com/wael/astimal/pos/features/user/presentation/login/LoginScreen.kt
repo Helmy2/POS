@@ -1,12 +1,15 @@
 package com.wael.astimal.pos.features.user.presentation.login
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -38,12 +41,17 @@ fun LoginRoute(
 @Composable
 fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) -> Unit) {
     val focus = LocalFocusManager.current
-    Screen {
+    Screen(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
         CredentialsHeader(
             title = stringResource(R.string.welcome_back),
             body = stringResource(R.string.login_to_your_account)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         AuthTextField(
             value = state.email,
@@ -73,7 +81,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
                 .sizeIn(maxWidth = 600.dp)
                 .fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         ProgressiveButton(
             text = stringResource(R.string.login),
@@ -81,6 +89,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
             isLoading = state.loading,
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.weight(2f))
     }
 }
 

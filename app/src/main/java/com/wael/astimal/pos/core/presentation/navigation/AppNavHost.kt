@@ -1,5 +1,7 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -37,6 +39,8 @@ fun AppNavHost(
         modifier = modifier,
         navController = navController,
         startDestination = startDestination,
+        exitTransition = { fadeOut() },
+        enterTransition = { fadeIn() },
     ) {
         // Main App Graph
         navigation<Destination.Main>(

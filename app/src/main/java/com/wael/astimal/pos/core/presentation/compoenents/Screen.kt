@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -14,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
@@ -81,26 +79,23 @@ fun Screen(
 @Composable
 fun Screen(
     modifier: Modifier = Modifier,
-    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
-        16.dp,
-        Alignment.CenterVertically
-    ),
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     floatingActionButton: @Composable () -> Unit = {},
     topBar: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
-        modifier = modifier,
+        modifier = Modifier,
         topBar = topBar,
         floatingActionButton = floatingActionButton
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .consumeWindowInsets(it),
+            modifier = modifier
+                .padding(it)
+                .fillMaxSize(),
             verticalArrangement = verticalArrangement,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = horizontalAlignment
         ) {
             content()
         }

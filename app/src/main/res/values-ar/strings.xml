@@ -23,11 +23,6 @@
     <string name="create">إنشاء</string>
     <string name="update">تحديث</string>
     <string name="delete">حذف</string>
-    <string name="error_invalid_email">عنوان بريد إلكتروني غير صالح</string>
-    <string name="error_invalid_password">كلمة مرور غير صالحة</string>
-    <string name="error_password_empty">كلمة المرور مطلوبة</string>
-    <string name="error_password_weak">يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي على حرف كبير ورمز خاص.</string>
-    <string name="error_name_required">الاسم مطلوب</string>
     <string name="logged_out_success">تم تسجيل الخروج بنجاح</string>
     <string name="dashboard">لوحة التحكم</string>
     <string name="inventory">المخزون</string>
@@ -280,4 +275,13 @@
     <string name="voucher_deleted_successfully">تم حذف الإيصال بنجاح</string>
     <string name="error_deleting_voucher">خطأ في حذف الإيصال</string>
     <string name="edit_voucher">تعديل الإيصال</string>
+    <string name="error_loading_transactione">خطأ في تحميل المعاملة</string>
+    <string name="some_field_are_required">بعض الحقول مطلوبة</string>
+    <string name="account_avatar_image">الصورة الرمزية للحساب</string>
+    <string name="store_deleted_successfully">تم حذف المخزن بنجاح</string>
+    <string name="store_saved_successfully">تم حفظ المخزن بنجاح</string>
+    <string name="update_at">آخر تحديث</string>
+    <string name="store_type_main">مخزن رئيسي</string>
+    <string name="store_type_sub">مخزن فرعي</string>
+    <string name="total_sales">إجمالي المبيعات</string>
 </resources>

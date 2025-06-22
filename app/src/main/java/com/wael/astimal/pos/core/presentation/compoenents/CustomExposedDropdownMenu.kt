@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.res.stringResource
 import com.wael.astimal.pos.R
 
@@ -34,32 +35,29 @@ fun <T> CustomExposedDropdownMenu(
     val currentSelectionString = selectedItem?.let { itemToDisplayString(it) } ?: ""
 
     ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier
+        expanded = expanded, onExpandedChange = { expanded = !expanded }, modifier = modifier
     ) {
-        TextInputField(
+        LabeledTextField(
             value = currentSelectionString,
             onValueChange = {},
-            readOnly = true,
             label = label,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
-                .menuAnchor(MenuAnchorType.Companion.PrimaryEditable),
+                .menuAnchor(MenuAnchorType.Companion.PrimaryEditable)
+                .onFocusEvent {
+                    expanded = it.hasFocus
+                },
+
             enabled = enabled,
+            readOnly = true,
         )
         ExposedDropdownMenu(
-            expanded = expanded && enabled,
-            onDismissRequest = { expanded = false }
-        ) {
+            expanded = expanded && enabled, onDismissRequest = { expanded = false }) {
             items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(itemToDisplayString(item)) },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    }
-                )
+                DropdownMenuItem(text = { Text(itemToDisplayString(item)) }, onClick = {
+                    onItemSelected(item)
+                    expanded = false
+                })
             }
             if (selectedItem != null && canClearSelection) {
                 DropdownMenuItem(
@@ -67,7 +65,51 @@ fun <T> CustomExposedDropdownMenu(
                     onClick = {
                         onClearItem()
                         expanded = false
-                    }
+                    })
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> CustomExposedDropdownMenu(
+    label: String,
+    currentSelection: String,
+    items: List<T>,
+    onItemSelected: (T) -> Unit,
+    displayedItem: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded, onExpandedChange = { expanded = !expanded }, modifier = modifier
+    ) {
+        LabeledTextField(
+            value = currentSelection,
+            onValueChange = {},
+            label = label,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.Companion.PrimaryEditable)
+                .onFocusEvent {
+                    expanded = it.hasFocus
+                },
+            enabled = enabled,
+            readOnly = true,
+        )
+        ExposedDropdownMenu(
+            expanded = expanded && enabled, onDismissRequest = { expanded = false }) {
+            items.forEach { item ->
+                DropdownMenuItem(
+                    text = { displayedItem(item) },
+                    onClick = {
+                        onItemSelected(item)
+                        expanded = false
+                    },
                 )
             }
         }

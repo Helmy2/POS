@@ -40,7 +40,7 @@ class DummyDataSeeder(
 ) {
     fun seedInitialDataIfNeeded() {
         applicationScope.launch(Dispatchers.IO) {
-            val userCount = userRepository.getEmployeesFlow().first().count()
+            val userCount = userDao.getUserCount()
             if (userCount == 0) {
                 populateAllDummyData()
             } else {

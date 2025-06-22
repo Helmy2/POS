@@ -13,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidedValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -71,11 +72,13 @@ fun POSTheme(
         LocalLayoutDirection provides language.layoutDirection,
         LocalAppLocale provides language.code,
     ) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            shapes = Shapes,
-            content = content,
-        )
+        key(language) {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                shapes = Shapes,
+                content = content,
+            )
+        }
     }
 }
 

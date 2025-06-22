@@ -99,7 +99,7 @@ class UnitViewModel(
         viewModelScope.launch {
             val currentState = _state.value
             if (currentState.arName.isBlank() && currentState.enName.isBlank()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_name_arabic_or_english_is_required))
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_some_field_are_required))
                 return@launch
             }
 

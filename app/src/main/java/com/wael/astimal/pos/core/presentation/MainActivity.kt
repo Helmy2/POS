@@ -45,15 +45,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val state = startDestination.collectAsStateWithLifecycle()
-            state.value?.let {
-                POSTheme {
+            POSTheme {
+                val state = startDestination.collectAsStateWithLifecycle()
+                state.value?.let {
                     it.onSuccess {
                         MainScaffold(it)
                     }.onFailure {
                         Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
+                            contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
                         ) {
                             Text(stringResource(R.string.something_went_wrong))
                         }

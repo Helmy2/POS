@@ -23,7 +23,6 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["employeeId"],
-            onDelete = ForeignKey.CASCADE
         ),
     ],
     indices = [Index(value = ["employeeId"]), Index(value = ["sourceTransactionId", "sourceTransactionType"])]
@@ -48,19 +47,16 @@ data class SaleCommissionEntity(
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["employeeId"],
-            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["createdByEmployeeId"],
-            onDelete = ForeignKey.NO_ACTION
         ),
         ForeignKey(
             entity = SaleCommissionEntity::class,
             parentColumns = ["localId"],
             childColumns = ["relatedCommissionId"],
-            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [Index(value = ["employeeId"]), Index(value = ["createdByEmployeeId"])]

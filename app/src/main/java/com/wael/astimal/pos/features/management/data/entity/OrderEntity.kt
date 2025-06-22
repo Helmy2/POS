@@ -23,12 +23,10 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
         entity = ClientEntity::class,
         parentColumns = ["localId"],
         childColumns = ["clientLocalId"],
-        onDelete = ForeignKey.RESTRICT
     ), ForeignKey(
         entity = UserEntity::class,
         parentColumns = ["id"],
         childColumns = ["employeeLocalId"],
-        onDelete = ForeignKey.RESTRICT
     )],
     indices = [Index(value = ["clientLocalId"]), Index(value = ["employeeLocalId"]), Index(
         value = ["invoiceNumber"], unique = true
@@ -56,12 +54,10 @@ data class OrderEntity(
         entity = OrderEntity::class,
         parentColumns = ["localId"],
         childColumns = ["orderLocalId"],
-        onDelete = ForeignKey.CASCADE
     ), ForeignKey(
         entity = ProductEntity::class,
         parentColumns = ["localId"],
         childColumns = ["productLocalId"],
-        onDelete = ForeignKey.RESTRICT
     )],
     indices = [Index(value = ["orderLocalId"]), Index(value = ["productLocalId"])]
 )

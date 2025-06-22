@@ -15,13 +15,11 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
             entity = StoreEntity::class,
             parentColumns = ["localId"],
             childColumns = ["storeLocalId"],
-            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = ProductEntity::class,
             parentColumns = ["localId"],
             childColumns = ["productLocalId"],
-            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [

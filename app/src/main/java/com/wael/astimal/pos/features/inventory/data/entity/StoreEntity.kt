@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
@@ -21,7 +22,16 @@ data class StoreEntity(
     val type: StoreType,
 ) : ItemEntity
 
-enum class StoreType { MAIN, SUB }
+enum class StoreType {
+    MAIN, SUB;
+
+    fun getStringResourceId(): Int {
+        return when (this) {
+            MAIN -> R.string.store_type_main
+            SUB -> R.string.store_type_sub
+        }
+    }
+}
 
 fun StoreEntity.toDomain(): Store {
     return Store(

@@ -1,11 +1,10 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -31,9 +30,7 @@ fun StoreRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     StoreScreen(
-        state = state,
-        onEvent = viewModel::processEvent,
-        modifier = modifier
+        state = state, onEvent = viewModel::processEvent, modifier = modifier
     )
 }
 
@@ -44,13 +41,10 @@ fun StoreScreen(
     onEvent: (StoreContract.Event) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val language = LocalAppLocale.current
-
     SearchScreen(
         modifier = modifier,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
-        loading = state.isLoading,
         isNew = !state.isEditing,
         onQueryChange = { onEvent(StoreContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(StoreContract.Event.SearchQueryChanged(it)) },
@@ -62,44 +56,52 @@ fun StoreScreen(
         onUpdate = { onEvent(StoreContract.Event.SaveClicked) },
         onNew = { onEvent(StoreContract.Event.NewStoreClicked) },
         canEdit = state.canUserEdit,
+        canSave = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.stores,
                 onItemClick = { store ->
                     onEvent(StoreContract.Event.StoreSelected(store))
                 },
-                label = { Label(it.name.displayName(language)) },
+                label = { Label(it.name.displayName(LocalAppLocale.current)) },
                 isSelected = { store -> store.id.local == state.selectedStore?.id?.local },
             )
         },
         mainContent = {
-            FlowRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
+            item {
                 LabeledTextField(
                     value = state.inputArName,
                     onValueChange = { onEvent(StoreContract.Event.ArNameChanged(it)) },
                     label = stringResource(id = R.string.ar_name),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
                 )
+            }
+            item {
                 LabeledTextField(
                     value = state.inputEnName,
                     onValueChange = { onEvent(StoreContract.Event.EnNameChanged(it)) },
                     label = stringResource(id = R.string.en_name),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
                 )
-
+            }
+            item {
                 CustomExposedDropdownMenu(
                     label = stringResource(id = R.string.store_type),
+                    currentSelection = stringResource(state.inputType.getStringResourceId()),
                     items = StoreType.entries,
-                    selectedItemId = state.inputType.ordinal.toLong(),
                     onItemSelected = { onEvent(StoreContract.Event.TypeChanged(it)) },
-                    itemToDisplayString = { it.name },
                     enabled = state.canUserEdit,
-                    itemToId = { it.ordinal.toLong() }
+                    displayedItem = {
+                        Text(
+                            stringResource(it.getStringResourceId()),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    },
+                    modifier = Modifier.padding(8.dp)
                 )
             }
         },

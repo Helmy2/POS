@@ -76,7 +76,7 @@ class StoreViewModel(
         viewModelScope.launch {
             val currentState = state.value
             if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.at_least_one_name_arabic_or_english_is_required)))
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
             setState(StoreContract.Event.LoadingStarted)
