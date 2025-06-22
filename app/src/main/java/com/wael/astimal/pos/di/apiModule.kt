@@ -14,11 +14,13 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 
 val apiModule = module {
-    single<AuthApiService> { AuthApiServiceImpl(get()) }
+    singleOf(::AuthApiServiceImpl) { bind<AuthApiService>() }
 
     single {
         val sessionManager = get<SessionManager>()
@@ -41,8 +43,7 @@ val apiModule = module {
                     refreshTokens { sessionManager.refreshBearerTokens(client) }
 
                     sendWithoutRequest { request ->
-                        request.url.host == BASE_URL &&
-                                !request.url.encodedPath.endsWith("/login")
+                        request.url.host == BASE_URL && !request.url.encodedPath.endsWith("/login")
                     }
                 }
             }

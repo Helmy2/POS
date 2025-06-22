@@ -20,7 +20,9 @@ import com.wael.astimal.pos.features.inventory.presentation.stock_management.Sto
 import com.wael.astimal.pos.features.inventory.presentation.stock_transfer.StockTransferViewModel
 import com.wael.astimal.pos.features.inventory.presentation.store.StoreViewModel
 import com.wael.astimal.pos.features.inventory.presentation.unit.UnitViewModel
-import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val inventoryModule = module {
@@ -33,18 +35,19 @@ val inventoryModule = module {
     single { get<AppDatabase>().storeProductStockDao() }
     single { get<AppDatabase>().stockAdjustmentDao() }
 
-    single<UnitRepository> { UnitRepositoryImpl(get()) }
-    single<StoreRepository> { StoreRepositoryImpl(get()) }
-    single<CategoryRepository> { CategoryRepositoryImpl(get()) }
-    single<ProductRepository> { ProductRepositoryImpl(get(),get(),get(),get()) }
-    single<StockTransferRepository> { StockTransferRepositoryImpl(get(), get(), get()) }
-    single<StockRepository> { StockRepositoryImpl(get(), get(),get(),get()) }
+    singleOf(::UnitRepositoryImpl) { bind<UnitRepository>() }
+    singleOf(::StoreRepositoryImpl) { bind<StoreRepository>() }
+    singleOf(::CategoryRepositoryImpl) { bind<CategoryRepository>() }
+    singleOf(::ProductRepositoryImpl) { bind<ProductRepository>() }
+    singleOf(::StockTransferRepositoryImpl) { bind<StockTransferRepository>() }
+    singleOf(::StockRepositoryImpl) { bind<StockRepository>() }
 
-    viewModel { InventoryViewModel() }
-    viewModel { UnitViewModel(get(), get()) }
-    viewModel { StoreViewModel(get(), get()) }
-    viewModel { CategoryViewModel(get(), get()) }
-    viewModel { ProductViewModel(get(), get(), get(), get(), get()) }
-    viewModel { StockTransferViewModel(get(), get(), get(), get(), get()) }
-    viewModel { StockManagementViewModel(get(), get(),get()) }
+
+    viewModelOf(::InventoryViewModel)
+    viewModelOf(::UnitViewModel)
+    viewModelOf(::StoreViewModel)
+    viewModelOf(::CategoryViewModel)
+    viewModelOf(::ProductViewModel)
+    viewModelOf(::StockTransferViewModel)
+    viewModelOf(::StockManagementViewModel)
 }

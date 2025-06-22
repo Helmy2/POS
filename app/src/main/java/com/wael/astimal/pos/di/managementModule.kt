@@ -25,7 +25,9 @@ import com.wael.astimal.pos.features.management.presentation.purchase_return.Pur
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherViewModel
 import com.wael.astimal.pos.features.management.presentation.sales.SalesViewModel
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnViewModel
-import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val managementModule = module {
@@ -38,35 +40,25 @@ val managementModule = module {
     single { get<AppDatabase>().receivePayVoucherDao() }
     single { get<AppDatabase>().partnerTransactionDao() }
 
-    single { OrderAmountLogic(get(), get(), get(), get()) }
-    single { ReturnAmountLogic(get(), get(), get(), get()) }
+    singleOf(::OrderAmountLogic)
+    singleOf(::ReturnAmountLogic)
 
-    single<SalesOrderRepository> { SalesOrderRepositoryImpl(get(), get(), get(), get(), get()) }
-    single<SalesReturnRepository> { SalesReturnRepositoryImpl(get(), get(), get(), get(), get()) }
-    single<PurchaseRepository> { PurchaseRepositoryImpl(get(), get(), get(), get(), get()) }
-    single<PurchaseReturnRepository> {
-        PurchaseReturnRepositoryImpl(get(), get(), get(), get(), get())
-    }
-    single<EmployeeAccountRepository> { EmployeeAccountRepositoryImpl(get()) }
-    single<ReceivePayVoucherRepository> {
-        ReceivePayVoucherRepositoryImpl(get(), get(), get())
-    }
-    single<BusinessPartnerRepository> {
-        BusinessPartnerRepositoryImpl(
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    }
 
-    viewModel { ManagementViewModel() }
+    singleOf(::SalesOrderRepositoryImpl) { bind<SalesOrderRepository>() }
+    singleOf(::SalesReturnRepositoryImpl) { bind<SalesReturnRepository>() }
+    singleOf(::PurchaseRepositoryImpl) { bind<PurchaseRepository>() }
+    singleOf(::PurchaseReturnRepositoryImpl) { bind<PurchaseReturnRepository>() }
+    singleOf(::EmployeeAccountRepositoryImpl) { bind<EmployeeAccountRepository>() }
+    singleOf(::ReceivePayVoucherRepositoryImpl) { bind<ReceivePayVoucherRepository>() }
+    singleOf(::BusinessPartnerRepositoryImpl) { bind<BusinessPartnerRepository>() }
 
-    viewModel { BusinessPartnerViewModel(get(), get()) }
-    viewModel { SalesReturnViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SalesViewModel(get(), get(), get(), get(), get()) }
-    viewModel { PurchaseViewModel(get(), get(), get(), get(), get()) }
-    viewModel { PurchaseReturnViewModel(get(), get(), get(), get(), get()) }
-    viewModel { EmployeeAccountViewModel(get(), get()) }
-    viewModel { ReceivePayVoucherViewModel(get(), get(), get()) }
+
+    viewModelOf(::ManagementViewModel)
+    viewModelOf(::BusinessPartnerViewModel)
+    viewModelOf(::SalesReturnViewModel)
+    viewModelOf(::SalesViewModel)
+    viewModelOf(::PurchaseViewModel)
+    viewModelOf(::PurchaseReturnViewModel)
+    viewModelOf(::EmployeeAccountViewModel)
+    viewModelOf(::ReceivePayVoucherViewModel)
 }

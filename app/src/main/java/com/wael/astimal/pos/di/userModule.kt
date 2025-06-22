@@ -9,22 +9,18 @@ import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import com.wael.astimal.pos.features.user.presentation.login.LoginViewModel
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsViewModel
-import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val userModule = module {
     single { get<AppDatabase>().userDao() }
 
-    single<SettingsManager> {
-        SettingsManagerImpl(get())
-    }
-    single<SessionManager> {
-        SessionManagerImpl(get())
-    }
-    single<UserRepository> {
-        UserRepositoryImpl(get(), get(), get(), get())
-    }
+    singleOf(::SettingsManagerImpl) { bind<SettingsManager>() }
+    singleOf(::SessionManagerImpl) { bind<SessionManager>() }
+    singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
 
-    viewModel { SettingsViewModel(get(), get(), get()) }
-    viewModel { LoginViewModel(get(), get(), get()) }
+    viewModelOf(::SettingsViewModel)
+    viewModelOf(::LoginViewModel)
 }
