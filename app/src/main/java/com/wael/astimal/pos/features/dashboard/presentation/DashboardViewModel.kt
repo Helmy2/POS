@@ -1,52 +1,50 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import java.time.LocalDate
 import java.time.ZoneOffset
 
 class DashboardViewModel(
-    private val salesOrderRepository: SalesOrderRepository
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(DashboardState())
-    val state: StateFlow<DashboardState> = _state.asStateFlow()
-
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
+    private val salesOrderRepository: SalesOrderRepository,
+    private val snackbarController: SnackbarController
+) : BaseViewModel<DashboardContract.State, DashboardContract.Event, Nothing>(
+    reducer = DashboardReducer(),
+    initialState = DashboardContract.State()
+) {
 
     init {
         loadDashboardData()
     }
 
-    fun onEvent(event: DashboardEvent) {
+    override fun handleEvent(event: DashboardContract.Event) {
         when (event) {
-            is DashboardEvent.SelectTimePeriod -> {
-                _state.update { it.copy(selectedTimePeriod = event.period) }
+            is DashboardContract.Event.TimePeriodSelected -> {
+                setState(event)
                 loadDashboardData()
             }
 
-            is DashboardEvent.RefreshData -> loadDashboardData()
+            is DashboardContract.Event.RefreshDataClicked -> {
+                loadDashboardData()
+            }
+            // All other events are for synchronous state updates only
+            else -> setState(event)
         }
     }
 
     private fun loadDashboardData() {
-        _state.update { it.copy(isLoading = true) }
+        setState(DashboardContract.Event.LoadingData)
 
         val now = LocalDate.now()
-        val (startDate, endDate) = when (_state.value.selectedTimePeriod) {
+        val (startDate, endDate) = when (state.value.selectedTimePeriod) {
             TimePeriod.TODAY -> now to now
             TimePeriod.WEEKLY -> now.minusDays(6) to now
             TimePeriod.MONTHLY -> now.minusMonths(1) to now
@@ -57,21 +55,13 @@ class DashboardViewModel(
 
         salesOrderRepository.getDailySales(startMillis, endMillis)
             .onEach { dailySales ->
-                val totalRevenue = dailySales.sumOf { it.totalRevenue }
-                val totalSales = dailySales.sumOf { it.numberOfSales }
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        salesAnalytics = dailySales,
-                        kpiData = it.kpiData.copy(
-                            totalRevenue = totalRevenue,
-                            todaysSales = totalSales
-                        )
-                    )
-                }
+                setState(DashboardContract.Event.DataLoaded(dailySales))
             }
             .catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_dashboard_data))
+                snackbarController.sendEvent(
+                    SnackbarEvent(StringResource.FromResource(R.string.error_loading_dashboard_data))
+                )
+                setState(DashboardContract.Event.DataLoaded(emptyList()))
             }
             .launchIn(viewModelScope)
     }

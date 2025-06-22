@@ -4,23 +4,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,14 +37,10 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.ObserveEffect
-import com.wael.astimal.pos.core.base.SnackbarController
-import com.wael.astimal.pos.core.base.SnackbarEvent
-import com.wael.astimal.pos.core.base.StringResource
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.core.util.sharePdf
 import org.koin.androidx.compose.koinViewModel
+import org.slf4j.MDC.clear
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -56,49 +51,28 @@ fun DashboardRoute(
     viewModel: DashboardViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    val context = LocalContext.current
-
-    ObserveEffect(viewModel.eventFlow, viewModel.eventFlow) {
-        when (it) {
-            is UiEvent.ShowSnackbar -> {
-                SnackbarController.sendEvent(
-                    event = SnackbarEvent(
-                        message = StringResource.FromResource(it.message)
-                    )
-                )
-            }
-
-            is UiEvent.ShareFile -> {
-                sharePdf(
-                    context = context,
-                    uri = it.fileUri,
-                    title = context.getString(it.fileTitle)
-                )
-            }
-        }
-    }
-
-    DashboardScreen(state = state, onEvent = viewModel::onEvent)
+    DashboardScreen(state = state, onEvent = viewModel::processEvent)
 }
 
 @Composable
 fun DashboardScreen(
-    state: DashboardState, onEvent: (DashboardEvent) -> Unit
+    state: DashboardContract.State, onEvent: (DashboardContract.Event) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Screen(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { KpiCards(kpiData = state.kpiData) }
-        item { SalesAnalyticsChart(state = state, onEvent = onEvent) }
+        TimePeriodSelector(
+            selectedPeriod = state.selectedTimePeriod,
+            onPeriodSelected = { onEvent(DashboardContract.Event.TimePeriodSelected(it)) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        KpiCards(kpiData = state.kpiData)
+        SalesAnalyticsChart(state = state)
     }
 }
 
 @Composable
-fun KpiCards(kpiData: KpiData) {
+fun KpiCards(kpiData: DashboardContract.KpiData) {
     val language = LocalAppLocale.current
     val numberFormat =
         remember { NumberFormat.getCurrencyInstance(Locale(language.code, language.country)) }
@@ -113,8 +87,8 @@ fun KpiCards(kpiData: KpiData) {
             modifier = Modifier.weight(1f)
         )
         KpiCard(
-            title = stringResource(R.string.todays_sales),
-            value = kpiData.todaysSales.toString(),
+            title = stringResource(R.string.total_sales),
+            value = kpiData.totalSalesCount.toString(),
             modifier = Modifier.weight(1f)
         )
     }
@@ -131,18 +105,22 @@ fun KpiCard(title: String, value: String, modifier: Modifier = Modifier) {
     }
 }
 
-
 @Composable
-fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit) {
+fun SalesAnalyticsChart(
+    state: DashboardContract.State,
+) {
     val chartModelProducer = remember { CartesianChartModelProducer() }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("MMM dd") }
 
     LaunchedEffect(state.salesAnalytics) {
-        state.salesAnalytics.takeIf { it.isNotEmpty() }?.let {
+        if (state.salesAnalytics.isNotEmpty()) {
             chartModelProducer.runTransaction {
                 columnSeries {
-                    series(it.map { it -> it.totalRevenue.toFloat() })
+                    series(state.salesAnalytics.map { it.totalRevenue.toFloat() })
                 }
             }
+        } else {
+            chartModelProducer.runTransaction { clear() }
         }
     }
 
@@ -158,10 +136,6 @@ fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit
                     style = MaterialTheme.typography.titleLarge
                 )
             }
-            TimePeriodSelector(
-                selectedPeriod = state.selectedTimePeriod,
-                onPeriodSelected = { onEvent(DashboardEvent.SelectTimePeriod(it)) })
-            Spacer(modifier = Modifier.height(16.dp))
             CartesianChartHost(
                 chart = rememberCartesianChart(
                     rememberColumnCartesianLayer(
@@ -174,12 +148,11 @@ fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit
                     bottomAxis = HorizontalAxis.rememberBottom(
                         valueFormatter = { _, value, _ ->
                             state.salesAnalytics.getOrNull(value.toInt())?.date?.format(
-                                DateTimeFormatter.ofPattern("MMM dd")
-                            ) ?: "N/A"
+                                dateFormatter
+                            ) ?: " "
                         },
                     )
-                ),
-                modelProducer = chartModelProducer,
+                ), modelProducer = chartModelProducer, modifier = Modifier.height(200.dp)
             )
         }
     }
@@ -187,16 +160,23 @@ fun SalesAnalyticsChart(state: DashboardState, onEvent: (DashboardEvent) -> Unit
 
 @Composable
 fun TimePeriodSelector(
-    selectedPeriod: TimePeriod, onPeriodSelected: (TimePeriod) -> Unit
+    selectedPeriod: TimePeriod,
+    onPeriodSelected: (TimePeriod) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row {
-        TimePeriod.entries.forEach { period ->
-            TextButton(
+    SingleChoiceSegmentedButtonRow(
+        modifier,
+    ) {
+        TimePeriod.entries.forEachIndexed { index, period ->
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = TimePeriod.entries.size,
+                ),
                 onClick = { onPeriodSelected(period) },
-                enabled = period != selectedPeriod,
-            ) {
-                Text(text = stringResource(period.getStringRes()))
-            }
+                selected = period == selectedPeriod,
+                label = { Text(text = stringResource(period.getStringRes())) }
+            )
         }
     }
 }

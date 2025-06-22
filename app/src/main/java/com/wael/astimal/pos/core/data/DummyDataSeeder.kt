@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.core.data
 
 import com.wael.astimal.pos.core.base.NavigationController
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
@@ -9,7 +8,9 @@ import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -39,7 +40,7 @@ class DummyDataSeeder(
 ) {
     fun seedInitialDataIfNeeded() {
         applicationScope.launch(Dispatchers.IO) {
-            val userCount = userDao.getUserCount()
+            val userCount = userRepository.getEmployeesFlow().first().count()
             if (userCount == 0) {
                 populateAllDummyData()
             } else {
@@ -75,11 +76,11 @@ class DummyDataSeeder(
         println("Dummy data population complete.")
     }
 
-    private suspend fun assignEmployeesToStores(stores: List<StoreEntity>, user: User) {
+    private suspend fun assignEmployeesToStores(stores: List<Store>, user: User) {
         stores.forEach {
             userDao.assignStoreToEmployee(
                 EmployeeStoreEntity(
-                    employeeLocalId = user.id, storeLocalId = it.localId
+                    employeeLocalId = user.id, storeLocalId = it.id.local
                 )
             )
         }
@@ -89,8 +90,8 @@ class DummyDataSeeder(
     private suspend fun populateDummyBusinessPartner(user: User): List<BusinessPartner> {
         val businessPartners = listOf(
             BusinessPartner(
-                clientLocalId = Id(1, 1),
-                supplierLocalId = Id(1, 1),
+                clientLocalId = null,
+                supplierLocalId = null,
                 name = LocalizedString(
                     arName = "شريك عالمي",
                     enName = "Universal Partner",
@@ -99,11 +100,12 @@ class DummyDataSeeder(
                 phone = "0123456789",
                 responsibleEmployee = user,
                 supplierIndebtedness = 350.0,
+                clientDebt = 500.0,
                 type = PartnerType.BOTH,
                 isSynced = false
             ), BusinessPartner(
                 clientLocalId = null,
-                supplierLocalId = Id(2, 2),
+                supplierLocalId = null,
                 name = LocalizedString(
                     arName = "مورد ٢ (فقط)",
                     enName = "Supplier Two (Only)",
@@ -115,7 +117,7 @@ class DummyDataSeeder(
                 type = PartnerType.SUPPLIER,
                 isSynced = false
             ), BusinessPartner(
-                clientLocalId = Id(3, 3),
+                clientLocalId = null,
                 supplierLocalId = null,
                 name = LocalizedString(
                     arName = "عميل ١ (فقط)",
@@ -134,7 +136,7 @@ class DummyDataSeeder(
             businessPartnerRepository.saveBusinessPartner(it)
         }
 
-        return businessPartners
+        return businessPartnerRepository.getBusinessPartners().first()
     }
 
     private suspend fun populateDummyUnits(): List<UnitEntity> {
@@ -153,7 +155,7 @@ class DummyDataSeeder(
         return list
     }
 
-    private suspend fun populateDummyStores(): List<StoreEntity> {
+    private suspend fun populateDummyStores(): List<Store> {
         val stores = listOf(
             StoreEntity(
                 localId = -1,
@@ -182,10 +184,10 @@ class DummyDataSeeder(
         stores.forEach {
             storeRepository.saveStore(it)
         }
-        return stores
+        return storeRepository.getStores().first()
     }
 
-    private suspend fun populateDummyCategories(): List<CategoryEntity> {
+    private suspend fun populateDummyCategories(): List<Category> {
         val list = listOf(
             CategoryEntity(
                 localId = -1, serverId = null, arName = "عدسات", enName = "Lenses", isSynced = false
@@ -204,11 +206,11 @@ class DummyDataSeeder(
             )
         )
         list.forEach { categoryRepository.saveCategory(it) }
-        return list
+        return categoryRepository.getCategories().first()
     }
 
     private suspend fun populateDummyProducts(
-        stores: List<StoreEntity>, categories: List<CategoryEntity>, units: List<UnitEntity>
+        stores: List<Store>, categories: List<Category>, units: List<UnitEntity>
     ): List<Product> {
         val list = listOf(
             ProductEntity(
@@ -216,11 +218,11 @@ class DummyDataSeeder(
                 serverId = null,
                 arName = "عدسات ديزيو الشهرية",
                 enName = "Desio Monthly Lenses",
-                categoryId = categories[0].localId,
+                categoryId = categories[0].id.local,
                 averagePrice = 120.0,
                 sellingPrice = 180.0,
                 openingBalanceQuantity = 50.0,
-                storeId = stores[1].localId,
+                storeId = stores[1].id.local,
                 minimumUnitId = null,
                 maximumUnitId = units[2].localId,
                 subUnitsPerMainUnit = 1.0
@@ -229,11 +231,11 @@ class DummyDataSeeder(
                 serverId = -2,
                 arName = "محلول أوبتي-فري",
                 enName = "Opti-Free Solution",
-                categoryId = categories[1].localId,
+                categoryId = categories[1].id.local,
                 averagePrice = 35.5,
                 sellingPrice = 55.0,
                 openingBalanceQuantity = 100.0,
-                storeId = stores[1].localId,
+                storeId = stores[1].id.local,
                 isSynced = false,
                 minimumUnitId = null,
                 maximumUnitId = units[0].localId,
@@ -243,11 +245,11 @@ class DummyDataSeeder(
                 serverId = -3,
                 arName = "حافظة عدسات",
                 enName = "Lens Case",
-                categoryId = categories[2].localId,
+                categoryId = categories[2].id.local,
                 averagePrice = 5.0,
                 sellingPrice = 15.0,
                 openingBalanceQuantity = 200.0,
-                storeId = stores[1].localId,
+                storeId = stores[1].id.local,
                 isSynced = false,
                 minimumUnitId = units[0].localId, // Piece
                 maximumUnitId = units[1].localId, // Dozen

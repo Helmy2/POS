@@ -80,6 +80,10 @@ fun Screen(
 @Composable
 fun Screen(
     modifier: Modifier = Modifier,
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(
+        16.dp,
+        Alignment.CenterVertically
+    ),
     floatingActionButton: @Composable () -> Unit = {},
     topBar: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
@@ -92,7 +96,7 @@ fun Screen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
                 .padding(it),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            verticalArrangement = verticalArrangement,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             content()

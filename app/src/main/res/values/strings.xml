@@ -170,6 +170,7 @@
     <string name="stock_adjustment_reason_other">stock adjustment reason other</string>
     <string name="error_loading_dashboard_data">Error loading dashboard data</string>
     <string name="total_revenue">Total revenue</string>
+    <string name="total_sales">Total sales</string>
     <string name="todays_sales">Today\'s sales</string>
     <string name="sales_analytics">Sales analytics</string>
     <string name="today">Today</string>

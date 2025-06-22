@@ -1,12 +1,11 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 
 enum class TimePeriod {
-    TODAY,
-    WEEKLY,
-    MONTHLY;
+    TODAY, WEEKLY, MONTHLY;
 
     fun getStringRes(): Int {
         return when (this) {
@@ -17,21 +16,23 @@ enum class TimePeriod {
     }
 }
 
-data class KpiData(
-    val totalRevenue: Double = 0.0,
-    val todaysSales: Int = 0,
-    val conversionRate: Double = 0.0,
-    val todaysVisits: Int = 0
-)
+object DashboardContract {
+    data class KpiData(
+        val totalRevenue: Double = 0.0,
+        val totalSalesCount: Int = 0,
+    )
 
-data class DashboardState(
-    val isLoading: Boolean = false,
-    val kpiData: KpiData = KpiData(),
-    val salesAnalytics: List<DailySale> = emptyList(),
-    val selectedTimePeriod: TimePeriod = TimePeriod.WEEKLY,
-)
+    data class State(
+        val isLoading: Boolean = true,
+        val kpiData: KpiData = KpiData(),
+        val salesAnalytics: List<DailySale> = emptyList(),
+        val selectedTimePeriod: TimePeriod = TimePeriod.WEEKLY,
+    ) : Reducer.ViewState
 
-sealed interface DashboardEvent {
-    data class SelectTimePeriod(val period: TimePeriod) : DashboardEvent
-    data object RefreshData : DashboardEvent
+    sealed interface Event : Reducer.ViewEvent {
+        data class TimePeriodSelected(val period: TimePeriod) : Event
+        data object RefreshDataClicked : Event
+        data object LoadingData : Event
+        data class DataLoaded(val sales: List<DailySale>) : Event
+    }
 }
