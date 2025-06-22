@@ -1,5 +1,7 @@
 package com.wael.astimal.pos.core.presentation.theme
 
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,10 +14,9 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ProvidedValue
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,20 @@ val Shapes = Shapes(
     extraLarge = RoundedCornerShape(16.dp)
 )
 
+@Composable
+fun rememberLocalizedContext(language: Language): Context {
+    val context = LocalContext.current
+    return remember(context, language) {
+        val locale = Locale(language.code)
+        Locale.setDefault(locale) // Set default locale for the JVM
+
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocale(locale)
+        configuration.setLayoutDirection(locale)
+
+        context.createConfigurationContext(configuration)
+    }
+}
 
 @Composable
 fun POSTheme(
@@ -69,8 +84,9 @@ fun POSTheme(
     }
 
     CompositionLocalProvider(
+        LocalContext provides rememberLocalizedContext(language),
         LocalLayoutDirection provides language.layoutDirection,
-        LocalAppLocale provides language.code,
+        LocalAppLocale provides language,
     ) {
         key(language) {
             MaterialTheme(
@@ -83,31 +99,4 @@ fun POSTheme(
 }
 
 
-object LocalAppLocale {
-    private var default: Locale? = null
-
-    val current: Language
-        @Composable get() = Language.fromCode(Locale.getDefault().language)
-
-
-    @Composable
-    infix fun provides(value: String?): ProvidedValue<*> {
-        val configuration = LocalConfiguration.current
-
-        if (default == null) {
-            default = Locale.getDefault()
-        }
-
-        val new = when (value) {
-            null -> default!!
-            else -> Locale(value)
-        }
-        Locale.setDefault(new)
-        configuration.setLocale(new)
-        configuration.setLayoutDirection(new)
-        val resources = LocalContext.current.resources
-
-        resources.updateConfiguration(configuration, resources.displayMetrics)
-        return LocalConfiguration.provides(configuration)
-    }
-}
+val LocalAppLocale = compositionLocalOf { Language.English }
