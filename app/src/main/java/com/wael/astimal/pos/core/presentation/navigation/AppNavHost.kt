@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,8 +31,10 @@ import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 fun AppNavHost(
     startDestination: Destination,
     navController: NavHostController,
+    modifier: Modifier = Modifier,
 ) {
     NavHost(
+        modifier = modifier,
         navController = navController,
         startDestination = startDestination,
     ) {
@@ -43,11 +46,8 @@ fun AppNavHost(
             composable<Destination.Dashboard> { DashboardRoute() }
 
             // Inventory Hub
-            composable<Destination.Inventory> {
-                InventoryRoute(
-                    onNavigate = { navController.navigate(it) }
-                )
-            }
+            composable<Destination.Inventory> { InventoryRoute() }
+
             // Management Hub
             composable<Destination.Management> {
                 ManagementRoute(

@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.core.presentation.navigation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -122,58 +122,58 @@ fun MainScaffold(
     var showSetting by rememberSaveable {
         mutableStateOf(false)
     }
-    Scaffold(
-        topBar = {
-            if (isOnTopLevelRoute) {
-                TopAppBar(title = { Text(topBarTitle) }, actions = {
-                    IconButton(onClick = { showSetting = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(id = com.wael.astimal.pos.R.string.settings)
-                        )
-                    }
-                })
-            }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { paddingValues ->
-        Box {
-            NavigationSuiteScaffold(
-                layoutType = if (isOnTopLevelRoute) {
-                    NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
-                        currentWindowAdaptiveInfo()
-                    )
-                } else {
-                    NavigationSuiteType.None
-                },
-                modifier = Modifier.padding(paddingValues),
-                navigationSuiteItems = {
-                    mainNavigationItems(
-                        onDestinationSelected = { destination ->
-                            navController.navigate(destination) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        navBackStackEntry = navBackStackEntry,
-                    )
-                },
-            ) {
-                AppNavHost(
-                    startDestination = startDestination,
-                    navController = navController,
-                )
-            }
 
-            if (isOnTopLevelRoute) AnimatedVisibility(showSetting) {
-                Dialog(onDismissRequest = { showSetting = false }) {
-                    Card {
-                        SettingsRoute()
+    NavigationSuiteScaffold(
+        layoutType = if (isOnTopLevelRoute) {
+            NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
+                currentWindowAdaptiveInfo()
+            )
+        } else {
+            NavigationSuiteType.None
+        },
+        navigationSuiteItems = {
+            mainNavigationItems(
+                onDestinationSelected = { destination ->
+                    navController.navigate(destination) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
+                },
+                navBackStackEntry = navBackStackEntry,
+            )
+        },
+    ) {
+        Scaffold(
+            topBar = {
+                if (isOnTopLevelRoute) {
+                    TopAppBar(title = { Text(topBarTitle) }, actions = {
+                        IconButton(onClick = { showSetting = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(id = com.wael.astimal.pos.R.string.settings)
+                            )
+                        }
+                    })
                 }
+            },
+            modifier = Modifier.animateContentSize(),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+        ) { paddingValues ->
+            AppNavHost(
+                startDestination = startDestination,
+                navController = navController,
+                modifier = Modifier.padding(paddingValues),
+            )
+        }
+    }
+
+    if (isOnTopLevelRoute) AnimatedVisibility(showSetting) {
+        Dialog(onDismissRequest = { showSetting = false }) {
+            Card {
+                SettingsRoute()
             }
         }
     }

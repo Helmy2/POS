@@ -1,16 +1,29 @@
 package com.wael.astimal.pos.features.inventory.presentation.inventory
 
-import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import kotlinx.coroutines.launch
 
-class InventoryViewModel : ViewModel() {
-
-    private val _state = MutableStateFlow(InventoryState())
-    val state: StateFlow<InventoryState> = _state.asStateFlow()
-
+class InventoryViewModel(
+    private val navigationController: NavigationController
+) : BaseViewModel<InventoryContract.State, InventoryContract.Event, Nothing>(
+    reducer = InventoryReducer(),
+    initialState = InventoryContract.State()
+) {
     init {
-        _state.value = InventoryState(items = InventoryDestinations.getAll())
+        processEvent(InventoryContract.Event.LoadInventoryItems)
+    }
+
+    override fun handleEvent(event: InventoryContract.Event) {
+        viewModelScope.launch {
+            when (event) {
+                is InventoryContract.Event.ItemClicked -> {
+                    navigationController.navigate(event.destination)
+                }
+
+                else -> setState(event)
+            }
+        }
     }
 }

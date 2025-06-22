@@ -1,50 +1,42 @@
 package com.wael.astimal.pos.features.inventory.presentation.inventory
 
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun InventoryRoute(
-    onNavigate: (Destination) -> Unit,
     viewModel: InventoryViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     InventoryScreen(
         state = state,
-        onNavigate = onNavigate,
+        onEvent = viewModel::processEvent,
     )
 }
 
 @Composable
 fun InventoryScreen(
-    state: InventoryState,
-    onNavigate: (Destination) -> Unit,
+    state: InventoryContract.State,
+    onEvent: (InventoryContract.Event) -> Unit,
 ) {
-    Scaffold { paddingValues ->
+    Screen {
         ItemGrid(
             list = state.items,
             onItemClick = { inventoryItem ->
-                onNavigate(inventoryItem.destination)
+                onEvent(InventoryContract.Event.ItemClicked(inventoryItem.destination))
             },
             label = { inventoryItem ->
                 Label(text = stringResource(id = inventoryItem.label))
             },
-            modifier = Modifier
-                .padding(8.dp)
-                .consumeWindowInsets(paddingValues)
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             isSelected = { false }
         )
     }
