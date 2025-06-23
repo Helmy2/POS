@@ -192,7 +192,7 @@ class PurchaseViewModel(
                 userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
-                    updatePurchaseItem(tempId) { it.copy(currentStock = stock) }
+                    updatePurchaseItem(tempId) { it.copy(currentStock = stock.getOrDefault(0.0)) }
                 }.launchIn(viewModelScope)
         }
     }

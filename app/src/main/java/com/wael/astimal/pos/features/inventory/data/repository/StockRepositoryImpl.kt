@@ -3,16 +3,17 @@ package com.wael.astimal.pos.features.inventory.data.repository
 import android.util.Log
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
-import com.wael.astimal.pos.core.domain.entity.Language
-import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreProductStockEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
+import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -24,24 +25,30 @@ class StockRepositoryImpl(
     private val productDao: ProductDao
 ) : StockRepository {
 
-    override fun getStoreStocks(query: String, selectedStoreId: Long?): Flow<List<StoreStock>> {
+    override fun getStoreStocks(
+        query: String,
+        selectedStoreId: Long?
+    ): Flow<Result<List<StoreStock>>> {
         return stockDao.getStoreStocks().map { list ->
-            list.map { it.toDomain() }.filter {
-                val storeCondition =
-                    selectedStoreId == null || it.store.id.local == selectedStoreId
-                val queryCondition =
-                    query.isBlank() || it.product.name.displayName(Language.English)
-                        .contains(
-                            query, ignoreCase = true
-                        ) || it.product.name.displayName(Language.Arabic)
-                        .contains(query, ignoreCase = true)
-                storeCondition && queryCondition
+            runCatching {
+                list.map { it.toDomain() }.filter {
+                    val storeCondition =
+                        selectedStoreId == null || it.store.id.local == selectedStoreId
+                    val queryCondition =
+                        query.isBlank() || it.product.name.contains(query) || it.store.name.contains(
+                            query
+                        )
+                    storeCondition && queryCondition
+                }
             }
-        }
+        }.catch { emit(Result.failure(it)) }
     }
 
-    override fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Double> {
-        return stockDao.getStockQuantity(storeId, productId).map { it ?: 0.0 }
+    override fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Result<Double>> {
+        return stockDao.getStockQuantity(storeId, productId).map { runCatching { it ?: 0.0 } }
+            .catch {
+                emit(Result.failure(it))
+            }
     }
 
     override suspend fun adjustStock(
@@ -68,20 +75,20 @@ class StockRepositoryImpl(
         )
     }
 
-    override suspend fun addStockAdjustment(adjustment: StockAdjustmentEntity) {
+    override suspend fun addStockAdjustment(adjustment: StockAdjustment) {
         database.withTransaction {
             Log.d("TAG", "addStockAdjustment: $adjustment")
-            stockAdjustmentDao.insert(adjustment)
+            stockAdjustmentDao.insert(adjustment.toEntity())
 
             val currentStock = stockDao.getStockByStoreAndProduct(
-                adjustment.storeId, adjustment.productId
+                adjustment.store.id.local, adjustment.product.id.local
             ).map { it?.quantity ?: 0.0 }.first()
             val newQuantity = currentStock + adjustment.quantityChange
 
             stockDao.insertOrUpdateStock(
                 StoreProductStockEntity(
-                    storeLocalId = adjustment.storeId,
-                    productLocalId = adjustment.productId,
+                    storeLocalId = adjustment.store.id.local,
+                    productLocalId = adjustment.product.id.local,
                     quantity = newQuantity
                 )
             )

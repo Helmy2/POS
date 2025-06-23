@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,36 +28,39 @@ fun SearchBarWithBackButton(
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = SearchBarDefaults.dockedShape,
-        color = SearchBarDefaults.colors().containerColor,
-        contentColor = contentColorFor(SearchBarDefaults.colors().containerColor),
-        tonalElevation = SearchBarDefaults.TonalElevation,
-        shadowElevation = SearchBarDefaults.ShadowElevation,
-        modifier = Modifier.Companion
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-            .zIndex(1f)
-            .fillMaxWidth()
-    ) {
-        Row(
-            verticalAlignment = Alignment.Companion.CenterVertically,
+    Box(modifier) {
+        Surface(
+            shape = SearchBarDefaults.dockedShape,
+            color = SearchBarDefaults.colors().containerColor,
+            contentColor = contentColorFor(SearchBarDefaults.colors().containerColor),
+            tonalElevation = SearchBarDefaults.TonalElevation,
+            shadowElevation = SearchBarDefaults.ShadowElevation,
+            modifier = Modifier
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                .zIndex(1f)
+                .fillMaxWidth()
         ) {
-            BackButton(onClick = onBack)
-            SearchBarDefaults.InputField(
-                query = query,
-                onQueryChange = onQueryChange,
-                onSearch = onSearch,
-                expanded = true,
-                onExpandedChange = {},
-                placeholder = { Text(stringResource(R.string.search)) },
-                trailingIcon = {
-                    IconButton(onClick = { onQueryChange(query) }) {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    }
-                },
-                modifier = Modifier.Companion.weight(1f),
-            )
+            Row(
+                verticalAlignment = Alignment.Companion.CenterVertically,
+            ) {
+                BackButton(onClick = onBack)
+                SearchBarDefaults.InputField(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    onSearch = onSearch,
+                    expanded = true,
+                    onExpandedChange = {},
+                    placeholder = { Text(stringResource(R.string.search)) },
+                    trailingIcon = {
+                        IconButton(onClick = { onQueryChange(query) }) {
+                            Icon(Icons.Default.Search, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier.Companion.weight(1f),
+                )
+            }
         }
     }
 }

@@ -2,11 +2,12 @@ package com.wael.astimal.pos.features.inventory.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
@@ -52,14 +53,15 @@ class ProductRepositoryImpl(
                         productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
 
                     if (openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
-                        val adjustment = StockAdjustmentEntity(
-                            serverId = null,
-                            storeId = fullProduct.store.id.local,
-                            productId = newProductId,
-                            userId = currentUser.id,
+                        val adjustment = StockAdjustment(
+                            id = Id.new,
+                            store = fullProduct.store,
+                            product = fullProduct,
+                            user = currentUser,
                             reason = StockAdjustmentReason.INITIAL_COUNT,
                             notes = "Opening Balance",
                             quantityChange = openingBalance,
+                            createdAt = Clock.now()
                         )
                         stockRepository.addStockAdjustment(adjustment)
                     }
@@ -77,17 +79,15 @@ class ProductRepositoryImpl(
                             ?: throw Exception("User not authenticated for stock adjustment.")
                         val store = product.store
 
-                        val adjustment = StockAdjustmentEntity(
-                            localId = 0L,
-                            serverId = null,
-                            storeId = store.id.local,
-                            productId = product.id.local,
-                            userId = currentUser.id,
+                        val adjustment = StockAdjustment(
+                            id = Id.new,
+                            store = store,
+                            product = product,
+                            user = currentUser,
                             reason = StockAdjustmentReason.RECOUNT,
                             notes = "Opening balance updated.",
                             quantityChange = openingBalanceDifference,
-                            updatedAt = Clock.now(),
-                            isSynced = false
+                            createdAt = Clock.now(),
                         )
                         stockRepository.addStockAdjustment(adjustment)
                     }
@@ -106,21 +106,20 @@ class ProductRepositoryImpl(
                 // Fetch all stock entries for this product to zero them out
                 val allStocks =
                     stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
-                val productStocks = allStocks.filter { it.product.id.local == product.id.local }
+                val productStocks = allStocks.getOrDefault(emptyList())
+                    .filter { it.product.id.local == product.id.local }
 
                 for (stockItem in productStocks) {
                     if (stockItem.quantity != 0.0) {
-                        val adjustment = StockAdjustmentEntity(
-                            localId = 0L,
-                            serverId = null,
-                            storeId = stockItem.store.id.local,
-                            productId = stockItem.product.id.local,
-                            userId = currentUser.id,
+                        val adjustment = StockAdjustment(
+                            id = Id.new,
+                            store = stockItem.store,
+                            product = stockItem.product,
+                            user = currentUser,
                             reason = StockAdjustmentReason.OTHER,
                             notes = "Product ${product.name.arName} deleted.",
                             quantityChange = -stockItem.quantity,
-                            updatedAt = Clock.now(),
-                            isSynced = false
+                            createdAt = Clock.now(),
                         )
                         stockRepository.addStockAdjustment(adjustment)
                     }

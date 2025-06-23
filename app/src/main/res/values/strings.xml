@@ -298,5 +298,9 @@
     <string name="transfer_must_have_at_least_one_valid_item">transfer_must_have_at_least_one_valid_item</string>
     <string name="not_enough_stock_for">not_enough_stock_for</string>
     <string name="unknown_name">unknown_name</string>
+    <string name="notes">notes</string>
+    <string name="all_stores">All stores</string>
+    <string name="insufficient_stock">insufficient_stock</string>
+    <string name="product_not_found_in_store">product_not_found_in_store</string>
 
 </resources>

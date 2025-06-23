@@ -1,36 +1,61 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
+import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
 import com.wael.astimal.pos.features.user.domain.entity.User
 
+object StockManagementContract {
 
-data class StockManagementState(
-    val loading: Boolean = false,
-    val stores: List<Store> = emptyList(),
-    val stocks: List<StoreStock> = emptyList(),
-    val query: String = "",
-    val selectedStore: Store? = null,
-    val currentUser: User? = null,
+    data class ProductBundle(
+        val store: Store, val quantities: List<ProductQuantity>
+    )
 
-    val showAdjustmentDialog: Boolean = false,
-    val adjustmentTarget: StoreStock? = null,
-    val adjustmentQuantityChange: String = "",
-    val adjustmentReason: StockAdjustmentReason = StockAdjustmentReason.RECOUNT,
-    val adjustmentNotes: String = "",
-) {
-    val canEdit get() = currentUser?.isAdmin == true
-}
+    data class ProductQuantity(
+        val product: Product, val quantity: Double
+    )
 
-sealed interface StockManagementEvent {
-    data class SearchStock(val query: String) : StockManagementEvent
-    data class FilterByStore(val store: Store?) : StockManagementEvent
+    data class State(
+        val isLoading: Boolean = true,
+        val stores: List<Store> = emptyList(),
+        val products: List<Product> = emptyList(),
+        val productBundles: List<ProductBundle> = emptyList(),
+        val query: String = "",
+        val currentUser: User? = null,
 
-    data class ShowAdjustmentDialog(val stockItem: StoreStock) : StockManagementEvent
-    data object DismissAdjustmentDialog : StockManagementEvent
-    data class UpdateAdjustmentQuantity(val quantity: String) : StockManagementEvent
-    data class UpdateAdjustmentReason(val reason: StockAdjustmentReason) : StockManagementEvent
-    data class UpdateAdjustmentNotes(val notes: String) : StockManagementEvent
-    data object SaveStockAdjustment : StockManagementEvent
+        val showAdjustmentDialog: Boolean = false,
+        val adjustmentStore: Store? = null,
+        val adjustmentProduct: Product? = null,
+        val adjustmentQuantityChange: String = "",
+        val adjustmentReason: StockAdjustmentReason = StockAdjustmentReason.RECOUNT,
+        val adjustmentNotes: String = "",
+    ) : Reducer.ViewState {
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+    }
+
+    sealed interface Event : Reducer.ViewEvent {
+        // UI Actions
+        data object LoadInitialData : Event
+        data class SearchQueryChanged(val query: String) : Event
+        data object ShowAdjustmentDialog : Event
+        data class ShowAdjustmentDialogWithStore(val store: Store) : Event
+        data object DismissAdjustmentDialog : Event
+        data object SaveAdjustmentClicked : Event
+
+        // Dialog Input Changes
+        data class AdjustmentQuantityChanged(val quantity: String) : Event
+        data class AdjustmentReasonChanged(val reason: StockAdjustmentReason) : Event
+        data class AdjustmentNotesChanged(val notes: String) : Event
+        data class AdjustmentStoreChanged(val store: Store) : Event
+        data class AdjustmentProductChanged(val product: Product) : Event
+
+        // Data results from ViewModel
+        data class UserLoaded(val user: User?) : Event
+        data class StoresLoaded(val stores: List<Store>) : Event
+        data class StocksLoaded(val stocks: List<StoreStock>) : Event
+        data class ProductsLoaded(val products: List<Product>) : Event
+        data object AdjustmentSucceeded : Event
+    }
 }

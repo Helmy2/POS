@@ -3,19 +3,24 @@ package com.wael.astimal.pos.features.inventory.presentation.stock_management
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,15 +33,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
-import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
-import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
-import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -47,150 +49,231 @@ fun StockManagementRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     StockManagementScreen(
-        onBack = onBack,
-        eventFlow = viewModel.eventFlow,
-        state = state,
-        onEvent = viewModel::onEvent
+        state = state, onEvent = viewModel::processEvent, onBack = onBack
     )
 }
 
 @Composable
 fun StockManagementScreen(
-    state: StockManagementState,
-    onEvent: (StockManagementEvent) -> Unit,
-    onBack: () -> Unit,
-    eventFlow: SharedFlow<UiEvent>
+    state: StockManagementContract.State,
+    onEvent: (StockManagementContract.Event) -> Unit,
+    onBack: () -> Unit
 ) {
-    val language = LocalAppLocale.current
     if (state.showAdjustmentDialog) {
         StockAdjustmentDialog(state = state, onEvent = onEvent)
     }
 
-    Screen(
-        eventFlow = eventFlow,
-        topBar = {
-            SearchBarWithBackButton(
-                query = state.query,
-                onBack = onBack,
-                onQueryChange = { onEvent(StockManagementEvent.SearchStock(it)) },
-                onSearch = { onEvent(StockManagementEvent.SearchStock(it)) },
-            )
-        },
-        loading = state.loading,
-    ) {
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Adaptive(150.dp),
-            modifier = Modifier.padding(16.dp),
-            verticalItemSpacing = 8.dp,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item(
-                span = StaggeredGridItemSpan.FullLine
+    Screen(topBar = {
+        SearchBarWithBackButton(
+            query = state.query,
+            onBack = onBack,
+            onQueryChange = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
+            onSearch = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
+            modifier = Modifier.statusBarsPadding()
+        )
+    }, floatingActionButton = {
+        if (state.canUserEdit) {
+            FloatingActionButton(
+                onClick = { onEvent(StockManagementContract.Event.ShowAdjustmentDialog) },
+                modifier = Modifier.padding(8.dp)
             ) {
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.filter_by_store),
-                    items = state.stores,
-                    selectedItemId = state.selectedStore?.id?.local,
-                    onItemSelected = { onEvent(StockManagementEvent.FilterByStore(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
-                    canClearSelection = true,
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.adjust_stock),
                 )
             }
-            items(
-                state.stocks,
-                key = { "${it.store.id.local}-${it.product.id.local}" }) { stockItem ->
-                StockItemCard(stockItem = stockItem, onEvent = onEvent, canEdit = state.canEdit)
+        }
+    }) {
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxSize()
+        ) {
+            if (state.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else {
+                LazyVerticalStaggeredGrid(
+                    columns = StaggeredGridCells.Adaptive(300.dp),
+                    modifier = Modifier.padding(8.dp),
+                    verticalItemSpacing = 8.dp,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        state.productBundles, key = { "${it.store.id.local}" }) { stockItem ->
+                        StockItemCard(
+                            productBundle = stockItem, onClick = {
+                                onEvent(
+                                    StockManagementContract.Event.ShowAdjustmentDialogWithStore(
+                                        stockItem.store
+                                    )
+                                )
+                            })
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun StockItemCard(
-    stockItem: StoreStock,
-    onEvent: (StockManagementEvent) -> Unit,
-    canEdit: Boolean
+    productBundle: StockManagementContract.ProductBundle, onClick: () -> Unit
 ) {
-    Card(modifier = Modifier) {
-        Box {
-            Column(
-                modifier = Modifier.padding(16.dp),
+    val language = LocalAppLocale.current
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = stockItem.product.name.displayName(LocalAppLocale.current),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = stringResource(R.string.store) + ": ${
-                        stockItem.store.name.displayName(
-                            LocalAppLocale.current
-                        )
-                    }", style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = stringResource(R.string.current_quantity) + ": ${stockItem.quantity}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Column {
+                    Text(
+                        text = productBundle.store.name.displayName(language),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.products),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                Card(
+                    onClick = onClick,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.adjust_stock),
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
 
-            IconButton(
-                onClick = { onEvent(StockManagementEvent.ShowAdjustmentDialog(stockItem)) },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                enabled = canEdit,
-            ) {
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = stringResource(R.string.adjust)
-                )
+            productBundle.quantities.forEach {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+                ) {
+                    Text(
+                        text = it.product.name.displayName(
+                            language
+                        ), style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "${stringResource(R.string.current_quantity)}: ${it.quantity} ${
+                            it.product.maximumProductUnit.name.displayName(
+                                language
+                            )
+                        }", style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun StockAdjustmentDialog(state: StockManagementState, onEvent: (StockManagementEvent) -> Unit) {
+fun StockAdjustmentDialog(
+    state: StockManagementContract.State, onEvent: (StockManagementContract.Event) -> Unit
+) {
     val context = LocalContext.current
+    val language = LocalAppLocale.current
+    if (!state.showAdjustmentDialog) return
+
     AlertDialog(
-        onDismissRequest = { onEvent(StockManagementEvent.DismissAdjustmentDialog) },
+        onDismissRequest = { onEvent(StockManagementContract.Event.DismissAdjustmentDialog) },
         title = { Text(stringResource(R.string.adjust_stock)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = state.adjustmentTarget?.product?.name?.displayName(
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.store),
+                    items = state.stores,
+                    currentSelection = state.adjustmentStore?.name?.displayName(
                         LocalAppLocale.current
-                    ) ?: ""
+                    ) ?: "",
+                    onItemSelected = {
+                        onEvent(
+                            StockManagementContract.Event.AdjustmentStoreChanged(it)
+                        )
+                    },
+                    displayedItemText = { it.name.displayName(language) },
+                    enabled = state.canUserEdit
                 )
-                TextInputField(
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.product),
+                    items = state.products,
+                    currentSelection = state.adjustmentProduct?.name?.displayName(
+                        LocalAppLocale.current
+                    ) ?: "",
+                    onItemSelected = {
+                        onEvent(
+                            StockManagementContract.Event.AdjustmentProductChanged(it)
+                        )
+                    },
+                    displayedItemText = { it.name.displayName(language) },
+                    enabled = state.canUserEdit
+                )
+                LabeledTextField(
                     value = state.adjustmentQuantityChange,
-                    onValueChange = { onEvent(StockManagementEvent.UpdateAdjustmentQuantity(it)) },
+                    onValueChange = {
+                        onEvent(
+                            StockManagementContract.Event.AdjustmentQuantityChanged(
+                                it
+                            )
+                        )
+                    },
                     label = stringResource(R.string.quantity_change_by),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = state.canUserEdit
                 )
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.reason),
                     items = StockAdjustmentReason.entries,
-                    selectedItemId = state.adjustmentReason.ordinal.toLong(),
+                    currentSelection = stringResource(state.adjustmentReason.getStringResource()),
                     onItemSelected = {
                         onEvent(
-                            StockManagementEvent.UpdateAdjustmentReason(it)
+                            StockManagementContract.Event.AdjustmentReasonChanged(
+                                it
+                            )
                         )
                     },
-                    itemToDisplayString = { context.getString(it.getStringResource()) },
-                    itemToId = { it.ordinal.toLong() },
-                    canClearSelection = false,
+                    displayedItemText = { context.getString(it.getStringResource()) },
+                    enabled = state.canUserEdit
+                )
+                LabeledTextField(
+                    value = state.adjustmentNotes,
+                    onValueChange = {
+                        onEvent(
+                            StockManagementContract.Event.AdjustmentNotesChanged(
+                                it
+                            )
+                        )
+                    },
+                    label = stringResource(R.string.notes),
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = state.canUserEdit
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { onEvent(StockManagementEvent.SaveStockAdjustment) }) {
+            Button(
+                onClick = { onEvent(StockManagementContract.Event.SaveAdjustmentClicked) },
+                enabled = state.canUserEdit
+            ) {
                 Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(StockManagementEvent.DismissAdjustmentDialog) }) {
+            TextButton(
+                onClick = { onEvent(StockManagementContract.Event.DismissAdjustmentDialog) },
+                enabled = state.canUserEdit
+            ) {
                 Text(stringResource(R.string.cancel))
             }
         })

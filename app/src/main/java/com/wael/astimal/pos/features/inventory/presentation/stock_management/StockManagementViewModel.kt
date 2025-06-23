@@ -1,150 +1,138 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
-import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
+import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class StockManagementViewModel(
     private val stockRepository: StockRepository,
     private val storeRepository: StoreRepository,
-    private val userRepository: UserRepository
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(StockManagementState())
-    val state: StateFlow<StockManagementState> = _state.asStateFlow()
-
+    private val productRepository: ProductRepository,
+    private val userRepository: UserRepository,
+    private val snackbarController: SnackbarController,
+) : BaseViewModel<StockManagementContract.State, StockManagementContract.Event, Nothing>(
+    reducer = StockManagementReducer(), initialState = StockManagementContract.State()
+) {
     private var stockJob: Job? = null
 
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
-
     init {
+        handleEvent(StockManagementContract.Event.LoadInitialData)
+    }
+
+    override fun handleEvent(event: StockManagementContract.Event) {
+        when (event) {
+            is StockManagementContract.Event.LoadInitialData -> loadInitialData()
+            is StockManagementContract.Event.SearchQueryChanged -> {
+                setState(event)
+                loadStocks()
+            }
+
+            is StockManagementContract.Event.SaveAdjustmentClicked -> saveStockAdjustment()
+            else -> setState(event)
+        }
+    }
+
+    private fun loadInitialData() {
+        setState(StockManagementContract.Event.LoadInitialData)
         viewModelScope.launch {
-            storeRepository.getStores().catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stores))
-            }.collect { stores ->
-                _state.update { it.copy(stores = stores.getOrDefault(emptyList())) }
+            setState(StockManagementContract.Event.UserLoaded(userRepository.getCurrentUser()))
+        }
+        viewModelScope.launch {
+            storeRepository.getStores("").collect { stores ->
+                setState(StockManagementContract.Event.StoresLoaded(stores.getOrDefault(emptyList())))
             }
         }
         viewModelScope.launch {
-            userRepository.getCurrentUser()?.let { user ->
-                _state.update { it.copy(currentUser = user) }
+            productRepository.getProducts().collect { it ->
+                setState(StockManagementContract.Event.ProductsLoaded(it.getOrDefault(emptyList())))
             }
         }
         loadStocks()
     }
 
-    fun onEvent(event: StockManagementEvent) {
-        when (event) {
-            is StockManagementEvent.SearchStock -> {
-                _state.update { it.copy(query = event.query) }
-                loadStocks()
-            }
-
-            is StockManagementEvent.FilterByStore -> {
-                _state.update { it.copy(selectedStore = event.store) }
-                loadStocks()
-            }
-
-            is StockManagementEvent.ShowAdjustmentDialog -> {
-                _state.update {
-                    it.copy(
-                        showAdjustmentDialog = true,
-                        adjustmentTarget = event.stockItem,
-                        adjustmentQuantityChange = "",
-                        adjustmentReason = StockAdjustmentReason.RECOUNT,
-                        adjustmentNotes = ""
-                    )
-                }
-            }
-
-            is StockManagementEvent.DismissAdjustmentDialog -> {
-                _state.update { it.copy(showAdjustmentDialog = false, adjustmentTarget = null) }
-            }
-
-            is StockManagementEvent.UpdateAdjustmentQuantity -> {
-                _state.update { it.copy(adjustmentQuantityChange = event.quantity) }
-            }
-
-            is StockManagementEvent.UpdateAdjustmentReason -> {
-                _state.update { it.copy(adjustmentReason = event.reason) }
-            }
-
-            is StockManagementEvent.UpdateAdjustmentNotes -> {
-                _state.update { it.copy(adjustmentNotes = event.notes) }
-            }
-
-            is StockManagementEvent.SaveStockAdjustment -> {
-                saveStockAdjustment()
-            }
-        }
-    }
-
     private fun loadStocks() {
         stockJob?.cancel()
         stockJob = stockRepository.getStoreStocks(
-            query = _state.value.query, selectedStoreId = _state.value.selectedStore?.id?.local
-        ).onEach { stocks ->
-                _state.update { it.copy(stocks = stocks, loading = false) }
-            }.catch {
-            _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stock))
-            }.launchIn(viewModelScope)
+            query = state.value.query, selectedStoreId = null
+        ).onEach { result ->
+            result.fold(onSuccess = {
+                setState(StockManagementContract.Event.StocksLoaded(it))
+            }, onFailure = {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_loading_stock)))
+                setState(StockManagementContract.Event.StocksLoaded(emptyList())) // Clear list on error
+
+            })
+        }.launchIn(viewModelScope)
     }
 
     private fun saveStockAdjustment() {
         viewModelScope.launch {
-            val target = _state.value.adjustmentTarget
-            val currentUser = _state.value.currentUser
-            val quantityChange = _state.value.adjustmentQuantityChange.toDoubleOrNull()
+            val adjustmentStore = state.value.adjustmentStore
+            val adjustmentProduct = state.value.adjustmentProduct
+            val currentUser = state.value.currentUser
+            val quantityChange = state.value.adjustmentQuantityChange.toDoubleOrNull()
 
-            if (target == null || currentUser == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_missing_data))
-
-                _state.update { it.copy(showAdjustmentDialog = false) }
+            if (adjustmentStore == null || adjustmentProduct == null || currentUser == null) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_missing_data)))
+                setState(StockManagementContract.Event.DismissAdjustmentDialog)
                 return@launch
             }
 
             if (quantityChange == null || quantityChange == 0.0) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_quantity))
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.invalid_quantity)))
                 return@launch
             }
 
-            val adjustment = StockAdjustmentEntity(
-                localId = 0L,
-                serverId = null,
-                storeId = target.store.id.local,
-                productId = target.product.id.local,
-                userId = currentUser.id,
-                reason = _state.value.adjustmentReason,
-                notes = _state.value.adjustmentNotes.takeIf { it.isNotBlank() },
+            state.value.productBundles.first { it.store == adjustmentStore }
+                .quantities.firstOrNull { it.product == adjustmentProduct }
+                ?.let { productQuantity ->
+                    if (productQuantity.quantity + quantityChange < 0) {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.insufficient_stock)))
+                        return@launch
+                    }
+                } ?: run {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.product_not_found_in_store)))
+                return@launch
+            }
+
+            val adjustment = StockAdjustment(
+                id = Id.new,
+                store = adjustmentStore,
+                product = adjustmentProduct,
+                user = currentUser,
+                reason = state.value.adjustmentReason,
+                notes = state.value.adjustmentNotes.takeIf { it.isNotBlank() },
                 quantityChange = quantityChange,
-                updatedAt = Clock.now(),
-                isSynced = false
+                createdAt = Clock.now(),
             )
 
             try {
                 stockRepository.addStockAdjustment(adjustment)
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.stock_updated_successfully))
-            } catch (_: Exception) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_updating_stock))
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.stock_updated_successfully)))
+                setState(StockManagementContract.Event.AdjustmentSucceeded)
+            } catch (e: Exception) {
+                snackbarController.sendEvent(
+                    SnackbarEvent(
+                        StringResource.FromResource(
+                            R.string.error_updating_stock, e.message ?: ""
+                        )
+                    )
+                )
+                setState(StockManagementContract.Event.DismissAdjustmentDialog)
             }
         }
     }

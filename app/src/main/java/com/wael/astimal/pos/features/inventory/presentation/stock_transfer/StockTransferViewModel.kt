@@ -32,8 +32,7 @@ class StockTransferViewModel(
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController,
 ) : BaseViewModel<StockTransferContract.State, StockTransferContract.Event, Nothing>(
-    reducer = StockTransferReducer(),
-    initialState = StockTransferContract.State(
+    reducer = StockTransferReducer(), initialState = StockTransferContract.State(
         currentTransferInput = StockTransferContract.EditableStockTransfer()
     )
 ) {
@@ -87,12 +86,10 @@ class StockTransferViewModel(
 
     private fun loadDropdownData() = viewModelScope.launch {
         combine(
-            storeRepository.getStores(""),
-            productRepository.getProducts("")
+            storeRepository.getStores(""), productRepository.getProducts("")
         ) { stores, products ->
             StockTransferContract.DropdownData(
-                stores.getOrDefault(emptyList()),
-                products.getOrDefault(emptyList())
+                stores.getOrDefault(emptyList()), products.getOrDefault(emptyList())
             )
         }.collect { dropdownData ->
             setState(StockTransferContract.Event.DropdownDataLoaded(dropdownData))
@@ -103,8 +100,7 @@ class StockTransferViewModel(
     private fun searchTransfers(query: String) {
         searchJob?.cancel()
         setState(StockTransferContract.Event.LoadingStarted)
-        searchJob = stockTransferRepository.getStockTransfersWithDetails()
-            .debounce(300L)
+        searchJob = stockTransferRepository.getStockTransfersWithDetails().debounce(300L)
             .onEach { transfers ->
                 val filtered = if (query.isBlank()) {
                     transfers
@@ -116,19 +112,20 @@ class StockTransferViewModel(
                     }
                 }
                 setState(StockTransferContract.Event.TransfersLoaded(filtered))
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     private fun observeStockForItem(editorId: String, productId: Long) {
         stockObservationJobs[editorId]?.cancel()
         val fromStoreId = state.value.currentTransferInput.fromStore?.id?.local ?: return
         stockObservationJobs[editorId] =
-            stockRepository.getStockQuantityFlow(fromStoreId, productId)
-                .onEach { stock ->
-                    setState(StockTransferContract.Event.StockForItemSelected(editorId, stock))
-                }
-                .launchIn(viewModelScope)
+            stockRepository.getStockQuantityFlow(fromStoreId, productId).onEach { stock ->
+                setState(
+                    StockTransferContract.Event.StockForItemSelected(
+                        editorId, stock.getOrDefault(0.0)
+                    )
+                )
+            }.launchIn(viewModelScope)
     }
 
     private fun resubscribeAllStockObservers() {
@@ -168,10 +165,8 @@ class StockTransferViewModel(
                 snackbarController.sendEvent(
                     SnackbarEvent(
                         StringResource.FromResourceAndLocalizedString(
-                            R.string.not_enough_stock_for,
-                            item.product?.name
-                        ) { res, name -> "$res $name" }
-                    )
+                            R.string.not_enough_stock_for, item.product?.name
+                        ) { res, name -> "$res $name" })
                 )
                 return@launch
             }
