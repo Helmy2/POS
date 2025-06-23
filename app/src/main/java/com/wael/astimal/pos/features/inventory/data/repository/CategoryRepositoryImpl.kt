@@ -1,12 +1,13 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
+import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 class CategoryRepositoryImpl(
@@ -14,32 +15,27 @@ class CategoryRepositoryImpl(
 ) : CategoryRepository {
 
 
-    override fun getCategories(query: String): Flow<List<Category>> {
+    override fun getCategories(query: String): Flow<Result<List<Category>>> {
         return categoryDao.searchCategoriesFlow(query).map { entities ->
-            entities.map { it.toDomain() }
-        }
+            runCatching { entities.map { it.toDomain() } }
+        }.catch { emit(Result.failure(it)) }
     }
 
     override suspend fun saveCategory(
-        category: CategoryEntity
+        category: Category
     ): Result<Unit> {
         return runCatching {
-            if (category.enName.isNullOrBlank() && category.arName.isNullOrBlank()) {
+            if (category.name.arName.isNullOrBlank() && category.name.enName.isNullOrBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the category."))
             }
 
-            categoryDao.insertOrUpdate(category)
+            categoryDao.insertOrUpdate(category.toEntity())
         }
     }
 
     override suspend fun deleteCategory(category: Category): Result<Unit> {
         return try {
-            val entityToDelete =
-                categoryDao.getCategoryByLocalId(category.id.local) ?: return Result.failure(
-                    NoSuchElementException("Category not found for deletion")
-                )
-
-            val categoryToMarkAsDeleted = entityToDelete.copy(
+            val categoryToMarkAsDeleted = category.toEntity().copy(
                 isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
             )
             categoryDao.insertOrUpdate(categoryToMarkAsDeleted)

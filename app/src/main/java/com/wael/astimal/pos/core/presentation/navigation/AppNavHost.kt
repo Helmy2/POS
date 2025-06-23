@@ -63,7 +63,7 @@ fun AppNavHost(
 
 
             // --- Inventory Sub-Screens ---
-            composable<Destination.Categories> { CategoryRoute(onBack = { navController.popBackStack() }) }
+            composable<Destination.Categories> { CategoryRoute() }
             composable<Destination.Products> { ProductRoute(onBack = { navController.popBackStack() }) }
             composable<Destination.Stores> { StoreRoute() }
             composable<Destination.Units> { UnitRoute() }

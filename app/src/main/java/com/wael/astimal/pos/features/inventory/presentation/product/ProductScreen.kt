@@ -105,7 +105,7 @@ fun ProductScreen(
                     items = state.categories,
                     selectedItemId = state.selectedCategoryId,
                     onItemSelected = { category -> onEvent(ProductEvent.SelectCategoryId(category.id.local)) },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     canClearSelection = false,
                     enabled = state.canEdit

@@ -1,10 +1,8 @@
 package com.wael.astimal.pos.features.inventory.presentation.category
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -13,18 +11,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CategoryRoute(
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CategoryViewModel = koinViewModel(),
 ) {
@@ -32,69 +27,63 @@ fun CategoryRoute(
 
     CategoryScreen(
         state = state,
-        onEvent = viewModel::onEvent,
-        onBack = onBack,
-        modifier = modifier,
-        eventFlow = viewModel.eventFlow,
+        onEvent = viewModel::processEvent,
+        modifier = modifier
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
-    state: CategoryScreenState,
-    onEvent: (CategoryScreenEvent) -> Unit,
-    onBack: () -> Unit,
+    state: CategoryContract.State,
+    onEvent: (CategoryContract.Event) -> Unit,
     modifier: Modifier = Modifier,
-    eventFlow: SharedFlow<UiEvent>,
 ) {
     val language = LocalAppLocale.current
+
     SearchScreen(
-        eventFlow = eventFlow,
         modifier = modifier,
-        query = state.query,
-        isSearchActive = state.isQueryActive,
-        loading = state.loading,
-        isNew = state.isNew,
-        onQueryChange = { onEvent(CategoryScreenEvent.UpdateQuery(it)) },
-        onSearch = { onEvent(CategoryScreenEvent.Search(it)) },
-        onSearchActiveChange = { onEvent(CategoryScreenEvent.UpdateIsQueryActive(it)) },
-        onBack = onBack,
+        query = state.searchQuery,
+        isSearchActive = state.isSearchActive,
+        isNew = !state.isEditing,
+        onQueryChange = { onEvent(CategoryContract.Event.SearchQueryChanged(it)) },
+        onSearch = { onEvent(CategoryContract.Event.SearchQueryChanged(it)) },
+        onSearchActiveChange = { onEvent(CategoryContract.Event.SearchActiveChanged(it)) },
+        onBack = { onEvent(CategoryContract.Event.BackClicked) },
         lastModifiedDate = state.selectedCategory?.updatedAt,
-        onDelete = { onEvent(CategoryScreenEvent.DeleteCategory) },
-        onCreate = { onEvent(CategoryScreenEvent.CreateCategory) },
-        onUpdate = { onEvent(CategoryScreenEvent.UpdateCategory) },
-        onNew = { onEvent(CategoryScreenEvent.SelectCategory(null)) },
-        canEdit = state.canEdit,
+        onDelete = { onEvent(CategoryContract.Event.DeleteClicked) },
+        onCreate = { onEvent(CategoryContract.Event.SaveClicked) },
+        onUpdate = { onEvent(CategoryContract.Event.SaveClicked) },
+        onNew = { onEvent(CategoryContract.Event.NewCategoryClicked) },
+        canEdit = state.canUserEdit,
+        canSave = state.canSave,
         searchResults = {
             ItemGrid(
-                list = state.searchResults,
-                onItemClick = { category ->
-                    onEvent(CategoryScreenEvent.UpdateIsQueryActive(false))
-                    onEvent(CategoryScreenEvent.SelectCategory(category))
-                },
-                label = { Label(it.localizedName.displayName(language)) },
+                list = state.categories,
+                onItemClick = { category -> onEvent(CategoryContract.Event.CategorySelected(category)) },
+                label = { Label(it.name.displayName(language)) },
                 isSelected = { category -> category.id.local == state.selectedCategory?.id?.local },
             )
         },
         mainContent = {
-            FlowRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                LabeledTextField(
-                    value = state.inputArName,
-                    onValueChange = { onEvent(CategoryScreenEvent.UpdateInputArName(it)) },
-                    label = stringResource(id = R.string.ar_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    enabled = state.canEdit,
-                )
+            item {
                 LabeledTextField(
                     value = state.inputEnName,
-                    onValueChange = { onEvent(CategoryScreenEvent.UpdateInputEnName(it)) },
+                    onValueChange = { onEvent(CategoryContract.Event.EnNameChanged(it)) },
                     label = stringResource(id = R.string.en_name),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+            item {
+                LabeledTextField(
+                    value = state.inputArName,
+                    onValueChange = { onEvent(CategoryContract.Event.ArNameChanged(it)) },
+                    label = stringResource(id = R.string.ar_name),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    enabled = state.canEdit,
+                    enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
                 )
             }
         },

@@ -5,7 +5,6 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
@@ -213,24 +212,31 @@ class DummyDataSeeder(
 
     private suspend fun populateDummyCategories(): List<Category> {
         val list = listOf(
-            CategoryEntity(
-                localId = -1, serverId = null, arName = "عدسات", enName = "Lenses", isSynced = false
-            ), CategoryEntity(
-                localId = -2,
-                serverId = null,
-                arName = "محاليل",
-                enName = "Solutions",
-                isSynced = false
-            ), CategoryEntity(
-                localId = -3,
-                serverId = null,
-                arName = "اكسسوارات",
-                enName = "Accessories",
-                isSynced = false
+            Category(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "عدسات",
+                    enName = "Lenses"
+                ),
+                createdAt = Clock.now(),
+            ), Category(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "محاليل",
+                    enName = "Solutions"
+                ),
+                createdAt = Clock.now(),
+            ), Category(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "اكسسوارات",
+                    enName = "Accessories"
+                ),
+                createdAt = Clock.now(),
             )
         )
         list.forEach { categoryRepository.saveCategory(it) }
-        return categoryRepository.getCategories().first()
+        return categoryRepository.getCategories().first().getOrDefault(emptyList())
     }
 
     private suspend fun populateDummyProducts(

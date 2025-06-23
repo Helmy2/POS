@@ -278,7 +278,6 @@
     <string name="error_deleting_voucher">Error deleting voucher</string>
     <string name="edit_voucher">Edit voucher</string>
     <string name="error_loading_transactione">error loading transactione</string>
-    <string name="some_field_are_required">Some field are required</string>
     <string name="account_avatar_image">Account avatar image</string>
     <string name="store_deleted_successfully">Store deleted successfully</string>
     <string name="store_saved_successfully">Store saved successfully</string>
@@ -290,5 +289,7 @@
     <string name="unit_saved_successfully">unit_saved_successfully</string>
     <string name="failed_to_save_unit">failed_to_save_unit</string>
     <string name="unit_deleted_successfully">unit_deleted_successfully</string>
+    <string name="category_saved_successfully">category_saved_successfully</string>
+    <string name="category_deleted_successfully">category_deleted_successfully</string>
 
 </resources>

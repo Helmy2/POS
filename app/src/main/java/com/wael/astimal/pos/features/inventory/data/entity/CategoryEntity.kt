@@ -24,7 +24,7 @@ data class CategoryEntity(
 fun CategoryEntity.toDomain(): Category {
     return Category(
         id = Id(localId, serverId),
-        localizedName = LocalizedString(arName = arName, enName = enName),
+        name = LocalizedString(arName = arName, enName = enName),
         isSynced = isSynced,
         updatedAt = updatedAt,
         createdAt = createdAt

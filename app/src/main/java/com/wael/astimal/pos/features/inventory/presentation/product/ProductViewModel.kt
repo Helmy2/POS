@@ -51,7 +51,7 @@ class ProductViewModel(
     private fun loadDropdownData() {
         viewModelScope.launch {
             categoryRepository.getCategories("").collect { categories ->
-                _state.update { it.copy(categories = categories) }
+                _state.update { it.copy(categories = categories.getOrDefault(emptyList())) }
             }
         }
         viewModelScope.launch {
@@ -168,7 +168,7 @@ class ProductViewModel(
             }
 
             if (currentState.selectedCategoryId == null || currentState.selectedStoreId == null || currentState.selectedMaxStockUnitId == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.some_field_are_required))
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_some_field_are_required))
                 return@launch
             }
 

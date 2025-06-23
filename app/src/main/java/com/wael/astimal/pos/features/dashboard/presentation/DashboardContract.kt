@@ -26,7 +26,7 @@ object DashboardContract {
         val isLoading: Boolean = true,
         val kpiData: KpiData = KpiData(),
         val salesAnalytics: List<DailySale> = emptyList(),
-        val selectedTimePeriod: TimePeriod = TimePeriod.WEEKLY,
+        val selectedTimePeriod: TimePeriod = TimePeriod.TODAY,
     ) : Reducer.ViewState
 
     sealed interface Event : Reducer.ViewEvent {

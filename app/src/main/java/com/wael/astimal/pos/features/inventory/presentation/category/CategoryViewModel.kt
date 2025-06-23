@@ -1,149 +1,123 @@
 package com.wael.astimal.pos.features.inventory.presentation.category
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(
-    private val categoryRepository: CategoryRepository, private val userRepository: UserRepository
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(CategoryScreenState())
-    val state: StateFlow<CategoryScreenState> = _state.asStateFlow()
-
+    private val categoryRepository: CategoryRepository,
+    private val userRepository: UserRepository,
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController
+) : BaseViewModel<CategoryContract.State, CategoryContract.Event, Nothing>(
+    reducer = CategoryReducer(),
+    initialState = CategoryContract.State()
+) {
     private var searchJob: Job? = null
 
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
-
     init {
-        viewModelScope.launch {
-            _state.update { it.copy(currentUser = userRepository.getCurrentUser()) }
-        }
-        onEvent(CategoryScreenEvent.Search(""))
+        loadCurrentUser()
+        searchCategories("") // Initial load
     }
 
-    fun onEvent(event: CategoryScreenEvent) {
+    override fun handleEvent(event: CategoryContract.Event) {
         when (event) {
-            is CategoryScreenEvent.CreateCategory -> saveCategory()
-            is CategoryScreenEvent.UpdateCategory -> saveCategory()
-            is CategoryScreenEvent.DeleteCategory -> deleteSelectedCategory()
-            is CategoryScreenEvent.Search -> searchCategories(event.query)
-            is CategoryScreenEvent.SelectCategory -> handleSelectCategory(event.category)
-            is CategoryScreenEvent.UpdateQuery -> {
-                _state.update { it.copy(query = event.query) }
+            is CategoryContract.Event.SearchQueryChanged -> {
+                setState(event)
                 searchCategories(event.query)
             }
 
-            is CategoryScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
-            is CategoryScreenEvent.UpdateInputArName -> _state.update { it.copy(inputArName = event.name) }
-            is CategoryScreenEvent.UpdateInputEnName -> _state.update { it.copy(inputEnName = event.name) }
+            is CategoryContract.Event.SaveClicked -> saveCategory()
+            is CategoryContract.Event.DeleteClicked -> deleteCategory()
+            is CategoryContract.Event.BackClicked -> navigateBack()
+            else -> setState(event)
         }
     }
 
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            setState(CategoryContract.Event.UserLoaded(userRepository.getCurrentUser()))
+        }
+    }
+
+    @OptIn(FlowPreview::class)
     private fun searchCategories(query: String) {
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            if (query.length > 1 || query.isEmpty()) {
-                delay(300)
+        setState(CategoryContract.Event.LoadingStarted)
+        searchJob = categoryRepository.getCategories(query)
+            .debounce(300L)
+            .onEach { categories ->
+                setState(CategoryContract.Event.CategoriesLoaded(categories.getOrDefault(emptyList())))
             }
-            categoryRepository.getCategories(query).catch { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_categories))
-            }.collect { categories ->
-                _state.update { it.copy(loading = false, searchResults = categories) }
-            }
-        }
-    }
-
-    private fun handleSelectCategory(category: Category?) {
-        if (category == null) {
-            _state.update {
-                it.copy(
-                    selectedCategory = null, inputArName = "", inputEnName = ""
-                )
-            }
-        } else {
-            _state.update {
-                it.copy(
-                    selectedCategory = category,
-                    inputArName = category.localizedName.arName ?: "",
-                    inputEnName = category.localizedName.enName ?: "",
-                )
-            }
-        }
+            .launchIn(viewModelScope)
     }
 
     private fun saveCategory() {
         viewModelScope.launch {
-            val currentState = _state.value
-
-            if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_some_field_are_required))
+            val currentState = state.value
+            if (!currentState.canSave) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
-
-            _state.update { it.copy(loading = true) }
-
-            val result = categoryRepository.saveCategory(
-                CategoryEntity(
-                    localId = currentState.selectedCategory?.id?.local ?: 0,
-                    serverId = currentState.selectedCategory?.id?.server,
-                    arName = currentState.inputArName,
-                    enName = currentState.inputEnName,
-                    createdAt = currentState.selectedCategory?.createdAt
-                        ?: Clock.now(),
+            setState(CategoryContract.Event.LoadingStarted)
+            viewModelScope.launch {
+                val categoryToSave = Category(
+                    id = currentState.selectedCategory?.id ?: Id.new,
+                    name = LocalizedString(
+                        arName = currentState.inputArName,
+                        enName = currentState.inputEnName
+                    ),
+                    createdAt = currentState.selectedCategory?.createdAt ?: Clock.now(),
                 )
-            )
 
+                val result = categoryRepository.saveCategory(categoryToSave)
 
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false, selectedCategory = null, inputArName = "", inputEnName = ""
-                    )
+                result.onSuccess {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.category_saved_successfully)))
+                    setState(CategoryContract.Event.SaveSucceeded)
+                    searchCategories("") // Refresh the list
+                }.onFailure {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_save_category)))
+                    setState(CategoryContract.Event.LoadingFinished)
                 }
-            }, onFailure = { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_category))
-            })
+            }
         }
     }
 
-    private fun deleteSelectedCategory() {
+    private fun deleteCategory() {
+        val categoryToDelete = state.value.selectedCategory ?: return
+        setState(CategoryContract.Event.LoadingStarted)
         viewModelScope.launch {
-            val categoryToDelete = _state.value.selectedCategory
-            if (categoryToDelete == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.no_category_selected_for_deletion))
-                return@launch
+            categoryRepository.deleteCategory(categoryToDelete).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.category_deleted_successfully)))
+                setState(CategoryContract.Event.DeleteSucceeded)
+                searchCategories("") // Refresh the list
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_delete_category)))
+                setState(CategoryContract.Event.LoadingFinished)
             }
+        }
+    }
 
-            _state.update { it.copy(loading = true) }
-            val result = categoryRepository.deleteCategory(categoryToDelete)
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false, selectedCategory = null, inputArName = "", inputEnName = ""
-                    )
-                }
-            }, onFailure = { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_category))
-            })
+    private fun navigateBack() {
+        viewModelScope.launch {
+            navigationController.navigateBack()
         }
     }
 }
