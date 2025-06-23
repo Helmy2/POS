@@ -3,24 +3,24 @@ package com.wael.astimal.pos.features.reports.presentation.account_statement
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.ObserveEffect
+import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
@@ -109,9 +110,9 @@ fun AccountStatementScreen(
     Screen(
         topBar = {
             AnimatedContent(
-                targetState = state.selectedPartner == null,
-            ) { isPartnerListVisible ->
-                if (isPartnerListVisible) {
+                state.selectedPartner == null, modifier = Modifier.statusBarsPadding()
+            ) { selectedPartnerIsNull ->
+                if (selectedPartnerIsNull) {
                     SearchBarWithBackButton(
                         query = state.searchQuery,
                         onQueryChange = {
@@ -121,33 +122,37 @@ fun AccountStatementScreen(
                         onBack = onBack,
                     )
                 } else {
-                    val title = if (state.selectedPartner == null) {
-                        stringResource(R.string.account_statement)
-                    } else {
-                        state.selectedPartner.name.displayName(LocalAppLocale.current)
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    val title = state.selectedPartner?.name?.displayName(LocalAppLocale.current)
+                        ?: stringResource(
+                            R.string.account_statement
+                        )
+                    Card(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(title, style = MaterialTheme.typography.titleLarge)
-                        IconButton(onClick = { onEvent(AccountStatementContract.Event.ExportToPdfClicked) }) {
-                            Icon(
-                                Icons.Default.Share,
-                                contentDescription = stringResource(R.string.export_as_pdf)
-                            )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            BackButton({ onEvent(AccountStatementContract.Event.ClearPartnerSelection) })
+                            Text(title, style = MaterialTheme.typography.titleLarge)
+                            Spacer(modifier = Modifier.weight(1f))
+                            IconButton(onClick = { onEvent(AccountStatementContract.Event.ExportToPdfClicked) }) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = stringResource(R.string.export_as_pdf)
+                                )
+                            }
                         }
                     }
+
                 }
             }
         }) {
         AnimatedContent(
-            targetState = state.selectedPartner == null,
-            transitionSpec = { fadeIn() togetherWith fadeOut() }) { isPartnerListVisible ->
+            targetState = state.selectedPartner == null, modifier = Modifier.padding(16.dp)
+        ) { isPartnerListVisible ->
             if (isPartnerListVisible) {
                 PartnerSelectionList(
                     isLoading = state.isPartnerListLoading,

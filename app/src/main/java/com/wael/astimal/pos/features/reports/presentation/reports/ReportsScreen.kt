@@ -1,9 +1,7 @@
 package com.wael.astimal.pos.features.reports.presentation.reports
 
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -12,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -30,7 +29,7 @@ fun ReportsScreen(
     state: ReportsContract.State,
     onEvent: (ReportsContract.Event) -> Unit,
 ) {
-    Scaffold { paddingValues ->
+    Screen {
         ItemGrid(
             list = state.items,
             onItemClick = { reportItem ->
@@ -42,8 +41,7 @@ fun ReportsScreen(
                 )
             },
             modifier = Modifier
-                .padding(8.dp)
-                .consumeWindowInsets(paddingValues)
+                .padding(16.dp)
                 .fillMaxSize(),
             isSelected = { false }
         )
