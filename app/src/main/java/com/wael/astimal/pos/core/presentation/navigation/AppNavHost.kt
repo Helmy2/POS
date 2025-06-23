@@ -68,7 +68,7 @@ fun AppNavHost(
             composable<Destination.Stores> { StoreRoute() }
             composable<Destination.Units> { UnitRoute() }
             composable<Destination.StockManagement> { StockManagementRoute(onBack = { navController.popBackStack() }) }
-            composable<Destination.StockTransfer> { StockTransferRoute(onBack = { navController.popBackStack() }) }
+            composable<Destination.StockTransfer> { StockTransferRoute() }
 
 
             // --- Management Sub-Screens ---

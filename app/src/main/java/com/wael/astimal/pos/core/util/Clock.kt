@@ -18,7 +18,7 @@ object Clock {
 }
 
 fun Long.convertToString(): String {
-    val formatter = SimpleDateFormat("h:ma ddMMM", Locale.getDefault())
+    val formatter = SimpleDateFormat("hh:mma ddMMM", Locale.getDefault())
     return formatter.format(Date(this))
 }
 

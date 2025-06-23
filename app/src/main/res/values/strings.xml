@@ -295,5 +295,8 @@
     <string name="category">category</string>
     <string name="product_deleted_successfully">product_deleted_successfully</string>
     <string name="product_saved_successfully">product_saved_successfully</string>
+    <string name="transfer_must_have_at_least_one_valid_item">transfer_must_have_at_least_one_valid_item</string>
+    <string name="not_enough_stock_for">not_enough_stock_for</string>
+    <string name="unknown_name">unknown_name</string>
 
 </resources>

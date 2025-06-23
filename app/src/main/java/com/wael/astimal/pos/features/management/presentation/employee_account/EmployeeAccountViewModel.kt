@@ -37,7 +37,7 @@ class EmployeeAccountViewModel(
             userRepository.getEmployeesFlow().catch {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_employees))
             }.collect { employees ->
-                _state.update { it.copy(employees = employees) }
+                _state.update { it.copy(employees = employees.getOrDefault(emptyList())) }
             }
         }
         viewModelScope.launch {

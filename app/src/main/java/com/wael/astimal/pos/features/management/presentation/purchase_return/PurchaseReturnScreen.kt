@@ -113,7 +113,7 @@ fun PurchaseReturnForm(
             label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = state.currentReturnInput.selectedEmployeeId,
-            onItemSelected = { onEvent(PurchaseReturnEvent.SelectEmployee(it?.id)) },
+            onItemSelected = { onEvent(PurchaseReturnEvent.SelectEmployee(it.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false,

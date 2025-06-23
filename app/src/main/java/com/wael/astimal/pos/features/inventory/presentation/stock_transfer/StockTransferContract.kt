@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
@@ -7,55 +8,82 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 import java.util.UUID
 
-data class StockTransferScreenState(
-    val loading: Boolean = false,
-    val transfers: List<StockTransfer> = emptyList(),
-    val selectedTransfer: StockTransfer? = null,
-    val query: String = "",
-    val isQueryActive: Boolean = false,
-    val currentTransferInput: EditableStockTransfer = EditableStockTransfer(),
-    val availableStores: List<Store> = emptyList(),
-    val availableEmployees: List<User> = emptyList(),
-    val availableProducts: List<Product> = emptyList(),
-    val currentUser: User? = null,
-) {
-    val isNew: Boolean get() = selectedTransfer == null
-    val canEdit get() = currentUser?.isAdmin == true
-}
+object StockTransferContract {
 
-data class EditableStockTransfer(
-    val localId: Long = 0L,
-    val fromStore: Store? = null,
-    val toStore: Store? = null,
-    val selectedEmployeeId: Long? = null,
-    val transferDate: Long = Clock.now(),
-    val items: List<EditableStockTransferItem> = listOf(),
-)
+    // Represents the data needed to fill dropdowns
+    data class DropdownData(
+        val stores: List<Store> = emptyList(),
+        val products: List<Product> = emptyList()
+    )
 
-data class EditableStockTransferItem(
-    val tempEditorId: String = UUID.randomUUID().toString(),
-    val product: Product? = null,
-    val isSelectedUnitIsMax: Boolean = true,
-    val maxUnitQuantity: String = "1.0",
-    val minUnitQuantity: String = "0.0",
-    val currentStock: Double = 0.0
-)
+    // Represents a single item being edited in the transfer form
+    data class EditableStockTransferItem(
+        val editorId: String = UUID.randomUUID().toString(),
+        val product: Product? = null,
+        val isSelectedUnitMax: Boolean = true,
+        val maxUnitQuantity: String = "1.0",
+        val minUnitQuantity: String = "0.0",
+        val currentMaxStock: Double = 0.0
+    )
 
-sealed interface StockTransferScreenEvent {
-    data class SearchTransfers(val query: String) : StockTransferScreenEvent
-    data class SelectTransferToView(val transfer: StockTransfer?) : StockTransferScreenEvent
-    data class UpdateIsQueryActive(val isQueryActive: Boolean) : StockTransferScreenEvent
-    data object OpenNewTransferForm : StockTransferScreenEvent
-    data class UpdateFromStore(val store: Store?) : StockTransferScreenEvent
-    data class UpdateToStore(val store: Store?) : StockTransferScreenEvent
-    data object AddItemToTransfer : StockTransferScreenEvent
-    data class RemoveItemFromTransfer(val itemEditorId: String) : StockTransferScreenEvent
-    data class SelectEmployee(val id: Long?) : StockTransferScreenEvent
-    data class UpdateItemProduct(val itemEditorId: String, val product: Product?) : StockTransferScreenEvent
-    data class UpdateTransferDate(val date: Long?) : StockTransferScreenEvent
-    data class UpdateItemUnit(val itemEditorId: String, val isMaxUnitSelected: Boolean) : StockTransferScreenEvent
-    data class UpdateItemMaxUnitQuantity(val itemEditorId: String, val quantity: String) : StockTransferScreenEvent
-    data class UpdateItemMinUnitQuantity(val itemEditorId: String, val quantity: String) : StockTransferScreenEvent
-    data object SaveTransfer : StockTransferScreenEvent
-    data class DeleteTransfer(val transferLocalId: Long) : StockTransferScreenEvent
+    // Represents the entire transfer form being edited
+    data class EditableStockTransfer(
+        val fromStore: Store? = null,
+        val toStore: Store? = null,
+        val selectedEmployeeId: Long? = null,
+        val transferDate: Long = Clock.now(),
+        val items: List<EditableStockTransferItem> = emptyList()
+    )
+
+    data class State(
+        val isLoading: Boolean = false,
+        val transfers: List<StockTransfer> = emptyList(),
+        val selectedTransfer: StockTransfer? = null,
+        val searchQuery: String = "",
+        val isSearchActive: Boolean = false,
+        val currentUser: User? = null,
+        val dropdownData: DropdownData = DropdownData(),
+        val currentTransferInput: EditableStockTransfer
+    ) : Reducer.ViewState {
+        val isEditing: Boolean get() = selectedTransfer != null
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val canSave: Boolean
+            get() = currentTransferInput.fromStore != null &&
+                    currentTransferInput.toStore != null &&
+                    currentTransferInput.items.isNotEmpty() &&
+                    currentTransferInput.items.all { it.product != null }
+    }
+
+    sealed interface Event : Reducer.ViewEvent {
+        // UI Actions
+        data class SearchQueryChanged(val query: String) : Event
+        data class SearchActiveChanged(val isActive: Boolean) : Event
+        data class TransferSelected(val transfer: StockTransfer) : Event
+        data object NewTransferClicked : Event
+        data object SaveClicked : Event
+        data object DeleteClicked : Event
+        data object BackClicked : Event
+
+        // Form Input Changes
+        data class FromStoreChanged(val store: Store?) : Event
+        data class ToStoreChanged(val store: Store?) : Event
+        data class EmployeeChanged(val employeeId: Long?) : Event
+        data class DateChanged(val date: Long) : Event
+        data object AddItem : Event
+        data class RemoveItem(val editorId: String) : Event
+        data class ItemProductChanged(val editorId: String, val product: Product?) : Event
+        data class ItemUnitChanged(val editorId: String, val isMaxUnit: Boolean) : Event
+        data class ItemMaxQuantityChanged(val editorId: String, val quantity: String) : Event
+        data class ItemMinQuantityChanged(val editorId: String, val quantity: String) : Event
+
+        // Data results from ViewModel
+        data class UserLoaded(val user: User?, val fromStore: Store?) : Event
+        data class DropdownDataLoaded(val data: DropdownData) : Event
+        data class TransfersLoaded(val transfers: List<StockTransfer>) : Event
+        data class StockForItemSelected(val editorId: String, val stock: Double) : Event
+        data object SaveSucceeded : Event
+        data object DeleteSucceeded : Event
+        data object LoadingStarted : Event
+        data object LoadingFinished : Event
+    }
 }

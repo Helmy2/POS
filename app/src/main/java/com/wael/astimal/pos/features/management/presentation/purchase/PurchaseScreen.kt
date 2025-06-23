@@ -103,7 +103,7 @@ fun PurchaseForm(
             label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = purchaseInput.selectedEmployeeId,
-            onItemSelected = { onEvent(PurchaseEvent.SelectEmployee(it?.id)) },
+            onItemSelected = { onEvent(PurchaseEvent.SelectEmployee(it.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false,

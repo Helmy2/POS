@@ -4,10 +4,11 @@ import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +36,7 @@ class StockTransferRepositoryImpl(
         toStoreId: Long,
         transferDate: Long?,
         initiatedByUserId: Long,
-        items: List<StockTransferItemEntity>
+        items: List<StockTransferItem>
     ): Result<StockTransfer> {
         return try {
             if (items.isEmpty()) {
@@ -55,20 +56,22 @@ class StockTransferRepositoryImpl(
 
             var insertedId: Long = -1
             database.withTransaction {
-                insertedId = stockTransferDao.insertTransferWithItems(newTransferEntity, items)
+                insertedId = stockTransferDao.insertTransferWithItems(
+                    newTransferEntity,
+                    items.map { it.toEntity(0L) })
 
                 // Adjust stock for all items
                 items.forEach { item ->
                     // Decrease stock from source store
                     stockRepository.adjustStock(
                         storeId = fromStoreId,
-                        productId = item.productLocalId,
+                        productId = item.product.id.local,
                         transactionQuantity = -item.quantity,
                     )
                     // Increase stock in destination store
                     stockRepository.adjustStock(
                         storeId = toStoreId,
-                        productId = item.productLocalId,
+                        productId = item.product.id.local,
                         transactionQuantity = item.quantity
                     )
                 }
@@ -89,7 +92,7 @@ class StockTransferRepositoryImpl(
         toStoreId: Long,
         transferDate: Long?,
         initiatedByUserId: Long,
-        items: List<StockTransferItemEntity>
+        items: List<StockTransferItem>
     ): Result<Unit> {
         return try {
             database.withTransaction {
@@ -117,11 +120,15 @@ class StockTransferRepositoryImpl(
                 // Apply stock changes for the new items
                 items.forEach { newItem ->
                     stockRepository.adjustStock(
-                        newItem.productLocalId,
+                        newItem.product.id.local,
                         fromStoreId,
                         -newItem.quantity
                     ) // Remove
-                    stockRepository.adjustStock(newItem.productLocalId, toStoreId, newItem.quantity) // Add
+                    stockRepository.adjustStock(
+                        newItem.product.id.local,
+                        toStoreId,
+                        newItem.quantity
+                    ) // Add
                 }
 
                 // Update the transfer record itself
@@ -133,7 +140,9 @@ class StockTransferRepositoryImpl(
                     createdAt = transferDate ?: Clock.now(),
                     updatedAt = Clock.now()
                 )
-                stockTransferDao.updateTransferWithItems(updatedTransferEntity, items)
+                stockTransferDao.updateTransferWithItems(
+                    updatedTransferEntity,
+                    items.map { it.toEntity(transferLocalId) })
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -141,10 +150,11 @@ class StockTransferRepositoryImpl(
         }
     }
 
-    override suspend fun deleteStockTransfer(transferLocalId: Long): Result<Unit> {
+    override suspend fun deleteStockTransfer(transfer: StockTransfer): Result<Unit> {
         return try {
             database.withTransaction {
-                val transferToDelete = stockTransferDao.getStockTransferWithDetails(transferLocalId)
+                val transferToDelete =
+                    stockTransferDao.getStockTransferWithDetails(transfer.id.local)
                     ?: throw NoSuchElementException("Stock transfer not found for deletion.")
 
                 if (!transferToDelete.transfer.isDeletedLocally) {

@@ -48,7 +48,6 @@ import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import kotlinx.coroutines.flow.SharedFlow
@@ -160,9 +159,7 @@ fun AddVoucherForm(
             selectedDateMillis = state.date,
             onDateSelected = {
                 onEvent(
-                    ReceivePayVoucherEvent.UpdateDate(
-                        it ?: Clock.now()
-                    )
+                    ReceivePayVoucherEvent.UpdateDate(it)
                 )
             },
             enabled = canEdit,
@@ -318,7 +315,8 @@ fun EditVoucherDialog(
                 )
                 DataPicker(
                     selectedDateMillis = date,
-                    onDateSelected = { date = it ?: Clock.now() })
+                    onDateSelected = { date = it },
+                )
                 TextInputField(
                     value = notes,
                     onValueChange = { notes = it },

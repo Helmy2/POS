@@ -109,7 +109,7 @@ fun OrderForm(
             label = stringResource(R.string.employee),
             items = state.availableEmployees,
             selectedItemId = orderInput.selectedEmployeeId,
-            onItemSelected = { onEvent(OrderEvent.SelectEmployee(it?.id)) },
+            onItemSelected = { onEvent(OrderEvent.SelectEmployee(it.id)) },
             itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false,

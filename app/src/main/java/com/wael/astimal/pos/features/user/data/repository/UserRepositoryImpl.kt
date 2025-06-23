@@ -10,6 +10,7 @@ import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -20,14 +21,17 @@ class UserRepositoryImpl(
     private val connectivity: Connectivity
 ) : UserRepository {
 
-    override fun getEmployeesFlow(): Flow<List<User>> {
+    override fun getEmployeesFlow(): Flow<Result<List<User>>> {
         return userDao.getAllEmployeesFlow().map { entities ->
-            entities.map { it.toDomain() }
-        }
+            runCatching { entities.map { it.toDomain() } }
+        }.catch { emit(Result.failure(it)) }
     }
 
-    override suspend fun getStoreIdForEmployee(employeeId: Long): Long? {
-        return userDao.getStoreIdForEmployee(employeeId)
+    override suspend fun getStoreIdForEmployee(employeeId: Long): Result<Long> {
+        return runCatching {
+            userDao.getStoreIdForEmployee(employeeId)
+                ?: throw NoSuchElementException("No store found for employee with ID $employeeId")
+        }
     }
 
     override suspend fun getCurrentUser(): User? {

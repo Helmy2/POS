@@ -74,7 +74,15 @@ class PurchaseViewModel(
         }
         viewModelScope.launch {
             userRepository.getEmployeesFlow()
-                .collect { result -> _state.update { it.copy(availableEmployees = result) } }
+                .collect { result ->
+                    _state.update {
+                        it.copy(
+                            availableEmployees = result.getOrDefault(
+                                emptyList()
+                            )
+                        )
+                    }
+                }
         }
     }
 
@@ -180,7 +188,8 @@ class PurchaseViewModel(
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
             val employeeId = _state.value.currentPurchaseInput.selectedEmployeeId ?: return@launch
-            val storeId = userRepository.getStoreIdForEmployee(employeeId) ?: return@launch
+            val storeId =
+                userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
                     updatePurchaseItem(tempId) { it.copy(currentStock = stock) }

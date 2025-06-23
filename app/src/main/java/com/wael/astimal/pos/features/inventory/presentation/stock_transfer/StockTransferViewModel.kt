@@ -1,32 +1,27 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
-import com.wael.astimal.pos.core.domain.entity.Language
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.user.domain.entity.User
-import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 class StockTransferViewModel(
     private val stockTransferRepository: StockTransferRepository,
@@ -34,349 +29,208 @@ class StockTransferViewModel(
     private val productRepository: ProductRepository,
     private val userRepository: UserRepository,
     private val stockRepository: StockRepository,
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(StockTransferScreenState())
-    val state: StateFlow<StockTransferScreenState> = _state.asStateFlow()
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController,
+) : BaseViewModel<StockTransferContract.State, StockTransferContract.Event, Nothing>(
+    reducer = StockTransferReducer(),
+    initialState = StockTransferContract.State(
+        currentTransferInput = StockTransferContract.EditableStockTransfer()
+    )
+) {
     private var searchJob: Job? = null
     private val stockObservationJobs = mutableMapOf<String, Job>()
 
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
-
     init {
-        viewModelScope.launch {
-            userRepository.getCurrentUser()?.let { updateCurrentUser(it) }
-        }
-        onEvent(StockTransferScreenEvent.SearchTransfers(""))
+        loadCurrentUser()
         loadDropdownData()
+        searchTransfers("")
     }
 
-    private fun updateCurrentUser(user: User?) {
-        viewModelScope.launch {
-            if (user != null) {
-                var fromStore = _state.value.currentTransferInput.fromStore
-                if (user.userType != UserType.ADMIN) {
-                    val storeId = userRepository.getStoreIdForEmployee(user.id)
-                    fromStore = storeId?.let { storeRepository.getStoreByLocalId(it).getOrNull() }
-                }
-                _state.update {
-                    it.copy(
-                        currentUser = user, currentTransferInput = it.currentTransferInput.copy(
-                            selectedEmployeeId = user.id, fromStore = fromStore
-                        )
-                    )
-                }
-                resubscribeAllStockObservers()
-            }
-        }
-    }
-
-    private fun loadDropdownData() {
-        viewModelScope.launch {
-            storeRepository.getStores().collect { stores ->
-                _state.update { it.copy(availableStores = stores.getOrDefault(emptyList())) }
-            }
-        }
-        viewModelScope.launch {
-            productRepository.getProducts().collect { products ->
-                _state.update { it.copy(availableProducts = products.getOrDefault(emptyList())) }
-            }
-        }
-        viewModelScope.launch {
-            userRepository.getEmployeesFlow().collect { employees ->
-                _state.update { it.copy(availableEmployees = employees) }
-            }
-        }
-    }
-
-    fun onEvent(event: StockTransferScreenEvent) {
+    override fun handleEvent(event: StockTransferContract.Event) {
         when (event) {
-            is StockTransferScreenEvent.SearchTransfers -> searchTransfers(event.query)
-            is StockTransferScreenEvent.SelectTransferToView -> updateSelectedTransfer(event.transfer)
-            is StockTransferScreenEvent.OpenNewTransferForm -> clear()
-            is StockTransferScreenEvent.UpdateFromStore -> {
-                _state.update {
-                    it.copy(
-                        currentTransferInput = it.currentTransferInput.copy(
-                            fromStore = event.store
-                        )
-                    )
-                }
+            is StockTransferContract.Event.SearchQueryChanged -> {
+                setState(event)
+                searchTransfers(event.query)
+            }
+
+            is StockTransferContract.Event.SaveClicked -> saveTransfer()
+            is StockTransferContract.Event.DeleteClicked -> deleteTransfer()
+            is StockTransferContract.Event.BackClicked -> navigateBack()
+            is StockTransferContract.Event.FromStoreChanged -> {
+                setState(event)
                 resubscribeAllStockObservers()
             }
 
-            is StockTransferScreenEvent.UpdateToStore -> _state.update {
-                it.copy(
-                    currentTransferInput = it.currentTransferInput.copy(toStore = event.store)
-                )
+            is StockTransferContract.Event.ItemProductChanged -> {
+                setState(event)
+                event.product?.let { observeStockForItem(event.editorId, it.id.local) }
             }
 
-            is StockTransferScreenEvent.AddItemToTransfer -> {
-                val currentInput = _state.value.currentTransferInput
-                _state.update {
-                    it.copy(currentTransferInput = currentInput.copy(items = currentInput.items + EditableStockTransferItem()))
-                }
+            is StockTransferContract.Event.RemoveItem -> {
+                stockObservationJobs[event.editorId]?.cancel()
+                stockObservationJobs.remove(event.editorId)
+                setState(event)
             }
 
-            is StockTransferScreenEvent.RemoveItemFromTransfer -> {
-                stockObservationJobs[event.itemEditorId]?.cancel()
-                stockObservationJobs.remove(event.itemEditorId)
-                val currentInput = _state.value.currentTransferInput
-                val updatedItems =
-                    currentInput.items.filterNot { it.tempEditorId == event.itemEditorId }
-                _state.update { it.copy(currentTransferInput = currentInput.copy(items = updatedItems)) }
-            }
-
-            is StockTransferScreenEvent.UpdateItemProduct -> {
-                updateTransferItem(event.itemEditorId) {
-                    val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
-                    it.copy(
-                        product = event.product,
-                        minUnitQuantity = conversionFactor.toString(),
-                        maxUnitQuantity = "1.0",
-                    )
-                }
-                event.product?.let { observeStockForItem(event.itemEditorId, it.id.local) }
-            }
-
-            is StockTransferScreenEvent.UpdateItemUnit -> updateTransferItem(event.itemEditorId) {
-                it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
-            }
-
-            is StockTransferScreenEvent.UpdateItemMaxUnitQuantity -> updateTransferItem(event.itemEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    maxUnitQuantity = event.quantity,
-                    minUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0.0"
-                )
-            }
-
-            is StockTransferScreenEvent.UpdateItemMinUnitQuantity -> updateTransferItem(event.itemEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    minUnitQuantity = event.quantity,
-                    maxUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.div(conversionFactor))?.toString() ?: "0.0"
-                )
-            }
-
-            is StockTransferScreenEvent.SaveTransfer -> saveCurrentTransfer()
-            is StockTransferScreenEvent.DeleteTransfer -> deleteTransfer(event.transferLocalId)
-            is StockTransferScreenEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
-            is StockTransferScreenEvent.SelectEmployee -> {
-                _state.update {
-                    it.copy(
-                        currentTransferInput = it.currentTransferInput.copy(
-                            selectedEmployeeId = event.id
-                        )
-                    )
-                }
-            }
-
-            is StockTransferScreenEvent.UpdateTransferDate -> _state.update {
-                it.copy(
-                    currentTransferInput = it.currentTransferInput.copy(
-                        transferDate = event.date ?: Clock.now()
-                    )
-                )
-            }
+            else -> setState(event)
         }
     }
 
-    private fun observeStockForItem(tempId: String, productId: Long) {
-        stockObservationJobs[tempId]?.cancel()
-        val fromStoreId = _state.value.currentTransferInput.fromStore?.id?.local ?: return
-        stockObservationJobs[tempId] =
-            stockRepository.getStockQuantityFlow(fromStoreId, productId).onEach { stock ->
-                updateTransferItem(tempId) { it.copy(currentStock = stock) }
-            }.launchIn(viewModelScope)
+    private fun loadCurrentUser() = viewModelScope.launch {
+        val currentUser = userRepository.getCurrentUser() ?: return@launch
+
+        val fromStore = if (!currentUser.isAdmin) {
+            storeRepository.getStoreByLocalId(currentUser.id).getOrNull()
+        } else null
+        setState(StockTransferContract.Event.UserLoaded(currentUser, fromStore))
     }
 
-    private fun resubscribeAllStockObservers() {
-        _state.value.currentTransferInput.items.forEach { item ->
-            item.product?.let { product ->
-                observeStockForItem(item.tempEditorId, product.id.local)
-            }
-        }
-    }
-
-    private fun updateSelectedTransfer(transfer: StockTransfer?) {
-        stockObservationJobs.values.forEach { it.cancel() }
-        stockObservationJobs.clear()
-
-        _state.update {
-            it.copy(
-                selectedTransfer = transfer,
-                isQueryActive = false,
-                currentTransferInput = if (transfer == null) EditableStockTransfer(
-                    selectedEmployeeId = it.currentUser?.id
-                ) else EditableStockTransfer(
-                    localId = transfer.id.local,
-                    fromStore = transfer.fromStore,
-                    toStore = transfer.toStore,
-                    transferDate = transfer.createdAt,
-                    selectedEmployeeId = transfer.initiatedByUser.id,
-                    items = transfer.items.map { item ->
-                        val conversionFactor = item.product.subUnitsPerMainUnit
-                        EditableStockTransferItem(
-                            tempEditorId = item.id.local.toString(),
-                            product = item.product,
-                            isSelectedUnitIsMax = true,
-                            maxUnitQuantity = item.quantity.toString(),
-                            minUnitQuantity = (item.quantity * conversionFactor).toString(),
-                        )
-                    },
-                )
+    private fun loadDropdownData() = viewModelScope.launch {
+        combine(
+            storeRepository.getStores(""),
+            productRepository.getProducts("")
+        ) { stores, products ->
+            StockTransferContract.DropdownData(
+                stores.getOrDefault(emptyList()),
+                products.getOrDefault(emptyList())
             )
+        }.collect { dropdownData ->
+            setState(StockTransferContract.Event.DropdownDataLoaded(dropdownData))
         }
-        resubscribeAllStockObservers()
     }
 
-    private fun updateTransferItem(
-        itemEditorId: String, updateAction: (EditableStockTransferItem) -> EditableStockTransferItem
-    ) {
-        val currentInput = _state.value.currentTransferInput
-        val updatedItems = currentInput.items.map {
-            if (it.tempEditorId == itemEditorId) updateAction(it) else it
-        }
-        _state.update { it.copy(currentTransferInput = currentInput.copy(items = updatedItems)) }
-    }
-
+    @OptIn(FlowPreview::class)
     private fun searchTransfers(query: String) {
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, query = query) }
-            stockTransferRepository.getStockTransfersWithDetails().catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_transfers))
-            }.collect { transfers ->
+        setState(StockTransferContract.Event.LoadingStarted)
+        searchJob = stockTransferRepository.getStockTransfersWithDetails()
+            .debounce(300L)
+            .onEach { transfers ->
                 val filtered = if (query.isBlank()) {
                     transfers
                 } else {
-                    transfers.filter { transfer ->
-                        val fromStoreName =
-                            transfer.fromStore.name.displayName(Language.Arabic)
-                        val toStoreName =
-                            transfer.toStore.name.displayName(Language.English)
-                        fromStoreName.contains(query, true) || toStoreName.contains(query, true)
+                    transfers.filter {
+                        it.fromStore.name.contains(query) || it.toStore.name.contains(
+                            query
+                        )
                     }
                 }
-                _state.update { it.copy(loading = false, transfers = filtered) }
+                setState(StockTransferContract.Event.TransfersLoaded(filtered))
             }
-        }
+            .launchIn(viewModelScope)
     }
 
-    private fun saveCurrentTransfer() {
-        viewModelScope.launch {
-            val currentInput = _state.value.currentTransferInput
-            val loggedInUserId = _state.value.currentUser?.id
-
-            if (currentInput.fromStore == null || currentInput.toStore == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.from_and_to_stores_must_be_selected))
-                return@launch
-            }
-            if (currentInput.fromStore.id.local == currentInput.toStore.id.local) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.from_and_to_stores_cannot_be_the_same))
-                return@launch
-            }
-            if (currentInput.items.isEmpty()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transfer_must_have_at_least_one_item))
-                return@launch
-            }
-            if (loggedInUserId == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified_cannot_save_transfer))
-                return@launch
-            }
-
-            for (item in currentInput.items) {
-                val quantity = item.maxUnitQuantity.toDoubleOrNull() ?: 0.0
-                if (quantity > item.currentStock) {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.not_enough_stock))
-                    return@launch
+    private fun observeStockForItem(editorId: String, productId: Long) {
+        stockObservationJobs[editorId]?.cancel()
+        val fromStoreId = state.value.currentTransferInput.fromStore?.id?.local ?: return
+        stockObservationJobs[editorId] =
+            stockRepository.getStockQuantityFlow(fromStoreId, productId)
+                .onEach { stock ->
+                    setState(StockTransferContract.Event.StockForItemSelected(editorId, stock))
                 }
-            }
-
-            val itemEntities = currentInput.items.mapNotNull { editableItem ->
-                val quantity = editableItem.maxUnitQuantity.toDoubleOrNull() ?: 0.0
-                if (editableItem.product == null || quantity <= 0) {
-                    return@mapNotNull null
-                }
-                StockTransferItemEntity(
-                    stockTransferLocalId = 0L,
-                    productLocalId = editableItem.product.id.local,
-                    quantity = quantity,
-                    serverId = null,
-                )
-            }
-
-            if (itemEntities.size != currentInput.items.size) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
-                return@launch
-            }
-
-            _state.update { it.copy(loading = true) }
-            val result = if (_state.value.isNew) {
-                stockTransferRepository.addStockTransfer(
-                    fromStoreId = currentInput.fromStore.id.local,
-                    toStoreId = currentInput.toStore.id.local,
-                    transferDate = currentInput.transferDate,
-                    initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
-                        ?: loggedInUserId,
-                    items = itemEntities
-                )
-            } else {
-                stockTransferRepository.updateStockTransfer(
-                    transferLocalId = currentInput.localId,
-                    fromStoreId = currentInput.fromStore.id.local,
-                    toStoreId = currentInput.toStore.id.local,
-                    transferDate = currentInput.transferDate,
-                    initiatedByUserId = _state.value.currentTransferInput.selectedEmployeeId
-                        ?: loggedInUserId,
-                    items = itemEntities
-                )
-            }
-
-            result.fold(onSuccess = {
-                clear(snackbarMessage = R.string.transfer_saved_successfully)
-                onEvent(StockTransferScreenEvent.SearchTransfers(""))
-            }, onFailure = { e ->
-                _state.update { it.copy(loading = false) }
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_transfer))
-            })
-        }
+                .launchIn(viewModelScope)
     }
 
-    private fun deleteTransfer(transferLocalId: Long) {
-        viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            val result = stockTransferRepository.deleteStockTransfer(transferLocalId)
-            result.fold(onSuccess = {
-                clear(snackbarMessage = R.string.transfer_deleted_successfully)
-                onEvent(StockTransferScreenEvent.SearchTransfers(""))
-            }, onFailure = {
-                _state.update { it.copy(loading = false) }
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_transfer))
-            })
-        }
-    }
-
-    private fun clear(snackbarMessage: Int? = null) {
+    private fun resubscribeAllStockObservers() {
         stockObservationJobs.values.forEach { it.cancel() }
         stockObservationJobs.clear()
-        _state.update {
-            it.copy(
-                loading = false,
-                isQueryActive = false,
-                selectedTransfer = null,
-                currentTransferInput = EditableStockTransfer()
+        state.value.currentTransferInput.items.forEach { item ->
+            item.product?.id?.local?.let { productId ->
+                observeStockForItem(item.editorId, productId)
+            }
+        }
+    }
+
+    private fun saveTransfer() = viewModelScope.launch {
+        val currentInput = state.value.currentTransferInput
+        val currentUser = state.value.currentUser
+
+        if (currentInput.fromStore == null || currentInput.toStore == null) {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.from_and_to_stores_must_be_selected)))
+            return@launch
+        }
+        if (currentInput.fromStore.id.local == currentInput.toStore.id.local) {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.from_and_to_stores_cannot_be_the_same)))
+            return@launch
+        }
+        if (currentInput.items.isEmpty() || currentInput.items.any { it.product == null }) {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.transfer_must_have_at_least_one_valid_item)))
+            return@launch
+        }
+        if (currentUser == null) {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.user_not_identified_cannot_save_transfer)))
+            return@launch
+        }
+
+        // Validate stock levels
+        for (item in currentInput.items) {
+            if ((item.maxUnitQuantity.toDoubleOrNull() ?: 0.0) > item.currentMaxStock) {
+                snackbarController.sendEvent(
+                    SnackbarEvent(
+                        StringResource.FromResourceAndLocalizedString(
+                            R.string.not_enough_stock_for,
+                            item.product?.name
+                        ) { res, name -> "$res $name" }
+                    )
+                )
+                return@launch
+            }
+        }
+
+        setState(StockTransferContract.Event.LoadingStarted)
+
+        val transferItems = currentInput.items.mapNotNull {
+            val quantity = it.maxUnitQuantity.toDoubleOrNull()
+            if (it.product != null && quantity != null && quantity > 0) {
+                StockTransferItem(product = it.product, quantity = quantity, id = Id.new)
+            } else null
+        }
+
+        val result = if (state.value.isEditing) {
+            stockTransferRepository.updateStockTransfer(
+                transferLocalId = state.value.selectedTransfer!!.id.local,
+                fromStoreId = currentInput.fromStore.id.local,
+                toStoreId = currentInput.toStore.id.local,
+                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id,
+                items = transferItems,
+                transferDate = Clock.now()
+            )
+        } else {
+            stockTransferRepository.addStockTransfer(
+                fromStoreId = currentInput.fromStore.id.local,
+                toStoreId = currentInput.toStore.id.local,
+                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id,
+                items = transferItems,
+                transferDate = Clock.now()
             )
         }
-        updateCurrentUser(_state.value.currentUser)
+
+        result.onSuccess {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.transfer_saved_successfully)))
+            setState(StockTransferContract.Event.SaveSucceeded)
+            searchTransfers("")
+        }.onFailure {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_save_transfer)))
+            setState(StockTransferContract.Event.LoadingFinished)
+        }
+    }
+
+    private fun deleteTransfer() = viewModelScope.launch {
+        val transferToDelete = state.value.selectedTransfer ?: return@launch
+        setState(StockTransferContract.Event.LoadingStarted)
+        stockTransferRepository.deleteStockTransfer(transferToDelete).onSuccess {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.transfer_deleted_successfully)))
+            setState(StockTransferContract.Event.DeleteSucceeded)
+            searchTransfers("")
+        }.onFailure {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_delete_transfer)))
+            setState(StockTransferContract.Event.LoadingFinished)
+        }
+    }
+
+    private fun navigateBack() {
         viewModelScope.launch {
-            snackbarMessage?.let {
-                _eventFlow.emit(UiEvent.ShowSnackbar(it))
-            }
+            navigationController.navigateBack()
         }
     }
 }

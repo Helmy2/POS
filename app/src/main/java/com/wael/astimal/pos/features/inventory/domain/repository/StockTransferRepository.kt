@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.inventory.domain.repository
 
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 import kotlinx.coroutines.flow.Flow
 
 interface StockTransferRepository {
@@ -12,7 +12,7 @@ interface StockTransferRepository {
         toStoreId: Long,
         transferDate: Long?,
         initiatedByUserId: Long,
-        items: List<StockTransferItemEntity>
+        items: List<StockTransferItem>
     ): Result<StockTransfer>
 
     suspend fun updateStockTransfer(
@@ -21,8 +21,8 @@ interface StockTransferRepository {
         toStoreId: Long,
         transferDate: Long?,
         initiatedByUserId: Long,
-        items: List<StockTransferItemEntity>
+        items: List<StockTransferItem>
     ): Result<Unit>
 
-    suspend fun deleteStockTransfer(transferLocalId: Long): Result<Unit>
+    suspend fun deleteStockTransfer(transfer: StockTransfer): Result<Unit>
 }

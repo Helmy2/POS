@@ -4,6 +4,14 @@ data class LocalizedString(
     val arName: String? = null,
     val enName: String? = null,
 ) {
+
+    fun contains(
+        value: String
+    ): Boolean {
+        return arName?.contains(value, ignoreCase = true) == true ||
+                enName?.contains(value, ignoreCase = true) == true
+    }
+
     fun displayName(
         language: Language
     ): String {
