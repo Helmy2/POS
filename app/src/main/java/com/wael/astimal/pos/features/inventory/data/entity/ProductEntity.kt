@@ -57,7 +57,7 @@ data class ProductEntity(
     val enName: String,
     val categoryId: Long?,
     val storeId: Long?,
-    val openingBalanceQuantity: Double? = null,
+    val openingBalanceQuantity: Double,
     val averagePrice: Double = 0.0,
     val sellingPrice: Double = 0.0,
     val minimumUnitId: Long?,
@@ -83,7 +83,7 @@ data class ProductWithDetailsEntity(
 
 fun ProductWithDetailsEntity.toDomain(): Product {
     return Product(
-        localizedName = LocalizedString(
+        name = LocalizedString(
             arName = product.arName, enName = product.enName
         ),
         category = category?.toDomain() ?: throw NullPointerException(),

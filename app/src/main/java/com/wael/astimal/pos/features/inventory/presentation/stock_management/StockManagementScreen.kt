@@ -118,7 +118,7 @@ fun StockItemCard(
                 modifier = Modifier.padding(16.dp),
             ) {
                 Text(
-                    text = stockItem.product.localizedName.displayName(LocalAppLocale.current),
+                    text = stockItem.product.name.displayName(LocalAppLocale.current),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
@@ -159,7 +159,7 @@ fun StockAdjustmentDialog(state: StockManagementState, onEvent: (StockManagement
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = state.adjustmentTarget?.product?.localizedName?.displayName(
+                    text = state.adjustmentTarget?.product?.name?.displayName(
                         LocalAppLocale.current
                     ) ?: ""
                 )
@@ -175,9 +175,7 @@ fun StockAdjustmentDialog(state: StockManagementState, onEvent: (StockManagement
                     selectedItemId = state.adjustmentReason.ordinal.toLong(),
                     onItemSelected = {
                         onEvent(
-                            StockManagementEvent.UpdateAdjustmentReason(
-                                it ?: StockAdjustmentReason.RECOUNT
-                            )
+                            StockManagementEvent.UpdateAdjustmentReason(it)
                         )
                     },
                     itemToDisplayString = { context.getString(it.getStringResource()) },

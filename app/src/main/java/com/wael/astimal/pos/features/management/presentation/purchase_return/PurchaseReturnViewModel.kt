@@ -62,7 +62,15 @@ class PurchaseReturnViewModel(
         }
         viewModelScope.launch {
             productRepository.getProducts()
-                .collect { result -> _state.update { it.copy(availableProducts = result) } }
+                .collect { result ->
+                    _state.update {
+                        it.copy(
+                            availableProducts = result.getOrDefault(
+                                emptyList()
+                            )
+                        )
+                    }
+                }
         }
         viewModelScope.launch {
             userRepository.getEmployeesFlow()

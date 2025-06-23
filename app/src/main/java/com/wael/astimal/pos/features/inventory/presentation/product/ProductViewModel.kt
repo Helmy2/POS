@@ -1,27 +1,27 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class ProductViewModel(
@@ -29,220 +29,124 @@ class ProductViewModel(
     private val categoryRepository: CategoryRepository,
     private val unitRepository: UnitRepository,
     private val storeRepository: StoreRepository,
-    private val userRepository: UserRepository
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(ProductState())
-    val state: StateFlow<ProductState> = _state.asStateFlow()
-
+    private val userRepository: UserRepository,
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController
+) : BaseViewModel<ProductContract.State, ProductContract.Event, Nothing>(
+    reducer = ProductReducer(), initialState = ProductContract.State()
+) {
     private var searchJob: Job? = null
 
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
-
     init {
-        viewModelScope.launch {
-            _state.update { it.copy(currentUser = userRepository.getCurrentUser()) }
-        }
-        searchProducts("")
+        loadCurrentUser()
         loadDropdownData()
+        searchProducts("") // Initial load
+    }
+
+    override fun handleEvent(event: ProductContract.Event) {
+        when (event) {
+            is ProductContract.Event.SearchQueryChanged -> {
+                setState(event)
+                searchProducts(event.query)
+            }
+
+            is ProductContract.Event.SaveClicked -> saveProduct()
+            is ProductContract.Event.DeleteClicked -> deleteProduct()
+            is ProductContract.Event.BackClicked -> navigateBack()
+            else -> setState(event)
+        }
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            setState(ProductContract.Event.UserLoaded(userRepository.getCurrentUser()))
+        }
     }
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            categoryRepository.getCategories("").collect { categories ->
-                _state.update { it.copy(categories = categories.getOrDefault(emptyList())) }
-            }
-        }
-        viewModelScope.launch {
-            unitRepository.getUnits("").collect { units ->
-                _state.update { it.copy(units = units.getOrDefault(emptyList())) }
-            }
-        }
-        viewModelScope.launch {
-            storeRepository.getStores("").collect { stores ->
-                _state.update { it.copy(stores = stores.getOrDefault(emptyList())) }
-            }
-        }
-    }
-
-    fun onEvent(event: ProductEvent) {
-        when (event) {
-            is ProductEvent.SaveProduct -> saveProduct()
-            is ProductEvent.DeleteProduct -> deleteSelectedProduct()
-            is ProductEvent.Search -> searchProducts(event.query)
-            is ProductEvent.SelectProduct -> handleSelectProduct(event.product)
-            is ProductEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
-            is ProductEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isQueryActive) }
-            is ProductEvent.UpdateInputArName -> _state.update { it.copy(inputArName = event.name) }
-            is ProductEvent.UpdateInputEnName -> _state.update { it.copy(inputEnName = event.name) }
-            is ProductEvent.SelectCategoryId -> _state.update { it.copy(selectedCategoryId = event.id) }
-            is ProductEvent.UpdateInputAveragePrice -> _state.update {
-                it.copy(inputAveragePrice = event.price)
-            }
-
-            is ProductEvent.UpdateInputSellingPrice -> _state.update {
-                it.copy(inputSellingPrice = event.price)
-            }
-
-            is ProductEvent.UpdateInputOpeningBalance -> _state.update {
-                it.copy(inputOpeningBalance = event.qty)
-            }
-
-            is ProductEvent.SelectStoreId -> _state.update { it.copy(selectedStoreId = event.id) }
-
-            is ProductEvent.SelectMinStockUnitId -> _state.update {
-                it.copy(selectedMinStockUnitId = event.unit.id.local)
-            }
-
-            is ProductEvent.SelectMaxStockUnitId -> _state.update {
-                it.copy(selectedMaxStockUnitId = event.unit.id.local)
-            }
-
-            is ProductEvent.UpdateSubUnitsPerMainUnit -> _state.update {
-                it.copy(subUnitsPerMainUnit = event.value)
+            combine(
+                categoryRepository.getCategories(""),
+                unitRepository.getUnits(""),
+                storeRepository.getStores("")
+            ) { categories, units, stores ->
+                ProductContract.DropdownData(
+                    categories.getOrDefault(emptyList()),
+                    units.getOrDefault(emptyList()),
+                    stores.getOrDefault(emptyList()),
+                )
+            }.collect { dropdownData ->
+                setState(ProductContract.Event.DropdownDataLoaded(dropdownData))
             }
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun searchProducts(query: String) {
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            if (query.length > 1 || query.isEmpty()) {
-                delay(300)
-            }
-            productRepository.getProducts(query).catch { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_products))
-            }.collect { products ->
-                _state.update {
-                    it.copy(
-                        loading = false, searchResults = products
-                    )
-                }
-            }
-        }
-    }
-
-    private fun handleSelectProduct(product: Product?) {
-        if (product == null) {
-            _state.update {
-                it.copy(
-                    selectedProduct = null,
-                    inputArName = "",
-                    inputEnName = "",
-                    selectedCategoryId = null,
-                    inputAveragePrice = "",
-                    inputSellingPrice = "",
-                    inputOpeningBalance = "",
-                    selectedStoreId = null,
-                    selectedMinStockUnitId = null,
-                    selectedMaxStockUnitId = null,
-                )
-            }
-        } else {
-            _state.update {
-                it.copy(
-                    selectedProduct = product,
-                    inputArName = product.localizedName.arName ?: "",
-                    inputEnName = product.localizedName.enName ?: "",
-                    selectedCategoryId = product.category.id.local,
-                    inputAveragePrice = product.averagePrice.toString(),
-                    inputSellingPrice = product.sellingPrice.toString(),
-                    inputOpeningBalance = product.openingBalanceQuantity?.toString() ?: "",
-                    selectedStoreId = product.store.id.local,
-                    selectedMinStockUnitId = product.minimumProductUnit?.id?.local,
-                    selectedMaxStockUnitId = product.maximumProductUnit.id.local,
-                    subUnitsPerMainUnit = product.subUnitsPerMainUnit.toString()
-                )
-            }
-        }
+        setState(ProductContract.Event.LoadingStarted)
+        searchJob = productRepository.getProducts(query).debounce(300L).onEach { products ->
+            setState(ProductContract.Event.ProductsLoaded(products.getOrDefault(emptyList())))
+        }.launchIn(viewModelScope)
     }
 
     private fun saveProduct() {
         viewModelScope.launch {
-            val currentState = _state.value
-            if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.at_least_one_product_name_is_required))
+            val currentState = state.value
+            if (!currentState.canSave) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
-
-            if (currentState.selectedCategoryId == null || currentState.selectedStoreId == null || currentState.selectedMaxStockUnitId == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_some_field_are_required))
-                return@launch
-            }
-
-            _state.update { it.copy(loading = true) }
-
-            // Construct ProductEntity from current state
-            val productEntity = ProductEntity(
-                localId = currentState.selectedProduct?.id?.local ?: 0L,
-                serverId = currentState.selectedProduct?.id?.server,
-                arName = currentState.inputArName,
-                enName = currentState.inputEnName,
-                categoryId = currentState.selectedCategoryId,
-                averagePrice = currentState.inputAveragePrice.toDoubleOrNull() ?: 0.0,
-                sellingPrice = currentState.inputSellingPrice.toDoubleOrNull() ?: 0.0,
-                openingBalanceQuantity = currentState.inputOpeningBalance.toDoubleOrNull(),
-                storeId = currentState.selectedStoreId,
-                minimumUnitId = currentState.selectedMinStockUnitId,
-                maximumUnitId = currentState.selectedMaxStockUnitId,
-                subUnitsPerMainUnit = currentState.subUnitsPerMainUnit.toDoubleOrNull() ?: 1.0,
+            setState(ProductContract.Event.LoadingStarted)
+            viewModelScope.launch {
+                val productToSave = Product(
+                    id = currentState.selectedProduct?.id ?: Id.new,
+                    name = LocalizedString(currentState.inputArName, currentState.inputEnName),
+                    averagePrice = currentState.inputPurchasePrice.toDouble(),
+                    sellingPrice = currentState.inputSellingPrice.toDouble(),
+                    openingBalanceQuantity = currentState.inputOpeningBalance.toDoubleOrNull()
+                        ?: 0.0,
+                    subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
+                        ?: 1.0,
+                    category = currentState.dropdownData.categories.find { it.id.local == currentState.selectedCategoryId }!!,
+                    store = currentState.dropdownData.stores.find { it.id.local == currentState.selectedStoreId }!!,
+                    maximumProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMaximumUnitId }!!,
+                    minimumProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMinimumUnitId },
                 createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
             )
 
-            Log.d("TAG", "saveProduct: $productEntity")
+                val result = productRepository.saveProduct(productToSave)
 
-            val result = productRepository.saveProduct(productEntity)
-
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        selectedProduct = null,
-                        inputArName = "",
-                        inputEnName = "",
-                        selectedCategoryId = null,
-                        inputAveragePrice = "",
-                        inputSellingPrice = "",
-                        inputOpeningBalance = "",
-                        selectedStoreId = null,
-                        selectedMinStockUnitId = null,
-                        selectedMaxStockUnitId = null,
-                        subUnitsPerMainUnit = "",
-                    )
+                result.onSuccess {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.product_saved_successfully)))
+                    setState(ProductContract.Event.SaveSucceeded)
+                    searchProducts("")
+                }.onFailure {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_save_product)))
+                    setState(ProductContract.Event.LoadingFinished)
                 }
-            }, onFailure = { e ->
-                Log.d("TAG", "saveProduct: $e")
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_save_product))
-            })
+            }
         }
     }
 
-    private fun deleteSelectedProduct() {
-        val productToDelete = _state.value.selectedProduct ?: return
+    private fun deleteProduct() {
+        val productToDelete = state.value.selectedProduct ?: return
+        setState(ProductContract.Event.LoadingStarted)
         viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            val result = productRepository.deleteProduct(productToDelete.id.local)
-            result.fold(onSuccess = {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        selectedProduct = null,
-                        inputArName = "",
-                        inputEnName = "",
-                        selectedCategoryId = null,
-                        inputAveragePrice = "",
-                        inputSellingPrice = "",
-                        inputOpeningBalance = "",
-                        selectedStoreId = null,
-                        selectedMinStockUnitId = null,
-                        selectedMaxStockUnitId = null,
-                    )
-                }
-            }, onFailure = { e ->
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.failed_to_delete_product))
-            })
+            productRepository.deleteProduct(productToDelete).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.product_deleted_successfully)))
+                setState(ProductContract.Event.DeleteSucceeded)
+                searchProducts("")
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_delete_product)))
+                setState(ProductContract.Event.LoadingFinished)
+            }
+        }
+    }
+
+    private fun navigateBack() {
+        viewModelScope.launch {
+            navigationController.navigateBack()
         }
     }
 }

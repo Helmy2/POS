@@ -5,7 +5,6 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
@@ -243,52 +242,56 @@ class DummyDataSeeder(
         stores: List<Store>, categories: List<Category>, units: List<ProductUnit>
     ): List<Product> {
         val list = listOf(
-            ProductEntity(
-                localId = 0,
-                serverId = null,
-                arName = "عدسات ديزيو الشهرية",
-                enName = "Desio Monthly Lenses",
-                categoryId = categories[0].id.local,
+            Product(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "عدسات شهرية",
+                    enName = "Monthly Lenses"
+                ),
                 averagePrice = 120.0,
                 sellingPrice = 180.0,
                 openingBalanceQuantity = 50.0,
-                storeId = stores[1].id.local,
-                minimumUnitId = null,
-                maximumUnitId = units[2].id.local,
-                subUnitsPerMainUnit = 1.0
-            ), ProductEntity(
-                localId = 0,
-                serverId = -2,
-                arName = "محلول أوبتي-فري",
-                enName = "Opti-Free Solution",
-                categoryId = categories[1].id.local,
+                category = categories[0],
+                store = stores[1],
+                minimumProductUnit = null,
+                maximumProductUnit = units[2],
+                subUnitsPerMainUnit = 1.0,
+                createdAt = Clock.now(),
+            ), Product(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "محلول عدسات",
+                    enName = "Lens Solution"
+                ),
                 averagePrice = 35.5,
                 sellingPrice = 55.0,
                 openingBalanceQuantity = 100.0,
-                storeId = stores[1].id.local,
-                isSynced = false,
-                minimumUnitId = null,
-                maximumUnitId = units[0].id.local,
-                subUnitsPerMainUnit = 1.0
-            ), ProductEntity(
-                localId = 0,
-                serverId = -3,
-                arName = "حافظة عدسات",
-                enName = "Lens Case",
-                categoryId = categories[2].id.local,
+                category = categories[1],
+                store = stores[1],
+                minimumProductUnit = null,
+                maximumProductUnit = units[0],
+                subUnitsPerMainUnit = 1.0,
+                createdAt = Clock.now(),
+            ), Product(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "حافظة عدسات",
+                    enName = "Lens Case"
+                ),
                 averagePrice = 5.0,
                 sellingPrice = 15.0,
                 openingBalanceQuantity = 200.0,
-                storeId = stores[1].id.local,
-                isSynced = false,
-                minimumUnitId = units[0].id.local, // Piece
-                maximumUnitId = units[1].id.local, // Dozen
-                subUnitsPerMainUnit = 12.0
+                category = categories[2],
+                store = stores[1],
+                minimumProductUnit = units[0], // Piece
+                maximumProductUnit = units[1], // Dozen
+                subUnitsPerMainUnit = 12.0,
+                createdAt = Clock.now(),
             )
         )
         list.forEach {
             productRep.saveProduct(it)
         }
-        return productRep.getProducts().first()
+        return productRep.getProducts().first().getOrDefault(emptyList())
     }
 }

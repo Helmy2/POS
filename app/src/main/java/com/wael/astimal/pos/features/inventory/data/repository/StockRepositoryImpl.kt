@@ -30,10 +30,10 @@ class StockRepositoryImpl(
                 val storeCondition =
                     selectedStoreId == null || it.store.id.local == selectedStoreId
                 val queryCondition =
-                    query.isBlank() || it.product.localizedName.displayName(Language.English)
+                    query.isBlank() || it.product.name.displayName(Language.English)
                         .contains(
                             query, ignoreCase = true
-                        ) || it.product.localizedName.displayName(Language.Arabic)
+                        ) || it.product.name.displayName(Language.Arabic)
                         .contains(query, ignoreCase = true)
                 storeCondition && queryCondition
             }

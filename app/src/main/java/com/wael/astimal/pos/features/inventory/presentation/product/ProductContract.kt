@@ -1,56 +1,81 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
+import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 
-data class ProductState(
-    val loading: Boolean = false,
-    val searchResults: List<Product> = emptyList(),
-    val selectedProduct: Product? = null,
-    val currentUser: User? = null,
+object ProductContract {
 
-    // Input fields for Add/Edit
-    val inputArName: String = "",
-    val inputEnName: String = "",
-    val selectedCategoryId: Long? = null,
-    val inputAveragePrice: String = "",
-    val inputSellingPrice: String = "",
-    val inputOpeningBalance: String = "",
-    val selectedStoreId: Long? = null,
-    val selectedMinStockUnitId: Long? = null,
-    val selectedMaxStockUnitId: Long? = null,
-    val subUnitsPerMainUnit: String = "",
+    data class DropdownData(
+        val categories: List<Category> = emptyList(),
+        val units: List<ProductUnit> = emptyList(),
+        val stores: List<Store> = emptyList()
+    )
 
-    // Lists for dropdowns/pickers
-    val categories: List<Category> = emptyList(),
-    val units: List<ProductUnit> = emptyList(),
-    val stores: List<Store> = emptyList(),
+    data class State(
+        val isLoading: Boolean = false,
+        val products: List<Product> = emptyList(),
+        val selectedProduct: Product? = null,
+        val searchQuery: String = "",
+        val isSearchActive: Boolean = false,
+        val currentUser: User? = null,
+        val dropdownData: DropdownData = DropdownData(),
+        // Form input state
+        val inputArName: String = "",
+        val inputEnName: String = "",
+        val inputPurchasePrice: String = "",
+        val inputSellingPrice: String = "",
+        val inputOpeningBalance: String = "",
+        val inputSubUnitsPerMainUnit: String = "1.0",
+        val selectedCategoryId: Long? = null,
+        val selectedStoreId: Long? = null,
+        val selectedMaximumUnitId: Long? = null,
+        val selectedMinimumUnitId: Long? = null
 
-    val query: String = "",
-    val isQueryActive: Boolean = false,
-) {
-    val isNew: Boolean get() = selectedProduct == null
-    val canEdit get() = currentUser?.isAdmin == true
-}
+    ) : Reducer.ViewState {
+        val isEditing: Boolean get() = selectedProduct != null
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val canSave: Boolean
+            get() = (inputArName.isNotBlank() || inputEnName.isNotBlank()) &&
+                    inputPurchasePrice.isNotBlank() &&
+                    inputSellingPrice.isNotBlank() &&
+                    selectedCategoryId != null &&
+                    selectedStoreId != null &&
+                    selectedMaximumUnitId != null
+    }
 
-sealed interface ProductEvent {
-    data object SaveProduct : ProductEvent
-    data object DeleteProduct : ProductEvent
-    data class UpdateInputArName(val name: String) : ProductEvent
-    data class UpdateInputEnName(val name: String) : ProductEvent
-    data class SelectCategoryId(val id: Long?) : ProductEvent
-    data class UpdateInputAveragePrice(val price: String) : ProductEvent
-    data class UpdateInputSellingPrice(val price: String) : ProductEvent
-    data class UpdateInputOpeningBalance(val qty: String) : ProductEvent
-    data class SelectStoreId(val id: Long?) : ProductEvent
-    data class SelectMinStockUnitId(val unit: ProductUnit) : ProductEvent
-    data class SelectMaxStockUnitId(val unit: ProductUnit) : ProductEvent
-    data class UpdateQuery(val query: String) : ProductEvent
-    data class UpdateIsQueryActive(val isQueryActive: Boolean) : ProductEvent
-    data class Search(val query: String) : ProductEvent
-    data class SelectProduct(val product: Product?) : ProductEvent
-    data class UpdateSubUnitsPerMainUnit(val value: String) : ProductEvent
+    sealed interface Event : Reducer.ViewEvent {
+        // UI Actions
+        data class SearchQueryChanged(val query: String) : Event
+        data class SearchActiveChanged(val isActive: Boolean) : Event
+        data class ProductSelected(val product: Product) : Event
+        data object NewProductClicked : Event
+        data object SaveClicked : Event
+        data object DeleteClicked : Event
+        data object BackClicked : Event
+
+        // Form Input Changes
+        data class ArNameChanged(val name: String) : Event
+        data class EnNameChanged(val name: String) : Event
+        data class PurchasePriceChanged(val price: String) : Event
+        data class SellingPriceChanged(val price: String) : Event
+        data class OpeningBalanceChanged(val qty: String) : Event
+        data class SubUnitsPerMainUnitChanged(val value: String) : Event
+        data class CategoryIdChanged(val id: Long?) : Event
+        data class StoreIdChanged(val id: Long?) : Event
+        data class MaximumUnitIdChanged(val id: Long?) : Event
+        data class MinimumUnitIdChanged(val id: Long?) : Event
+
+        // Data results from ViewModel
+        data class UserLoaded(val user: User?) : Event
+        data class DropdownDataLoaded(val data: DropdownData) : Event
+        data class ProductsLoaded(val products: List<Product>) : Event
+        data object SaveSucceeded : Event
+        data object DeleteSucceeded : Event
+        data object LoadingStarted : Event
+        data object LoadingFinished : Event
+    }
 }

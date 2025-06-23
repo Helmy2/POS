@@ -223,7 +223,7 @@ fun StockTransferItemRow(
                             )
                         )
                     },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     enabled = enabled,
                     canClearSelection = false,

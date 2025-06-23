@@ -126,7 +126,7 @@ private fun OrderItemRow(
                     items = availableProducts,
                     selectedItemId = item.product?.id?.local,
                     onItemSelected = { onUpdateSelectedItem(item.tempEditorId, it) },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     canClearSelection = false,
                 )

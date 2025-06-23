@@ -80,7 +80,7 @@ class StockTransferViewModel(
         }
         viewModelScope.launch {
             productRepository.getProducts().collect { products ->
-                _state.update { it.copy(availableProducts = products) }
+                _state.update { it.copy(availableProducts = products.getOrDefault(emptyList())) }
             }
         }
         viewModelScope.launch {

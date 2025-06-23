@@ -291,5 +291,9 @@
     <string name="unit_deleted_successfully">unit_deleted_successfully</string>
     <string name="category_saved_successfully">category_saved_successfully</string>
     <string name="category_deleted_successfully">category_deleted_successfully</string>
+    <string name="purchase_price">purchase_price</string>
+    <string name="category">category</string>
+    <string name="product_deleted_successfully">product_deleted_successfully</string>
+    <string name="product_saved_successfully">product_saved_successfully</string>
 
 </resources>

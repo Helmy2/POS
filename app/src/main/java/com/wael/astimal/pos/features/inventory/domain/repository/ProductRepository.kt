@@ -1,12 +1,11 @@
 package com.wael.astimal.pos.features.inventory.domain.repository
 
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
-    fun getProducts(query: String = ""): Flow<List<Product>>
-    suspend fun getProductByLocalId(localId: Long): Product?
-    suspend fun saveProduct(productEntity: ProductEntity): Result<Unit>
-    suspend fun deleteProduct(productLocalId: Long): Result<Unit>
+    fun getProducts(query: String = ""): Flow<Result<List<Product>>>
+    suspend fun getProductByLocalId(localId: Long): Result<Product>
+    suspend fun saveProduct(product: Product): Result<Unit>
+    suspend fun deleteProduct(product: Product): Result<Unit>
 }

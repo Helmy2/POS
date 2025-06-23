@@ -3,22 +3,44 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 
 
 data class Product(
-    val localizedName: LocalizedString,
-    val openingBalanceQuantity: Double?,
+    val name: LocalizedString,
+    val openingBalanceQuantity: Double,
     val category: Category,
     val store: Store,
     val averagePrice: Double,
     val sellingPrice: Double,
     val minimumProductUnit: ProductUnit?,
     val maximumProductUnit: ProductUnit,
-    val subUnitsPerMainUnit: Double = 1.0,
-
+    val subUnitsPerMainUnit: Double,
     override val id: Id,
-    override val isSynced: Boolean,
+    override val isSynced: Boolean = false,
     override val createdAt: Long,
-    override val updatedAt: Long
+    override val updatedAt: Long = Clock.now()
 ) : Item
+
+
+fun Product.toEntity(): ProductEntity {
+    return ProductEntity(
+        localId = id.local,
+        serverId = id.server,
+        arName = name.arName ?: "",
+        enName = name.enName ?: "",
+        openingBalanceQuantity = openingBalanceQuantity,
+        categoryId = category.id.local,
+        storeId = store.id.local,
+        averagePrice = averagePrice,
+        sellingPrice = sellingPrice,
+        minimumUnitId = minimumProductUnit?.id?.local,
+        maximumUnitId = maximumProductUnit.id.local,
+        subUnitsPerMainUnit = subUnitsPerMainUnit,
+        isSynced = isSynced,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}
 

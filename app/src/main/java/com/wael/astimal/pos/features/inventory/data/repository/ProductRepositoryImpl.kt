@@ -3,16 +3,17 @@ package com.wael.astimal.pos.features.inventory.data.repository
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -23,34 +24,34 @@ class ProductRepositoryImpl(
     private val userRepository: UserRepository
 ) : ProductRepository {
 
-    override fun getProducts(query: String): Flow<List<Product>> {
+    override fun getProducts(query: String): Flow<Result<List<Product>>> {
         return productDao.searchProductsWithDetailsFlow(query).map { entities ->
-            entities.map { it.toDomain() }
+            runCatching { entities.map { it.toDomain() } }
+        }.catch { emit(Result.failure(it)) }
+    }
+
+
+    override suspend fun getProductByLocalId(localId: Long): Result<Product> {
+        return runCatching {
+            val entity = productDao.getProductWithDetailsByLocalId(localId)
+            if (entity?.product?.isDeletedLocally == true)
+                throw Exception("Product not found")
+            entity?.toDomain() ?: throw Exception("Product not found")
         }
     }
 
-
-    override suspend fun getProductByLocalId(localId: Long): Product? {
-        val entity = productDao.getProductWithDetailsByLocalId(localId)
-        return if (entity?.product?.isDeletedLocally == true) null else entity?.toDomain()
-    }
-
-    override suspend fun saveProduct(productEntity: ProductEntity): Result<Unit> {
+    override suspend fun saveProduct(product: Product): Result<Unit> {
         return runCatching {
-            if (productEntity.arName.isBlank() && productEntity.enName.isBlank()) {
-                return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the product."))
-            }
-
             appDatabase.withTransaction {
-                if (productEntity.localId == 0L) {
-                    val newProductId = productDao.insertOrUpdate(productEntity)
+                if (product.id.local == 0L) {
+                    val newProductId = productDao.insertOrUpdate(product.toEntity())
 
-                    val openingBalance = productEntity.openingBalanceQuantity
+                    val openingBalance = product.openingBalanceQuantity
                     val currentUser = userRepository.getCurrentUser()
                     val fullProduct =
                         productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
 
-                    if (openingBalance != null && openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
+                    if (openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
                         val adjustment = StockAdjustmentEntity(
                             serverId = null,
                             storeId = fullProduct.store.id.local,
@@ -63,28 +64,24 @@ class ProductRepositoryImpl(
                         stockRepository.addStockAdjustment(adjustment)
                     }
                 } else {
-                    val oldProductEntity = productDao.getProductByLocalId(productEntity.localId)
-                        ?: throw NoSuchElementException("Product not found for update with localId: ${productEntity.localId}")
+                    val oldProductEntity = productDao.getProductByLocalId(product.id.local)
+                        ?: throw NoSuchElementException("Product not found for update with localId: ${product.id.local}")
 
-                    productDao.insertOrUpdate(productEntity)
+                    productDao.insertOrUpdate(product.toEntity())
 
-                    val openingBalanceDifference = (productEntity.openingBalanceQuantity
-                        ?: 0.0) - (oldProductEntity.openingBalanceQuantity ?: 0.0)
+                    val openingBalanceDifference =
+                        product.openingBalanceQuantity - oldProductEntity.openingBalanceQuantity
 
                     if (openingBalanceDifference != 0.0) {
                         val currentUser = userRepository.getCurrentUser()
                             ?: throw Exception("User not authenticated for stock adjustment.")
-                        val fullProduct =
-                            getProductByLocalId(productEntity.localId) ?: throw Exception(
-                                "Could not retrieve full product details for adjustment."
-                            )
-                        val store = fullProduct.store
+                        val store = product.store
 
                         val adjustment = StockAdjustmentEntity(
                             localId = 0L,
                             serverId = null,
                             storeId = store.id.local,
-                            productId = fullProduct.id.local,
+                            productId = product.id.local,
                             userId = currentUser.id,
                             reason = StockAdjustmentReason.RECOUNT,
                             notes = "Opening balance updated.",
@@ -99,19 +96,17 @@ class ProductRepositoryImpl(
         }
     }
 
-    override suspend fun deleteProduct(productLocalId: Long): Result<Unit> {
+    override suspend fun deleteProduct(product: Product): Result<Unit> {
         return try {
             appDatabase.withTransaction {
                 val currentUser = userRepository.getCurrentUser()
                     ?: throw Exception("User not authenticated for delete operation")
 
-                val productToDelete = getProductByLocalId(productLocalId)
-                    ?: throw NoSuchElementException("Product not found with localId: $productLocalId")
 
                 // Fetch all stock entries for this product to zero them out
                 val allStocks =
                     stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
-                val productStocks = allStocks.filter { it.product.id.local == productLocalId }
+                val productStocks = allStocks.filter { it.product.id.local == product.id.local }
 
                 for (stockItem in productStocks) {
                     if (stockItem.quantity != 0.0) {
@@ -122,8 +117,8 @@ class ProductRepositoryImpl(
                             productId = stockItem.product.id.local,
                             userId = currentUser.id,
                             reason = StockAdjustmentReason.OTHER,
-                            notes = "Product ${productToDelete.localizedName.arName} deleted.",
-                            quantityChange = -stockItem.quantity, // Reverse the quantity
+                            notes = "Product ${product.name.arName} deleted.",
+                            quantityChange = -stockItem.quantity,
                             updatedAt = Clock.now(),
                             isSynced = false
                         )
@@ -131,11 +126,7 @@ class ProductRepositoryImpl(
                     }
                 }
 
-                // Mark the product as deleted
-                val productEntityFromDb = productDao.getProductByLocalId(productLocalId)
-                    ?: throw NoSuchElementException("Product entity not found for deletion with localId: $productLocalId")
-
-                val productToMarkAsDeleted = productEntityFromDb.copy(
+                val productToMarkAsDeleted = product.toEntity().copy(
                     isDeletedLocally = true,
                     isSynced = false,
                     updatedAt = Clock.now()
