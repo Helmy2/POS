@@ -1,9 +1,12 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
+import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 
@@ -11,21 +14,24 @@ class UnitRepositoryImpl(
     private val unitDao: UnitDao
 ) : UnitRepository {
 
-    override fun getUnits(query: String): Flow<List<UnitEntity>> {
+    override fun getUnits(query: String): Flow<Result<List<ProductUnit>>> {
         return unitDao.getAll(query).map { units ->
-            units.filter { !it.isDeletedLocally }
-        }
+            runCatching { units.filter { !it.isDeletedLocally }.map { it.toDomain() } }
+        }.catch { Result.failure<List<ProductUnit>>(it) }
     }
 
-    override suspend fun saveUnit(unit: UnitEntity): Result<Unit> {
+    override suspend fun saveUnit(unit: ProductUnit): Result<Unit> {
         return runCatching {
-            unitDao.insertOrUpdate(unit)
+            if (unit.name.arName.isNullOrBlank() && unit.name.arName.isNullOrBlank()) {
+                return Result.failure(IllegalArgumentException("Arabic and English names must be provided."))
+            }
+            unitDao.insertOrUpdate(unit.toEntity())
         }
     }
 
-    override suspend fun deleteUnit(unit: UnitEntity): Result<Unit> {
+    override suspend fun deleteUnit(unit: ProductUnit): Result<Unit> {
         return try {
-            val unitToDelete = unit.copy(
+            val unitToDelete = unit.toEntity().copy(
                 isDeletedLocally = true, isSynced = false, updatedAt = System.currentTimeMillis()
             )
             unitDao.insertOrUpdate(unitToDelete)

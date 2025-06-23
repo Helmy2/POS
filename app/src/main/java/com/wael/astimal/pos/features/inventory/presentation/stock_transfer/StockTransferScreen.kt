@@ -168,7 +168,7 @@ fun StockTransferForm(
             label = stringResource(R.string.employee),
             items = availableEmployees,
             selectedItemId = editableTransfer.selectedEmployeeId,
-            onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it?.id)) },
+            onItemSelected = { onEvent(StockTransferScreenEvent.SelectEmployee(it.id)) },
             itemToDisplayString = { it.localizedName.displayName(localAppLocale) },
             itemToId = { it.id },
             enabled = canEditEmployee,
@@ -258,11 +258,11 @@ fun StockTransferItemRow(
                         onEvent(
                             StockTransferScreenEvent.UpdateItemUnit(
                                 item.tempEditorId,
-                                unit?.id?.local == item.product?.maximumProductUnit?.id?.local
+                                unit.id.local == item.product?.maximumProductUnit?.id?.local
                             )
                         )
                     },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     enabled = enabled,
                     canClearSelection = false,
@@ -275,7 +275,7 @@ fun StockTransferItemRow(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Label(
-                        item.product?.minimumProductUnit?.localizedName?.displayName(language)
+                        item.product?.minimumProductUnit?.name?.displayName(language)
                             ?: "", modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     TextInputField(
@@ -303,7 +303,7 @@ fun StockTransferItemRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Label(
-                    item.product?.maximumProductUnit?.localizedName?.displayName(language) ?: ""
+                    item.product?.maximumProductUnit?.name?.displayName(language) ?: ""
                 )
                 TextInputField(
                     value = item.maxUnitQuantity,

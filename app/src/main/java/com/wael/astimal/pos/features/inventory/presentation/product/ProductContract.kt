@@ -1,8 +1,8 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -26,7 +26,7 @@ data class ProductState(
 
     // Lists for dropdowns/pickers
     val categories: List<Category> = emptyList(),
-    val units: List<UnitEntity> = emptyList(),
+    val units: List<ProductUnit> = emptyList(),
     val stores: List<Store> = emptyList(),
 
     val query: String = "",
@@ -46,8 +46,8 @@ sealed interface ProductEvent {
     data class UpdateInputSellingPrice(val price: String) : ProductEvent
     data class UpdateInputOpeningBalance(val qty: String) : ProductEvent
     data class SelectStoreId(val id: Long?) : ProductEvent
-    data class SelectMinStockUnitId(val id: Long?) : ProductEvent
-    data class SelectMaxStockUnitId(val id: Long?) : ProductEvent
+    data class SelectMinStockUnitId(val unit: ProductUnit) : ProductEvent
+    data class SelectMaxStockUnitId(val unit: ProductUnit) : ProductEvent
     data class UpdateQuery(val query: String) : ProductEvent
     data class UpdateIsQueryActive(val isQueryActive: Boolean) : ProductEvent
     data class Search(val query: String) : ProductEvent

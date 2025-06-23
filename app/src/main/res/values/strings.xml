@@ -287,5 +287,8 @@
     <string name="store_type_sub">Sub store</string>
     <string name="total_sales">Total sales</string>
     <string name="unknown_user">Unknown user</string>
+    <string name="unit_saved_successfully">unit_saved_successfully</string>
+    <string name="failed_to_save_unit">failed_to_save_unit</string>
+    <string name="unit_deleted_successfully">unit_deleted_successfully</string>
 
 </resources>

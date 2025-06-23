@@ -156,10 +156,10 @@ private fun OrderItemRow(
                     onItemSelected = { unit ->
                         onUpdateItemUnit(
                             item.tempEditorId,
-                            unit?.id?.local == item.product?.maximumProductUnit?.id?.local
+                            unit.id.local == item.product?.maximumProductUnit?.id?.local
                         )
                     },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     canClearSelection = false,
                 )
@@ -170,7 +170,7 @@ private fun OrderItemRow(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Label(
-                        item.product?.minimumProductUnit?.localizedName?.displayName(language)
+                        item.product?.minimumProductUnit?.name?.displayName(language)
                             ?: "", modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     TextInputField(
@@ -201,7 +201,7 @@ private fun OrderItemRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Label(
-                        item.product?.maximumProductUnit?.localizedName?.displayName(language) ?: ""
+                        item.product?.maximumProductUnit?.name?.displayName(language) ?: ""
                     )
                     TextInputField(
                         value = item.maxUnitQuantity,

@@ -17,6 +17,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -42,14 +43,15 @@ val Shapes = Shapes(
 @Composable
 fun rememberLocalizedContext(language: Language): Context {
     val context = LocalContext.current
+    val localeConfiguration = LocalConfiguration.current
     return remember(context, language) {
         val locale = Locale(language.code)
         Locale.setDefault(locale) // Set default locale for the JVM
 
-        val configuration = Configuration(context.resources.configuration)
-        configuration.setLocale(locale)
-        configuration.setLayoutDirection(locale)
-
+        val configuration = Configuration(localeConfiguration).apply {
+            setLocale(locale)
+            setLayoutDirection(locale)
+        }
         context.createConfigurationContext(configuration)
     }
 }

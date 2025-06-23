@@ -57,7 +57,7 @@ class StockTransferViewModel(
                 var fromStore = _state.value.currentTransferInput.fromStore
                 if (user.userType != UserType.ADMIN) {
                     val storeId = userRepository.getStoreIdForEmployee(user.id)
-                    fromStore = storeId?.let { storeRepository.getStoreByLocalId(it) }
+                    fromStore = storeId?.let { storeRepository.getStoreByLocalId(it).getOrNull() }
                 }
                 _state.update {
                     it.copy(
@@ -74,7 +74,7 @@ class StockTransferViewModel(
     private fun loadDropdownData() {
         viewModelScope.launch {
             storeRepository.getStores().collect { stores ->
-                _state.update { it.copy(availableStores = stores) }
+                _state.update { it.copy(availableStores = stores.getOrDefault(emptyList())) }
             }
         }
         viewModelScope.launch {
@@ -189,8 +189,8 @@ class StockTransferViewModel(
         val fromStoreId = _state.value.currentTransferInput.fromStore?.id?.local ?: return
         stockObservationJobs[tempId] =
             stockRepository.getStockQuantityFlow(fromStoreId, productId).onEach { stock ->
-                    updateTransferItem(tempId) { it.copy(currentStock = stock) }
-                }.launchIn(viewModelScope)
+                updateTransferItem(tempId) { it.copy(currentStock = stock) }
+            }.launchIn(viewModelScope)
     }
 
     private fun resubscribeAllStockObservers() {
@@ -248,21 +248,21 @@ class StockTransferViewModel(
         searchJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, query = query) }
             stockTransferRepository.getStockTransfersWithDetails().catch {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_transfers))
-                }.collect { transfers ->
-                    val filtered = if (query.isBlank()) {
-                        transfers
-                    } else {
-                        transfers.filter { transfer ->
-                            val fromStoreName =
-                                transfer.fromStore.name.displayName(Language.Arabic)
-                            val toStoreName =
-                                transfer.toStore.name.displayName(Language.English)
-                            fromStoreName.contains(query, true) || toStoreName.contains(query, true)
-                        }
+                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_fetching_transfers))
+            }.collect { transfers ->
+                val filtered = if (query.isBlank()) {
+                    transfers
+                } else {
+                    transfers.filter { transfer ->
+                        val fromStoreName =
+                            transfer.fromStore.name.displayName(Language.Arabic)
+                        val toStoreName =
+                            transfer.toStore.name.displayName(Language.English)
+                        fromStoreName.contains(query, true) || toStoreName.contains(query, true)
                     }
-                    _state.update { it.copy(loading = false, transfers = filtered) }
                 }
+                _state.update { it.copy(loading = false, transfers = filtered) }
+            }
         }
     }
 

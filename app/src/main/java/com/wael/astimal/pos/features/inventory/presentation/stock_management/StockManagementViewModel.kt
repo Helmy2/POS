@@ -40,7 +40,7 @@ class StockManagementViewModel(
             storeRepository.getStores().catch {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_stores))
             }.collect { stores ->
-                _state.update { it.copy(stores = stores) }
+                _state.update { it.copy(stores = stores.getOrDefault(emptyList())) }
             }
         }
         viewModelScope.launch {

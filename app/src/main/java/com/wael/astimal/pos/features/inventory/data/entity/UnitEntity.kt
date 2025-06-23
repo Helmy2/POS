@@ -16,13 +16,13 @@ data class UnitEntity(
     override val updatedAt: Long = System.currentTimeMillis(),
     override var isDeletedLocally: Boolean = false,
 
-    var arName: String?,
-    var enName: String?,
+    var arName: String,
+    var enName: String,
 ) : ItemEntity
 
 fun UnitEntity.toDomain(): ProductUnit {
     return ProductUnit(
-        id = Id(localId, serverId), localizedName = LocalizedString(
+        id = Id(localId, serverId), name = LocalizedString(
             arName = arName, enName = enName
         ), isSynced = isSynced, createdAt = createdAt, updatedAt = updatedAt
     )

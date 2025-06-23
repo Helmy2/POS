@@ -1,15 +1,15 @@
 package com.wael.astimal.pos.core.data
 
 import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
@@ -139,52 +139,75 @@ class DummyDataSeeder(
         return businessPartnerRepository.getBusinessPartners().first()
     }
 
-    private suspend fun populateDummyUnits(): List<UnitEntity> {
+    private suspend fun populateDummyUnits(): List<ProductUnit> {
         val list = listOf(
-            UnitEntity(
-                localId = -1, serverId = -1, arName = "قطعة", enName = "Piece", isSynced = false
-            ), UnitEntity(
-                localId = -2, serverId = -2, arName = "دستة", enName = "Dozen", isSynced = false
-            ), UnitEntity(
-                localId = -3, serverId = -3, arName = "علبة", enName = "Box", isSynced = false
+            ProductUnit(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "قطعة",
+                    enName = "Piece"
+                ),
+                createdAt = System.currentTimeMillis(),
+            ),
+            ProductUnit(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "دزينة",
+                    enName = "Dozen"
+                ),
+                createdAt = System.currentTimeMillis(),
+            ), ProductUnit(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "علبة",
+                    enName = "Box"
+                ),
+                createdAt = System.currentTimeMillis(),
             )
         )
         list.forEach {
             unitRepository.saveUnit(it)
         }
-        return list
+        return unitRepository.getUnits("").first().getOrDefault(emptyList())
     }
 
     private suspend fun populateDummyStores(): List<Store> {
         val stores = listOf(
-            StoreEntity(
-                localId = -1,
-                serverId = -1,
-                arName = "المخزن الرئيسي",
-                enName = "Main Warehouse",
+            Store(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "المخزن الرئيسي",
+                    enName = "Main Warehouse"
+                ),
                 type = StoreType.MAIN,
-                isSynced = false
-            ), StoreEntity(
-                localId = -2,
-                serverId = -2,
-                arName = "فرع أ",
-                enName = "Branch A",
+                isSynced = false,
+                createdAt = System.currentTimeMillis(),
+            ),
+            Store(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "فرع أ",
+                    enName = "Branch A"
+                ),
                 type = StoreType.SUB,
-                isSynced = false
-            ), StoreEntity(
-                localId = -3,
-                serverId = -3,
-                arName = "فرع ب",
-                enName = "Branch B",
+                isSynced = false,
+                createdAt = System.currentTimeMillis(),
+            ), Store(
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "فرع ب",
+                    enName = "Branch B"
+                ),
                 type = StoreType.SUB,
-                isSynced = false
+                isSynced = false,
+                createdAt = System.currentTimeMillis(),
             )
         )
 
         stores.forEach {
             storeRepository.saveStore(it)
         }
-        return storeRepository.getStores().first()
+        return storeRepository.getStores().first().getOrDefault(emptyList())
     }
 
     private suspend fun populateDummyCategories(): List<Category> {
@@ -210,7 +233,7 @@ class DummyDataSeeder(
     }
 
     private suspend fun populateDummyProducts(
-        stores: List<Store>, categories: List<Category>, units: List<UnitEntity>
+        stores: List<Store>, categories: List<Category>, units: List<ProductUnit>
     ): List<Product> {
         val list = listOf(
             ProductEntity(
@@ -224,7 +247,7 @@ class DummyDataSeeder(
                 openingBalanceQuantity = 50.0,
                 storeId = stores[1].id.local,
                 minimumUnitId = null,
-                maximumUnitId = units[2].localId,
+                maximumUnitId = units[2].id.local,
                 subUnitsPerMainUnit = 1.0
             ), ProductEntity(
                 localId = 0,
@@ -238,7 +261,7 @@ class DummyDataSeeder(
                 storeId = stores[1].id.local,
                 isSynced = false,
                 minimumUnitId = null,
-                maximumUnitId = units[0].localId,
+                maximumUnitId = units[0].id.local,
                 subUnitsPerMainUnit = 1.0
             ), ProductEntity(
                 localId = 0,
@@ -251,8 +274,8 @@ class DummyDataSeeder(
                 openingBalanceQuantity = 200.0,
                 storeId = stores[1].id.local,
                 isSynced = false,
-                minimumUnitId = units[0].localId, // Piece
-                maximumUnitId = units[1].localId, // Dozen
+                minimumUnitId = units[0].id.local, // Piece
+                maximumUnitId = units[1].id.local, // Dozen
                 subUnitsPerMainUnit = 12.0
             )
         )

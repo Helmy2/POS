@@ -7,7 +7,9 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.FlowPreview
@@ -67,7 +69,7 @@ class StoreViewModel(
         searchJob = storeRepository.getStores(query)
             .debounce(300L)
             .onEach { stores ->
-                setState(StoreContract.Event.StoresLoaded(stores))
+                setState(StoreContract.Event.StoresLoaded(stores.getOrDefault(emptyList())))
             }
             .launchIn(viewModelScope)
     }
@@ -81,13 +83,14 @@ class StoreViewModel(
             }
             setState(StoreContract.Event.LoadingStarted)
             viewModelScope.launch {
-                val storeToSave = StoreEntity(
-                    localId = currentState.selectedStore?.id?.local ?: 0L,
-                    serverId = currentState.selectedStore?.id?.server,
-                    arName = currentState.inputArName,
-                    enName = currentState.inputEnName,
+                val storeToSave = Store(
+                    id = currentState.selectedStore?.id ?: Id.new,
+                    name = LocalizedString(
+                        arName = currentState.inputArName,
+                        enName = currentState.inputEnName
+                    ),
                     type = currentState.inputType,
-                    createdAt = currentState.selectedStore?.createdAt ?: System.currentTimeMillis()
+                    createdAt = currentState.selectedStore?.createdAt ?: System.currentTimeMillis(),
                 )
 
                 val result = storeRepository.saveStore(storeToSave)

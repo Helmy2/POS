@@ -154,9 +154,9 @@ fun ProductScreen(
                     label = stringResource(R.string.min_stock_unit),
                     items = state.units,
                     selectedItemId = state.selectedMinStockUnitId,
-                    onItemSelected = { unit -> onEvent(ProductEvent.SelectMinStockUnitId(unit.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
-                    itemToId = { it.localId },
+                    onItemSelected = { unit -> onEvent(ProductEvent.SelectMinStockUnitId(unit)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToId = { it.id.local },
                     canClearSelection = true,
                     enabled = state.canEdit
                 )
@@ -179,9 +179,9 @@ fun ProductScreen(
                     label = stringResource(R.string.max_stock_unit),
                     items = state.units,
                     selectedItemId = state.selectedMaxStockUnitId,
-                    onItemSelected = { unit -> onEvent(ProductEvent.SelectMaxStockUnitId(unit.localId)) },
-                    itemToDisplayString = { "${it.enName}: ${it.arName}" },
-                    itemToId = { it.localId },
+                    onItemSelected = { unit -> onEvent(ProductEvent.SelectMaxStockUnitId(unit)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToId = { it.id.local },
                     canClearSelection = false,
                     enabled = state.canEdit
                 )

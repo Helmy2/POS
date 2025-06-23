@@ -55,12 +55,12 @@ class ProductViewModel(
         }
         viewModelScope.launch {
             unitRepository.getUnits("").collect { units ->
-                _state.update { it.copy(units = units) }
+                _state.update { it.copy(units = units.getOrDefault(emptyList())) }
             }
         }
         viewModelScope.launch {
             storeRepository.getStores("").collect { stores ->
-                _state.update { it.copy(stores = stores) }
+                _state.update { it.copy(stores = stores.getOrDefault(emptyList())) }
             }
         }
     }
@@ -91,11 +91,11 @@ class ProductViewModel(
             is ProductEvent.SelectStoreId -> _state.update { it.copy(selectedStoreId = event.id) }
 
             is ProductEvent.SelectMinStockUnitId -> _state.update {
-                it.copy(selectedMinStockUnitId = event.id)
+                it.copy(selectedMinStockUnitId = event.unit.id.local)
             }
 
             is ProductEvent.SelectMaxStockUnitId -> _state.update {
-                it.copy(selectedMaxStockUnitId = event.id)
+                it.copy(selectedMaxStockUnitId = event.unit.id.local)
             }
 
             is ProductEvent.UpdateSubUnitsPerMainUnit -> _state.update {
