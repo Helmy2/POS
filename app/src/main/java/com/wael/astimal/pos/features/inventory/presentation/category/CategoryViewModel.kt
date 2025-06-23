@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
@@ -107,7 +108,7 @@ class CategoryViewModel(
                     arName = currentState.inputArName,
                     enName = currentState.inputEnName,
                     createdAt = currentState.selectedCategory?.createdAt
-                        ?: System.currentTimeMillis(),
+                        ?: Clock.now(),
                 )
             )
 

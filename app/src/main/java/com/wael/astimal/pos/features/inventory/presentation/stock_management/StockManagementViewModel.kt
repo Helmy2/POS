@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -135,7 +136,7 @@ class StockManagementViewModel(
                 reason = _state.value.adjustmentReason,
                 notes = _state.value.adjustmentNotes.takeIf { it.isNotBlank() },
                 quantityChange = quantityChange,
-                updatedAt = System.currentTimeMillis(),
+                updatedAt = Clock.now(),
                 isSynced = false
             )
 

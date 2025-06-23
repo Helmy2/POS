@@ -9,6 +9,7 @@ import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -90,7 +91,7 @@ class StoreViewModel(
                         enName = currentState.inputEnName
                     ),
                     type = currentState.inputType,
-                    createdAt = currentState.selectedStore?.createdAt ?: System.currentTimeMillis(),
+                    createdAt = currentState.selectedStore?.createdAt ?: Clock.now(),
                 )
 
                 val result = storeRepository.saveStore(storeToSave)

@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
@@ -113,7 +114,7 @@ class PurchaseReturnRepositoryImpl(
                 )
 
                 val entityToUpdate =
-                    purchaseReturn.copy(isSynced = false, updatedAt = System.currentTimeMillis())
+                    purchaseReturn.copy(isSynced = false, updatedAt = Clock.now())
                 purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
 
                 items.forEach { newItem ->
@@ -162,7 +163,7 @@ class PurchaseReturnRepositoryImpl(
                     val entityToMarkAsDeleted = returnToDelete.purchaseReturn.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        updatedAt = System.currentTimeMillis()
+                        updatedAt = Clock.now()
                     )
                     purchaseReturnDao.updatePurchaseReturn(entityToMarkAsDeleted)
                 }

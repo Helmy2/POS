@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
@@ -131,7 +132,7 @@ class SalesOrderRepositoryImpl(
 
                 // Update the order and its items
                 val entityToUpdate =
-                    order.copy(isSynced = false, updatedAt = System.currentTimeMillis())
+                    order.copy(isSynced = false, updatedAt = Clock.now())
                 salesOrderDao.updateOrderWithItems(entityToUpdate, items)
 
                 // Re-process the non-financial logic
@@ -168,7 +169,7 @@ class SalesOrderRepositoryImpl(
                     val orderToMarkAsDeleted = orderEntity.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        updatedAt = System.currentTimeMillis()
+                        updatedAt = Clock.now()
                     )
                     salesOrderDao.updateOrder(orderToMarkAsDeleted)
                 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
@@ -126,7 +127,7 @@ class SalesViewModel(
             is OrderEvent.DeleteOrder -> deleteOrder(event.localId)
             OrderEvent.OpenNewOrderForm -> clearState()
             is OrderEvent.UpdateTransferDate -> updateOrderInput {
-                it.copy(date = event.date ?: System.currentTimeMillis())
+                it.copy(date = event.date ?: Clock.now())
             }
 
             is OrderEvent.UpdateItemMaxUnitPrice -> updateOrderItem(event.tempEditorId) {

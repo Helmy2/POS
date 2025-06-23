@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -27,7 +28,7 @@ data class EditableStockTransfer(
     val fromStore: Store? = null,
     val toStore: Store? = null,
     val selectedEmployeeId: Long? = null,
-    val transferDate: Long = System.currentTimeMillis(),
+    val transferDate: Long = Clock.now(),
     val items: List<EditableStockTransferItem> = listOf(),
 )
 

@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
@@ -32,7 +33,7 @@ class UnitRepositoryImpl(
     override suspend fun deleteUnit(unit: ProductUnit): Result<Unit> {
         return try {
             val unitToDelete = unit.toEntity().copy(
-                isDeletedLocally = true, isSynced = false, updatedAt = System.currentTimeMillis()
+                isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
             )
             unitDao.insertOrUpdate(unitToDelete)
             Result.success(Unit)

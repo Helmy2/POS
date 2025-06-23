@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
@@ -39,7 +40,7 @@ class CategoryRepositoryImpl(
                 )
 
             val categoryToMarkAsDeleted = entityToDelete.copy(
-                isDeletedLocally = true, isSynced = false, updatedAt = System.currentTimeMillis()
+                isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
             )
             categoryDao.insertOrUpdate(categoryToMarkAsDeleted)
             Result.success(Unit)

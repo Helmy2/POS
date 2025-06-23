@@ -48,6 +48,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import kotlinx.coroutines.flow.SharedFlow
@@ -99,9 +100,7 @@ fun ReceivePayVoucherScreen(
                     label = stringResource(R.string.client_or_suppler),
                     items = VoucherPartyType.entries,
                     selectedItemId = state.partyType.ordinal.toLong(),
-                    onItemSelected = { it ->
-                        it?.let { onEvent(ReceivePayVoucherEvent.SelectPartyType(it)) }
-                    },
+                    onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectPartyType(it)) },
                     itemToDisplayString = { context.getString(it.getStringRes()) },
                     itemToId = { it.ordinal.toLong() },
                     canClearSelection = false,
@@ -162,7 +161,7 @@ fun AddVoucherForm(
             onDateSelected = {
                 onEvent(
                     ReceivePayVoucherEvent.UpdateDate(
-                        it ?: System.currentTimeMillis()
+                        it ?: Clock.now()
                     )
                 )
             },
@@ -319,7 +318,7 @@ fun EditVoucherDialog(
                 )
                 DataPicker(
                     selectedDateMillis = date,
-                    onDateSelected = { date = it ?: System.currentTimeMillis() })
+                    onDateSelected = { date = it ?: Clock.now() })
                 TextInputField(
                     value = notes,
                     onValueChange = { notes = it },

@@ -5,6 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.data.entity.ItemEntity
+import com.wael.astimal.pos.core.util.Clock
 
 @Entity(
     tableName = "partner_transactions",
@@ -14,8 +15,8 @@ data class PartnerTransactionEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
     override val serverId: Long?,
     override var isSynced: Boolean = false,
-    override val createdAt: Long = System.currentTimeMillis(),
-    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: Long = Clock.now(),
+    override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
     val clientId: Long?,
     val supplierId: Long?,

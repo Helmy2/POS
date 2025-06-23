@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
@@ -46,9 +47,9 @@ class StockTransferRepositoryImpl(
                 fromStoreId = fromStoreId,
                 toStoreId = toStoreId,
                 initiatedByUserId = initiatedByUserId,
-                createdAt = transferDate ?: System.currentTimeMillis(),
+                createdAt = transferDate ?: Clock.now(),
                 isSynced = false,
-                updatedAt = System.currentTimeMillis(),
+                updatedAt = Clock.now(),
                 isDeletedLocally = false
             )
 
@@ -129,8 +130,8 @@ class StockTransferRepositoryImpl(
                     toStoreId = toStoreId,
                     initiatedByUserId = initiatedByUserId,
                     isSynced = false,
-                    createdAt = transferDate ?: System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    createdAt = transferDate ?: Clock.now(),
+                    updatedAt = Clock.now()
                 )
                 stockTransferDao.updateTransferWithItems(updatedTransferEntity, items)
             }
@@ -168,7 +169,7 @@ class StockTransferRepositoryImpl(
                     val transferToMarkAsDeleted = transferToDelete.transfer.copy(
                         isDeletedLocally = true,
                         isSynced = false,
-                        updatedAt = System.currentTimeMillis()
+                        updatedAt = Clock.now()
                     )
                     stockTransferDao.insertStockOrUpdateTransfer(transferToMarkAsDeleted)
                 }

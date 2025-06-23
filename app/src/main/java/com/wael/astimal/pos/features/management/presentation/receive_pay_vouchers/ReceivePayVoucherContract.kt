@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
@@ -15,7 +16,7 @@ data class ReceivePayVoucherState(
     val selectedSupplier: BusinessPartner? = null,
     val amount: String = "",
     val notes: String = "",
-    val date: Long = System.currentTimeMillis(),
+    val date: Long = Clock.now(),
     val isSaving: Boolean = false,
     val currentUser: User? = null,
     val voucherToEdit: ReceivePayVoucher? = null,

@@ -4,6 +4,7 @@ import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StoreType
@@ -147,7 +148,7 @@ class DummyDataSeeder(
                     arName = "قطعة",
                     enName = "Piece"
                 ),
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
             ),
             ProductUnit(
                 id = Id.new,
@@ -155,14 +156,14 @@ class DummyDataSeeder(
                     arName = "دزينة",
                     enName = "Dozen"
                 ),
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
             ), ProductUnit(
                 id = Id.new,
                 name = LocalizedString(
                     arName = "علبة",
                     enName = "Box"
                 ),
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
             )
         )
         list.forEach {
@@ -181,7 +182,7 @@ class DummyDataSeeder(
                 ),
                 type = StoreType.MAIN,
                 isSynced = false,
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
             ),
             Store(
                 id = Id.new,
@@ -191,7 +192,7 @@ class DummyDataSeeder(
                 ),
                 type = StoreType.SUB,
                 isSynced = false,
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
             ), Store(
                 id = Id.new,
                 name = LocalizedString(
@@ -200,7 +201,7 @@ class DummyDataSeeder(
                 ),
                 type = StoreType.SUB,
                 isSynced = false,
-                createdAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
             )
         )
 

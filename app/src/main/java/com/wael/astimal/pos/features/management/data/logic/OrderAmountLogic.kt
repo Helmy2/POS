@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.logic
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.ORDER_COMMISSION_PERCENTAGE
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
@@ -104,8 +105,8 @@ class OrderAmountLogic(
             amount = commissionAmount,
             relatedCommissionId = commissionId,
             notes = "Commission for order #$invoiceNumber",
-            updatedAt = System.currentTimeMillis(),
-            createdAt = System.currentTimeMillis(),
+            updatedAt = Clock.now(),
+            createdAt = Clock.now(),
             localId = 0L,
             isSynced = false,
             isDeletedLocally = false
@@ -130,8 +131,8 @@ class OrderAmountLogic(
                     amount = -commission.commissionAmount,
                     relatedCommissionId = commission.localId,
                     notes = "Reversal for order #${invoiceNumber}",
-                    updatedAt = System.currentTimeMillis(),
-                    createdAt = System.currentTimeMillis(),
+                    updatedAt = Clock.now(),
+                    createdAt = Clock.now(),
                     localId = 0L,
                     isSynced = false,
                     isDeletedLocally = false

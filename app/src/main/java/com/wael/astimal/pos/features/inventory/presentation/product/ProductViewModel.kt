@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
@@ -187,7 +188,7 @@ class ProductViewModel(
                 minimumUnitId = currentState.selectedMinStockUnitId,
                 maximumUnitId = currentState.selectedMaxStockUnitId,
                 subUnitsPerMainUnit = currentState.subUnitsPerMainUnit.toDoubleOrNull() ?: 1.0,
-                createdAt = currentState.selectedProduct?.createdAt ?: System.currentTimeMillis(),
+                createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
             )
 
             Log.d("TAG", "saveProduct: $productEntity")

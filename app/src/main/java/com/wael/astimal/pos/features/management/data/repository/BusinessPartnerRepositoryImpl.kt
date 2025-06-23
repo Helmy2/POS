@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.entity.ClientEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
@@ -106,7 +107,7 @@ class BusinessPartnerRepositoryImpl(
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
             db.withTransaction {
-                val timestamp = System.currentTimeMillis()
+                val timestamp = Clock.now()
                 partner.clientLocalId?.let { clientDao.softDeleteClient(it.local, timestamp) }
                 partner.supplierLocalId?.let { supplierDao.softDeleteSupplier(it.local, timestamp) }
             }
@@ -153,8 +154,8 @@ class BusinessPartnerRepositoryImpl(
                 supplierId = supplierId,
                 sourceTransactionId = 0L,
                 transactionType = TransactionType.OPENING_BALANCE,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
+                createdAt = Clock.now(),
+                updatedAt = Clock.now(),
                 debit = debit,
                 credit = credit,
             )

@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.logic
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.RETURN_COMMISSION_PERCENTAGE
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
@@ -111,8 +112,8 @@ class ReturnAmountLogic(
             amount = commissionAmount, // Already negative
             relatedCommissionId = commissionId,
             notes = "Commission for return #$invoiceNumber",
-            updatedAt = System.currentTimeMillis(),
-            createdAt = System.currentTimeMillis(),
+            updatedAt = Clock.now(),
+            createdAt = Clock.now(),
             localId = 0L,
             isSynced = false,
             isDeletedLocally = false
@@ -139,8 +140,8 @@ class ReturnAmountLogic(
                     amount = -commission.commissionAmount, // Revert the negative amount
                     relatedCommissionId = commission.localId,
                     notes = "Reversal for return #${invoiceNumber}",
-                    updatedAt = System.currentTimeMillis(),
-                    createdAt = System.currentTimeMillis(),
+                    updatedAt = Clock.now(),
+                    createdAt = Clock.now(),
                     localId = 0L,
                     isSynced = false,
                     isDeletedLocally = false

@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
@@ -41,8 +42,8 @@ data class PurchaseReturnEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
     override val serverId: Long?,
     override var isSynced: Boolean = false,
-    override val createdAt: Long = System.currentTimeMillis(),
-    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: Long = Clock.now(),
+    override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
     var invoiceNumber: String,
     val supplierLocalId: Long,

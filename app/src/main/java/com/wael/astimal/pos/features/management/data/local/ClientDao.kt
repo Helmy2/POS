@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.entity.ClientEntity
 import com.wael.astimal.pos.features.management.data.entity.ClientWithDetailsEntity
 import kotlinx.coroutines.flow.Flow
@@ -51,7 +52,7 @@ interface ClientDao {
 
     // Add this method to your ClientDao interface
     @Query("UPDATE clients SET isDeletedLocally = 1, updatedAt = :timestamp WHERE localId = :localId")
-    suspend fun softDeleteClient(localId: Long, timestamp: Long = System.currentTimeMillis())
+    suspend fun softDeleteClient(localId: Long, timestamp: Long = Clock.now())
 
     @Query("SELECT debt FROM clients WHERE localId = :clientId")
     fun getDebtFlow(clientId: Long): Flow<Double?>

@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
@@ -88,7 +89,7 @@ class ProductRepositoryImpl(
                             reason = StockAdjustmentReason.RECOUNT,
                             notes = "Opening balance updated.",
                             quantityChange = openingBalanceDifference,
-                            updatedAt = System.currentTimeMillis(),
+                            updatedAt = Clock.now(),
                             isSynced = false
                         )
                         stockRepository.addStockAdjustment(adjustment)
@@ -123,7 +124,7 @@ class ProductRepositoryImpl(
                             reason = StockAdjustmentReason.OTHER,
                             notes = "Product ${productToDelete.localizedName.arName} deleted.",
                             quantityChange = -stockItem.quantity, // Reverse the quantity
-                            updatedAt = System.currentTimeMillis(),
+                            updatedAt = Clock.now(),
                             isSynced = false
                         )
                         stockRepository.addStockAdjustment(adjustment)
@@ -137,7 +138,7 @@ class ProductRepositoryImpl(
                 val productToMarkAsDeleted = productEntityFromDb.copy(
                     isDeletedLocally = true,
                     isSynced = false,
-                    updatedAt = System.currentTimeMillis()
+                    updatedAt = Clock.now()
                 )
                 productDao.insertOrUpdate(productToMarkAsDeleted)
             }

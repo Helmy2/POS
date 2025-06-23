@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.domain.entity.Language
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
@@ -177,7 +178,7 @@ class StockTransferViewModel(
             is StockTransferScreenEvent.UpdateTransferDate -> _state.update {
                 it.copy(
                     currentTransferInput = it.currentTransferInput.copy(
-                        transferDate = event.date ?: System.currentTimeMillis()
+                        transferDate = event.date ?: Clock.now()
                     )
                 )
             }

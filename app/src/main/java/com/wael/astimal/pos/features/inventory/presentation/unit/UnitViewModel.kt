@@ -9,6 +9,7 @@ import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -84,8 +85,8 @@ class UnitViewModel(
                             enName = currentState.inputEnName
                         ),
                         createdAt = currentState.selectedUnit?.createdAt
-                            ?: System.currentTimeMillis(),
-                        updatedAt = System.currentTimeMillis(),
+                            ?: Clock.now(),
+                        updatedAt = Clock.now(),
                         isSynced = false
                     )
 

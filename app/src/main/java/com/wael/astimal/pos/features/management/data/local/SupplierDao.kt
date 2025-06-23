@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
 import com.wael.astimal.pos.features.management.data.entity.SupplierWithDetailsEntity
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +25,7 @@ interface SupplierDao {
 
     // Add this method to your SupplierDao interface
     @Query("UPDATE suppliers SET isDeletedLocally = 1, updatedAt = :timestamp WHERE localId = :localId")
-    suspend fun softDeleteSupplier(localId: Long, timestamp: Long = System.currentTimeMillis())
+    suspend fun softDeleteSupplier(localId: Long, timestamp: Long = Clock.now())
 
     @Query("SELECT indebtedness FROM suppliers WHERE localId = :supplierId")
     fun getIndebtednessFlow(supplierId: Long): Flow<Double?>

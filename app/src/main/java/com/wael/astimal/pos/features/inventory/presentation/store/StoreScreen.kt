@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -41,6 +41,7 @@ fun StoreScreen(
     onEvent: (StoreContract.Event) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     SearchScreen(
         modifier = modifier,
         query = state.searchQuery,
@@ -95,12 +96,7 @@ fun StoreScreen(
                     items = StoreType.entries,
                     onItemSelected = { onEvent(StoreContract.Event.TypeChanged(it)) },
                     enabled = state.canUserEdit,
-                    displayedItem = {
-                        Text(
-                            stringResource(it.getStringResourceId()),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    },
+                    displayedItemText = { context.getString(it.getStringResourceId()) },
                     modifier = Modifier.padding(8.dp)
                 )
             }

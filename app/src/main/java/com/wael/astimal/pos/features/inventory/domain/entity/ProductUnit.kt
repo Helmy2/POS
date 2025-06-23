@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 
 
@@ -11,7 +12,7 @@ data class ProductUnit(
     override val id: Id,
     override val isSynced: Boolean = false,
     override val createdAt: Long,
-    override val updatedAt: Long = System.currentTimeMillis(),
+    override val updatedAt: Long = Clock.now(),
 ) : Item
 
 fun ProductUnit.toEntity(): UnitEntity {
