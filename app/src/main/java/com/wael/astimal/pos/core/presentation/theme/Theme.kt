@@ -1,8 +1,10 @@
 package com.wael.astimal.pos.core.presentation.theme
 
-import android.content.Context
-import android.content.res.Configuration
+import android.app.Activity
+import android.app.LocaleManager
 import android.os.Build
+import android.os.LocaleList
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
@@ -14,19 +16,20 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
-import java.util.Locale
 
 val LightColorScheme: ColorScheme = lightColorScheme()
 
@@ -41,24 +44,14 @@ val Shapes = Shapes(
 )
 
 @Composable
-fun rememberLocalizedContext(language: Language): Context {
-    val context = LocalContext.current
-    val localeConfiguration = LocalConfiguration.current
-    return remember(context, language) {
-        val locale = Locale(language.code)
-        Locale.setDefault(locale) // Set default locale for the JVM
-
-        val configuration = Configuration(localeConfiguration).apply {
-            setLocale(locale)
-            setLayoutDirection(locale)
+fun SystemAppearance(isDark: Boolean) {
+    val view = LocalView.current
+    LaunchedEffect(isDark) {
+        val window = (view.context as Activity).window
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !isDark
+            isAppearanceLightNavigationBars = !isDark
         }
-
-        // TODO remove
-        // Update the context's resources with the new configuration
-        val resources = context.resources
-        resources.updateConfiguration(configuration, resources.displayMetrics)
-
-        context.createConfigurationContext(configuration)
     }
 }
 
@@ -67,11 +60,11 @@ fun POSTheme(
     dynamicColor: Boolean = true, content: @Composable () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    val getThemeModeUseCase: SettingsManager = koinInject()
+    val settingsManager: SettingsManager = koinInject()
     val mode =
-        getThemeModeUseCase.getThemeMode().collectAsStateWithLifecycle(ThemeMode.System).value
+        settingsManager.getThemeMode().collectAsStateWithLifecycle(ThemeMode.System).value
     val language =
-        getThemeModeUseCase.getLanguage().collectAsStateWithLifecycle(Language.English).value
+        settingsManager.getLanguage().collectAsStateWithLifecycle(Language.English).value
 
     val darkTheme = remember(mode) {
         when (mode) {
@@ -80,6 +73,9 @@ fun POSTheme(
             ThemeMode.System -> isDark
         }
     }
+
+    SystemAppearance(darkTheme)
+
 
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -91,18 +87,27 @@ fun POSTheme(
         else -> LightColorScheme
     }
 
+    val context = LocalContext.current.applicationContext
+
+    LaunchedEffect(Unit) {
+        settingsManager.getLanguage().collectLatest {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.getSystemService(LocaleManager::class.java).applicationLocales =
+                    LocaleList.forLanguageTags(it.code)
+            } else {
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(it.code))
+            }
+        }
+    }
+
     CompositionLocalProvider(
-        LocalContext provides rememberLocalizedContext(language),
-        LocalLayoutDirection provides language.layoutDirection,
         LocalAppLocale provides language,
     ) {
-        key(language) {
-            MaterialTheme(
-                colorScheme = colorScheme,
-                shapes = Shapes,
-                content = content,
-            )
-        }
+        MaterialTheme(
+            colorScheme = colorScheme,
+            shapes = Shapes,
+            content = content,
+        )
     }
 }
 
