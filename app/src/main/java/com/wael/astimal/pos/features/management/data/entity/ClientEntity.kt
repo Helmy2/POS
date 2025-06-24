@@ -54,8 +54,8 @@ data class ClientWithDetailsEntity(
 
 fun ClientWithDetailsEntity.toDomain(): BusinessPartner {
     return BusinessPartner(
-        clientLocalId = Id(client.localId, client.serverId),
-        supplierLocalId = null,
+        clientId = Id(client.localId, client.serverId),
+        supplierId = null,
         name = LocalizedString(arName = client.arName, enName = client.enName),
         address = client.address,
         phone = client.phone,

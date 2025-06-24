@@ -11,8 +11,8 @@ enum class PartnerType {
 }
 
 data class BusinessPartner(
-    val clientLocalId: Id?,
-    val supplierLocalId: Id?,
+    val clientId: Id?,
+    val supplierId: Id?,
 
     val name: LocalizedString,
     val address: String,

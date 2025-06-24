@@ -65,11 +65,11 @@ fun ReceivePayVoucherWithDetails.toDomain(): ReceivePayVoucher {
         val clint = client.toDomain()
         supplier.toDomain().copy(
             clientDebt = clint.clientDebt,
-            clientLocalId = clint.clientLocalId
+            clientId = clint.clientId
         )
     } else if (voucher.partyType == VoucherPartyType.CLIENT && client != null) {
         client.toDomain()
-    } else if (voucher.partyType == VoucherPartyType.CLIENT && supplier != null) {
+    } else if (voucher.partyType == VoucherPartyType.SUPPLIER && supplier != null) {
         supplier.toDomain()
     } else {
         throw IllegalStateException("Receipt voucher #${voucher.localId}")

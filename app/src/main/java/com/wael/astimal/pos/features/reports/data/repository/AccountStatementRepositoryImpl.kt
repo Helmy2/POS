@@ -19,11 +19,11 @@ class AccountStatementRepositoryImpl(
         // Determine which ledger query to use based on the partner type.
         val ledgerFlow = when (partner.type) {
             PartnerType.BOTH -> partnerTransactionDao.getTransactionsForPartner(
-                partner.clientLocalId?.local!!, partner.supplierLocalId?.local!!
+                partner.clientId?.local!!, partner.supplierId?.local!!
             )
 
-            PartnerType.CLIENT -> partnerTransactionDao.getTransactionsForClient(partner.clientLocalId?.local!!)
-            PartnerType.SUPPLIER -> partner.supplierLocalId?.let {
+            PartnerType.CLIENT -> partnerTransactionDao.getTransactionsForClient(partner.clientId?.local!!)
+            PartnerType.SUPPLIER -> partner.supplierId?.let {
                 partnerTransactionDao.getTransactionsForSupplier(
                     it.local
                 )

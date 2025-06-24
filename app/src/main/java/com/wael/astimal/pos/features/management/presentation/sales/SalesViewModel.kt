@@ -302,7 +302,7 @@ class SalesViewModel(
                 localId = _state.value.selectedOrder?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                clientLocalId = selectedClient.clientLocalId?.local ?: throw Exception(),
+                clientLocalId = selectedClient.clientId?.local ?: throw Exception(),
                 employeeLocalId = orderInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = orderInput.amountRemaining,

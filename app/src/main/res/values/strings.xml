@@ -334,4 +334,9 @@
     <string name="phone">phone</string>
     <string name="opening_debt">opening_debt</string>
     <string name="opening_indebtedness">opening_indebtedness</string>
+    <string name="error_party_not_found">error_party_not_found</string>
+    <string name="add_voucher">add_voucher</string>
+    <string name="new_voucher">new_voucher</string>
+    <string name="party_type">party_type</string>
+    <string name="are_you_sure_you_want_to_delete_this_voucher">are_you_sure_you_want_to_delete_this_voucher</string>
 </resources>

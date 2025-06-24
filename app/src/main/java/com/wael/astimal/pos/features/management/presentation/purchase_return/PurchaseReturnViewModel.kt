@@ -297,7 +297,7 @@ class PurchaseReturnViewModel(
                 )
             }
 
-            if (itemEntities.size != returnInput.items.size || returnInput.selectedEmployeeId == null || selectedSupplier.supplierLocalId == null) {
+            if (itemEntities.size != returnInput.items.size || returnInput.selectedEmployeeId == null || selectedSupplier.supplierId == null) {
                 _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
                 return@launch
             }
@@ -306,7 +306,7 @@ class PurchaseReturnViewModel(
                 localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.supplierLocalId.local,
+                supplierLocalId = selectedSupplier.supplierId.local,
                 employeeLocalId = returnInput.selectedEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,

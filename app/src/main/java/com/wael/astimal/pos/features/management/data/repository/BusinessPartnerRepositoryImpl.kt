@@ -51,7 +51,7 @@ class BusinessPartnerRepositoryImpl(
                 if (existingPartner != null) {
                     partnerMap[mapKey] = existingPartner.copy(
                         type = PartnerType.BOTH,
-                        supplierLocalId = supplier.supplierLocalId,
+                        supplierId = supplier.supplierId,
                         supplierIndebtedness = supplier.supplierIndebtedness
                     )
                 } else {
@@ -66,9 +66,9 @@ class BusinessPartnerRepositoryImpl(
         return try {
             db.withTransaction {
                 val isNewClient =
-                    partner.type != PartnerType.SUPPLIER && partner.clientLocalId == null
+                    partner.type != PartnerType.SUPPLIER && partner.clientId == null
                 val isNewSupplier =
-                    partner.type != PartnerType.CLIENT && partner.supplierLocalId == null
+                    partner.type != PartnerType.CLIENT && partner.supplierId == null
 
                 // Save Client record if applicable
                 if (partner.type == PartnerType.CLIENT || partner.type == PartnerType.BOTH) {
@@ -108,8 +108,8 @@ class BusinessPartnerRepositoryImpl(
         return try {
             db.withTransaction {
                 val timestamp = Clock.now()
-                partner.clientLocalId?.let { clientDao.softDeleteClient(it.local, timestamp) }
-                partner.supplierLocalId?.let { supplierDao.softDeleteSupplier(it.local, timestamp) }
+                partner.clientId?.let { clientDao.softDeleteClient(it.local, timestamp) }
+                partner.supplierId?.let { supplierDao.softDeleteSupplier(it.local, timestamp) }
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -166,7 +166,7 @@ class BusinessPartnerRepositoryImpl(
 private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
     return ClientEntity(
         serverId = null,
-        localId = this.clientLocalId?.local ?: 0L,
+        localId = this.clientId?.local ?: 0L,
         arName = this.name.arName.orEmpty(),
         enName = this.name.enName.orEmpty(),
         phone = this.phone,
@@ -181,7 +181,7 @@ private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
 private fun BusinessPartner.toSupplierEntity(isClient: Boolean): SupplierEntity {
     return SupplierEntity(
         serverId = null,
-        localId = this.supplierLocalId?.local ?: 0L,
+        localId = this.supplierId?.local ?: 0L,
         arName = this.name.arName.orEmpty(),
         enName = this.name.enName.orEmpty(),
         phone = this.phone,

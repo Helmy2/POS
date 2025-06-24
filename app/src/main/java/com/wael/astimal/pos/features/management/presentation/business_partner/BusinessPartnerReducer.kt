@@ -64,8 +64,8 @@ class BusinessPartnerReducer :
 
     private fun createBlankBusinessPartner(currentUser: User): BusinessPartner {
         return BusinessPartner(
-            clientLocalId = null,
-            supplierLocalId = null,
+            clientId = null,
+            supplierId = null,
             name = LocalizedString(),
             address = "",
             phone = "",

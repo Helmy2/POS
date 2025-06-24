@@ -3,24 +3,21 @@ package com.wael.astimal.pos.features.management.presentation.receive_pay_vouche
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,19 +34,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
-import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.FAB
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
-import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
+import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
-import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -58,146 +52,192 @@ import java.util.Locale
 
 @Composable
 fun ReceivePayVoucherRoute(
-    onBack: () -> Unit,
     viewModel: ReceivePayVoucherViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val filteredVouchers by viewModel.filteredVouchersState.collectAsStateWithLifecycle()
+
     ReceivePayVoucherScreen(
-        onBack = onBack,
+        onBack = { viewModel.processEvent(ReceivePayVoucherContract.Event.BackClicked) },
         state = state,
-        onEvent = viewModel::onEvent,
-        eventFlow = viewModel.eventFlow
+        filteredVouchers = filteredVouchers,
+        onEvent = viewModel::processEvent
     )
 }
 
 @Composable
 fun ReceivePayVoucherScreen(
-    state: ReceivePayVoucherState,
-    onEvent: (ReceivePayVoucherEvent) -> Unit,
+    state: ReceivePayVoucherContract.State,
+    onEvent: (ReceivePayVoucherContract.Event) -> Unit,
     onBack: () -> Unit,
-    eventFlow: SharedFlow<UiEvent>
+    filteredVouchers: List<ReceivePayVoucher>
 ) {
-    val context = LocalContext.current
-
-    if (state.showEditDialog && state.voucherToEdit != null) {
-        EditVoucherDialog(
-            voucher = state.voucherToEdit,
-            isSaving = state.isSaving,
-            onDismiss = { onEvent(ReceivePayVoucherEvent.DismissEditDialog) },
-            onSave = { onEvent(ReceivePayVoucherEvent.SaveVoucher(it)) })
+    if (state.dialogState.show) {
+        VoucherEditDialog(state = state, onEvent = onEvent)
     }
 
     Screen(
-        loading = state.isLoading, eventFlow = eventFlow, topBar = {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp),
+        topBar = {
+            SearchBarWithBackButton(
+                query = state.searchQuery,
+                onBack = onBack,
+                onQueryChange = { onEvent(ReceivePayVoucherContract.Event.SearchQueryChanged(it)) },
+                onSearch = { onEvent(ReceivePayVoucherContract.Event.SearchQueryChanged(it)) },
+                modifier = Modifier.statusBarsPadding()
+            )
+        },
+        floatingActionButton = {
+            FAB(
+                onClick = {
+                    if (state.canUserEdit) onEvent(ReceivePayVoucherContract.Event.AddVoucherClicked)
+                }, enable = state.canUserEdit
             ) {
-                BackButton(onBack, Modifier.padding(16.dp))
-                CustomExposedDropdownMenu(
-                    label = stringResource(R.string.client_or_suppler),
-                    items = VoucherPartyType.entries,
-                    selectedItemId = state.partyType.ordinal.toLong(),
-                    onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectPartyType(it)) },
-                    itemToDisplayString = { context.getString(it.getStringRes()) },
-                    itemToId = { it.ordinal.toLong() },
-                    canClearSelection = false,
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add_voucher),
                 )
             }
-        }) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
+        },
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp),
+            contentPadding = PaddingValues(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            AddVoucherForm(state = state, onEvent = onEvent, canEdit = state.canEdit)
-            VoucherList(vouchers = state.vouchers, state = state, onEvent = onEvent)
-        }
-    }
-}
-
-@Composable
-fun AddVoucherForm(
-    state: ReceivePayVoucherState, onEvent: (ReceivePayVoucherEvent) -> Unit, canEdit: Boolean
-) {
-    val currentLanguage = LocalAppLocale.current
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AnimatedContent(targetState = state.partyType) { partyType ->
-            when (partyType) {
-                VoucherPartyType.CLIENT -> CustomExposedDropdownMenu(
-                    label = stringResource(R.string.client),
-                    items = state.clients,
-                    selectedItemId = state.selectedClient?.clientLocalId?.local,
-                    onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectClient(it)) },
-                    itemToDisplayString = { it.name.displayName(currentLanguage) },
-                    itemToId = { it.clientLocalId?.local },
-                    canClearSelection = true,
-                )
-
-                VoucherPartyType.SUPPLIER -> CustomExposedDropdownMenu(
-                    label = stringResource(R.string.supplier),
-                    items = state.suppliers,
-                    selectedItemId = state.selectedSupplier?.supplierLocalId?.local,
-                    onItemSelected = { onEvent(ReceivePayVoucherEvent.SelectSupplier(it)) },
-                    itemToDisplayString = { it.name.displayName(currentLanguage) },
-                    itemToId = { it.supplierLocalId?.local },
-                    canClearSelection = true
-                )
+            items(filteredVouchers, key = { it.id.local }) { voucher ->
+                VoucherItem(
+                    voucher = voucher,
+                    canEdit = state.canUserEdit || voucher.createdBy.id == state.currentUser?.id,
+                    onEdit = { onEvent(ReceivePayVoucherContract.Event.EditVoucherClicked(voucher)) },
+                    onDelete = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DeleteVoucherClicked(
+                                voucher
+                            )
+                        )
+                    })
             }
         }
-        TextInputField(
-            value = state.amount,
-            onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateAmount(it)) },
-            label = stringResource(R.string.amount),
-            enabled = canEdit
-        )
-        DataPicker(
-            selectedDateMillis = state.date,
-            onDateSelected = {
-                onEvent(
-                    ReceivePayVoucherEvent.UpdateDate(it)
-                )
-            },
-            enabled = canEdit,
-        )
-        TextInputField(
-            value = state.notes,
-            onValueChange = { onEvent(ReceivePayVoucherEvent.UpdateNotes(it)) },
-            label = stringResource(R.string.notes_optional),
-            enabled = canEdit,
-        )
-        Button(
-            onClick = { onEvent(ReceivePayVoucherEvent.AddVoucher) },
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            enabled = !state.isSaving && canEdit
-        ) {
-            Text(stringResource(R.string.save_voucher))
-        }
-        HorizontalDivider(Modifier.padding(vertical = 8.dp))
     }
 }
 
-
 @Composable
-fun VoucherList(
-    vouchers: List<ReceivePayVoucher>,
-    state: ReceivePayVoucherState,
-    onEvent: (ReceivePayVoucherEvent) -> Unit
+fun VoucherEditDialog(
+    state: ReceivePayVoucherContract.State, onEvent: (ReceivePayVoucherContract.Event) -> Unit
 ) {
-    LazyColumn {
-        items(vouchers, key = { it.id.local }) { voucher ->
-            VoucherItem(
-                voucher = voucher,
-                canEdit = state.currentUser?.isAdmin == true || state.currentUser?.id == voucher.party.responsibleEmployee.id,
-                onEdit = { onEvent(ReceivePayVoucherEvent.EditVoucherClicked(voucher)) },
-                onDelete = { onEvent(ReceivePayVoucherEvent.DeleteVoucherClicked(voucher)) },
-            )
-        }
-    }
+    val dialogState = state.dialogState
+    val context = LocalContext.current
+    val language = LocalAppLocale.current
+
+    AlertDialog(
+        onDismissRequest = { onEvent(ReceivePayVoucherContract.Event.DismissDialog) },
+        title = {
+            val titleRes =
+                if (dialogState.voucherToEdit == null) R.string.new_voucher else R.string.edit_voucher
+            Text(stringResource(titleRes))
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.party_type),
+                    items = VoucherPartyType.entries,
+                    selectedItemId = dialogState.partyType.ordinal.toLong(),
+                    onItemSelected = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogPartyTypeChanged(
+                                it
+                            )
+                        )
+                    },
+                    itemToDisplayString = { context.getString(it.getStringRes()) },
+                    itemToId = { it.ordinal.toLong() },
+                    enabled = state.canUserEdit && dialogState.voucherToEdit == null // Can't change type when editing
+                )
+
+                AnimatedContent(targetState = dialogState.partyType) { partyType ->
+                    when (partyType) {
+                        VoucherPartyType.CLIENT -> CustomExposedDropdownMenu(
+                            label = stringResource(R.string.client),
+                            items = state.dropdownData.clients,
+                            selectedItemId = dialogState.selectedPartnerId,
+                            onItemSelected = {
+                                onEvent(
+                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
+                                        it.clientId?.local
+                                    )
+                                )
+                            },
+                            itemToDisplayString = { it.name.displayName(language) },
+                            itemToId = { it.clientId?.local },
+                            onClearItem = {
+                                onEvent(
+                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
+                                        null
+                                    )
+                                )
+                            },
+                            enabled = state.canUserEdit && dialogState.voucherToEdit == null
+                        )
+
+                        VoucherPartyType.SUPPLIER -> CustomExposedDropdownMenu(
+                            label = stringResource(R.string.supplier),
+                            items = state.dropdownData.suppliers,
+                            selectedItemId = dialogState.selectedPartnerId,
+                            onItemSelected = {
+                                onEvent(
+                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
+                                        it.supplierId?.local
+                                    )
+                                )
+                            },
+                            itemToDisplayString = { it.name.displayName(language) },
+                            itemToId = { it.supplierId?.local },
+                            onClearItem = {
+                                onEvent(
+                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
+                                        null
+                                    )
+                                )
+                            },
+                            enabled = state.canUserEdit && dialogState.voucherToEdit == null,
+                        )
+                    }
+                }
+
+                LabeledTextField(
+                    value = dialogState.amount,
+                    onValueChange = { onEvent(ReceivePayVoucherContract.Event.DialogAmountChanged(it)) },
+                    label = stringResource(R.string.amount),
+                    enabled = state.canUserEdit
+                )
+
+                DataPicker(
+                    selectedDateMillis = dialogState.date,
+                    onDateSelected = { onEvent(ReceivePayVoucherContract.Event.DialogDateChanged(it)) },
+                    enabled = state.canUserEdit
+                )
+
+                LabeledTextField(
+                    value = dialogState.notes,
+                    onValueChange = { onEvent(ReceivePayVoucherContract.Event.DialogNotesChanged(it)) },
+                    label = stringResource(R.string.notes_optional),
+                    enabled = state.canUserEdit
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onEvent(ReceivePayVoucherContract.Event.SaveChangesClicked) }) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onEvent(ReceivePayVoucherContract.Event.DismissDialog) }) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -205,11 +245,31 @@ fun VoucherItem(
     voucher: ReceivePayVoucher, canEdit: Boolean, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
     val date = remember(voucher.updatedAt) {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
-            Date(voucher.updatedAt)
-        )
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(voucher.updatedAt))
     }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    val language = LocalAppLocale.current
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.confirm_delete)) },
+            text = { Text(stringResource(R.string.are_you_sure_you_want_to_delete_this_voucher)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text(stringResource(R.string.delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                }) { Text(stringResource(R.string.cancel)) }
+            })
+    }
 
     Card(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(
@@ -219,7 +279,7 @@ fun VoucherItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = voucher.party.name.displayName(LocalAppLocale.current),
+                    text = voucher.party.name.displayName(language),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
@@ -252,104 +312,6 @@ fun VoucherItem(
                             contentDescription = "Delete",
                             tint = MaterialTheme.colorScheme.error
                         )
-                    }
-                }
-            }
-        }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(R.string.confirm_delete)) },
-            text = { Text("Are you sure you want to delete this voucher?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteConfirm = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(stringResource(R.string.delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(
-                        stringResource(R.string.cancel)
-                    )
-                }
-            })
-    }
-}
-
-
-@Composable
-fun EditVoucherDialog(
-    voucher: ReceivePayVoucher,
-    isSaving: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (ReceivePayVoucher) -> Unit
-) {
-    var amount by remember { mutableStateOf(voucher.amount.toString()) }
-    var notes by remember { mutableStateOf(voucher.notes) }
-    var date by remember { mutableLongStateOf(voucher.createdAt) }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    stringResource(R.string.edit_voucher),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Spacer(Modifier.height(16.dp))
-                TextInputField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = stringResource(R.string.amount)
-                )
-                DataPicker(
-                    selectedDateMillis = date,
-                    onDateSelected = { date = it },
-                )
-                TextInputField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = stringResource(R.string.notes_optional)
-                )
-                Spacer(Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.End) {
-                    TextButton(
-                        onClick = onDismiss, enabled = !isSaving
-                    ) { Text(stringResource(R.string.cancel)) }
-                    Button(
-                        onClick = {
-                            val newAmount = amount.toDoubleOrNull()
-                            if (newAmount != null) {
-                                onSave(
-                                    voucher.copy(
-                                        amount = newAmount,
-                                        notes = notes,
-                                        createdAt = date
-                                    )
-                                )
-                            }
-                        }, enabled = !isSaving
-                    ) {
-                        if (isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text(stringResource(R.string.save))
-                        }
                     }
                 }
             }

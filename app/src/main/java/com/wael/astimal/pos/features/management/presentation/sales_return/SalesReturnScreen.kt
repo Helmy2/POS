@@ -104,10 +104,10 @@ fun SalesReturnForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.client),
             items = state.availableClients,
-            selectedItemId = state.selectedClient?.clientLocalId?.local,
+            selectedItemId = state.selectedClient?.clientId?.local,
             onItemSelected = { onEvent(SalesReturnEvent.SelectClient(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.clientLocalId?.local },
+            itemToId = { it.clientId?.local },
             canClearSelection = false,
         )
 

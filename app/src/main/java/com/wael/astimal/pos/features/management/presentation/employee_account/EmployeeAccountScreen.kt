@@ -19,7 +19,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
@@ -72,35 +72,30 @@ fun EmployeeAccountScreen(
         EditTransactionDialog(state = state, onEvent = onEvent)
     }
 
-    Screen(
-        topBar = {
-            SearchBarWithBackButton(
-                query = state.searchQuery,
-                onBack = { onEvent(EmployeeAccountContract.Event.NavigateBack) },
-                onQueryChange = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
-                onSearch = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
-                modifier = Modifier.statusBarsPadding()
+    Screen(topBar = {
+        SearchBarWithBackButton(
+            query = state.searchQuery,
+            onBack = { onEvent(EmployeeAccountContract.Event.NavigateBack) },
+            onQueryChange = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
+            onSearch = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
+            modifier = Modifier.statusBarsPadding()
+        )
+    }, floatingActionButton = {
+        FAB(
+            enable = state.canUserEdit,
+            onClick = { onEvent(EmployeeAccountContract.Event.AddTransactionClicked) }) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = stringResource(R.string.add_transaction),
             )
-        },
-        floatingActionButton = {
-            AnimatedVisibility(state.canUserEdit) {
-                FloatingActionButton(onClick = { onEvent(EmployeeAccountContract.Event.AddTransactionClicked) }) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_transaction),
-                    )
-                }
-            }
-        },
-    ) {
+        }
+    }) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             TransactionList(
-                transactions = filteredTransactions,
-                canEdit = state.canUserEdit,
-                onEvent = onEvent
+                transactions = filteredTransactions, canEdit = state.canUserEdit, onEvent = onEvent
             )
         }
     }

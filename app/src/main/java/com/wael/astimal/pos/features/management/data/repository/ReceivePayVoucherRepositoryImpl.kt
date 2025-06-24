@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
@@ -10,6 +11,7 @@ import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
+import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,51 +28,40 @@ class ReceivePayVoucherRepositoryImpl(
         }
     }
 
-    override suspend fun addVoucher(voucher: ReceivePayVoucherEntity): Result<Unit> {
-        return try {
-            database.withTransaction {
-                val voucherEntity = voucher
-                val voucherId = voucherDao.insertVoucher(voucherEntity)
-                partnerTransactionDao.insertTransaction(voucher.toLedgerEntry(voucherId))
+    override suspend fun saveVoucher(voucher: ReceivePayVoucher): Result<Unit> {
+        return runCatching {
+            if (voucher.id == Id.new) {
+                database.withTransaction {
+                    val voucherId = voucherDao.insertVoucher(voucher.toEntity())
+                    partnerTransactionDao.insertTransaction(
+                        voucher.toEntity().toLedgerEntry(voucherId)
+                    )
+                }
+            } else {
+                database.withTransaction {
+                    voucherDao.updateVoucher(voucher.toEntity())
+
+                    // Delete the old ledger entry and insert the updated one
+                    partnerTransactionDao.deleteTransactionsBySource(
+                        voucher.id.local,
+                        voucher.getTransactionType()
+                    )
+                    partnerTransactionDao.insertTransaction(
+                        voucher.toEntity().toLedgerEntry(voucher.id.local)
+                    )
+                }
             }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    override suspend fun updateVoucher(voucher: ReceivePayVoucherEntity): Result<Unit> {
+    override suspend fun deleteVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return try {
             database.withTransaction {
-                val voucherEntity = voucher
-                voucherDao.updateVoucher(voucherEntity)
-
-                // Delete the old ledger entry and insert the updated one
                 partnerTransactionDao.deleteTransactionsBySource(
-                    voucher.localId,
+                    voucher.id.local,
                     voucher.getTransactionType()
                 )
-                partnerTransactionDao.insertTransaction(voucher.toLedgerEntry(voucher.localId))
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun deleteVoucher(voucherId: Long): Result<Unit> {
-        return try {
-            database.withTransaction {
-                // Delete both the voucher and its corresponding ledger entry
-                val voucherToDelete =
-                    voucherDao.getVoucherWithDetailsById(voucherId) ?: throw NoSuchElementException(
-                        "Voucher not found"
-                    )
-                partnerTransactionDao.deleteTransactionsBySource(
-                    voucherId,
-                    voucherToDelete.voucher.getTransactionType()
-                )
-                voucherDao.deleteVoucher(voucherId)
+                voucherDao.deleteVoucher(voucher.id.local)
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -107,6 +98,6 @@ private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTrans
     }
 }
 
-private fun ReceivePayVoucherEntity.getTransactionType(): TransactionType {
+private fun ReceivePayVoucher.getTransactionType(): TransactionType {
     return if (partyType == VoucherPartyType.CLIENT) TransactionType.PAYMENT_RECEIVED else TransactionType.PAYMENT_SENT
 }

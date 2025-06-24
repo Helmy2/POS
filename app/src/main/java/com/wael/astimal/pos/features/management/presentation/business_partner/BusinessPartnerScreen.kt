@@ -28,7 +28,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -52,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
@@ -99,13 +99,13 @@ fun BusinessPartnerScreen(
             )
         },
         floatingActionButton = {
-            AnimatedVisibility(state.canUserEdit) {
-                FloatingActionButton(onClick = { onEvent(BusinessPartnerContract.Event.AddNewPartnerClicked) }) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_partner),
-                    )
-                }
+            FAB(
+                enable = state.canUserEdit,
+                onClick = { onEvent(BusinessPartnerContract.Event.AddNewPartnerClicked) }) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add_partner),
+                )
             }
         },
     ) {
@@ -290,7 +290,7 @@ fun BusinessPartnerEditDialog(
     var openingDebt by remember { mutableStateOf("0.0") }
     var openingIndebtedness by remember { mutableStateOf("0.0") }
 
-    val isNewPartner = partner.clientLocalId == null && partner.supplierLocalId == null
+    val isNewPartner = partner.clientId == null && partner.supplierId == null
 
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -455,5 +455,5 @@ fun BalanceText(partner: BusinessPartner) {
 }
 
 fun BusinessPartner.getCompositeId(): String {
-    return "${type}_${clientLocalId}_${supplierLocalId}"
+    return "${type}_${clientId?.local}_${supplierId?.local}"
 }

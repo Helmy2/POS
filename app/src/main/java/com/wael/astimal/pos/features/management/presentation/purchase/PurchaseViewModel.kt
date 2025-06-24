@@ -314,7 +314,7 @@ class PurchaseViewModel(
                 localId = _state.value.selectedPurchase?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                supplierLocalId = selectedSupplier.supplierLocalId?.local ?: throw Exception(),
+                supplierLocalId = selectedSupplier.supplierId?.local ?: throw Exception(),
                 employeeLocalId = purchaseInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = purchaseInput.amountRemaining,

@@ -75,7 +75,7 @@ fun AppNavHost(
             composable<Destination.PurchaseOrders> { PurchaseRoute(onBack = { navController.popBackStack() }) }
             composable<Destination.PurchaseReturns> { PurchaseReturnRoute(onBack = { navController.popBackStack() }) }
             composable<Destination.EmployeeAccounts> { EmployeeAccountRoute() }
-            composable<Destination.Vouchers> { ReceivePayVoucherRoute(onBack = { navController.popBackStack() }) }
+            composable<Destination.Vouchers> { ReceivePayVoucherRoute() }
 
             // --- Reports Sub-Screens ---
             composable<Destination.AccountStatement> { AccountStatementRoute() }

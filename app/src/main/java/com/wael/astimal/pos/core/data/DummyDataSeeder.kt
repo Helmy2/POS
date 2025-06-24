@@ -89,8 +89,8 @@ class DummyDataSeeder(
     private suspend fun populateDummyBusinessPartner(user: User): List<BusinessPartner> {
         val businessPartners = listOf(
             BusinessPartner(
-                clientLocalId = null,
-                supplierLocalId = null,
+                clientId = null,
+                supplierId = null,
                 name = LocalizedString(
                     arName = "شريك عالمي",
                     enName = "Universal Partner",
@@ -103,8 +103,8 @@ class DummyDataSeeder(
                 type = PartnerType.BOTH,
                 isSynced = false
             ), BusinessPartner(
-                clientLocalId = null,
-                supplierLocalId = null,
+                clientId = null,
+                supplierId = null,
                 name = LocalizedString(
                     arName = "مورد ٢ (فقط)",
                     enName = "Supplier Two (Only)",
@@ -116,8 +116,8 @@ class DummyDataSeeder(
                 type = PartnerType.SUPPLIER,
                 isSynced = false
             ), BusinessPartner(
-                clientLocalId = null,
-                supplierLocalId = null,
+                clientId = null,
+                supplierId = null,
                 name = LocalizedString(
                     arName = "عميل ١ (فقط)",
                     enName = "Client One (Only)",

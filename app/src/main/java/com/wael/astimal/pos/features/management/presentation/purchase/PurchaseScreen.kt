@@ -92,10 +92,10 @@ fun PurchaseForm(
         CustomExposedDropdownMenu(
             label = stringResource(R.string.supplier),
             items = state.availableSuppliers,
-            selectedItemId = state.selectedSupplier?.supplierLocalId?.local,
+            selectedItemId = state.selectedSupplier?.supplierId?.local,
             onItemSelected = { onEvent(PurchaseEvent.SelectSupplier(it)) },
             itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.supplierLocalId?.local },
+            itemToId = { it.supplierId?.local },
             canClearSelection = false,
         )
 

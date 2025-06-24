@@ -1,42 +1,61 @@
 package com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers
 
-import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import com.wael.astimal.pos.features.user.domain.entity.User
 
-data class ReceivePayVoucherState(
-    val isLoading: Boolean = false,
-    val vouchers: List<ReceivePayVoucher> = emptyList(),
-    val clients: List<BusinessPartner> = emptyList(),
-    val suppliers: List<BusinessPartner> = emptyList(),
-    val partyType: VoucherPartyType = VoucherPartyType.CLIENT,
-    val selectedClient: BusinessPartner? = null,
-    val selectedSupplier: BusinessPartner? = null,
-    val amount: String = "",
-    val notes: String = "",
-    val date: Long = Clock.now(),
-    val isSaving: Boolean = false,
-    val currentUser: User? = null,
-    val voucherToEdit: ReceivePayVoucher? = null,
-    val showEditDialog: Boolean = false
-) {
-    val canEdit = currentUser?.isAdmin == true ||
-            (selectedClient?.responsibleEmployee?.id == currentUser?.id && partyType == VoucherPartyType.CLIENT)
-            || (selectedSupplier?.responsibleEmployee?.id == currentUser?.id && partyType == VoucherPartyType.SUPPLIER)
-}
+object ReceivePayVoucherContract {
 
-sealed interface ReceivePayVoucherEvent {
-    data class SelectPartyType(val type: VoucherPartyType) : ReceivePayVoucherEvent
-    data class SelectClient(val client: BusinessPartner?) : ReceivePayVoucherEvent
-    data class SelectSupplier(val supplier: BusinessPartner?) : ReceivePayVoucherEvent
-    data class UpdateAmount(val amount: String) : ReceivePayVoucherEvent
-    data class UpdateNotes(val notes: String) : ReceivePayVoucherEvent
-    data class UpdateDate(val date: Long) : ReceivePayVoucherEvent
-    data object AddVoucher : ReceivePayVoucherEvent
-    data class EditVoucherClicked(val voucher: ReceivePayVoucher) : ReceivePayVoucherEvent
-    data class DeleteVoucherClicked(val voucher: ReceivePayVoucher) : ReceivePayVoucherEvent
-    data class SaveVoucher(val voucher: ReceivePayVoucher) : ReceivePayVoucherEvent
-    data object DismissEditDialog : ReceivePayVoucherEvent
+    data class DropdownData(
+        val clients: List<BusinessPartner> = emptyList(),
+        val suppliers: List<BusinessPartner> = emptyList()
+    )
+
+    data class DialogState(
+        val show: Boolean = false,
+        val voucherToEdit: ReceivePayVoucher? = null,
+        val partyType: VoucherPartyType = VoucherPartyType.CLIENT,
+        val selectedPartnerId: Long? = null,
+        val amount: String = "",
+        val notes: String = "",
+        val date: Long
+    )
+
+    data class State(
+        val isLoading: Boolean = true,
+        val vouchers: List<ReceivePayVoucher> = emptyList(),
+        val dropdownData: DropdownData = DropdownData(),
+        val currentUser: User? = null,
+        val dialogState: DialogState,
+        val searchQuery: String = "",
+    ) : Reducer.ViewState {
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+    }
+
+    sealed interface Event : Reducer.ViewEvent {
+        // UI Actions
+        data object LoadInitialData : Event
+        data object AddVoucherClicked : Event
+        data class SearchQueryChanged(val query: String) : Event
+        data class EditVoucherClicked(val voucher: ReceivePayVoucher) : Event
+        data class DeleteVoucherClicked(val voucher: ReceivePayVoucher) : Event
+        data object SaveChangesClicked : Event
+        data object DismissDialog : Event
+        data object BackClicked : Event
+
+        // Dialog Input Changes
+        data class DialogPartyTypeChanged(val type: VoucherPartyType) : Event
+        data class DialogPartnerSelected(val partnerId: Long?) : Event
+        data class DialogAmountChanged(val amount: String) : Event
+        data class DialogNotesChanged(val notes: String) : Event
+        data class DialogDateChanged(val date: Long) : Event
+
+        // Data results from ViewModel
+        data class UserLoaded(val user: User?) : Event
+        data class DropdownDataLoaded(val data: DropdownData) : Event
+        data class VouchersLoaded(val vouchers: List<ReceivePayVoucher>) : Event
+        data object SaveSucceeded : Event
+    }
 }

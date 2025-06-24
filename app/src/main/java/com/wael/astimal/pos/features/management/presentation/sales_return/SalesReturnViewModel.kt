@@ -297,7 +297,7 @@ class SalesReturnViewModel(
                 localId = _state.value.selectedReturn?.id?.local ?: 0L,
                 serverId = null,
                 invoiceNumber = "",
-                clientLocalId = selectedClient.clientLocalId?.local ?: throw Exception(),
+                clientLocalId = selectedClient.clientId?.local ?: throw Exception(),
                 employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
                 amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 amountRemaining = returnInput.amountRemaining,
