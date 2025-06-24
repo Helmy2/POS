@@ -24,8 +24,7 @@ object EmployeeAccountContract {
         val searchQuery: String = "",
         val dialogState: DialogState = DialogState()
     ) : Reducer.ViewState {
-        // TODO : Implement logic to determine if the user can edit transactions
-        val canUserEdit: Boolean get() = true
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
     }
 
     sealed interface Event : Reducer.ViewEvent {

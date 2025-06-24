@@ -81,7 +81,7 @@
     <string name="add_partner">Add Partner</string>
     <string name="edit_partner">Edit Partner</string>
     <string name="is_client">Is Client</string>
-    <string name="is_supplier">Is Supplier: %1$s</string>
+    <string name="is_supplier">Is Supplier</string>
     <string name="phones">Phones:</string>
     <string name="address">Address: %1$s</string>
     <string name="address_placeholder">Address: %s</string>
@@ -224,7 +224,7 @@
     <string name="export_as_pdf">Export as PDF</string>
     <string name="error_creating_pdf">Error creating PDF file.</string>
     <string name="share_statement_pdf">Share Statement PDF</string>
-    <string name="invoice_no">Invoice #</string>
+    <string name="invoice_no">Invoice </string>
     <string name="money_out">Money Out</string>
     <string name="money_in">Money In</string>
     <string name="opening_balance">Opening Balance</string>
@@ -330,4 +330,8 @@
     <string name="unknown_name">Unknown Name</string>
     <string name="open_new">Open new</string>
     <string name="back_button_icon">Back button icon</string>
+    <string name="phone_placeholder">Phone: %s</string>
+    <string name="phone">phone</string>
+    <string name="opening_debt">opening_debt</string>
+    <string name="opening_indebtedness">opening_indebtedness</string>
 </resources>
