@@ -42,14 +42,11 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReas
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun StockManagementRoute(
-    onBack: () -> Unit,
-    viewModel: StockManagementViewModel = koinViewModel(),
-) {
+fun StockManagementRoute(viewModel: StockManagementViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     StockManagementScreen(
-        state = state, onEvent = viewModel::processEvent, onBack = onBack
+        state = state, onEvent = viewModel::processEvent
     )
 }
 
@@ -57,7 +54,6 @@ fun StockManagementRoute(
 fun StockManagementScreen(
     state: StockManagementContract.State,
     onEvent: (StockManagementContract.Event) -> Unit,
-    onBack: () -> Unit
 ) {
     if (state.showAdjustmentDialog) {
         StockAdjustmentDialog(state = state, onEvent = onEvent)
@@ -66,7 +62,7 @@ fun StockManagementScreen(
     Screen(topBar = {
         SearchBarWithBackButton(
             query = state.query,
-            onBack = onBack,
+            onBack = { onEvent(StockManagementContract.Event.NavigateBack) },
             onQueryChange = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
             onSearch = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
             modifier = Modifier.statusBarsPadding()

@@ -1,17 +1,29 @@
 package com.wael.astimal.pos.features.management.presentation.management
 
-import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import kotlinx.coroutines.launch
 
-
-class ManagementViewModel : ViewModel() {
-
-    private val _state = MutableStateFlow(ManagementState())
-    val state: StateFlow<ManagementState> = _state.asStateFlow()
-
+class ManagementViewModel(
+    private val navigationController: NavigationController
+) : BaseViewModel<ManagementContract.State, ManagementContract.Event, Nothing>(
+    reducer = ManagementReducer(),
+    initialState = ManagementContract.State()
+) {
     init {
-        _state.value = ManagementState(items = ManagementDestinations.getAll())
+        processEvent(ManagementContract.Event.LoadManagementItems)
+    }
+
+    override fun handleEvent(event: ManagementContract.Event) {
+        when (event) {
+            is ManagementContract.Event.ItemClicked -> {
+                viewModelScope.launch {
+                    navigationController.navigate(event.destination)
+                }
+            }
+
+            else -> setState(event)
+        }
     }
 }

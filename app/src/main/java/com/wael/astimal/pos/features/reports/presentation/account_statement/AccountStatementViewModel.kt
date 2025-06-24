@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.reports.presentation.account_statement
 
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
@@ -21,10 +22,10 @@ class AccountStatementViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
     private val accountStatementRepository: AccountStatementRepository,
     private val pdfGenerator: PdfGenerator,
-    private val snackbarController: SnackbarController
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController
 ) : BaseViewModel<AccountStatementContract.State, AccountStatementContract.Event, AccountStatementContract.Effect>(
-    reducer = AccountStatementReducer(),
-    initialState = AccountStatementContract.State()
+    reducer = AccountStatementReducer(), initialState = AccountStatementContract.State()
 ) {
 
     private var searchJob: Job? = null
@@ -54,7 +55,13 @@ class AccountStatementViewModel(
             is AccountStatementContract.Event.ExportToPdfClicked -> {
                 exportStatementToPdf()
             }
-            // Other events are for synchronous state updates only
+
+            is AccountStatementContract.Event.NavigateBack -> {
+                viewModelScope.launch {
+                    navigationController.navigateBack()
+                }
+            }
+
             else -> setState(event)
         }
     }
@@ -75,11 +82,10 @@ class AccountStatementViewModel(
     private fun loadAccountStatement(partner: BusinessPartner) {
         statementJob?.cancel()
         setState(AccountStatementContract.Event.StatementLoading)
-        statementJob = accountStatementRepository.getAccountStatement(partner)
-            .onEach { transactions ->
+        statementJob =
+            accountStatementRepository.getAccountStatement(partner).onEach { transactions ->
                 setState(AccountStatementContract.Event.StatementLoaded(transactions))
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     private fun exportStatementToPdf() {

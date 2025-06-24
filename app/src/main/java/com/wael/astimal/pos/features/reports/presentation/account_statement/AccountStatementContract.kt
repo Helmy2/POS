@@ -26,6 +26,8 @@ object AccountStatementContract {
         data object StatementLoading : Event
         data object PartnerListLoading : Event
         data class GenerateStatementPdfSuccessfully(val fileUri: Uri) : Event
+
+        data object NavigateBack : Event
     }
 
     sealed interface Effect : Reducer.ViewEffect {

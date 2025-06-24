@@ -19,20 +19,18 @@ class StockManagementReducer :
 
             is StockManagementContract.Event.StocksLoaded -> previousState.copy(
                 isLoading = false,
-                productBundles = event.stocks
-                    .filter { it.quantity != 0.0 }
-                    .groupBy {
-                        it.store
-                    }.map {
-                        StockManagementContract.ProductBundle(
-                            store = it.key,
-                            quantities = it.value.map { stock ->
-                                StockManagementContract.ProductQuantity(
-                                    product = stock.product, quantity = stock.quantity
-                                )
-                            },
-                        )
-                    }) to null
+                productBundles = event.stocks.filter { it.quantity != 0.0 }.groupBy {
+                    it.store
+                }.map {
+                    StockManagementContract.ProductBundle(
+                        store = it.key,
+                        quantities = it.value.map { stock ->
+                            StockManagementContract.ProductQuantity(
+                                product = stock.product, quantity = stock.quantity
+                            )
+                        },
+                    )
+                }) to null
 
             is StockManagementContract.Event.ProductsLoaded -> previousState.copy(products = event.products) to null
 
@@ -78,7 +76,7 @@ class StockManagementReducer :
                 adjustmentStore = event.store
             ) to null
 
-            is StockManagementContract.Event.SaveAdjustmentClicked -> previousState to null
+            is StockManagementContract.Event.SaveAdjustmentClicked, StockManagementContract.Event.NavigateBack -> previousState to null
 
         }
     }

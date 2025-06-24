@@ -65,7 +65,7 @@ val CreditColor = Color(0xFFD32F2F)
 
 @Composable
 fun AccountStatementRoute(
-    onBack: () -> Unit, viewModel: AccountStatementViewModel = koinViewModel()
+    viewModel: AccountStatementViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -91,7 +91,6 @@ fun AccountStatementRoute(
     AccountStatementScreen(
         state = state,
         onEvent = viewModel::processEvent,
-        onBack = onBack,
     )
 }
 
@@ -100,7 +99,6 @@ fun AccountStatementRoute(
 fun AccountStatementScreen(
     state: AccountStatementContract.State,
     onEvent: (AccountStatementContract.Event) -> Unit,
-    onBack: () -> Unit
 ) {
 
     BackHandler(enabled = state.selectedPartner != null) {
@@ -119,7 +117,9 @@ fun AccountStatementScreen(
                             onEvent(AccountStatementContract.Event.SearchQueryChanged(it))
                         },
                         onSearch = { onEvent(AccountStatementContract.Event.SearchQueryChanged(it)) },
-                        onBack = onBack,
+                        onBack = {
+                            onEvent(AccountStatementContract.Event.NavigateBack)
+                        },
                     )
                 } else {
                     val title = state.selectedPartner?.name?.displayName(LocalAppLocale.current)

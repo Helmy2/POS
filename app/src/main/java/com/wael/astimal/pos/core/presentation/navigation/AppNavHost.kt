@@ -53,11 +53,8 @@ fun AppNavHost(
             composable<Destination.Inventory> { InventoryRoute() }
 
             // Management Hub
-            composable<Destination.Management> {
-                ManagementRoute(
-                    onNavigate = { navController.navigate(it) }
-                )
-            }
+            composable<Destination.Management> { ManagementRoute() }
+
             // Reports Hub
             composable<Destination.Reports> { ReportsRoute() }
 
@@ -67,7 +64,7 @@ fun AppNavHost(
             composable<Destination.Products> { ProductRoute() }
             composable<Destination.Stores> { StoreRoute() }
             composable<Destination.Units> { UnitRoute() }
-            composable<Destination.StockManagement> { StockManagementRoute(onBack = { navController.popBackStack() }) }
+            composable<Destination.StockManagement> { StockManagementRoute() }
             composable<Destination.StockTransfer> { StockTransferRoute() }
 
 
@@ -81,7 +78,7 @@ fun AppNavHost(
             composable<Destination.Vouchers> { ReceivePayVoucherRoute(onBack = { navController.popBackStack() }) }
 
             // --- Reports Sub-Screens ---
-            composable<Destination.AccountStatement> { AccountStatementRoute(onBack = { navController.popBackStack() }) }
+            composable<Destination.AccountStatement> { AccountStatementRoute() }
             // Add other report routes here in the future
         }
 

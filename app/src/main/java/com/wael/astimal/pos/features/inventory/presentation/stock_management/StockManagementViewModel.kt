@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
@@ -25,6 +26,7 @@ class StockManagementViewModel(
     private val productRepository: ProductRepository,
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController
 ) : BaseViewModel<StockManagementContract.State, StockManagementContract.Event, Nothing>(
     reducer = StockManagementReducer(), initialState = StockManagementContract.State()
 ) {
@@ -43,6 +45,12 @@ class StockManagementViewModel(
             }
 
             is StockManagementContract.Event.SaveAdjustmentClicked -> saveStockAdjustment()
+
+            is StockManagementContract.Event.NavigateBack -> {
+                viewModelScope.launch {
+                    navigationController.navigateBack()
+                }
+            }
             else -> setState(event)
         }
     }

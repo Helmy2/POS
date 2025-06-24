@@ -57,5 +57,7 @@ object StockManagementContract {
         data class StocksLoaded(val stocks: List<StoreStock>) : Event
         data class ProductsLoaded(val products: List<Product>) : Event
         data object AdjustmentSucceeded : Event
+
+        data object NavigateBack : Event
     }
 }

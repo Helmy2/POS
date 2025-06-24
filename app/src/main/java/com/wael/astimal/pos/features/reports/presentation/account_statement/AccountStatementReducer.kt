@@ -32,13 +32,14 @@ class AccountStatementReducer :
                 isStatementLoading = false, transactions = event.transactions
             ) to null
 
-            is AccountStatementContract.Event.ExportToPdfClicked -> previousState to null
-
             is AccountStatementContract.Event.GenerateStatementPdfSuccessfully -> {
                 previousState.copy(
                     selectedPartner = null, transactions = emptyList(), isStatementLoading = false
                 ) to AccountStatementContract.Effect.SharePdf(event.fileUri)
             }
+
+            is AccountStatementContract.Event.ExportToPdfClicked, is AccountStatementContract.Event.NavigateBack -> previousState to null
+
         }
     }
 }
