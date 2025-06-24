@@ -14,6 +14,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -52,13 +53,19 @@ class StockManagementViewModel(
             setState(StockManagementContract.Event.UserLoaded(userRepository.getCurrentUser()))
         }
         viewModelScope.launch {
-            storeRepository.getStores("").collect { stores ->
-                setState(StockManagementContract.Event.StoresLoaded(stores.getOrDefault(emptyList())))
+            storeRepository.getStores("").catch {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_loading_stores)))
+                setState(StockManagementContract.Event.StoresLoaded(emptyList()))
+            }.collect { stores ->
+                setState(StockManagementContract.Event.StoresLoaded(stores))
             }
         }
         viewModelScope.launch {
-            productRepository.getProducts().collect { it ->
-                setState(StockManagementContract.Event.ProductsLoaded(it.getOrDefault(emptyList())))
+            productRepository.getProducts().catch {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_loading_products)))
+                setState(StockManagementContract.Event.ProductsLoaded(emptyList()))
+            }.collect { it ->
+                setState(StockManagementContract.Event.ProductsLoaded(it))
             }
         }
         loadStocks()
@@ -68,14 +75,12 @@ class StockManagementViewModel(
         stockJob?.cancel()
         stockJob = stockRepository.getStoreStocks(
             query = state.value.query, selectedStoreId = null
-        ).onEach { result ->
-            result.fold(onSuccess = {
-                setState(StockManagementContract.Event.StocksLoaded(it))
-            }, onFailure = {
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_loading_stock)))
-                setState(StockManagementContract.Event.StocksLoaded(emptyList())) // Clear list on error
+        ).catch {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_loading_stock)))
+            setState(StockManagementContract.Event.StocksLoaded(emptyList())) // Clear list on error
 
-            })
+        }.onEach {
+            setState(StockManagementContract.Event.StocksLoaded(it))
         }.launchIn(viewModelScope)
     }
 
@@ -97,8 +102,7 @@ class StockManagementViewModel(
                 return@launch
             }
 
-            state.value.productBundles.first { it.store == adjustmentStore }
-                .quantities.firstOrNull { it.product == adjustmentProduct }
+            state.value.productBundles.first { it.store == adjustmentStore }.quantities.firstOrNull { it.product == adjustmentProduct }
                 ?.let { productQuantity ->
                     if (productQuantity.quantity + quantityChange < 0) {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.insufficient_stock)))

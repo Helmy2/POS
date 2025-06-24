@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.di
 
-import com.wael.astimal.pos.core.util.BASE_URL
+import com.wael.astimal.pos.core.util.ApiRoutes
 import com.wael.astimal.pos.features.user.data.local.SessionManager
 import com.wael.astimal.pos.features.user.data.remote.AuthApiService
 import com.wael.astimal.pos.features.user.data.remote.AuthApiServiceImpl
@@ -43,7 +43,9 @@ val apiModule = module {
                     refreshTokens { sessionManager.refreshBearerTokens(client) }
 
                     sendWithoutRequest { request ->
-                        request.url.host == BASE_URL && !request.url.encodedPath.endsWith("/login")
+                        val url = request.url.encodedPath
+                        request.url.host == ApiRoutes.HOST &&
+                                url != ApiRoutes.LOGIN
                     }
                 }
             }

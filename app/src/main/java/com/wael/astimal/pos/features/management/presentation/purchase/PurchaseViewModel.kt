@@ -62,24 +62,26 @@ class PurchaseViewModel(
         }
         viewModelScope.launch {
             productRepository.getProducts()
+                .catch {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_products))
+                }
                 .collect { result ->
                     _state.update {
                         it.copy(
-                            availableProducts = result.getOrDefault(
-                                emptyList()
-                            )
+                            availableProducts = result
                         )
                     }
                 }
         }
         viewModelScope.launch {
             userRepository.getEmployeesFlow()
+                .catch {
+                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_employees))
+                }
                 .collect { result ->
                     _state.update {
                         it.copy(
-                            availableEmployees = result.getOrDefault(
-                                emptyList()
-                            )
+                            availableEmployees = result
                         )
                     }
                 }
@@ -191,8 +193,12 @@ class PurchaseViewModel(
             val storeId =
                 userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
             stockObservationJobs[tempId] =
-                stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
-                    updatePurchaseItem(tempId) { it.copy(currentStock = stock.getOrDefault(0.0)) }
+                stockRepository.getStockQuantityFlow(storeId, productId)
+                    .catch {
+
+                    }
+                    .onEach { stock ->
+                        updatePurchaseItem(tempId) { it.copy(currentStock = stock) }
                 }.launchIn(viewModelScope)
         }
     }

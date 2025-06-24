@@ -302,5 +302,12 @@
     <string name="all_stores">All stores</string>
     <string name="insufficient_stock">insufficient_stock</string>
     <string name="product_not_found_in_store">product_not_found_in_store</string>
+    <string name="failed_to_load_categories">failed_to_load_categories</string>
+    <string name="failed_to_load_units">failed_to_load_units</string>
+    <string name="failed_to_load_stores">failed_to_load_stores</string>
+    <string name="failed_to_load_products">failed_to_load_products</string>
+    <string name="error_loading_products">error_loading_products</string>
+    <string name="failed_to_load_stock">failed_to_load_stock</string>
+    <string name="error_loading_units">error_loading_units</string>
 
 </resources>

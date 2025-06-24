@@ -26,9 +26,12 @@ class StockTransferRepositoryImpl(
         }
     }
 
-    override suspend fun getStockTransferWithDetails(localId: Long): StockTransfer? {
-        val entityWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
-        return entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
+    override suspend fun getStockTransferWithDetails(localId: Long): Result<StockTransfer> {
+        return runCatching {
+            val entityWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
+            entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
+                ?: throw NoSuchElementException("Stock transfer with localId $localId not found or marked as deleted.")
+        }
     }
 
     override suspend fun addStockTransfer(
@@ -38,9 +41,9 @@ class StockTransferRepositoryImpl(
         initiatedByUserId: Long,
         items: List<StockTransferItem>
     ): Result<StockTransfer> {
-        return try {
+        return runCatching {
             if (items.isEmpty()) {
-                return Result.failure(IllegalArgumentException("Stock transfer must have at least one item."))
+                throw IllegalArgumentException("Stock transfer must have at least one item.")
             }
 
             val newTransferEntity = StockTransferEntity(
@@ -78,11 +81,8 @@ class StockTransferRepositoryImpl(
             }
 
             val createdTransfer = getStockTransferWithDetails(insertedId)
-                ?: return Result.failure(IllegalStateException("Failed to retrieve transfer after creation."))
 
-            Result.success(createdTransfer)
-        } catch (e: Exception) {
-            Result.failure(e)
+            createdTransfer.getOrThrow()
         }
     }
 
@@ -96,12 +96,15 @@ class StockTransferRepositoryImpl(
     ): Result<Unit> {
         return try {
             database.withTransaction {
-                val existingTransferWithDetails = stockTransferDao.getStockTransferWithDetails(transferLocalId)
-                    ?: throw NoSuchElementException("Stock transfer with localId $transferLocalId not found.")
+                val existingTransferWithDetails =
+                    stockTransferDao.getStockTransferWithDetails(transferLocalId)
+                        ?: throw NoSuchElementException("Stock transfer with localId $transferLocalId not found.")
 
                 val oldTransfer = existingTransferWithDetails.transfer
-                val oldFromStoreId = oldTransfer.fromStoreId ?: throw Exception("Old 'from' store ID is missing.")
-                val oldToStoreId = oldTransfer.toStoreId ?: throw Exception("Old 'to' store ID is missing.")
+                val oldFromStoreId =
+                    oldTransfer.fromStoreId ?: throw Exception("Old 'from' store ID is missing.")
+                val oldToStoreId =
+                    oldTransfer.toStoreId ?: throw Exception("Old 'to' store ID is missing.")
 
                 // Revert stock changes from the old items
                 existingTransferWithDetails.itemsWithProducts.forEach { oldItem ->
@@ -155,11 +158,13 @@ class StockTransferRepositoryImpl(
             database.withTransaction {
                 val transferToDelete =
                     stockTransferDao.getStockTransferWithDetails(transfer.id.local)
-                    ?: throw NoSuchElementException("Stock transfer not found for deletion.")
+                        ?: throw NoSuchElementException("Stock transfer not found for deletion.")
 
                 if (!transferToDelete.transfer.isDeletedLocally) {
-                    val fromStoreId = transferToDelete.transfer.fromStoreId ?: throw Exception("From store ID is missing.")
-                    val toStoreId = transferToDelete.transfer.toStoreId ?: throw Exception("To store ID is missing.")
+                    val fromStoreId = transferToDelete.transfer.fromStoreId
+                        ?: throw Exception("From store ID is missing.")
+                    val toStoreId = transferToDelete.transfer.toStoreId
+                        ?: throw Exception("To store ID is missing.")
 
                     // Revert stock changes
                     transferToDelete.itemsWithProducts.forEach { item ->

@@ -15,6 +15,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -68,9 +69,13 @@ class StoreViewModel(
         searchJob?.cancel()
         setState(StoreContract.Event.LoadingStarted)
         searchJob = storeRepository.getStores(query)
+            .catch {
+                setState(StoreContract.Event.LoadingFinished)
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_stores)))
+            }
             .debounce(300L)
             .onEach { stores ->
-                setState(StoreContract.Event.StoresLoaded(stores.getOrDefault(emptyList())))
+                setState(StoreContract.Event.StoresLoaded(stores))
             }
             .launchIn(viewModelScope)
     }

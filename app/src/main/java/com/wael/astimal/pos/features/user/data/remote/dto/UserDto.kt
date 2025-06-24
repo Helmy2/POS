@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.user.data.remote.dto
 
-import com.wael.astimal.pos.core.util.PROFILE_IMAGE_BASE_URL
+import com.wael.astimal.pos.core.util.ApiRoutes.PROFILE_IMAGE_BASE_URL
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import kotlinx.serialization.SerialName

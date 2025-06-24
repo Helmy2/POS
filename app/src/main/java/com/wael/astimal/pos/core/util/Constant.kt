@@ -5,6 +5,10 @@ const val PREFERENCES_NAME = "unify.preferences_pb"
 const val ORDER_COMMISSION_PERCENTAGE = 0.25
 const val RETURN_COMMISSION_PERCENTAGE = 0.25
 
+object ApiRoutes {
+    const val HOST = "wael.astimal.com"
+    const val BASE_URL = "https://$HOST/api/v1"
+    const val PROFILE_IMAGE_BASE_URL = "https://$HOST"
+    const val LOGIN = "$BASE_URL/login"
+}
 
-const val BASE_URL = "https://wael.astimal.com/api/v1"
-const val PROFILE_IMAGE_BASE_URL = "https://wael.astimal.com"

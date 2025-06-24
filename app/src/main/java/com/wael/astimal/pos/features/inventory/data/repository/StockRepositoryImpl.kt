@@ -13,7 +13,6 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -28,27 +27,22 @@ class StockRepositoryImpl(
     override fun getStoreStocks(
         query: String,
         selectedStoreId: Long?
-    ): Flow<Result<List<StoreStock>>> {
+    ): Flow<List<StoreStock>> {
         return stockDao.getStoreStocks().map { list ->
-            runCatching {
-                list.map { it.toDomain() }.filter {
-                    val storeCondition =
-                        selectedStoreId == null || it.store.id.local == selectedStoreId
-                    val queryCondition =
-                        query.isBlank() || it.product.name.contains(query) || it.store.name.contains(
-                            query
-                        )
-                    storeCondition && queryCondition
-                }
+            list.map { it.toDomain() }.filter {
+                val storeCondition =
+                    selectedStoreId == null || it.store.id.local == selectedStoreId
+                val queryCondition =
+                    query.isBlank() || it.product.name.contains(query) || it.store.name.contains(
+                        query
+                    )
+                storeCondition && queryCondition
             }
-        }.catch { emit(Result.failure(it)) }
+        }
     }
 
-    override fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Result<Double>> {
-        return stockDao.getStockQuantity(storeId, productId).map { runCatching { it ?: 0.0 } }
-            .catch {
-                emit(Result.failure(it))
-            }
+    override fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Double> {
+        return stockDao.getStockQuantity(storeId, productId).map { it ?: 0.0 }
     }
 
     override suspend fun adjustStock(

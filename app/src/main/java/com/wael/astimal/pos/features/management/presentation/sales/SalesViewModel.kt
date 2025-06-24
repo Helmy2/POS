@@ -65,9 +65,7 @@ class SalesViewModel(
                 .collect { result ->
                     _state.update {
                         it.copy(
-                            availableProducts = result.getOrDefault(
-                                emptyList()
-                            )
+                            availableProducts = result
                         )
                     }
                 }
@@ -77,9 +75,7 @@ class SalesViewModel(
                 .collect { result ->
                     _state.update {
                         it.copy(
-                            availableEmployees = result.getOrDefault(
-                                emptyList()
-                            )
+                            availableEmployees = result
                         )
                     }
                 }
@@ -192,7 +188,7 @@ class SalesViewModel(
                 userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
-                    updateOrderItem(tempId) { it.copy(currentStock = stock.getOrDefault(0.0)) }
+                    updateOrderItem(tempId) { it.copy(currentStock = stock) }
                 }.launchIn(viewModelScope)
         }
     }

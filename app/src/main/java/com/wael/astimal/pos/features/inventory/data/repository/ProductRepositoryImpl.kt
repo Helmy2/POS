@@ -14,7 +14,6 @@ import com.wael.astimal.pos.features.inventory.domain.repository.ProductReposito
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -25,10 +24,10 @@ class ProductRepositoryImpl(
     private val userRepository: UserRepository
 ) : ProductRepository {
 
-    override fun getProducts(query: String): Flow<Result<List<Product>>> {
+    override fun getProducts(query: String): Flow<List<Product>> {
         return productDao.searchProductsWithDetailsFlow(query).map { entities ->
-            runCatching { entities.map { it.toDomain() } }
-        }.catch { emit(Result.failure(it)) }
+            entities.map { it.toDomain() }
+        }
     }
 
 
@@ -106,7 +105,7 @@ class ProductRepositoryImpl(
                 // Fetch all stock entries for this product to zero them out
                 val allStocks =
                     stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
-                val productStocks = allStocks.getOrDefault(emptyList())
+                val productStocks = allStocks
                     .filter { it.product.id.local == product.id.local }
 
                 for (stockItem in productStocks) {

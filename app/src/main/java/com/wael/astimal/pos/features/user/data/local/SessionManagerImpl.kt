@@ -5,7 +5,7 @@ import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
-import com.wael.astimal.pos.core.util.BASE_URL
+import com.wael.astimal.pos.core.util.ApiRoutes
 import com.wael.astimal.pos.features.user.data.remote.dto.LoginRequest
 import com.wael.astimal.pos.features.user.data.remote.dto.LoginResponse
 import io.ktor.client.HttpClient
@@ -115,7 +115,7 @@ class SessionManagerImpl(
         }
 
         val response = runCatching {
-            client.post("${BASE_URL}/login") {
+            client.post(ApiRoutes.LOGIN) {
                 contentType(ContentType.Application.Json)
                 setBody(
                     LoginRequest(email, password)

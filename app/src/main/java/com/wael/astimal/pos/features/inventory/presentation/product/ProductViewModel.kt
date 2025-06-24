@@ -18,6 +18,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
@@ -66,14 +67,23 @@ class ProductViewModel(
     private fun loadDropdownData() {
         viewModelScope.launch {
             combine(
-                categoryRepository.getCategories(""),
-                unitRepository.getUnits(""),
-                storeRepository.getStores("")
+                categoryRepository.getCategories("").catch {
+                    setState(ProductContract.Event.LoadingFinished)
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_categories)))
+                },
+                unitRepository.getUnits("").catch {
+                    setState(ProductContract.Event.LoadingFinished)
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_units)))
+                },
+                storeRepository.getStores("").catch {
+                    setState(ProductContract.Event.LoadingFinished)
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_stores)))
+                }
             ) { categories, units, stores ->
                 ProductContract.DropdownData(
-                    categories.getOrDefault(emptyList()),
-                    units.getOrDefault(emptyList()),
-                    stores.getOrDefault(emptyList()),
+                    categories,
+                    units,
+                    stores,
                 )
             }.collect { dropdownData ->
                 setState(ProductContract.Event.DropdownDataLoaded(dropdownData))
@@ -85,8 +95,13 @@ class ProductViewModel(
     private fun searchProducts(query: String) {
         searchJob?.cancel()
         setState(ProductContract.Event.LoadingStarted)
-        searchJob = productRepository.getProducts(query).debounce(300L).onEach { products ->
-            setState(ProductContract.Event.ProductsLoaded(products.getOrDefault(emptyList())))
+        searchJob = productRepository.getProducts(query).debounce(300L)
+            .catch {
+                setState(ProductContract.Event.LoadingFinished)
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_products)))
+            }
+            .onEach { products ->
+                setState(ProductContract.Event.ProductsLoaded(products))
         }.launchIn(viewModelScope)
     }
 

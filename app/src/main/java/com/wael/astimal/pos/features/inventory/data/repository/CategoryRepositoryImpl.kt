@@ -7,7 +7,6 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 class CategoryRepositoryImpl(
@@ -15,10 +14,10 @@ class CategoryRepositoryImpl(
 ) : CategoryRepository {
 
 
-    override fun getCategories(query: String): Flow<Result<List<Category>>> {
+    override fun getCategories(query: String): Flow<List<Category>> {
         return categoryDao.searchCategoriesFlow(query).map { entities ->
-            runCatching { entities.map { it.toDomain() } }
-        }.catch { emit(Result.failure(it)) }
+            entities.map { it.toDomain() }
+        }
     }
 
     override suspend fun saveCategory(

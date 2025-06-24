@@ -15,6 +15,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -61,9 +62,13 @@ class UnitViewModel(
         searchJob?.cancel()
         setState(UnitContract.Event.LoadingStarted)
         searchJob = unitRepository.getUnits(query)
+            .catch {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_loading_units)))
+                setState(UnitContract.Event.UnitsLoaded(emptyList()))
+            }
             .debounce(300L)
             .onEach { result ->
-                setState(UnitContract.Event.UnitsLoaded(result.getOrDefault(emptyList())))
+                setState(UnitContract.Event.UnitsLoaded(result))
             }
             .launchIn(viewModelScope)
     }

@@ -167,7 +167,7 @@ class DummyDataSeeder(
         list.forEach {
             unitRepository.saveUnit(it)
         }
-        return unitRepository.getUnits("").first().getOrDefault(emptyList())
+        return unitRepository.getUnits("").first()
     }
 
     private suspend fun populateDummyStores(): List<Store> {
@@ -206,7 +206,7 @@ class DummyDataSeeder(
         stores.forEach {
             storeRepository.saveStore(it)
         }
-        return storeRepository.getStores().first().getOrDefault(emptyList())
+        return storeRepository.getStores().first()
     }
 
     private suspend fun populateDummyCategories(): List<Category> {
@@ -235,7 +235,7 @@ class DummyDataSeeder(
             )
         )
         list.forEach { categoryRepository.saveCategory(it) }
-        return categoryRepository.getCategories().first().getOrDefault(emptyList())
+        return categoryRepository.getCategories().first()
     }
 
     private suspend fun populateDummyProducts(
@@ -292,6 +292,6 @@ class DummyDataSeeder(
         list.forEach {
             productRep.saveProduct(it)
         }
-        return productRep.getProducts().first().getOrDefault(emptyList())
+        return productRep.getProducts().first()
     }
 }

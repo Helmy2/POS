@@ -17,6 +17,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
@@ -85,11 +86,15 @@ class StockTransferViewModel(
     }
 
     private fun loadDropdownData() = viewModelScope.launch {
-        combine(
-            storeRepository.getStores(""), productRepository.getProducts("")
-        ) { stores, products ->
+        combine(storeRepository.getStores("").catch {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_stores)))
+            setState(StockTransferContract.Event.LoadingFinished)
+        }, productRepository.getProducts("").catch {
+            snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_products)))
+            setState(StockTransferContract.Event.LoadingFinished)
+        }) { stores, products ->
             StockTransferContract.DropdownData(
-                stores.getOrDefault(emptyList()), products.getOrDefault(emptyList())
+                stores, products
             )
         }.collect { dropdownData ->
             setState(StockTransferContract.Event.DropdownDataLoaded(dropdownData))
@@ -119,10 +124,14 @@ class StockTransferViewModel(
         stockObservationJobs[editorId]?.cancel()
         val fromStoreId = state.value.currentTransferInput.fromStore?.id?.local ?: return
         stockObservationJobs[editorId] =
-            stockRepository.getStockQuantityFlow(fromStoreId, productId).onEach { stock ->
+            stockRepository.getStockQuantityFlow(fromStoreId, productId)
+                .catch {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_stock)))
+                }
+                .onEach { stock ->
                 setState(
                     StockTransferContract.Event.StockForItemSelected(
-                        editorId, stock.getOrDefault(0.0)
+                        editorId, stock
                     )
                 )
             }.launchIn(viewModelScope)

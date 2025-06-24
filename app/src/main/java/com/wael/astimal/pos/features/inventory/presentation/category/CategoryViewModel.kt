@@ -15,6 +15,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.CategoryReposit
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -62,8 +63,12 @@ class CategoryViewModel(
         setState(CategoryContract.Event.LoadingStarted)
         searchJob = categoryRepository.getCategories(query)
             .debounce(300L)
+            .catch {
+                setState(CategoryContract.Event.LoadingFinished)
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_load_categories)))
+            }
             .onEach { categories ->
-                setState(CategoryContract.Event.CategoriesLoaded(categories.getOrDefault(emptyList())))
+                setState(CategoryContract.Event.CategoriesLoaded(categories))
             }
             .launchIn(viewModelScope)
     }

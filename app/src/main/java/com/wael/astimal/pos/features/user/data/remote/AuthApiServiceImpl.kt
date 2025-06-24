@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.user.data.remote
 
-import com.wael.astimal.pos.core.util.BASE_URL
+import com.wael.astimal.pos.core.util.ApiRoutes
 import com.wael.astimal.pos.features.user.data.remote.dto.LoginRequest
 import com.wael.astimal.pos.features.user.data.remote.dto.LoginResponse
 import io.ktor.client.HttpClient
@@ -15,7 +15,7 @@ class AuthApiServiceImpl(
 ) : AuthApiService {
     override suspend fun login(request: LoginRequest): Result<LoginResponse> {
         return try {
-            val response = client.post("$BASE_URL/login") {
+            val response = client.post(ApiRoutes.LOGIN) {
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }

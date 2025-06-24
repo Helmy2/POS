@@ -7,7 +7,6 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 
@@ -15,10 +14,10 @@ class StoreRepositoryImpl(
     private val storeDao: StoreDao,
 ) : StoreRepository {
 
-    override fun getStores(query: String): Flow<Result<List<Store>>> {
+    override fun getStores(query: String): Flow<List<Store>> {
         return storeDao.searchStoresFlow(query).map { entities ->
-            runCatching { entities.map { it.toDomain() } }
-        }.catch { emit(Result.failure(it)) }
+            entities.map { it.toDomain() }
+        }
     }
 
     override suspend fun getStoreByLocalId(localId: Long): Result<Store> {
