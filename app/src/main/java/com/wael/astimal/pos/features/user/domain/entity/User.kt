@@ -5,13 +5,13 @@ import com.wael.astimal.pos.core.domain.entity.LocalizedString
 
 data class User(
     val id: Long,
-    val localizedName: LocalizedString,
+    val name: LocalizedString,
     val email: String,
     val phone: String,
     val userType: UserType,
     val isSynced: Boolean = false,
     val lastModified: Long,
-    val name: String,
+    val userName: String,
     val avatarUrl: String?,
 ) {
     val isEmployee: Boolean get() = userType == UserType.EMPLOYEE

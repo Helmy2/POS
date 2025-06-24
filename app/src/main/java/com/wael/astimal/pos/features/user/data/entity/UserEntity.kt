@@ -25,8 +25,8 @@ data class UserEntity(
 fun UserEntity.toDomain(): User {
     return User(
         id = id,
-        name = name,
-        localizedName = LocalizedString(arName ?: "", enName ?: ""),
+        userName = name,
+        name = LocalizedString(arName ?: "", enName ?: ""),
         email = email ?: "",
         phone = phone ?: "",
         userType = userType,

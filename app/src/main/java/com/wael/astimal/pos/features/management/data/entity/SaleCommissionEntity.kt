@@ -38,6 +38,7 @@ data class SaleCommissionEntity(
     val employeeId: Long,
     val sourceTransactionId: Long,
     val sourceTransactionType: SourceTransactionType,
+    val sourceInvoiceNumber: String,
     val commissionAmount: Double,
 ) : ItemEntity
 
@@ -67,8 +68,9 @@ data class EmployeeAccountTransactionEntity(
     val createdByEmployeeId: Long,
     val type: EmployeeTransactionType,
     val amount: Double,
-    @ColumnInfo(index = true) val relatedCommissionId: Long?,
     val notes: String?,
+    @ColumnInfo(index = true) val relatedCommissionId: Long?,
+
     @PrimaryKey(autoGenerate = true)
     override val localId: Long,
     override val serverId: Long?,
@@ -95,7 +97,14 @@ data class EmployeeAccountTransactionWithDetailsEntity(
         entityColumn = "id",
         entity = UserEntity::class
     )
-    val employee: UserEntity?
+    val employee: UserEntity?,
+
+    @Relation(
+        parentColumn = "relatedCommissionId",
+        entityColumn = "localId",
+        entity = SaleCommissionEntity::class
+    )
+    val saleCommission: SaleCommissionEntity?
 )
 
 fun SaleCommissionEntity.toDomain(): SaleCommission {
@@ -107,7 +116,8 @@ fun SaleCommissionEntity.toDomain(): SaleCommission {
         commissionAmount = commissionAmount,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        isSynced = isSynced
+        isSynced = isSynced,
+        sourceInvoiceNumber = sourceInvoiceNumber,
     )
 }
 
@@ -118,7 +128,7 @@ fun EmployeeAccountTransactionWithDetailsEntity.toDomain(): EmployeeAccountTrans
         createdByEmployee = createdByEmployee?.toDomain() ?: throw NullPointerException(),
         type = transactionEntity.type,
         amount = transactionEntity.amount,
-        relatedCommissionId = transactionEntity.relatedCommissionId,
+        relatedCommission = saleCommission?.toDomain(),
         notes = transactionEntity.notes,
         createdAt = transactionEntity.createdAt,
         isSynced = transactionEntity.isSynced,

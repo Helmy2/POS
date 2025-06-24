@@ -31,7 +31,7 @@ class LoginViewModel(
         viewModelScope.launch {
             userRepository.login(state.value.email, state.value.password).fold(
                 onSuccess = {
-                    setState(LoginContract.Event.LoginSuccess(it.name))
+                    setState(LoginContract.Event.LoginSuccess(it.userName))
                     navigationController.navigate(
                         destination = Destination.Dashboard,
                         popUpToRoute = Destination.Login,

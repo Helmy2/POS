@@ -100,7 +100,8 @@ class ReturnAmountLogic(
             sourceTransactionId = returnId,
             sourceTransactionType = SourceTransactionType.SALE_RETURN,
             commissionAmount = commissionAmount,
-            serverId = null
+            serverId = null,
+            sourceInvoiceNumber = invoiceNumber
         )
         val commissionId = employeeFinancesDao.insertSaleCommission(commission)
 
@@ -111,14 +112,14 @@ class ReturnAmountLogic(
             type = EmployeeTransactionType.COMMISSION,
             amount = commissionAmount, // Already negative
             relatedCommissionId = commissionId,
-            notes = "Commission for return #$invoiceNumber",
+            notes = "",
             updatedAt = Clock.now(),
             createdAt = Clock.now(),
             localId = 0L,
             isSynced = false,
             isDeletedLocally = false
         )
-        employeeFinancesDao.insertEmployeeTransaction(commissionTransaction)
+        employeeFinancesDao.insertOrUpdateEmployeeTransaction(commissionTransaction)
     }
 
     private suspend fun revertCommissions(
@@ -131,7 +132,7 @@ class ReturnAmountLogic(
             SourceTransactionType.SALE_RETURN
         )
         oldCommissions.forEach { commission ->
-            employeeFinancesDao.insertEmployeeTransaction(
+            employeeFinancesDao.insertOrUpdateEmployeeTransaction(
                 EmployeeAccountTransactionEntity(
                     serverId = null,
                     employeeId = commission.employeeId,

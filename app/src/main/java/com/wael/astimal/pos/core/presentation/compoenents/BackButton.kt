@@ -25,7 +25,7 @@ fun BackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 LayoutDirection.Ltr -> Icons.Default.ChevronLeft
                 LayoutDirection.Rtl -> Icons.Default.ChevronRight
             },
-            contentDescription = stringResource(R.string.back_button)
+            contentDescription = stringResource(R.string.back_button_icon)
         )
     }
 }

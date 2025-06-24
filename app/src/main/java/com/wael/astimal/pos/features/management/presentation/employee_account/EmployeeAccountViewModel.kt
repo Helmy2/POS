@@ -1,226 +1,122 @@
 package com.wael.astimal.pos.features.management.presentation.employee_account
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
-import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
+import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class EmployeeAccountViewModel(
     private val employeeAccountRepository: EmployeeAccountRepository,
     private val userRepository: UserRepository,
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(EmployeeAccountState())
-    val state: StateFlow<EmployeeAccountState> = _state.asStateFlow()
-
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
-    private var transactions: List<EmployeeAccountTransaction> = emptyList()
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController
+) : BaseViewModel<EmployeeAccountContract.State, EmployeeAccountContract.Event, Nothing>(
+    reducer = EmployeeAccountReducer(), initialState = EmployeeAccountContract.State()
+) {
 
     init {
-        viewModelScope.launch {
-            _state.update { it.copy(currentUser = userRepository.getCurrentUser()) }
-        }
-        viewModelScope.launch {
-            userRepository.getEmployeesFlow().catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_employees))
-            }.collect { employees ->
-                _state.update { it.copy(employees = employees) }
-            }
-        }
-        viewModelScope.launch {
-            employeeAccountRepository.getAllTransaction().catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_transactione))
-            }.collect { result ->
-                transactions = result
-                _state.update { it.copy(transactions = result) }
-            }
-        }
+        processEvent(EmployeeAccountContract.Event.LoadInitialData)
     }
 
-    fun onEvent(event: EmployeeAccountEvent) {
+    // A derived state flow for the UI that automatically filters based on the search query
+    val filteredTransactionsState: StateFlow<List<EmployeeAccountTransaction>> = combine(
+        state, employeeAccountRepository.getAllTransaction()
+    ) { state, allTransactions ->
+        setState(EmployeeAccountContract.Event.TransactionsLoaded(allTransactions))
+        if (state.searchQuery.isBlank()) {
+            allTransactions
+        } else {
+            allTransactions.filter { it.matchesQuery(state.searchQuery) }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+
+    override fun handleEvent(event: EmployeeAccountContract.Event) {
         when (event) {
-            is EmployeeAccountEvent.SelectTransactionType -> _state.update { it.copy(transactionType = event.type) }
-            is EmployeeAccountEvent.UpdateAmount -> _state.update { it.copy(amount = event.amount) }
-            is EmployeeAccountEvent.UpdateNotes -> _state.update { it.copy(notes = event.notes) }
-            is EmployeeAccountEvent.OpenNewTransaction -> _state.update {
-                it.copy(
-                    showEditDialog = true, selectedEmployee = null
-                )
+            is EmployeeAccountContract.Event.LoadInitialData -> loadInitialData()
+            is EmployeeAccountContract.Event.SaveChangesClicked -> saveTransaction()
+            is EmployeeAccountContract.Event.DeleteTransactionClicked -> deleteTransaction(event.transaction)
+            is EmployeeAccountContract.Event.NavigateBack -> {
+                viewModelScope.launch { navigationController.navigateBack() }
             }
 
-            is EmployeeAccountEvent.EditTransactionClicked -> {
-                _state.update {
-                    it.copy(
-                        selectedTransaction = event.transaction,
-                        showEditDialog = true,
-                        notes = event.transaction.notes ?: "",
-                        amount = event.transaction.amount.toString(),
-                        selectedEmployee = event.transaction.employee,
-                        transactionType = event.transaction.type
-                    )
-                }
-            }
-
-            is EmployeeAccountEvent.DeleteTransactionClicked -> deleteTransaction(event.transaction)
-            is EmployeeAccountEvent.SaveTransaction -> addTransaction()
-            is EmployeeAccountEvent.DismissEditDialog -> {
-                _state.update { it.copy(showEditDialog = false, selectedTransaction = null) }
-            }
-
-            is EmployeeAccountEvent.SelectEmployee -> {
-                _state.update { it.copy(selectedEmployee = event.employee) }
-            }
-
-            is EmployeeAccountEvent.UpdateQuery -> {
-                _state.update { it.copy(query = event.query) }
-                filterByQuery(query = event.query)
-            }
+            else -> setState(event)
         }
     }
 
-    private fun filterByQuery(query: String) {
-        _state.update {
-            it.copy(
-                transactions = transactions.filter { transaction ->
-                    transaction.employee.localizedName.enName?.contains(
-                        query,
-                        ignoreCase = true
-                    ) == true ||
-                            transaction.employee.localizedName.arName?.contains(
-                                query,
-                                ignoreCase = true
-                            ) == true
-                            || transaction.createdByEmployee.localizedName.enName?.contains(
-                        query,
-                        ignoreCase = true
-                    ) == true ||
-                            transaction.createdByEmployee.localizedName.arName?.contains(
-                                query,
-                                ignoreCase = true
-                            ) == true ||
-                            transaction.notes?.contains(query, ignoreCase = true) == true ||
-                            transaction.type.name.contains(query, ignoreCase = true)
-                }
-            )
-        }
-    }
-
-    private fun addTransaction() {
+    private fun loadInitialData() {
+        setState(EmployeeAccountContract.Event.LoadInitialData)
         viewModelScope.launch {
-            // Admins can add transactions for any selected employee.
-            if (_state.value.currentUser?.isAdmin != true) {
-                viewModelScope.launch { _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_admin_only)) }
+            setState(EmployeeAccountContract.Event.UserLoaded(userRepository.getCurrentUser()))
+        }
+        viewModelScope.launch {
+            userRepository.getEmployeesFlow().collect { employees ->
+                setState(EmployeeAccountContract.Event.DropdownDataLoaded(employees))
+            }
+        }
+    }
+
+    private fun saveTransaction() {
+        viewModelScope.launch {
+            val dialogState = state.value.dialogState
+            val currentUser = state.value.currentUser
+
+            if (currentUser == null || !state.value.canUserEdit) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_cannot_edit)))
                 return@launch
             }
 
-            val currentState = _state.value
-            val selectedEmployee = currentState.selectedEmployee
-            val currentUser = _state.value.currentUser
-            val amount = currentState.amount.toDoubleOrNull()
+            val employee = dialogState.selectedEmployee
+            val amount = dialogState.amount.toDoubleOrNull()
 
-            if (currentUser == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
-                return@launch
-            }
-            if (selectedEmployee == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.please_select_an_employee))
-                return@launch
-            }
-            if (amount == null || amount <= 0) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.invalid_amount))
+            if (employee == null || amount == null || amount == 0.0) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
 
-            val newTransaction = _state.value.selectedTransaction?.copy(
-                employee = selectedEmployee,
+            val transactionToSave = EmployeeAccountTransaction(
+                id = dialogState.selectedTransaction?.id ?: Id.new,
+                employee = employee,
                 createdByEmployee = currentUser,
-                type = currentState.transactionType,
                 amount = amount,
-                notes = currentState.notes,
-                isSynced = false
-            ).toEntity() ?: EmployeeAccountTransactionEntity(
-                employeeId = selectedEmployee.id,
-                createdByEmployeeId = currentUser.id,
-                type = currentState.transactionType,
-                amount = amount,
-                relatedCommissionId = null,
-                notes = currentState.notes,
-                localId = 0L,
-                serverId = null,
-                isSynced = false,
-                isDeletedLocally = false,
+                type = dialogState.transactionType,
+                notes = dialogState.notes,
+                createdAt = dialogState.selectedTransaction?.createdAt ?: Clock.now(),
+                relatedCommission = dialogState.selectedTransaction?.relatedCommission
+            )
 
-                )
-            saveTransaction(newTransaction)
-        }
-    }
+            val result = employeeAccountRepository.saveManualPayment(transactionToSave)
 
-    private fun saveTransaction(transaction: EmployeeAccountTransactionEntity) {
-        viewModelScope.launch {
-            _state.update { it.copy(isSaving = true) }
-            val result = if (transaction.localId == 0L) {
-                employeeAccountRepository.addManualPayment(transaction)
-            } else {
-                employeeAccountRepository.updateManualPayment(transaction)
+            result.onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.transaction_saved_successfully)))
+                setState(EmployeeAccountContract.Event.SaveSucceeded)
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_saving_transaction)))
             }
-
-            result.fold(onSuccess = {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_saved_successfully))
-                _state.update {
-                    it.copy(
-                        isSaving = false,
-                        showEditDialog = false,
-                        selectedTransaction = null,
-                        amount = "",
-                        notes = "",
-                        loading = false,
-                    )
-                }
-            }, onFailure = {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_saving_transaction))
-                _state.update { it.copy(isSaving = false) }
-            })
         }
     }
 
     private fun deleteTransaction(transaction: EmployeeAccountTransaction) {
         viewModelScope.launch {
-            val result = employeeAccountRepository.deleteManualPayment(transaction.id.local)
-            if (result.isSuccess) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.transaction_deleted_successfully))
-            } else {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_transaction))
+            employeeAccountRepository.deleteManualPayment(transaction.id.local).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.transaction_deleted_successfully)))
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_deleting_transaction)))
             }
         }
     }
-}
-
-private fun EmployeeAccountTransaction?.toEntity(): EmployeeAccountTransactionEntity? {
-    return if (this == null) null else EmployeeAccountTransactionEntity(
-        employeeId = employee.id,
-        createdByEmployeeId = createdByEmployee.id,
-        type = type,
-        amount = amount,
-        relatedCommissionId = relatedCommissionId,
-        notes = notes,
-        localId = id.local,
-        serverId = id.server,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        isSynced = isSynced,
-        isDeletedLocally = false
-    )
 }

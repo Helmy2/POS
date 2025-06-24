@@ -200,7 +200,7 @@ fun BusinessPartnerDetailView(
         Text(
             stringResource(
                 R.string.responsible_employee,
-                partner.responsibleEmployee.localizedName.displayName(language)
+                partner.responsibleEmployee.name.displayName(language)
             )
         )
 

@@ -101,7 +101,7 @@ fun SearchScreen(
                 add(
                     FabAction(
                         icon = Icons.Default.FileCopy,
-                        label = context.getString(R.string.new_),
+                        label = context.getString(R.string.open_new),
                         onClick = onNew
                     )
                 )
@@ -243,7 +243,7 @@ fun SearchScreen(
                 add(
                     FabAction(
                         icon = Icons.Default.FileCopy,
-                        label = context.getString(R.string.new_),
+                        label = context.getString(R.string.open_new),
                         onClick = onNew
                     )
                 )

@@ -116,7 +116,7 @@ fun SalesReturnForm(
             items = state.availableEmployees,
             selectedItemId = returnInput.selectedEmployeeId,
             onItemSelected = { onEvent(SalesReturnEvent.SelectEmployee(it.id)) },
-            itemToDisplayString = { it.localizedName.displayName(currentLanguage) },
+            itemToDisplayString = { it.name.displayName(currentLanguage) },
             itemToId = { it.id },
             enabled = state.currentUser?.isAdmin ?: false,
             canClearSelection = false,

@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import androidx.room.Update
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionWithDetailsEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
@@ -20,7 +19,7 @@ interface EmployeeFinancesDao {
     suspend fun insertSaleCommission(commission: SaleCommissionEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertEmployeeTransaction(transaction: EmployeeAccountTransactionEntity): Long
+    suspend fun insertOrUpdateEmployeeTransaction(transaction: EmployeeAccountTransactionEntity): Long
 
     @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId")
     fun getTransactionsForEmployee(employeeId: Long): Flow<List<EmployeeAccountTransactionEntity>>
@@ -37,9 +36,6 @@ interface EmployeeFinancesDao {
 
     @Query("DELETE FROM employee_sale_commissions WHERE sourceTransactionId = :orderId AND sourceTransactionType = :type")
     suspend fun deleteAllCommissionsBySource(orderId: Long, type: SourceTransactionType)
-
-    @Update
-    suspend fun updateEmployeeTransaction(transaction: EmployeeAccountTransactionEntity)
 
     @Query("DELETE FROM employee_account_transactions WHERE localId = :localId")
     suspend fun deleteEmployeeTransaction(localId: Long)

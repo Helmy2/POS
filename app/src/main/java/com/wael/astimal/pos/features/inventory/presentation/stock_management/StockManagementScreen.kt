@@ -55,31 +55,30 @@ fun StockManagementScreen(
     state: StockManagementContract.State,
     onEvent: (StockManagementContract.Event) -> Unit,
 ) {
-    if (state.showAdjustmentDialog) {
-        StockAdjustmentDialog(state = state, onEvent = onEvent)
-    }
-
-    Screen(topBar = {
-        SearchBarWithBackButton(
-            query = state.query,
-            onBack = { onEvent(StockManagementContract.Event.NavigateBack) },
-            onQueryChange = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
-            onSearch = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
-            modifier = Modifier.statusBarsPadding()
-        )
-    }, floatingActionButton = {
-        if (state.canUserEdit) {
-            FloatingActionButton(
-                onClick = { onEvent(StockManagementContract.Event.ShowAdjustmentDialog) },
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.adjust_stock),
-                )
+    Screen(
+        topBar = {
+            SearchBarWithBackButton(
+                query = state.query,
+                onBack = { onEvent(StockManagementContract.Event.NavigateBack) },
+                onQueryChange = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
+                onSearch = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
+                modifier = Modifier.statusBarsPadding()
+            )
+        },
+        floatingActionButton = {
+            if (state.canUserEdit) {
+                FloatingActionButton(
+                    onClick = { onEvent(StockManagementContract.Event.ShowAdjustmentDialog) },
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.adjust_stock),
+                    )
+                }
             }
-        }
-    }) {
+        },
+    ) {
         Box(
             modifier = Modifier
                 .padding(8.dp)
@@ -103,9 +102,14 @@ fun StockManagementScreen(
                                         stockItem.store
                                     )
                                 )
-                            })
+                            }, enabled = state.canUserEdit
+                        )
                     }
                 }
+            }
+
+            if (state.showAdjustmentDialog) {
+                StockAdjustmentDialog(state = state, onEvent = onEvent)
             }
         }
     }
@@ -114,7 +118,7 @@ fun StockManagementScreen(
 
 @Composable
 fun StockItemCard(
-    productBundle: StockManagementContract.ProductBundle, onClick: () -> Unit
+    productBundle: StockManagementContract.ProductBundle, onClick: () -> Unit, enabled: Boolean
 ) {
     val language = LocalAppLocale.current
 
@@ -136,6 +140,7 @@ fun StockItemCard(
                 }
                 Spacer(Modifier.weight(1f))
                 Card(
+                    enabled = enabled,
                     onClick = onClick,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -180,8 +185,6 @@ fun StockAdjustmentDialog(
 ) {
     val context = LocalContext.current
     val language = LocalAppLocale.current
-    if (!state.showAdjustmentDialog) return
-
     AlertDialog(
         onDismissRequest = { onEvent(StockManagementContract.Event.DismissAdjustmentDialog) },
         title = { Text(stringResource(R.string.adjust_stock)) },
@@ -268,9 +271,9 @@ fun StockAdjustmentDialog(
         dismissButton = {
             TextButton(
                 onClick = { onEvent(StockManagementContract.Event.DismissAdjustmentDialog) },
-                enabled = state.canUserEdit
             ) {
                 Text(stringResource(R.string.cancel))
             }
-        })
+        },
+    )
 }

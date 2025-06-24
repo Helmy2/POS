@@ -52,6 +52,12 @@ fun rememberLocalizedContext(language: Language): Context {
             setLocale(locale)
             setLayoutDirection(locale)
         }
+
+        // TODO remove
+        // Update the context's resources with the new configuration
+        val resources = context.resources
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+
         context.createConfigurationContext(configuration)
     }
 }

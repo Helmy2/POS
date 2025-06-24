@@ -4,12 +4,11 @@ package com.wael.astimal.pos.features.management.presentation.employee_account
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -37,63 +36,58 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
-import com.wael.astimal.pos.core.presentation.compoenents.TextInputField
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
-import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun EmployeeAccountRoute(
-    onBack: () -> Unit,
     viewModel: EmployeeAccountViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val filteredTransactions by viewModel.filteredTransactionsState.collectAsStateWithLifecycle()
 
     EmployeeAccountScreen(
-        onBack = onBack,
         state = state,
-        onEvent = viewModel::onEvent,
-        eventFlow = viewModel.eventFlow
+        filteredTransactions = filteredTransactions,
+        onEvent = viewModel::processEvent,
     )
 }
 
 @Composable
 fun EmployeeAccountScreen(
-    onBack: () -> Unit,
-    state: EmployeeAccountState,
-    onEvent: (EmployeeAccountEvent) -> Unit,
-    eventFlow: SharedFlow<UiEvent>,
+    state: EmployeeAccountContract.State,
+    filteredTransactions: List<EmployeeAccountTransaction>,
+    onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
+    if (state.dialogState.show) {
+        EditTransactionDialog(state = state, onEvent = onEvent)
+    }
+
     Screen(
-        loading = state.loading, eventFlow = eventFlow,
         topBar = {
             SearchBarWithBackButton(
-                query = state.query,
-                onBack = onBack,
-                onQueryChange = { onEvent(EmployeeAccountEvent.UpdateQuery(it)) },
-                onSearch = { onEvent(EmployeeAccountEvent.UpdateQuery(it)) },
+                query = state.searchQuery,
+                onBack = { onEvent(EmployeeAccountContract.Event.NavigateBack) },
+                onQueryChange = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
+                onSearch = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
+                modifier = Modifier.statusBarsPadding()
             )
         },
         floatingActionButton = {
-            AnimatedVisibility(
-                state.canEdit
-            ) {
-                FloatingActionButton(
-                    onClick = { onEvent(EmployeeAccountEvent.OpenNewTransaction) },
-                ) {
+            AnimatedVisibility(state.canUserEdit) {
+                FloatingActionButton(onClick = { onEvent(EmployeeAccountContract.Event.AddTransactionClicked) }) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add_partner),
+                        contentDescription = stringResource(R.string.add_transaction),
                     )
                 }
             }
@@ -104,101 +98,112 @@ fun EmployeeAccountScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             TransactionList(
-                transactions = state.transactions,
-                canEdit = state.canEdit,
+                transactions = filteredTransactions,
+                canEdit = state.canUserEdit,
                 onEvent = onEvent
             )
         }
-    }
-
-    if (state.showEditDialog) {
-        EditTransactionDialog(
-            state, onEvent
-        )
     }
 }
 
 @Composable
 fun EditTransactionDialog(
-    state: EmployeeAccountState, onEvent: (EmployeeAccountEvent) -> Unit
+    state: EmployeeAccountContract.State, onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
     val context = LocalContext.current
     val language = LocalAppLocale.current
-    Dialog(onDismissRequest = {
-        onEvent(EmployeeAccountEvent.DismissEditDialog)
-    }) {
-        Card {
-            FlowRow(
-                verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(16.dp)
-            ) {
+
+    AlertDialog(
+        onDismissRequest = { onEvent(EmployeeAccountContract.Event.DismissDialog) },
+        title = {
+            val titleRes =
+                if (state.dialogState.selectedTransaction == null) R.string.new_transaction else R.string.edit_transaction
+            Text(stringResource(titleRes))
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.employee),
-                    items = state.employees,
-                    selectedItemId = state.selectedEmployee?.id,
+                    items = state.employeesForDropdown,
+                    selectedItemId = state.dialogState.selectedEmployee?.id,
                     onItemSelected = {
-                        it?.let {
-                            onEvent(
-                                EmployeeAccountEvent.SelectEmployee(it)
+                        onEvent(
+                            EmployeeAccountContract.Event.DialogEmployeeSelected(
+                                it
                             )
-                        }
+                        )
                     },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id },
-                    canClearSelection = true
+                    enabled = state.canUserEdit
                 )
 
                 CustomExposedDropdownMenu(
                     label = stringResource(R.string.transaction_type),
                     items = EmployeeTransactionType.entries,
-                    selectedItemId = state.transactionType.ordinal.toLong(),
+                    selectedItemId = state.dialogState.transactionType.ordinal.toLong(),
                     onItemSelected = {
                         onEvent(
-                            EmployeeAccountEvent.SelectTransactionType(
-                                it ?: EmployeeTransactionType.SALARY
+                            EmployeeAccountContract.Event.DialogTransactionTypeSelected(
+                                it
                             )
                         )
                     },
                     itemToDisplayString = { context.getString(it.getStringResId()) },
                     itemToId = { it.ordinal.toLong() },
-                    canClearSelection = true
+                    enabled = state.canUserEdit
                 )
-                TextInputField(
-                    value = state.amount,
-                    onValueChange = { onEvent(EmployeeAccountEvent.UpdateAmount(it)) },
-                    label = stringResource(R.string.amount)
+                LabeledTextField(
+                    value = state.dialogState.amount,
+                    onValueChange = { onEvent(EmployeeAccountContract.Event.DialogAmountChanged(it)) },
+                    label = stringResource(R.string.amount),
+                    enabled = state.canUserEdit
                 )
-                TextInputField(
-                    value = state.notes,
-                    onValueChange = { onEvent(EmployeeAccountEvent.UpdateNotes(it)) },
-                    label = stringResource(R.string.notes_optional)
+                LabeledTextField(
+                    value = state.dialogState.notes,
+                    onValueChange = { onEvent(EmployeeAccountContract.Event.DialogNotesChanged(it)) },
+                    label = stringResource(R.string.notes_optional),
+                    enabled = state.canUserEdit
                 )
-                Button(
-                    onClick = { onEvent(EmployeeAccountEvent.SaveTransaction) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.save_payment))
-                }
             }
-        }
-    }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onEvent(EmployeeAccountContract.Event.SaveChangesClicked) },
+                enabled = state.canUserEdit
+            ) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onEvent(EmployeeAccountContract.Event.DismissDialog) }) {
+                Text(stringResource(R.string.cancel))
+            }
+        })
 }
 
 @Composable
 fun TransactionList(
     transactions: List<EmployeeAccountTransaction>,
     canEdit: Boolean,
-    onEvent: (EmployeeAccountEvent) -> Unit
+    onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(top = 16.dp)
     ) {
-        items(transactions) { transaction ->
+        items(transactions, key = { it.id.local }) { transaction ->
             TransactionItem(
                 transaction = transaction,
                 canEdit = canEdit,
-                onEdit = { onEvent(EmployeeAccountEvent.EditTransactionClicked(transaction)) },
-                onDelete = { onEvent(EmployeeAccountEvent.DeleteTransactionClicked(transaction)) })
+                onEdit = { onEvent(EmployeeAccountContract.Event.EditTransactionClicked(transaction)) },
+                onDelete = {
+                    onEvent(
+                        EmployeeAccountContract.Event.DeleteTransactionClicked(
+                            transaction
+                        )
+                    )
+                })
         }
     }
 }
@@ -214,15 +219,12 @@ fun TransactionItem(
     val language = LocalAppLocale.current
     Card {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            transaction.employee?.localizedName?.displayName(language)?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
+            Text(
+                text = transaction.employee.name.displayName(language),
+                style = MaterialTheme.typography.bodyLarge,
+            )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -239,7 +241,7 @@ fun TransactionItem(
                     color = if (transaction.amount >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
                 Spacer(Modifier.weight(1f))
-                AnimatedVisibility(canEdit) {
+                AnimatedVisibility(canEdit && transaction.relatedCommission == null) {
                     Row {
                         IconButton(onClick = onEdit) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
@@ -254,7 +256,16 @@ fun TransactionItem(
                     }
                 }
             }
-            transaction.notes.takeIf { !it.isNullOrBlank() }?.let {
+            transaction.relatedCommission?.let { commission ->
+                Text(
+                    text = stringResource(commission.sourceTransactionType.getStringResId()) + " " + stringResource(
+                        R.string.for_invoice, commission.sourceInvoiceNumber
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            transaction.notes?.takeIf { it.isNotBlank() }?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
@@ -268,7 +279,7 @@ fun TransactionItem(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text(stringResource(R.string.confirm_delete)) },
-            text = { Text("Are you sure you want to delete this transaction?") },
+            text = { Text(stringResource(R.string.are_you_sure_you_want_to_delete_this_transaction)) },
             confirmButton = {
                 TextButton(
                     onClick = {
