@@ -7,18 +7,19 @@ import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
-import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
+import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 class PurchaseRepositoryImpl(
     private val database: AppDatabase,
@@ -39,8 +40,9 @@ class PurchaseRepositoryImpl(
     }
 
     private suspend fun generateNextInvoiceNumber(): String {
+        val random = Random.nextInt(1, 999999)
         val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val prefix = "INV-PUR-$today-"
+        val prefix = "INV-PUR-$today-$random"
         val lastInvoice = purchaseDao.getLastInvoiceNumber("$prefix%")
         val nextSeq = if (lastInvoice == null) {
             1
@@ -51,18 +53,19 @@ class PurchaseRepositoryImpl(
     }
 
     override suspend fun addPurchase(
-        purchase: PurchaseEntity,
-        items: List<PurchaseProductEntity>
+        purchase: PurchaseOrder,
     ): Result<PurchaseOrder> {
         return try {
+            val (purchaseEntity, items) = purchase.toEntity()
+
             var insertedId: Long = -1
             database.withTransaction {
-                val employeeId = purchase.employeeLocalId
+                val employeeId = purchaseEntity.employeeLocalId
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Could not find an assigned store for the employee.")
 
                 val newInvoiceNumber = generateNextInvoiceNumber()
-                val purchaseWithInvoice = purchase.copy(invoiceNumber = newInvoiceNumber)
+                val purchaseWithInvoice = purchaseEntity.copy(invoiceNumber = newInvoiceNumber)
 
                 insertedId = purchaseDao.insertPurchaseWithItems(purchaseWithInvoice, items)
 
@@ -84,15 +87,16 @@ class PurchaseRepositoryImpl(
     }
 
     override suspend fun updatePurchase(
-        purchase: PurchaseEntity,
-        items: List<PurchaseProductEntity>
+        purchase: PurchaseOrder
     ): Result<PurchaseOrder> {
         return try {
-            val purchaseId = purchase.localId
+            val (purchaseEntity, items) = purchase.toEntity()
+
+            val purchaseId = purchaseEntity.localId
             database.withTransaction {
                 val oldPurchase = purchaseDao.getPurchaseWithDetails(purchaseId)
                     ?: throw NoSuchElementException("Original purchase not found")
-                val employeeId = purchase.employeeLocalId
+                val employeeId = purchaseEntity.employeeLocalId
                 val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
                     ?: throw Exception("Store not found.")
 
@@ -113,7 +117,7 @@ class PurchaseRepositoryImpl(
 
                 // Update purchase and items
                 val entityToUpdate =
-                    purchase.copy(isSynced = false, updatedAt = Clock.now())
+                    purchaseEntity.copy(isSynced = false, updatedAt = Clock.now())
                 purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
 
                 // Apply new adjustments
@@ -128,7 +132,8 @@ class PurchaseRepositoryImpl(
                 // Re-add new ledger entries
                 addPurchaseLedgerEntries(entityToUpdate, purchaseId)
             }
-            val updatedPurchase = getPurchaseDetails(purchase.localId) ?: return Result.failure(
+            val updatedPurchase =
+                getPurchaseDetails(purchaseEntity.localId) ?: return Result.failure(
                 IllegalStateException("Failed to retrieve purchase after update.")
             )
             Result.success(updatedPurchase)

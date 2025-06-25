@@ -29,7 +29,8 @@ fun UserEntity.toDomain(): User {
         name = LocalizedString(arName ?: "", enName ?: ""),
         email = email ?: "",
         phone = phone ?: "",
-        userType = userType,
+        // TODO change to userType
+        userType = UserType.EMPLOYEE,
         isSynced = isSynced,
         lastModified = lastModified,
         avatarUrl = avatarUrl

@@ -81,7 +81,7 @@ fun <T> CustomExposedDropdownMenu(
     currentSelection: String,
     items: List<T>,
     onItemSelected: (T) -> Unit,
-    displayedItemText: (T) -> String,
+    itemToDisplayString: (T) -> String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
@@ -108,7 +108,7 @@ fun <T> CustomExposedDropdownMenu(
             items.forEach { item ->
                 DropdownMenuItem(
                     text = {
-                        Text(displayedItemText(item), modifier = Modifier.padding(8.dp))
+                        Text(itemToDisplayString(item), modifier = Modifier.padding(8.dp))
                     },
                     onClick = {
                         onItemSelected(item)

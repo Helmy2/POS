@@ -3,6 +3,8 @@ package com.wael.astimal.pos.features.management.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
+import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 data class PurchaseOrder(
@@ -23,9 +25,45 @@ data class PurchaseOrder(
 
 data class PurchaseOrderItem(
     val id: Id,
-    val purchaseLocalId: Long,
     val product: Product,
     val quantity: Double,
     val purchasePrice: Double,
     val itemTotalPrice: Double
 )
+
+fun PurchaseOrder.matchesQuery(query: String): Boolean {
+    return invoiceNumber.contains(
+        query, ignoreCase = true
+    ) || supplier.name.contains(query) || user.name.contains(query) || items.any {
+        it.product.name.contains(
+            query
+        )
+    }
+}
+
+fun PurchaseOrder.toEntity(): Pair<PurchaseEntity, List<PurchaseProductEntity>> {
+    return PurchaseEntity(
+        localId = id.local,
+        serverId = id.server,
+        invoiceNumber = invoiceNumber,
+        employeeLocalId = user.id,
+        amountPaid = amountPaid,
+        amountRemaining = amountRemaining,
+        totalAmount = totalAmount,
+        paymentType = paymentType,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        isSynced = isSynced,
+        supplierLocalId = supplier.supplierId!!.local
+    ) to items.map { item ->
+        PurchaseProductEntity(
+            localId = item.id.local,
+            serverId = item.id.server,
+            quantity = item.quantity,
+            purchasePrice = item.purchasePrice,
+            itemTotalPrice = item.itemTotalPrice,
+            productLocalId = item.product.id.local,
+            purchaseLocalId = id.local
+        )
+    }
+}

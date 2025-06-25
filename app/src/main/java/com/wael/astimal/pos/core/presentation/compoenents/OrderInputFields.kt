@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,7 +43,7 @@ fun OrderInputFields(
     onUpdateAmountPaid: (String) -> Unit,
     onAddNewItemToOrder: () -> Unit,
     availableProducts: List<Product>,
-    onSelectPaymentType: (PaymentType?) -> Unit,
+    onSelectPaymentType: (PaymentType) -> Unit,
     onItemSelected: (tempEditorId: String, product: Product?) -> Unit,
     onRemoveItemFromOrder: (tempEditorId: String) -> Unit,
     onUpdateItemMaxUnitQuantity: (tempEditorId: String, quantity: String) -> Unit,
@@ -49,9 +51,11 @@ fun OrderInputFields(
     onUpdateItemUnit: (tempEditorId: String, isMaxUnitSelected: Boolean) -> Unit,
     onUpdateItemMaxUnitPrice: (tempEditorId: String, price: String) -> Unit,
     onUpdateItemMinUnitPrice: (tempEditorId: String, price: String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     Column(
+        modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -90,20 +94,21 @@ fun OrderInputFields(
             canClearSelection = false
         )
 
-        TextInputField(
+        LabeledTextField(
             value = amountPaid,
             onValueChange = onUpdateAmountPaid,
             label = stringResource(R.string.amount_paid),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done
             ),
+            enabled = true
         )
     }
 }
 
 
 @Composable
-private fun OrderItemRow(
+fun OrderItemRow(
     item: EditableItem,
     availableProducts: List<Product>,
     onUpdateSelectedItem: (tempEditorId: String, product: Product?) -> Unit,
@@ -113,31 +118,42 @@ private fun OrderItemRow(
     onUpdateItemUnit: (tempEditorId: String, isMaxUnitSelected: Boolean) -> Unit,
     onUpdateItemMaxUnitPrice: (tempEditorId: String, price: String) -> Unit,
     onUpdateItemMinUnitPrice: (tempEditorId: String, price: String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val language = LocalAppLocale.current
     Column(
+        modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(horizontal = 24.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.Center,
+        ) {
             Box(modifier = Modifier.weight(1f)) {
                 CustomExposedDropdownMenu(
+                    currentSelection = item.product?.name?.displayName(language) ?: "",
                     label = stringResource(R.string.product),
                     items = availableProducts,
-                    selectedItemId = item.product?.id?.local,
                     onItemSelected = { onUpdateSelectedItem(item.tempEditorId, it) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
-                    canClearSelection = false,
                 )
             }
-            IconButton(onClick = { onRemoveItemFromOrder(item.tempEditorId) }) {
-                Icon(Icons.Default.Delete, stringResource(R.string.remove_item))
+            IconButton(
+                onClick = { onRemoveItemFromOrder(item.tempEditorId) },
+                modifier = Modifier.padding(vertical = OutlinedTextFieldDefaults.MinHeight / 6)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.remove_item),
+                    modifier = Modifier.size(
+                        OutlinedTextFieldDefaults.MinHeight / 1.5f
+                    )
+                )
             }
         }
 
         Text(
-            text = "${stringResource(R.string.in_stock)}: ${item.currentStock}",
+            text = stringResource(R.string.in_stock, item.currentStock),
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -222,7 +238,9 @@ private fun OrderItemRow(
                 }
 
                 Card(
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,

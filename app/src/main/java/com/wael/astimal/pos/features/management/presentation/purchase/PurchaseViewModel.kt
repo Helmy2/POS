@@ -1,356 +1,166 @@
 package com.wael.astimal.pos.features.management.presentation.purchase
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
-import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
-import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
-import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
+import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrderItem
+import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
-import com.wael.astimal.pos.features.user.domain.entity.User
-import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class PurchaseViewModel(
     private val purchaseRepository: PurchaseRepository,
     private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
-    private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
-) : ViewModel() {
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController,
+) : BaseViewModel<PurchaseContract.State, PurchaseContract.Event, Nothing>(
+    reducer = PurchaseReducer(),
+    initialState = PurchaseContract.State(
+        currentPurchaseInput = PurchaseContract.EditablePurchase(date = Clock.now())
+    )
+) {
 
-    private val _state = MutableStateFlow(PurchaseState())
-    val state: StateFlow<PurchaseState> = _state.asStateFlow()
-    private var searchJob: Job? = null
-    private val stockObservationJobs = mutableMapOf<String, Job>()
+    val filteredPurchasesState: StateFlow<List<PurchaseOrder>> =
+        combine(
+            state,
+            purchaseRepository.getPurchases()
+        ) { state, allPurchases ->
+            if (state.purchases != allPurchases) {
+                setState(PurchaseContract.Event.PurchasesLoaded(allPurchases))
+            }
+            if (state.searchQuery.isBlank()) {
+                allPurchases
+            } else {
+                allPurchases.filter { it.matchesQuery(state.searchQuery) }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
+
+    override fun handleEvent(event: PurchaseContract.Event) {
+        when (event) {
+            is PurchaseContract.Event.SaveClicked -> savePurchase()
+            is PurchaseContract.Event.DeleteClicked -> deletePurchase()
+            is PurchaseContract.Event.BackClicked -> navigateBack()
+            else -> setState(event)
+        }
+    }
 
     init {
-        viewModelScope.launch {
-            updateCurrentUser(userRepository.getCurrentUser())
-        }
-        onEvent(PurchaseEvent.SearchPurchases(""))
-        loadDropdownData()
+        loadInitialData()
     }
 
-    private fun loadDropdownData() {
+    private fun loadInitialData() {
         viewModelScope.launch {
-            partnerRepository.getSuppliers()
-                .collect { result -> _state.update { it.copy(availableSuppliers = result) } }
+            setState(PurchaseContract.Event.UserLoaded(userRepository.getCurrentUser()))
         }
         viewModelScope.launch {
-            productRepository.getProducts()
-                .catch {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_products))
-                }
-                .collect { result ->
-                    _state.update {
-                        it.copy(
-                            availableProducts = result
-                        )
-                    }
-                }
-        }
-        viewModelScope.launch {
-            userRepository.getEmployeesFlow()
-                .catch {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_loading_employees))
-                }
-                .collect { result ->
-                    _state.update {
-                        it.copy(
-                            availableEmployees = result
-                        )
-                    }
-                }
-        }
-    }
-
-    private fun updateCurrentUser(user: User?) {
-        _state.update {
-            when {
-                user == null -> it
-                user.userType == UserType.ADMIN -> it.copy(currentUser = user)
-                else -> it.copy(
-                    currentUser = user,
-                    currentPurchaseInput = it.currentPurchaseInput.copy(selectedEmployeeId = user.id)
-                )
-            }
-        }
-    }
-
-    fun onEvent(event: PurchaseEvent) {
-        when (event) {
-            is PurchaseEvent.SearchPurchases -> searchPurchases(event.query)
-            is PurchaseEvent.SelectPurchaseToView -> updateSelectedPurchase(event.purchase)
-            is PurchaseEvent.SelectSupplier -> _state.update { it.copy(selectedSupplier = event.supplier) }
-            is PurchaseEvent.SelectEmployee -> updatePurchaseInput { it.copy(selectedEmployeeId = event.employeeId) }
-            is PurchaseEvent.UpdatePaymentType -> updatePurchaseInput {
-                it.copy(paymentType = event.type ?: PaymentType.CASH)
-            }
-
-            is PurchaseEvent.UpdateAmountPaid -> updatePurchaseInput { it.copy(amountPaid = event.amount) }
-            is PurchaseEvent.AddItemToPurchase -> updatePurchaseInput { it.copy(items = it.items + EditableItem()) }
-            is PurchaseEvent.RemoveItemFromPurchase -> {
-                stockObservationJobs[event.tempEditorId]?.cancel()
-                stockObservationJobs.remove(event.tempEditorId)
-                updatePurchaseInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
-            }
-
-            is PurchaseEvent.UpdateItemProduct -> {
-                updatePurchaseItem(event.tempEditorId) {
-                    val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
-                    it.copy(
-                        product = event.product,
-                        minUnitPrice = (event.product?.averagePrice?.div(conversionFactor)).toString(),
-                        maxUnitPrice = event.product?.averagePrice.toString(),
-                        minUnitQuantity = conversionFactor.toString(),
-                        maxUnitQuantity = "1.0",
-                    )
-                }
-                event.product?.let {
-                    observeStockForItem(event.tempEditorId, it.id.local)
-                }
-            }
-
-            is PurchaseEvent.UpdateItemUnit -> updatePurchaseItem(event.tempEditorId) {
-                it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
-            }
-
-            is PurchaseEvent.SavePurchase -> savePurchase()
-            is PurchaseEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
-            is PurchaseEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
-            is PurchaseEvent.DeletePurchase -> deletePurchase()
-            PurchaseEvent.OpenNewPurchaseForm -> clearState()
-            is PurchaseEvent.UpdatePurchaseDate -> updatePurchaseInput {
-                it.copy(date = event.date ?: Clock.now())
-            }
-
-            is PurchaseEvent.UpdateItemMaxUnitPrice -> updatePurchaseItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    maxUnitPrice = event.price,
-                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString()
-                        ?: "0.0"
-                )
-            }
-
-            is PurchaseEvent.UpdateItemMinUnitPrice -> updatePurchaseItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    minUnitPrice = event.price,
-                    maxUnitPrice = (event.price.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0"
-                )
-            }
-
-            is PurchaseEvent.UpdateItemMaxUnitQuantity -> updatePurchaseItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    maxUnitQuantity = event.quantity,
-                    minUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0"
-                )
-            }
-
-            is PurchaseEvent.UpdateItemMinUnitQuantity -> updatePurchaseItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    minUnitQuantity = event.quantity,
-                    maxUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.div(conversionFactor))?.toString() ?: "0"
-                )
-            }
-        }
-    }
-
-    private fun observeStockForItem(tempId: String, productId: Long) {
-        stockObservationJobs[tempId]?.cancel()
-        viewModelScope.launch {
-            val employeeId = _state.value.currentPurchaseInput.selectedEmployeeId ?: return@launch
-            val storeId =
-                userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
-            stockObservationJobs[tempId] =
-                stockRepository.getStockQuantityFlow(storeId, productId)
-                    .catch {
-
-                    }
-                    .onEach { stock ->
-                        updatePurchaseItem(tempId) { it.copy(currentStock = stock) }
-                }.launchIn(viewModelScope)
-        }
-    }
-
-    private fun deletePurchase() {
-        viewModelScope.launch {
-            _state.value.selectedPurchase?.id?.local?.let {
-                purchaseRepository.deletePurchase(it).fold(onSuccess = {
-                    clearState(snackbarMessage = R.string.purchase_deleted)
-                }, onFailure = {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_purchase))
-                })
-            }
-        }
-    }
-
-    private fun updateSelectedPurchase(purchase: PurchaseOrder?) {
-        stockObservationJobs.values.forEach { it.cancel() }
-        stockObservationJobs.clear()
-
-        _state.update {
-            it.copy(
-                isQueryActive = false,
-                selectedPurchase = purchase,
-                selectedSupplier = purchase?.supplier,
-                currentPurchaseInput = if (purchase == null) EditableItemList(
-                    selectedEmployeeId = it.currentUser?.id,
-                ) else EditableItemList(
-                    selectedEmployeeId = purchase.user.id,
-                    paymentType = purchase.paymentType,
-                    date = purchase.data,
-                    items = purchase.items.map { item ->
-                        val conversionFactor = item.product.subUnitsPerMainUnit
-                        EditableItem(
-                            tempEditorId = item.id.local.toString(),
-                            product = item.product,
-                            isSelectedUnitIsMax = true,
-                            maxUnitPrice = item.purchasePrice.toString(),
-                            minUnitPrice = (item.purchasePrice / conversionFactor).toString(),
-                            maxUnitQuantity = item.quantity.toString(),
-                            minUnitQuantity = (item.quantity * conversionFactor).toString(),
-                        )
-                    },
-                    amountPaid = purchase.amountPaid.toString(),
-                )
-            )
-        }
-    }
-
-    private fun updatePurchaseInput(action: (EditableItemList) -> EditableItemList) {
-        _state.update { it.copy(currentPurchaseInput = action(it.currentPurchaseInput)) }
-    }
-
-    private fun updatePurchaseItem(tempId: String, action: (EditableItem) -> EditableItem) {
-        val currentItems = _state.value.currentPurchaseInput.items.toMutableList()
-        val index = currentItems.indexOfFirst { it.tempEditorId == tempId }
-        if (index != -1) {
-            currentItems[index] = action(currentItems[index])
-            updatePurchaseInput { it.copy(items = currentItems) }
-        }
-    }
-
-    private fun searchPurchases(query: String) {
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, query = query) }
-            delay(300)
-            purchaseRepository.getPurchases().catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_searching_purchases))
-            }.collect { purchases ->
-                _state.update {
-                    it.copy(
-                        loading = false, purchases = purchases
-                    )
-                }
+            combine(
+                partnerRepository.getSuppliers(""),
+                productRepository.getProducts(""),
+                userRepository.getEmployeesFlow()
+            ) { suppliers, products, employees ->
+                PurchaseContract.DropdownData(suppliers, products, employees)
+            }.collect {
+                setState(PurchaseContract.Event.DropdownDataLoaded(it))
             }
         }
     }
 
     private fun savePurchase() {
         viewModelScope.launch {
-            val purchaseInput = _state.value.currentPurchaseInput
-            val selectedSupplier = _state.value.selectedSupplier
-            val loggedInEmployeeId = _state.value.currentUser?.id
-            if (loggedInEmployeeId == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
+            val currentState = state.value
+            if (!currentState.canSave) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
-            if (selectedSupplier == null || purchaseInput.items.isEmpty()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.supplier_and_at_least_one_item_are_required))
-                return@launch
+            setState(PurchaseContract.Event.LoadingStarted)
+
+            val purchaseItems = currentState.currentPurchaseInput.items.mapNotNull {
+                val quantity = it.maxUnitQuantity.toDoubleOrNull()
+                val price = it.maxUnitPrice.toDoubleOrNull()
+                if (it.product != null && quantity != null && quantity > 0 && price != null) {
+                    PurchaseOrderItem(
+                        id = Id.new,
+                        product = it.product,
+                        quantity = quantity,
+                        purchasePrice = price,
+                        itemTotalPrice = it.lineTotal
+                    )
+                } else null
             }
 
-            val itemEntities = purchaseInput.items.mapNotNull {
-                val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
-                if (it.product == null || quantity <= 0) return@mapNotNull null
-                PurchaseProductEntity(
-                    productLocalId = it.product.id.local,
-                    quantity = quantity,
-                    purchasePrice = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
-                    itemTotalPrice = it.lineTotal,
-                    serverId = null,
-                    purchaseLocalId = 0L
-                )
-            }
-
-            if (itemEntities.size != purchaseInput.items.size) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
+            if (purchaseItems.size != currentState.currentPurchaseInput.items.size) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.one_or_more_order_items_are_invalid)))
+                setState(PurchaseContract.Event.LoadingFinished)
                 return@launch
             }
 
-            val purchaseEntity = PurchaseEntity(
-                localId = _state.value.selectedPurchase?.id?.local ?: 0L,
-                serverId = null,
-                invoiceNumber = "",
-                supplierLocalId = selectedSupplier.supplierId?.local ?: throw Exception(),
-                employeeLocalId = purchaseInput.selectedEmployeeId ?: loggedInEmployeeId,
-                amountPaid = purchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
-                amountRemaining = purchaseInput.amountRemaining,
-                totalAmount = purchaseInput.totalAmount,
-                paymentType = purchaseInput.paymentType,
-                createdAt = purchaseInput.date
+            val purchaseToSave = PurchaseOrder(
+                supplier = currentState.selectedSupplier!!,
+                user = currentState.dropdownData.employees.find { it.id == currentState.currentPurchaseInput.selectedEmployeeId }
+                    ?: throw IllegalStateException("Selected employee not found"),
+                paymentType = currentState.currentPurchaseInput.paymentType,
+                amountPaid = currentState.currentPurchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
+                data = currentState.currentPurchaseInput.date,
+                items = purchaseItems,
+                isSynced = false,
+                totalAmount = currentState.currentPurchaseInput.totalAmount,
+                createdAt = currentState.selectedPurchase?.createdAt ?: Clock.now(),
+                updatedAt = currentState.selectedPurchase?.updatedAt ?: Clock.now(),
+                id = currentState.selectedPurchase?.id ?: Id.new,
+                invoiceNumber = currentState.selectedPurchase?.invoiceNumber ?: "",
+                amountRemaining = currentState.currentPurchaseInput.amountRemaining
             )
 
-            _state.update { it.copy(loading = true) }
-            val result = if (_state.value.isNew) purchaseRepository.addPurchase(
-                purchaseEntity, itemEntities
-            )
-            else purchaseRepository.updatePurchase(purchaseEntity, itemEntities)
+            val result = if (currentState.isEditing) {
+                purchaseRepository.updatePurchase(purchaseToSave)
+            } else {
+                purchaseRepository.addPurchase(purchaseToSave)
+            }
 
-            result.fold(onSuccess = {
-                clearState(snackbarMessage = R.string.purchase_saved)
-            }, onFailure = {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.something_went_wrong))
-            })
+            result.onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.purchase_saved_successfully)))
+                setState(PurchaseContract.Event.SaveSucceeded)
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_save_purchase)))
+                setState(PurchaseContract.Event.LoadingFinished)
+            }
         }
     }
 
-    private fun clearState(snackbarMessage: Int? = null) {
-        _state.update {
-            it.copy(
-                selectedPurchase = null,
-                selectedSupplier = null,
-                currentPurchaseInput = EditableItemList(),
-                isQueryActive = false,
-            )
-        }
-        updateCurrentUser(state.value.currentUser)
+    private fun deletePurchase() {
+        val purchaseToDelete = state.value.selectedPurchase ?: return
+        setState(PurchaseContract.Event.LoadingStarted)
         viewModelScope.launch {
-            snackbarMessage?.let {
-                _eventFlow.emit(UiEvent.ShowSnackbar(snackbarMessage))
+            purchaseRepository.deletePurchase(purchaseToDelete.id.local).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.purchase_deleted_successfully)))
+                setState(PurchaseContract.Event.DeleteSucceeded)
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_delete_purchase)))
+                setState(PurchaseContract.Event.LoadingFinished)
             }
+        }
+    }
+
+    private fun navigateBack() {
+        viewModelScope.launch {
+            navigationController.navigateBack()
         }
     }
 }

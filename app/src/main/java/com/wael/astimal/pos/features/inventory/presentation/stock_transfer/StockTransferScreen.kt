@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -121,7 +121,7 @@ fun StockTransferScreen(
                             )
                         )
                     },
-                    displayedItemText = { it.name.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )
@@ -141,7 +141,7 @@ fun StockTransferScreen(
                             )
                         )
                     },
-                    displayedItemText = { it.name.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
 
@@ -162,7 +162,7 @@ fun StockTransferScreen(
             }
 
             item(
-                span = { GridItemSpan(maxLineSpan) }
+                span = StaggeredGridItemSpan.FullLine
             ) {
                 Button(
                     onClick = { onEvent(StockTransferContract.Event.AddItem) },
@@ -213,7 +213,7 @@ fun StockTransferItemRow(
                             )
                         )
                     },
-                    displayedItemText = { it.name.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = enabled,
                 )
             }

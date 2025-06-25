@@ -201,7 +201,7 @@ fun StockAdjustmentDialog(
                             StockManagementContract.Event.AdjustmentStoreChanged(it)
                         )
                     },
-                    displayedItemText = { it.name.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.canUserEdit
                 )
                 CustomExposedDropdownMenu(
@@ -215,7 +215,7 @@ fun StockAdjustmentDialog(
                             StockManagementContract.Event.AdjustmentProductChanged(it)
                         )
                     },
-                    displayedItemText = { it.name.displayName(language) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.canUserEdit
                 )
                 LabeledTextField(
@@ -242,7 +242,7 @@ fun StockAdjustmentDialog(
                             )
                         )
                     },
-                    displayedItemText = { context.getString(it.getStringResource()) },
+                    itemToDisplayString = { context.getString(it.getStringResource()) },
                     enabled = state.canUserEdit
                 )
                 LabeledTextField(

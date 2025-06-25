@@ -96,7 +96,7 @@ fun StoreScreen(
                     items = StoreType.entries,
                     onItemSelected = { onEvent(StoreContract.Event.TypeChanged(it)) },
                     enabled = state.canUserEdit,
-                    displayedItemText = { context.getString(it.getStringResourceId()) },
+                    itemToDisplayString = { context.getString(it.getStringResourceId()) },
                     modifier = Modifier.padding(8.dp)
                 )
             }

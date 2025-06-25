@@ -147,7 +147,6 @@
     <string name="one_or_more_order_items_are_invalid">One or more items in the order are invalid.</string>
     <string name="error_searching_orders">Error: Could not search for orders.</string>
 
-    <string name="purchase_order">Purchase Order</string>
     <string name="purchase_saved">Purchase saved successfully.</string>
     <string name="purchase_deleted">Purchase deleted successfully.</string>
     <string name="error_deleting_purchase">Error: Could not delete the purchase.</string>
@@ -339,4 +338,8 @@
     <string name="new_voucher">new_voucher</string>
     <string name="party_type">party_type</string>
     <string name="are_you_sure_you_want_to_delete_this_voucher">are_you_sure_you_want_to_delete_this_voucher</string>
+    <string name="purchase_deleted_successfully">purchase_deleted_successfully</string>
+    <string name="failed_to_delete_purchase">failed_to_delete_purchase</string>
+    <string name="purchase_saved_successfully">purchase_saved_successfully</string>
+    <string name="failed_to_save_purchase">failed_to_save_purchase</string>
 </resources>

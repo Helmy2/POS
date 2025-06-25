@@ -30,7 +30,7 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                     ),
                     ManagementContract.ManagementItem(
                         Destination.PurchaseOrders,
-                        R.string.purchase_order
+                        R.string.purchase
                     ),
                     ManagementContract.ManagementItem(
                         Destination.PurchaseReturns,

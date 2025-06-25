@@ -7,8 +7,8 @@ data class EditableItem(
     val tempEditorId: String = UUID.randomUUID().toString(),
     val product: Product? = null,
     val isSelectedUnitIsMax: Boolean = true,
-    val minUnitQuantity: String = "",
-    val maxUnitQuantity: String = "",
+    val minUnitQuantity: String = "1",
+    val maxUnitQuantity: String = "1",
     val minUnitPrice: String = "0",
     val maxUnitPrice: String = "0",
     val currentStock: Double = 0.0
