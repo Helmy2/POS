@@ -78,9 +78,9 @@ class ReceivePayVoucherViewModel(
                 voucherRepository.getVouchers()
             ) { partners, vouchers ->
                 val clients =
-                    partners.filter { it.type == PartnerType.CLIENT || it.type == PartnerType.BOTH }
+                    partners.filter { it.type == PartnerType.CLIENT || it.type == PartnerType.CLIENT_AND_CAN_BE_SUPPLIER }
                 val suppliers =
-                    partners.filter { it.type == PartnerType.SUPPLIER || it.type == PartnerType.BOTH }
+                    partners.filter { it.type == PartnerType.SUPPLIER || it.type == PartnerType.SUPPLIER_AND_CAN_BE_CLIENT }
 
                 setState(
                     ReceivePayVoucherContract.Event.DropdownDataLoaded(
@@ -106,9 +106,9 @@ class ReceivePayVoucherViewModel(
             }
 
             val partner = if (dialogState.partyType == VoucherPartyType.CLIENT) {
-                state.value.dropdownData.clients.find { it.clientId?.local == dialogState.selectedPartnerId }
+                state.value.dropdownData.clients.find { it.id.local == dialogState.selectedPartnerId }
             } else {
-                state.value.dropdownData.suppliers.find { it.supplierId?.local == dialogState.selectedPartnerId }
+                state.value.dropdownData.suppliers.find { it.id.local == dialogState.selectedPartnerId }
             }
 
             if (partner == null) {

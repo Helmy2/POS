@@ -16,18 +16,14 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 @Entity(
     tableName = "receive_pay_vouchers", foreignKeys = [ForeignKey(
-        entity = ClientEntity::class,
+        entity = BusinessPartnerEntity::class,
         parentColumns = ["localId"],
-        childColumns = ["clientLocalId"],
-    ), ForeignKey(
-        entity = SupplierEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["supplierLocalId"],
+        childColumns = ["partnerLocalId"],
     ), ForeignKey(
         entity = UserEntity::class,
         parentColumns = ["id"],
         childColumns = ["employeeLocalId"],
-    )], indices = [Index("clientLocalId"), Index("supplierLocalId"), Index("employeeLocalId")]
+    )], indices = [Index("partnerLocalId"), Index("employeeLocalId")]
 )
 data class ReceivePayVoucherEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
@@ -37,8 +33,7 @@ data class ReceivePayVoucherEntity(
     override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
     val partyType: VoucherPartyType,
-    val clientLocalId: Long?,
-    val supplierLocalId: Long?,
+    val partnerLocalId: Long,
     val employeeLocalId: Long,
     val amount: Double,
     val notes: String,
@@ -48,12 +43,10 @@ data class ReceivePayVoucherWithDetails(
     @Embedded val voucher: ReceivePayVoucherEntity,
 
     @Relation(
-        parentColumn = "clientLocalId", entityColumn = "localId", entity = ClientEntity::class
-    ) val client: ClientWithDetailsEntity?,
-
-    @Relation(
-        parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class
-    ) val supplier: SupplierWithDetailsEntity?,
+        parentColumn = "partnerLocalId",
+        entityColumn = "localId",
+        entity = BusinessPartnerEntity::class
+    ) val partner: BusinessPartnerWithDetailsEntity?,
 
     @Relation(
         parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class
@@ -61,27 +54,15 @@ data class ReceivePayVoucherWithDetails(
 )
 
 fun ReceivePayVoucherWithDetails.toDomain(): ReceivePayVoucher {
-    val businessPartner = if (client != null && supplier != null) {
-        val clint = client.toDomain()
-        supplier.toDomain().copy(
-            clientDebt = clint.clientDebt,
-            clientId = clint.clientId
-        )
-    } else if (voucher.partyType == VoucherPartyType.CLIENT && client != null) {
-        client.toDomain()
-    } else if (voucher.partyType == VoucherPartyType.SUPPLIER && supplier != null) {
-        supplier.toDomain()
-    } else {
-        throw IllegalStateException("Receipt voucher #${voucher.localId}")
-    }
-
     val creator = createdByUser?.toDomain()
         ?: throw IllegalStateException("Voucher #${voucher.localId} must have a creator employee.")
 
     return ReceivePayVoucher(
         id = Id(voucher.localId, voucher.serverId),
         amount = voucher.amount,
-        party = businessPartner,
+        party = partner?.toDomain() ?: throw IllegalStateException(
+            "Voucher #${voucher.localId} must have a partner."
+        ),
         partyType = voucher.partyType,
         notes = voucher.notes,
         createdBy = creator,

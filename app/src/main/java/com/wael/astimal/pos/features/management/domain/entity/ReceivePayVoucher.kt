@@ -48,7 +48,6 @@ fun ReceivePayVoucher.toEntity() = ReceivePayVoucherEntity(
     createdAt = createdAt,
     updatedAt = updatedAt,
     isSynced = isSynced,
-    clientLocalId = if (partyType == VoucherPartyType.CLIENT) party.clientId?.local else null,
-    supplierLocalId = if (partyType == VoucherPartyType.SUPPLIER) party.supplierId?.local else null,
+    partnerLocalId = party.id.local,
     employeeLocalId = createdBy.id,
 )

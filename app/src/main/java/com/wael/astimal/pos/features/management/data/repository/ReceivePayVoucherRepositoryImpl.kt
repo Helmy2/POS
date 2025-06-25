@@ -74,8 +74,7 @@ private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTrans
     return when (partyType) {
         VoucherPartyType.CLIENT -> PartnerTransactionEntity(
             serverId = null,
-            clientId = clientLocalId,
-            supplierId = null,
+            partnerLocalId = partnerLocalId,
             sourceTransactionId = voucherId,
             transactionType = TransactionType.PAYMENT_RECEIVED,
             createdAt = createdAt,
@@ -86,8 +85,7 @@ private fun ReceivePayVoucherEntity.toLedgerEntry(voucherId: Long): PartnerTrans
 
         VoucherPartyType.SUPPLIER -> PartnerTransactionEntity(
             serverId = null,
-            clientId = null,
-            supplierId = supplierLocalId,
+            partnerLocalId = partnerLocalId,
             sourceTransactionId = voucherId,
             transactionType = TransactionType.PAYMENT_SENT,
             createdAt = createdAt,

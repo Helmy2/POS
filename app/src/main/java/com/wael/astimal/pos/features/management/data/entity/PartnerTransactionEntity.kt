@@ -7,9 +7,10 @@ import com.wael.astimal.pos.R
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.util.Clock
 
+
 @Entity(
     tableName = "partner_transactions",
-    indices = [Index("clientId"), Index("supplierId")]
+    indices = [Index("partnerLocalId")]
 )
 data class PartnerTransactionEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
@@ -18,8 +19,7 @@ data class PartnerTransactionEntity(
     override val createdAt: Long = Clock.now(),
     override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
-    val clientId: Long?,
-    val supplierId: Long?,
+    val partnerLocalId: Long?,
     val sourceTransactionId: Long,
     val transactionType: TransactionType,
     val debit: Double = 0.0,

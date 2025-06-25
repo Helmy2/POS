@@ -53,7 +53,6 @@ import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
-import com.wael.astimal.pos.features.management.presentation.business_partner.getCompositeId
 import org.koin.androidx.compose.koinViewModel
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
@@ -182,7 +181,7 @@ fun PartnerSelectionList(
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(partners, key = { it.getCompositeId() }) { partner ->
+                items(partners, key = { it.id.local }) { partner ->
                     ListItem(
                         headlineContent = {
                             Text(

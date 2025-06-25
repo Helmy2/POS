@@ -31,8 +31,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val managementModule = module {
-    single { get<AppDatabase>().clientDao() }
-    single { get<AppDatabase>().supplierDao() }
+    single { get<AppDatabase>().businessPartnerDao() }
     single { get<AppDatabase>().orderReturnDao() }
     single { get<AppDatabase>().purchaseOrderDao() }
     single { get<AppDatabase>().purchaseReturnDao() }

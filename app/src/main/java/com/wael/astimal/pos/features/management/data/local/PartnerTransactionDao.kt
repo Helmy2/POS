@@ -15,23 +15,11 @@ interface PartnerTransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: PartnerTransactionEntity)
 
-    @Query("SELECT * FROM partner_transactions WHERE clientId = :clientId")
-    fun getTransactionsForClient(clientId: Long): Flow<List<PartnerTransactionEntity>>
+    @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :partnerLocalId")
+    fun getTransactionsForPartner(partnerLocalId: Long): Flow<List<PartnerTransactionEntity>>
 
-    @Query("SELECT * FROM partner_transactions WHERE supplierId = :supplierId")
-    fun getTransactionsForSupplier(supplierId: Long): Flow<List<PartnerTransactionEntity>>
-
-    @Query("SELECT * FROM partner_transactions WHERE clientId = :clientId OR supplierId = :supplierId")
-    fun getTransactionsForPartner(
-        clientId: Long,
-        supplierId: Long
-    ): Flow<List<PartnerTransactionEntity>>
-
-    @Query("SELECT SUM(debit) - SUM(credit) FROM partner_transactions WHERE clientId = :clientId")
-    suspend fun getClientBalance(clientId: Long): Double?
-
-    @Query("SELECT SUM(credit) - SUM(debit) FROM partner_transactions WHERE supplierId = :supplierId")
-    suspend fun getSupplierBalance(supplierId: Long): Double?
+    @Query("SELECT SUM(credit) - SUM(debit) FROM partner_transactions WHERE partnerLocalId = :clientId")
+    suspend fun getPartnerBalance(clientId: Long): Double?
 
     @Query("DELETE FROM partner_transactions WHERE sourceTransactionId = :sourceId AND transactionType = :type")
     suspend fun deleteTransactionsBySource(sourceId: Long, type: TransactionType)

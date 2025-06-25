@@ -21,15 +21,15 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 @Entity(
     tableName = "orders",
     foreignKeys = [ForeignKey(
-        entity = ClientEntity::class,
+        entity = BusinessPartnerEntity::class,
         parentColumns = ["localId"],
-        childColumns = ["clientLocalId"],
+        childColumns = ["businessPartnerLocalId"],
     ), ForeignKey(
         entity = UserEntity::class,
         parentColumns = ["id"],
         childColumns = ["employeeLocalId"],
     )],
-    indices = [Index(value = ["clientLocalId"]), Index(value = ["employeeLocalId"]), Index(
+    indices = [Index(value = ["businessPartnerLocalId"]), Index(value = ["employeeLocalId"]), Index(
         value = ["invoiceNumber"], unique = true
     )]
 )
@@ -41,7 +41,7 @@ data class OrderEntity(
     override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
     var invoiceNumber: String,
-    val clientLocalId: Long,
+    val businessPartnerLocalId: Long,
     val employeeLocalId: Long,
     val amountPaid: Double,
     val amountRemaining: Double,
@@ -77,8 +77,10 @@ data class OrderWithDetailsEntity(
     @Embedded val order: OrderEntity,
 
     @Relation(
-        parentColumn = "clientLocalId", entityColumn = "localId", entity = ClientEntity::class
-    ) val clientWithUser: ClientWithDetailsEntity?,
+        parentColumn = "businessPartnerLocalId",
+        entityColumn = "localId",
+        entity = BusinessPartnerEntity::class
+    ) val clientWithUser: BusinessPartnerWithDetailsEntity?,
 
     @Relation(
         parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class

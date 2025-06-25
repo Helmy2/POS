@@ -17,13 +17,17 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 
 @Entity(
-    tableName = "suppliers", foreignKeys = [ForeignKey(
-        entity = UserEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["responsibleEmployeeLocalId"],
-    )], indices = [Index(value = ["responsibleEmployeeLocalId"])]
+    tableName = "business_partners",
+    foreignKeys = [
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["responsibleEmployeeLocalId"],
+        )
+    ],
+    indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
-data class SupplierEntity(
+data class BusinessPartnerEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
     override val serverId: Long?,
     override var isSynced: Boolean = false,
@@ -35,27 +39,31 @@ data class SupplierEntity(
     val enName: String,
     val phone: String,
     val address: String,
-    val indebtedness: Double,
+    val openingBalance: Double,
+    val type: PartnerType,
     val responsibleEmployeeLocalId: Long,
-    val isClient: Boolean,
 ) : ItemEntity
 
-data class SupplierWithDetailsEntity(
-    @Embedded val supplier: SupplierEntity, @Relation(
-        parentColumn = "responsibleEmployeeLocalId", entityColumn = "id", entity = UserEntity::class
-    ) val responsibleEmployeeUser: UserEntity?
+data class BusinessPartnerWithDetailsEntity(
+    @Embedded val businessPartner: BusinessPartnerEntity,
+
+    @Relation(
+        parentColumn = "responsibleEmployeeLocalId",
+        entityColumn = "id", entity = UserEntity::class
+    ) val responsibleEmployeeUser: UserEntity?,
 )
 
-fun SupplierWithDetailsEntity.toDomain(): BusinessPartner {
+fun BusinessPartnerWithDetailsEntity.toDomain(): BusinessPartner {
     return BusinessPartner(
-        clientId = null,
-        supplierId = Id(supplier.localId, supplier.serverId),
-        name = LocalizedString(arName = supplier.arName, enName = supplier.enName),
-        address = supplier.address,
-        phone = supplier.phone,
-        type = PartnerType.SUPPLIER,
-        supplierIndebtedness = supplier.indebtedness,
-        isSynced = supplier.isSynced,
+        id = Id(businessPartner.localId, businessPartner.serverId),
+        name = LocalizedString(arName = businessPartner.arName, enName = businessPartner.enName),
+        address = businessPartner.address,
+        phone = businessPartner.phone,
+        type = businessPartner.type,
+        isSynced = businessPartner.isSynced,
+        openingBalance = businessPartner.openingBalance,
         responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
+        createdAt = businessPartner.createdAt,
+        updatedAt = businessPartner.updatedAt,
     )
 }

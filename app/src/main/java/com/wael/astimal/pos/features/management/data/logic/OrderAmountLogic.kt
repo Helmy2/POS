@@ -46,7 +46,7 @@ class OrderAmountLogic(
     }
 
     private suspend fun handleCommissions(order: OrderEntity, orderId: Long) {
-        val client = partnerRepository.getClient(order.clientLocalId)
+        val client = partnerRepository.getClient(order.businessPartnerLocalId)
         val responsibleEmployeeId = client?.responsibleEmployee?.id
         val sellingEmployeeId = order.employeeLocalId
 

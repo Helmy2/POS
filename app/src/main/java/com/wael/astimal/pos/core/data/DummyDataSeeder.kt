@@ -89,8 +89,7 @@ class DummyDataSeeder(
     private suspend fun populateDummyBusinessPartner(user: User): List<BusinessPartner> {
         val businessPartners = listOf(
             BusinessPartner(
-                clientId = null,
-                supplierId = null,
+                id = Id.new,
                 name = LocalizedString(
                     arName = "شريك عالمي",
                     enName = "Universal Partner",
@@ -98,13 +97,27 @@ class DummyDataSeeder(
                 address = "1 El Tahrir Square, Cairo",
                 phone = "0123456789",
                 responsibleEmployee = user,
-                supplierIndebtedness = 350.0,
-                clientDebt = 500.0,
-                type = PartnerType.BOTH,
-                isSynced = false
+                openingBalance = 350.0,
+                type = PartnerType.CLIENT_AND_CAN_BE_SUPPLIER,
+                isSynced = false,
+                createdAt = Clock.now(),
+                updatedAt = Clock.now(),
             ), BusinessPartner(
-                clientId = null,
-                supplierId = null,
+                id = Id.new,
+                name = LocalizedString(
+                    arName = "مورد 1 (فقط)",
+                    enName = "Supplier 1 (Only)",
+                ),
+                address = "1 El Tahrir Square, Cairo",
+                phone = "6667778880",
+                responsibleEmployee = user,
+                openingBalance = 150.0,
+                type = PartnerType.SUPPLIER,
+                isSynced = false,
+                createdAt = Clock.now(),
+                updatedAt = Clock.now(),
+            ), BusinessPartner(
+                id = Id.new,
                 name = LocalizedString(
                     arName = "مورد ٢ (فقط)",
                     enName = "Supplier Two (Only)",
@@ -112,12 +125,13 @@ class DummyDataSeeder(
                 address = "1 El Tahrir Square, Cairo",
                 phone = "6667778880",
                 responsibleEmployee = user,
-                supplierIndebtedness = 150.0,
-                type = PartnerType.SUPPLIER,
-                isSynced = false
+                openingBalance = 150.0,
+                type = PartnerType.SUPPLIER_AND_CAN_BE_CLIENT,
+                isSynced = false,
+                createdAt = Clock.now(),
+                updatedAt = Clock.now(),
             ), BusinessPartner(
-                clientId = null,
-                supplierId = null,
+                id = Id.new,
                 name = LocalizedString(
                     arName = "عميل ١ (فقط)",
                     enName = "Client One (Only)",
@@ -125,9 +139,11 @@ class DummyDataSeeder(
                 address = "1 El Tahrir Square, Cairo",
                 phone = "0123412352235",
                 responsibleEmployee = user,
-                clientDebt = 250.50,
+                openingBalance = -250.50,
                 type = PartnerType.CLIENT,
-                isSynced = false
+                isSynced = false,
+                createdAt = Clock.now(),
+                updatedAt = Clock.now(),
             )
         )
 

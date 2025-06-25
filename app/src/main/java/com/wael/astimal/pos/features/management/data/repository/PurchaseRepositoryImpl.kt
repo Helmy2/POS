@@ -42,7 +42,7 @@ class PurchaseRepositoryImpl(
     private suspend fun generateNextInvoiceNumber(): String {
         val random = Random.nextInt(1, 999999)
         val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val prefix = "INV-PUR-$today-$random"
+        val prefix = "INV-PUR-$today-$random-"
         val lastInvoice = purchaseDao.getLastInvoiceNumber("$prefix%")
         val nextSeq = if (lastInvoice == null) {
             1
@@ -134,8 +134,8 @@ class PurchaseRepositoryImpl(
             }
             val updatedPurchase =
                 getPurchaseDetails(purchaseEntity.localId) ?: return Result.failure(
-                IllegalStateException("Failed to retrieve purchase after update.")
-            )
+                    IllegalStateException("Failed to retrieve purchase after update.")
+                )
             Result.success(updatedPurchase)
         } catch (e: Exception) {
             Result.failure(e)
@@ -186,8 +186,7 @@ class PurchaseRepositoryImpl(
         partnerTransactionDao.insertTransaction(
             PartnerTransactionEntity(
                 serverId = null,
-                clientId = null,
-                supplierId = purchase.supplierLocalId,
+                partnerLocalId = purchase.businessPartnerLocalId,
                 sourceTransactionId = purchaseId,
                 transactionType = TransactionType.PURCHASE,
                 createdAt = purchase.createdAt,
@@ -200,8 +199,7 @@ class PurchaseRepositoryImpl(
             partnerTransactionDao.insertTransaction(
                 PartnerTransactionEntity(
                     serverId = null,
-                    clientId = null,
-                    supplierId = purchase.supplierLocalId,
+                    partnerLocalId = purchase.businessPartnerLocalId,
                     sourceTransactionId = purchaseId,
                     transactionType = TransactionType.PAYMENT_SENT,
                     createdAt = purchase.createdAt,

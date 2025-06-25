@@ -20,19 +20,19 @@ interface ReceivePayVoucherDao {
     fun getAllVouchersWithDetails(): Flow<List<ReceivePayVoucherWithDetails>>
 
     @Transaction
-    @Query("SELECT * FROM receive_pay_vouchers WHERE clientLocalId = :clientId AND  partyType = \"CLIENT\" AND NOT isDeletedLocally")
+    @Query("SELECT * FROM receive_pay_vouchers WHERE partnerLocalId = :clientId AND  partyType = \"CLIENT\" AND NOT isDeletedLocally")
     fun getVouchersByClientId(clientId: Long): Flow<List<ReceivePayVoucherWithDetails>>
 
 
     @Transaction
-    @Query("SELECT * FROM receive_pay_vouchers WHERE supplierLocalId = :supplierId AND  partyType = \"CLIENT\" AND NOT isDeletedLocally")
+    @Query("SELECT * FROM receive_pay_vouchers WHERE partnerLocalId = :supplierId AND  partyType = \"CLIENT\" AND NOT isDeletedLocally")
     fun getVouchersBySupplierId(supplierId: Long): Flow<List<ReceivePayVoucherWithDetails>>
 
     @Transaction
     @Query("""
         SELECT * FROM receive_pay_vouchers
-        WHERE ((clientLocalId = :clientId AND partyType = "CLIENT")
-        OR (supplierLocalId = :supplierId AND partyType = "SUPPLIER"))
+        WHERE ((partnerLocalId = :clientId AND partyType = "CLIENT")
+        OR (partnerLocalId = :supplierId AND partyType = "SUPPLIER"))
         AND NOT isDeletedLocally
     """)
     fun getVouchersByPartnerIds(clientId: Long, supplierId: Long): Flow<List<ReceivePayVoucherWithDetails>>

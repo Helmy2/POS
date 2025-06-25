@@ -32,7 +32,7 @@ class ReceivePayVoucherReducer() :
                         show = true,
                         voucherToEdit = event.voucher,
                         partyType = event.voucher.partyType,
-                        selectedPartnerId = if (event.voucher.partyType == VoucherPartyType.CLIENT) event.voucher.party.clientId?.local else event.voucher.party.supplierId?.local,
+                        selectedPartnerId = if (event.voucher.partyType == VoucherPartyType.CLIENT) event.voucher.party.id.local else event.voucher.party.id.local,
                         amount = event.voucher.amount.toString(),
                         notes = event.voucher.notes,
                         date = event.voucher.createdAt

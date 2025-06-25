@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 class SalesReturnRepositoryImpl(
     private val database: AppDatabase,
@@ -42,8 +43,9 @@ class SalesReturnRepositoryImpl(
     }
 
     private suspend fun generateNextInvoiceNumber(): String {
+        val random = Random.nextInt(1, 999999)
         val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val prefix = "INV-RET-$today-"
+        val prefix = "INV-RET-$today-$random-"
         val lastInvoice = orderReturnDao.getLastInvoiceNumber("$prefix%")
         val nextSeq = if (lastInvoice == null) {
             1
@@ -153,8 +155,7 @@ class SalesReturnRepositoryImpl(
         partnerTransactionDao.insertTransaction(
             PartnerTransactionEntity(
                 serverId = null,
-                clientId = returnEntity.clientLocalId,
-                supplierId = null,
+                partnerLocalId = returnEntity.businessPartnerLocalId,
                 sourceTransactionId = returnId,
                 transactionType = TransactionType.SALE_RETURN,
                 createdAt = returnEntity.createdAt,
@@ -168,8 +169,7 @@ class SalesReturnRepositoryImpl(
             partnerTransactionDao.insertTransaction(
                 PartnerTransactionEntity(
                     serverId = null,
-                    clientId = returnEntity.clientLocalId,
-                    supplierId = null,
+                    partnerLocalId = returnEntity.businessPartnerLocalId,
                     sourceTransactionId = returnId,
                     transactionType = TransactionType.PAYMENT_SENT,
                     createdAt = returnEntity.createdAt,

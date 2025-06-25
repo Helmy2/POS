@@ -54,7 +54,7 @@ fun PurchaseOrder.toEntity(): Pair<PurchaseEntity, List<PurchaseProductEntity>> 
         createdAt = createdAt,
         updatedAt = updatedAt,
         isSynced = isSynced,
-        supplierLocalId = supplier.supplierId!!.local
+        businessPartnerLocalId = supplier.id.local
     ) to items.map { item ->
         PurchaseProductEntity(
             localId = item.id.local,

@@ -44,11 +44,7 @@ class BusinessPartnerViewModel(
     override fun handleEvent(event: BusinessPartnerContract.Event) {
         when (event) {
             is BusinessPartnerContract.Event.LoadInitialData -> loadCurrentUser()
-            is BusinessPartnerContract.Event.SaveChangesClicked -> savePartner(
-                event.partner,
-                event.openingDebt,
-                event.openingIndebtedness
-            )
+            is BusinessPartnerContract.Event.SaveChangesClicked -> savePartner(event.partner)
 
             is BusinessPartnerContract.Event.DeletePartnerClicked -> deletePartner(event.partner)
             is BusinessPartnerContract.Event.BackClicked -> navigateBack()
@@ -62,17 +58,9 @@ class BusinessPartnerViewModel(
         }
     }
 
-    private fun savePartner(
-        partner: BusinessPartner,
-        openingDebt: Double,
-        openingIndebtedness: Double
-    ) {
+    private fun savePartner(partner: BusinessPartner) {
         viewModelScope.launch {
-            val finalPartner = partner.copy(
-                clientDebt = openingDebt,
-                supplierIndebtedness = openingIndebtedness
-            )
-            businessPartnerRepository.saveBusinessPartner(finalPartner).onSuccess {
+            businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.partner_saved_successfully)))
                 setState(BusinessPartnerContract.Event.SaveSucceeded)
             }.onFailure {

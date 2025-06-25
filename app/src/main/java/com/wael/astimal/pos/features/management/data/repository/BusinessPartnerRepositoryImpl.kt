@@ -3,100 +3,58 @@ package com.wael.astimal.pos.features.management.data.repository
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.management.data.entity.ClientEntity
+import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
-import com.wael.astimal.pos.features.management.data.local.ClientDao
+import com.wael.astimal.pos.features.management.data.local.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
-import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class BusinessPartnerRepositoryImpl(
     private val db: AppDatabase,
-    private val clientDao: ClientDao,
-    private val supplierDao: SupplierDao,
+    private val partnerDao: BusinessPartnerDao,
     private val partnerTransactionDao: PartnerTransactionDao,
 ) : BusinessPartnerRepository {
 
-    override fun getBusinessPartners(
-        query: String
-    ): Flow<List<BusinessPartner>> {
-        val clientsFlow = clientDao.searchClientsWithDetailsFlow(query).map {
-            it.map { it -> it.toDomain() }
+    override fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
+        return partnerDao.searchPartnersFlow(query).map { entities ->
+            entities.map { it.toDomain() }
         }
-        val suppliersFlow = supplierDao.searchSuppliersFlow(query).map {
-            it.map { it -> it.toDomain() }
+    }
+
+    override fun getClients(query: String): Flow<List<BusinessPartner>> {
+        return partnerDao.searchPartnersFlow(query).map { entities ->
+            entities.filter {
+                it.businessPartner.type != PartnerType.SUPPLIER && it.businessPartner.type != PartnerType.SUPPLIER_AND_CAN_BE_CLIENT
+            }.map { it.toDomain() }
+
         }
+    }
 
-        return combine(clientsFlow, suppliersFlow) { clients, suppliers ->
-            val partnerMap = mutableMapOf<String, BusinessPartner>()
-
-            clients.forEach { client ->
-                val mapKey =
-                    (client.name.enName.orEmpty() + client.name.arName.orEmpty()).lowercase()
-                partnerMap[mapKey] = client
-            }
-
-            suppliers.forEach { supplier ->
-                val mapKey =
-                    (supplier.name.enName.orEmpty() + supplier.name.arName.orEmpty()).lowercase()
-                val existingPartner = partnerMap[mapKey]
-                if (existingPartner != null) {
-                    partnerMap[mapKey] = existingPartner.copy(
-                        type = PartnerType.BOTH,
-                        supplierId = supplier.supplierId,
-                        supplierIndebtedness = supplier.supplierIndebtedness
-                    )
-                } else {
-                    partnerMap[mapKey] = supplier
-                }
-            }
-            partnerMap.values.toList().sortedBy { it.name.enName }
+    override fun getSuppliers(query: String): Flow<List<BusinessPartner>> {
+        return partnerDao.searchPartnersFlow(query).map { entities ->
+            entities.filter {
+                it.businessPartner.type != PartnerType.CLIENT && it.businessPartner.type != PartnerType.CLIENT_AND_CAN_BE_SUPPLIER
+            }.map { it.toDomain() }
         }
     }
 
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
             db.withTransaction {
-                val isNewClient =
-                    partner.type != PartnerType.SUPPLIER && partner.clientId == null
-                val isNewSupplier =
-                    partner.type != PartnerType.CLIENT && partner.supplierId == null
-
                 // Save Client record if applicable
-                if (partner.type == PartnerType.CLIENT || partner.type == PartnerType.BOTH) {
-                    val clientEntity =
-                        partner.toClientEntity(isSupplier = partner.type == PartnerType.BOTH)
-                    val clientId = clientDao.insertOrUpdateClient(clientEntity)
-                    if (isNewClient) {
-                        createOpeningBalanceTransaction(
-                            clientId = clientId,
-                            debit = partner.clientDebt,
-                            credit = 0.0
-                        )
-                    }
-                }
+                val clientId = partnerDao.insertOrUpdate(partner.toEntity())
 
-                // Save Supplier record if applicable
-                if (partner.type == PartnerType.SUPPLIER || partner.type == PartnerType.BOTH) {
-                    val supplierEntity =
-                        partner.toSupplierEntity(isClient = partner.type == PartnerType.BOTH)
-                    val supplierId = supplierDao.insertOrUpdateSupplier(supplierEntity)
-                    if (isNewSupplier) {
-                        createOpeningBalanceTransaction(
-                            supplierId = supplierId,
-                            debit = 0.0,
-                            credit = partner.supplierIndebtedness
-                        )
-                    }
-                }
+                createOpeningBalanceTransaction(
+                    partnerLocalId = clientId,
+                    debit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1,
+                    credit = partner.openingBalance.takeIf { it > 0 } ?: 0.0
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -105,43 +63,18 @@ class BusinessPartnerRepositoryImpl(
     }
 
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
-        return try {
-            db.withTransaction {
-                val timestamp = Clock.now()
-                partner.clientId?.let { clientDao.softDeleteClient(it.local, timestamp) }
-                partner.supplierId?.let { supplierDao.softDeleteSupplier(it.local, timestamp) }
-            }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override fun getSuppliers(query: String): Flow<List<BusinessPartner>> {
-        return getBusinessPartners(query).map {
-            it.filter { it -> it.type != PartnerType.CLIENT }
-        }
-    }
-
-    override suspend fun getSupplier(localId: Long): BusinessPartner? {
-        return supplierDao.getSupplierById(localId)?.toDomain()
-    }
-
-
-    override fun getClients(query: String): Flow<List<BusinessPartner>> {
-        return getBusinessPartners(query).map {
-            it.filter { it -> it.type != PartnerType.SUPPLIER }
+        return runCatching {
+            TODO()
         }
     }
 
     override suspend fun getClient(clientId: Long): BusinessPartner? {
-        return clientDao.getClientWithDetails(clientId)?.toDomain()
+        return partnerDao.getPartnerByLocalId(clientId)?.toDomain()
     }
 
 
     private suspend fun createOpeningBalanceTransaction(
-        clientId: Long? = null,
-        supplierId: Long? = null,
+        partnerLocalId: Long? = null,
         debit: Double,
         credit: Double,
     ) {
@@ -150,8 +83,7 @@ class BusinessPartnerRepositoryImpl(
         partnerTransactionDao.insertTransaction(
             PartnerTransactionEntity(
                 serverId = null,
-                clientId = clientId,
-                supplierId = supplierId,
+                partnerLocalId = partnerLocalId,
                 sourceTransactionId = 0L,
                 transactionType = TransactionType.OPENING_BALANCE,
                 createdAt = Clock.now(),
@@ -163,32 +95,18 @@ class BusinessPartnerRepositoryImpl(
     }
 }
 
-private fun BusinessPartner.toClientEntity(isSupplier: Boolean): ClientEntity {
-    return ClientEntity(
-        serverId = null,
-        localId = this.clientId?.local ?: 0L,
-        arName = this.name.arName.orEmpty(),
-        enName = this.name.enName.orEmpty(),
-        phone = this.phone,
-        address = this.address,
-        debt = this.clientDebt,
-        isSupplier = isSupplier,
-        responsibleEmployeeLocalId = this.responsibleEmployee.id,
-        isSynced = false
-    )
-}
-
-private fun BusinessPartner.toSupplierEntity(isClient: Boolean): SupplierEntity {
-    return SupplierEntity(
-        serverId = null,
-        localId = this.supplierId?.local ?: 0L,
-        arName = this.name.arName.orEmpty(),
-        enName = this.name.enName.orEmpty(),
-        phone = this.phone,
-        address = this.address,
-        indebtedness = this.supplierIndebtedness,
-        isClient = isClient,
-        responsibleEmployeeLocalId = this.responsibleEmployee.id,
-        isSynced = false
+private fun BusinessPartner.toEntity(): BusinessPartnerEntity {
+    return BusinessPartnerEntity(
+        localId = id.local,
+        serverId = id.server,
+        arName = name.arName.orEmpty(),
+        enName = name.enName.orEmpty(),
+        phone = phone,
+        address = address,
+        responsibleEmployeeLocalId = responsibleEmployee.id,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        type = type,
+        openingBalance = openingBalance
     )
 }

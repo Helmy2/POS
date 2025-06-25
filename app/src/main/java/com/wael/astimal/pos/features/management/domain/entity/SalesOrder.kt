@@ -36,7 +36,7 @@ fun SalesOrder.toEntity(): Pair<OrderEntity, List<OrderProductEntity>> {
         localId = id.local,
         serverId = id.server,
         invoiceNumber = invoiceNumber,
-        clientLocalId = client.clientId!!.local,
+        businessPartnerLocalId = client.id.local,
         employeeLocalId = employee.id,
         amountPaid = amountPaid,
         amountRemaining = amountRemaining,

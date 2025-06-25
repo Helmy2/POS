@@ -83,7 +83,7 @@
     <string name="is_client">هل هو عميل؟</string>
     <string name="is_supplier">هل هو مورد: %1$s</string>
     <string name="phones">أرقام الهواتف:</string>
-    <string name="address">العنوان: %1$s</string>
+    <string name="address_with_args">العنوان: %1$s</string>
     <string name="address_placeholder">العنوان: %s</string>
     <string name="rate">المعدل</string>
     <string name="quantity">الكمية</string>

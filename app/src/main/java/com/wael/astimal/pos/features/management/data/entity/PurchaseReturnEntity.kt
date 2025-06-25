@@ -22,9 +22,9 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
     tableName = "purchase_returns",
     foreignKeys = [
         ForeignKey(
-            entity = SupplierEntity::class,
+            entity = BusinessPartnerEntity::class,
             parentColumns = ["localId"],
-            childColumns = ["supplierLocalId"],
+            childColumns = ["businessPartnerLocalId"],
         ),
         ForeignKey(
             entity = UserEntity::class,
@@ -33,7 +33,7 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
         )
     ],
     indices = [
-        Index(value = ["supplierLocalId"]),
+        Index(value = ["businessPartnerLocalId"]),
         Index(value = ["employeeLocalId"]),
         Index(value = ["invoiceNumber"], unique = true)
     ]
@@ -46,7 +46,7 @@ data class PurchaseReturnEntity(
     override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
     var invoiceNumber: String,
-    val supplierLocalId: Long,
+    val businessPartnerLocalId: Long,
     val employeeLocalId: Long,
     val amountPaid: Double,
     val amountRemaining: Double,
@@ -85,8 +85,12 @@ data class PurchaseReturnProductEntity(
 data class PurchaseReturnWithDetailsEntity(
     @Embedded
     val purchaseReturn: PurchaseReturnEntity,
-    @Relation(parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class)
-    val supplier: SupplierWithDetailsEntity?,
+    @Relation(
+        parentColumn = "businessPartnerLocalId",
+        entityColumn = "localId",
+        entity = BusinessPartnerEntity::class
+    )
+    val supplier: BusinessPartnerWithDetailsEntity?,
     @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
     val employee: UserEntity?,
     @Relation(

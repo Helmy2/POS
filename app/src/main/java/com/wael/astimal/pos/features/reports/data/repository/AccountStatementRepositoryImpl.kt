@@ -4,7 +4,6 @@ import com.wael.astimal.pos.core.util.toLocalDateTime
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
-import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.reports.domain.repository.AccountStatementRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -17,18 +16,9 @@ class AccountStatementRepositoryImpl(
 
     override fun getAccountStatement(partner: BusinessPartner): Flow<List<AccountTransaction>> {
         // Determine which ledger query to use based on the partner type.
-        val ledgerFlow = when (partner.type) {
-            PartnerType.BOTH -> partnerTransactionDao.getTransactionsForPartner(
-                partner.clientId?.local!!, partner.supplierId?.local!!
-            )
-
-            PartnerType.CLIENT -> partnerTransactionDao.getTransactionsForClient(partner.clientId?.local!!)
-            PartnerType.SUPPLIER -> partner.supplierId?.let {
-                partnerTransactionDao.getTransactionsForSupplier(
-                    it.local
-                )
-            } ?: flowOf(emptyList())
-        }
+        val ledgerFlow = partnerTransactionDao.getTransactionsForPartner(
+            partner.id.local
+        )
 
         // Combine the live ledger data with the static partner data to build the statement.
         return ledgerFlow.combine(flowOf(partner)) { ledgerEntries, currentPartner ->

@@ -57,7 +57,7 @@ interface PurchaseReturnDao {
     fun getAllPurchaseReturnsWithDetailsFlow(): Flow<List<PurchaseReturnWithDetailsEntity>>
 
     @Transaction
-    @Query("SELECT * FROM purchase_returns WHERE supplierLocalId = :supplierId AND NOT isDeletedLocally")
+    @Query("SELECT * FROM purchase_returns WHERE businessPartnerLocalId = :supplierId AND NOT isDeletedLocally")
     fun getReturnsBySupplierId(supplierId: Long): Flow<List<PurchaseReturnWithDetailsEntity>>
 
     @Query("SELECT MAX(invoiceNumber) FROM purchase_returns WHERE invoiceNumber LIKE :pattern")

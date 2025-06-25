@@ -54,7 +54,7 @@ class ReturnAmountLogic(
     }
 
     private suspend fun handleCommissions(returnEntity: OrderReturnEntity, returnId: Long) {
-        val client = partnerRepository.getClient(returnEntity.clientLocalId)
+        val client = partnerRepository.getClient(returnEntity.businessPartnerLocalId)
         val responsibleEmployeeId = client?.responsibleEmployee?.id
         val returningEmployeeId = returnEntity.employeeLocalId
 

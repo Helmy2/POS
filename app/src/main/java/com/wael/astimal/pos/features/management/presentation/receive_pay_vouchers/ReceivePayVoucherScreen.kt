@@ -165,12 +165,12 @@ fun VoucherEditDialog(
                             onItemSelected = {
                                 onEvent(
                                     ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                        it.clientId?.local
+                                        it.id.local
                                     )
                                 )
                             },
                             itemToDisplayString = { it.name.displayName(language) },
-                            itemToId = { it.clientId?.local },
+                            itemToId = { it.id.local },
                             onClearItem = {
                                 onEvent(
                                     ReceivePayVoucherContract.Event.DialogPartnerSelected(
@@ -188,12 +188,12 @@ fun VoucherEditDialog(
                             onItemSelected = {
                                 onEvent(
                                     ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                        it.supplierId?.local
+                                        it.id.local
                                     )
                                 )
                             },
                             itemToDisplayString = { it.name.displayName(language) },
-                            itemToId = { it.supplierId?.local },
+                            itemToId = { it.id.local },
                             onClearItem = {
                                 onEvent(
                                     ReceivePayVoucherContract.Event.DialogPartnerSelected(

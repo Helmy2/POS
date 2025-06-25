@@ -30,7 +30,7 @@ interface PurchaseDao {
     fun getAllPurchasesWithDetailsFlow(): Flow<List<PurchaseWithDetailsEntity>>
 
     @Transaction
-    @Query("SELECT * FROM purchases WHERE supplierLocalId = :supplierId AND NOT isDeletedLocally")
+    @Query("SELECT * FROM purchases WHERE businessPartnerLocalId = :supplierId AND NOT isDeletedLocally")
     fun getPurchasesBySupplierId(supplierId: Long): Flow<List<PurchaseWithDetailsEntity>>
 
     @Transaction

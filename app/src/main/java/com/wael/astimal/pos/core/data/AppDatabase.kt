@@ -17,7 +17,7 @@ import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
-import com.wael.astimal.pos.features.management.data.entity.ClientEntity
+import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
@@ -30,8 +30,7 @@ import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
-import com.wael.astimal.pos.features.management.data.entity.SupplierEntity
-import com.wael.astimal.pos.features.management.data.local.ClientDao
+import com.wael.astimal.pos.features.management.data.local.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
@@ -39,7 +38,6 @@ import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
-import com.wael.astimal.pos.features.management.data.local.SupplierDao
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.UserDao
@@ -54,8 +52,7 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         ProductEntity::class,
         StockTransferEntity::class,
         StockTransferItemEntity::class,
-        ClientEntity::class,
-        SupplierEntity::class,
+        BusinessPartnerEntity::class,
         OrderEntity::class,
         OrderProductEntity::class,
         OrderReturnEntity::class,
@@ -82,9 +79,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun productDao(): ProductDao
     abstract fun stockTransferDao(): StockTransferDao
-    abstract fun clientDao(): ClientDao
+    abstract fun businessPartnerDao(): BusinessPartnerDao
     abstract fun salesOrderDao(): SalesOrderDao
-    abstract fun supplierDao(): SupplierDao
     abstract fun orderReturnDao(): OrderReturnDao
     abstract fun purchaseOrderDao(): PurchaseDao
     abstract fun purchaseReturnDao(): PurchaseReturnDao

@@ -16,7 +16,7 @@ interface AccountStatementRepository {
      * running balance.
      *
      * @param partner The business partner for whom to generate the statement. The repository will use
-     * the clientLocalId and supplierLocalId from this object to fetch the relevant data.
+     * the businessPartnerLocalId and businessPartnerLocalId from this object to fetch the relevant data.
      * @return A Flow emitting a list of [AccountTransaction] objects, sorted by date.
      */
     fun getAccountStatement(partner: BusinessPartner): Flow<List<AccountTransaction>>

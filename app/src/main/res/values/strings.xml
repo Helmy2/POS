@@ -83,7 +83,8 @@
     <string name="is_client">Is Client</string>
     <string name="is_supplier">Is Supplier</string>
     <string name="phones">Phones:</string>
-    <string name="address">Address: %1$s</string>
+    <string name="address_with_args">Address: %1$s</string>
+    <string name="address">Address</string>
     <string name="address_placeholder">Address: %s</string>
     <string name="rate">Rate</string>
     <string name="quantity">Quantity</string>
@@ -205,7 +206,9 @@
     <string name="debt_address">Debt: %1$s | Address: %2$s</string>
     <string name="indebtedness_address">Indebtedness: %1$s | Address: %2$s</string>
     <string name="net_balance_positive">Net Balance (You Owe): %s</string>
+    <string name="opining_balance_positive_with_args">Opining Balance (You Owe): %s</string>
     <string name="net_balance_negative">Net Balance (Owed to You): %s</string>
+    <string name="opining_balance_negative_with_args">Opining Balance (Owed to You): %s</string>
     <string name="error_searching_clients">Error: Could not search for clients.</string>
     <string name="error_searching_business_partners">Error: Could not search for business partners.</string>
     <string name="partner_saved_successfully">Partner saved successfully.</string>
@@ -347,4 +350,5 @@
     <string name="order_to_with_args">Order from %1$s: %2$s</string>
     <string name="return_from_with_args">Return from %1$s: %2$s</string>
     <string name="error_no_order_selected">error_no_order_selected</string>
+    <string name="partner_type">partner_type</string>
 </resources>

@@ -26,7 +26,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,7 +40,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -51,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
@@ -135,12 +135,10 @@ fun BusinessPartnerScreen(
                 isSaving = state.isLoading,
                 canEdit = state.canUserEdit,
                 onDismiss = { onEvent(BusinessPartnerContract.Event.DismissDialog) },
-                onSave = { partner, openingDebt, openingIndebtedness ->
+                onSave = { partner ->
                     onEvent(
                         BusinessPartnerContract.Event.SaveChangesClicked(
                             partner,
-                            openingDebt,
-                            openingIndebtedness
                         )
                     )
                 }
@@ -240,7 +238,7 @@ fun BusinessPartnerList(
 ) {
     val language = LocalAppLocale.current
     LazyVerticalGrid(modifier = modifier, columns = GridCells.Adaptive(250.dp)) {
-        items(partners, key = { it.getCompositeId() }) { partner ->
+        items(partners, key = { it.id.local }) { partner ->
             Card(modifier = Modifier.clickable { onPartnerClick(partner) }) {
                 ListItem(
                     headlineContent = {
@@ -278,19 +276,18 @@ fun BusinessPartnerEditDialog(
     isSaving: Boolean,
     canEdit: Boolean,
     onDismiss: () -> Unit,
-    onSave: (BusinessPartner, Double, Double) -> Unit
+    onSave: (BusinessPartner) -> Unit
 ) {
     var enName by remember(partner.name.enName) { mutableStateOf(partner.name.enName ?: "") }
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
     var address by remember(partner.address) { mutableStateOf(partner.address) }
     var phone by remember(partner.phone) { mutableStateOf(partner.phone) }
-    var isClient by remember(partner.type) { mutableStateOf(partner.type == PartnerType.CLIENT || partner.type == PartnerType.BOTH) }
-    var isSupplier by remember(partner.type) { mutableStateOf(partner.type == PartnerType.SUPPLIER || partner.type == PartnerType.BOTH) }
 
-    var openingDebt by remember { mutableStateOf("0.0") }
-    var openingIndebtedness by remember { mutableStateOf("0.0") }
-
-    val isNewPartner = partner.clientId == null && partner.supplierId == null
+    var openingBalance by remember { mutableStateOf("0.0") }
+    val isNewPartner = partner.id == Id.new
+    var type by remember {
+        mutableStateOf(partner.type)
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -320,6 +317,16 @@ fun BusinessPartnerEditDialog(
                     enabled = canEdit
                 )
                 LabeledTextField(
+                    value = openingBalance,
+                    onValueChange = { openingBalance = it },
+                    label = stringResource(R.string.opening_balance),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone
+                    ),
+                    enabled = canEdit
+                )
+
+                LabeledTextField(
                     value = address,
                     onValueChange = { address = it },
                     label = stringResource(R.string.address),
@@ -335,79 +342,66 @@ fun BusinessPartnerEditDialog(
                     enabled = canEdit
                 )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = isClient, onCheckedChange = { isClient = it })
-                    Text(stringResource(R.string.is_client))
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Checkbox(checked = isSupplier, onCheckedChange = { isSupplier = it })
-                    Text(stringResource(R.string.is_supplier))
-                }
-
                 AnimatedVisibility(visible = isNewPartner) {
                     Column {
-                        if (isClient) {
-                            LabeledTextField(
-                                value = openingDebt,
-                                onValueChange = { openingDebt = it },
-                                label = stringResource(R.string.opening_debt),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                enabled = canEdit
-                            )
-                        }
-                        if (isSupplier) {
-                            LabeledTextField(
-                                value = openingIndebtedness,
-                                onValueChange = { openingIndebtedness = it },
-                                label = stringResource(R.string.opening_indebtedness),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                enabled = canEdit
-                            )
-                        }
+                        LabeledTextField(
+                            value = openingBalance,
+                            onValueChange = { openingBalance = it },
+                            label = stringResource(R.string.opening_balance),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            enabled = canEdit
+                        )
                     }
                 }
+            }
 
-                // Action Buttons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.End
+            CustomExposedDropdownMenu(
+                label = stringResource(R.string.partner_type),
+                items = PartnerType.entries,
+                currentSelection = type.name,
+                enabled = canEdit,
+                itemToDisplayString = { it.name },
+                onItemSelected = {
+                    type = it
+                }, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = onDismiss,
+                    enabled = !isSaving
+                ) { Text(stringResource(R.string.cancel)) }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        val updatedPartner = partner.copy(
+                            name = partner.name.copy(enName = enName, arName = arName),
+                            address = address,
+                            phone = phone,
+                            type = type,
+                            openingBalance = openingBalance.toDoubleOrNull() ?: 0.0
+                        )
+                        onSave(
+                            updatedPartner,
+                        )
+                    },
+                    enabled = !isSaving && (enName.isNotBlank() || arName.isNotBlank())
                 ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        enabled = !isSaving
-                    ) { Text(stringResource(R.string.cancel)) }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            val type = when {
-                                isClient && isSupplier -> PartnerType.BOTH
-                                isClient -> PartnerType.CLIENT
-                                else -> PartnerType.SUPPLIER
-                            }
-                            val updatedPartner = partner.copy(
-                                name = partner.name.copy(enName = enName, arName = arName),
-                                address = address,
-                                phone = phone,
-                                type = type
-                            )
-                            onSave(
-                                updatedPartner,
-                                openingDebt.toDoubleOrNull() ?: 0.0,
-                                openingIndebtedness.toDoubleOrNull() ?: 0.0
-                            )
-                        },
-                        enabled = !isSaving && (isClient || isSupplier) && (enName.isNotBlank() || arName.isNotBlank())
-                    ) {
-                        if (isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text(stringResource(R.string.save))
-                        }
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(stringResource(R.string.save))
                     }
                 }
             }
@@ -420,27 +414,24 @@ fun PartnerTypeChip(partnerType: PartnerType) {
     val text = when (partnerType) {
         PartnerType.CLIENT -> stringResource(R.string.client)
         PartnerType.SUPPLIER -> stringResource(R.string.supplier)
-        PartnerType.BOTH -> stringResource(R.string.client_and_supplier)
+        else -> stringResource(R.string.client_and_supplier)
     }
     SuggestionChip(onClick = {}, label = { Text(text, maxLines = 1) })
 }
 
-/**
- * A reusable composable to display the net balance of a partner with appropriate
- * coloring and text based on whether they owe money or are owed money.
- */
+
 @Composable
 fun BalanceText(partner: BusinessPartner) {
-    val balance = partner.netBalance
+    val balance = partner.openingBalance
     val (balanceText, balanceColor) = when {
         // They owe you (positive balance)
         balance > 0.01 -> stringResource(
-            R.string.net_balance_positive,
+            R.string.opining_balance_positive_with_args,
             "%.2f".format(balance)
         ) to PositiveBalanceColor
         // You owe them (negative balance)
         balance < -0.01 -> stringResource(
-            R.string.net_balance_negative,
+            R.string.opining_balance_negative_with_args,
             "%.2f".format(abs(balance))
         ) to NegativeBalanceColor
         // Settled
@@ -452,8 +443,4 @@ fun BalanceText(partner: BusinessPartner) {
         color = balanceColor,
         style = MaterialTheme.typography.bodyMedium
     )
-}
-
-fun BusinessPartner.getCompositeId(): String {
-    return "${type}_${clientId?.local}_${supplierId?.local}"
 }

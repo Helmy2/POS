@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 class SalesOrderRepositoryImpl(
     private val database: AppDatabase,
@@ -43,8 +44,9 @@ class SalesOrderRepositoryImpl(
     }
 
     private suspend fun generateNextInvoiceNumber(): String {
+        val random = Random.nextInt(1, 999999)
         val today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val prefix = "INV-$today-"
+        val prefix = "INV-$today-$random-"
         val lastInvoice = salesOrderDao.getLastInvoiceNumber("$prefix%")
         val nextSeq = if (lastInvoice == null) {
             1
@@ -73,8 +75,7 @@ class SalesOrderRepositoryImpl(
                 // Create ledger entry for the sale
                 partnerTransactionDao.insertTransaction(
                     PartnerTransactionEntity(
-                        clientId = orderWithInvoice.clientLocalId,
-                        supplierId = null,
+                        partnerLocalId = orderWithInvoice.businessPartnerLocalId,
                         sourceTransactionId = insertedOrderLocalId,
                         transactionType = TransactionType.SALE,
                         createdAt = orderWithInvoice.createdAt,
@@ -87,8 +88,7 @@ class SalesOrderRepositoryImpl(
                 if (orderWithInvoice.amountPaid > 0) {
                     partnerTransactionDao.insertTransaction(
                         PartnerTransactionEntity(
-                            clientId = orderWithInvoice.clientLocalId,
-                            supplierId = null,
+                            partnerLocalId = orderWithInvoice.businessPartnerLocalId,
                             sourceTransactionId = insertedOrderLocalId,
                             transactionType = TransactionType.PAYMENT_RECEIVED,
                             createdAt = orderWithInvoice.createdAt,
@@ -184,8 +184,7 @@ class SalesOrderRepositoryImpl(
     private suspend fun addOrderLedgerEntries(order: OrderEntity, orderId: Long) {
         partnerTransactionDao.insertTransaction(
             PartnerTransactionEntity(
-                clientId = order.clientLocalId,
-                supplierId = null,
+                partnerLocalId = order.businessPartnerLocalId,
                 sourceTransactionId = orderId,
                 transactionType = TransactionType.SALE,
                 createdAt = order.createdAt,
@@ -198,8 +197,7 @@ class SalesOrderRepositoryImpl(
         if (order.amountPaid > 0) {
             partnerTransactionDao.insertTransaction(
                 PartnerTransactionEntity(
-                    clientId = order.clientLocalId,
-                    supplierId = null,
+                    partnerLocalId = order.businessPartnerLocalId,
                     sourceTransactionId = orderId,
                     transactionType = TransactionType.PAYMENT_RECEIVED,
                     createdAt = order.createdAt,

@@ -21,15 +21,15 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 @Entity(
     tableName = "purchases",
     foreignKeys = [ForeignKey(
-        entity = SupplierEntity::class,
+        entity = BusinessPartnerEntity::class,
         parentColumns = ["localId"],
-        childColumns = ["supplierLocalId"],
+        childColumns = ["businessPartnerLocalId"],
     ), ForeignKey(
         entity = UserEntity::class,
         parentColumns = ["id"],
         childColumns = ["employeeLocalId"],
     )],
-    indices = [Index(value = ["supplierLocalId"]), Index(value = ["employeeLocalId"]), Index(
+    indices = [Index(value = ["businessPartnerLocalId"]), Index(value = ["employeeLocalId"]), Index(
         value = ["invoiceNumber"],
         unique = true
     )]
@@ -44,7 +44,7 @@ data class PurchaseEntity(
 
     var invoiceNumber: String,
 
-    val supplierLocalId: Long,
+    val businessPartnerLocalId: Long,
     val employeeLocalId: Long,
 
     val amountPaid: Double,
@@ -79,8 +79,10 @@ data class PurchaseWithDetailsEntity(
     @Embedded val purchase: PurchaseEntity,
 
     @Relation(
-        parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class
-    ) val supplier: SupplierWithDetailsEntity?,
+        parentColumn = "businessPartnerLocalId",
+        entityColumn = "localId",
+        entity = BusinessPartnerEntity::class
+    ) val supplier: BusinessPartnerWithDetailsEntity?,
 
     @Relation(
         parentColumn = "employeeLocalId",
