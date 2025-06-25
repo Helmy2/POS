@@ -20,23 +20,19 @@ import com.wael.astimal.pos.features.user.data.entity.toDomain
 
 @Entity(
     tableName = "purchases",
-    foreignKeys = [
-        ForeignKey(
-            entity = SupplierEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["supplierLocalId"],
-        ),
-        ForeignKey(
-            entity = UserEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["employeeLocalId"],
-        )
-    ],
-    indices = [
-        Index(value = ["supplierLocalId"]),
-        Index(value = ["employeeLocalId"]),
-        Index(value = ["invoiceNumber"], unique = true)
-    ]
+    foreignKeys = [ForeignKey(
+        entity = SupplierEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["supplierLocalId"],
+    ), ForeignKey(
+        entity = UserEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["employeeLocalId"],
+    )],
+    indices = [Index(value = ["supplierLocalId"]), Index(value = ["employeeLocalId"]), Index(
+        value = ["invoiceNumber"],
+        unique = true
+    )]
 )
 data class PurchaseEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
@@ -58,24 +54,18 @@ data class PurchaseEntity(
 ) : ItemEntity
 
 @Entity(
-    tableName = "purchase_products",
-    foreignKeys = [
-        ForeignKey(
-            entity = PurchaseEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["purchaseLocalId"],
-        ),
-        ForeignKey(
-            entity = ProductEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["productLocalId"],
-        )
-    ],
-    indices = [Index(value = ["purchaseLocalId"]), Index(value = ["productLocalId"])]
+    tableName = "purchase_products", foreignKeys = [ForeignKey(
+        entity = PurchaseEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["purchaseLocalId"],
+    ), ForeignKey(
+        entity = ProductEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["productLocalId"],
+    )], indices = [Index(value = ["purchaseLocalId"]), Index(value = ["productLocalId"])]
 )
 data class PurchaseProductEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
     val serverId: Long?,
     val purchaseLocalId: Long,
     val productLocalId: Long,
@@ -86,37 +76,31 @@ data class PurchaseProductEntity(
 
 
 data class PurchaseWithDetailsEntity(
-    @Embedded
-    val purchase: PurchaseEntity,
+    @Embedded val purchase: PurchaseEntity,
 
     @Relation(
-        parentColumn = "supplierLocalId",
-        entityColumn = "localId",
-        entity = SupplierEntity::class
-    )
-    val supplier: SupplierWithDetailsEntity?,
+        parentColumn = "supplierLocalId", entityColumn = "localId", entity = SupplierEntity::class
+    ) val supplier: SupplierWithDetailsEntity?,
 
-    @Relation(parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class)
-    val user: UserEntity?,
+    @Relation(
+        parentColumn = "employeeLocalId",
+        entityColumn = "id",
+        entity = UserEntity::class
+    ) val user: UserEntity?,
 
     @Relation(
         parentColumn = "localId",
         entityColumn = "purchaseLocalId",
         entity = PurchaseProductEntity::class
-    )
-    val itemsWithProductDetails: List<PurchaseProductItemWithDetails>
+    ) val itemsWithProductDetails: List<PurchaseProductItemWithDetails>
 )
 
 data class PurchaseProductItemWithDetails(
-    @Embedded
-    val purchaseItem: PurchaseProductEntity,
+    @Embedded val purchaseItem: PurchaseProductEntity,
 
     @Relation(
-        parentColumn = "productLocalId",
-        entityColumn = "localId",
-        entity = ProductEntity::class
-    )
-    val product: ProductWithDetailsEntity?,
+        parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class
+    ) val product: ProductWithDetailsEntity?,
 )
 
 fun PurchaseWithDetailsEntity.toDomain(): PurchaseOrder {

@@ -152,10 +152,15 @@ fun OrderItemRow(
             }
         }
 
-        Text(
-            text = stringResource(R.string.in_stock, item.currentStock),
-            style = MaterialTheme.typography.bodySmall
-        )
+        AnimatedVisibility(item.product?.maximumProductUnit != null) {
+            Text(
+                text = stringResource(
+                    R.string.in_stock, item.currentStock
+                ) + " " + item.product?.maximumProductUnit?.name?.displayName(language).orEmpty(),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
 
         AnimatedVisibility(item.product?.minimumProductUnit != null) {
             Column {
@@ -164,10 +169,10 @@ fun OrderItemRow(
                     items = listOfNotNull(
                         item.product?.minimumProductUnit, item.product?.maximumProductUnit
                     ),
-                    selectedItemId = if (item.isSelectedUnitIsMax) {
-                        item.product?.maximumProductUnit?.id?.local
+                    currentSelection = if (item.isSelectedUnitIsMax) {
+                        item.product?.maximumProductUnit?.name?.displayName(language).orEmpty()
                     } else {
-                        item.product?.minimumProductUnit?.id?.local
+                        item.product?.minimumProductUnit?.name?.displayName(language).orEmpty()
                     },
                     onItemSelected = { unit ->
                         onUpdateItemUnit(
@@ -176,18 +181,15 @@ fun OrderItemRow(
                         )
                     },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
-                    canClearSelection = false,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Label(
-                        item.product?.minimumProductUnit?.name?.displayName(language)
-                            ?: "", modifier = Modifier.align(Alignment.CenterVertically)
+                        item.product?.minimumProductUnit?.name?.displayName(language) ?: "",
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     TextInputField(
                         value = item.minUnitQuantity,

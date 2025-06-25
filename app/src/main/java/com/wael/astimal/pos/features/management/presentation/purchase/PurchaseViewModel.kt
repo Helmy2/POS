@@ -10,15 +10,20 @@ import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrderItem
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -27,6 +32,7 @@ class PurchaseViewModel(
     private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
     private val userRepository: UserRepository,
+    private val stockRepository: StockRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController,
 ) : BaseViewModel<PurchaseContract.State, PurchaseContract.Event, Nothing>(
@@ -35,6 +41,7 @@ class PurchaseViewModel(
         currentPurchaseInput = PurchaseContract.EditablePurchase(date = Clock.now())
     )
 ) {
+    private val stockObservationJobs = mutableMapOf<String, Job>()
 
     val filteredPurchasesState: StateFlow<List<PurchaseOrder>> =
         combine(
@@ -54,9 +61,36 @@ class PurchaseViewModel(
 
     override fun handleEvent(event: PurchaseContract.Event) {
         when (event) {
-            is PurchaseContract.Event.SaveClicked -> savePurchase()
-            is PurchaseContract.Event.DeleteClicked -> deletePurchase()
-            is PurchaseContract.Event.BackClicked -> navigateBack()
+            is PurchaseContract.Event.SaveClicked -> {
+                stockObservationJobs.values.forEach { it.cancel() }
+                stockObservationJobs.clear()
+                savePurchase()
+            }
+
+            is PurchaseContract.Event.DeleteClicked -> {
+                stockObservationJobs.values.forEach { it.cancel() }
+                stockObservationJobs.clear()
+                deletePurchase()
+            }
+
+            is PurchaseContract.Event.BackClicked -> {
+                stockObservationJobs.values.forEach { it.cancel() }
+                stockObservationJobs.clear()
+                navigateBack()
+            }
+
+            is PurchaseContract.Event.RemoveItem -> {
+                stockObservationJobs[event.editorId]?.cancel()
+                stockObservationJobs.remove(event.editorId)
+                setState(event)
+            }
+
+            is PurchaseContract.Event.ItemProductChanged -> {
+                event.product?.let {
+                    observeStockForItem(event.editorId, it.id.local)
+                }
+                setState(event)
+            }
             else -> setState(event)
         }
     }
@@ -85,7 +119,7 @@ class PurchaseViewModel(
     private fun savePurchase() {
         viewModelScope.launch {
             val currentState = state.value
-            if (!currentState.canSave) {
+            if (!currentState.canSave || currentState.selectedSupplier == null || currentState.currentPurchaseInput.selectedEmployee == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
@@ -112,9 +146,8 @@ class PurchaseViewModel(
             }
 
             val purchaseToSave = PurchaseOrder(
-                supplier = currentState.selectedSupplier!!,
-                user = currentState.dropdownData.employees.find { it.id == currentState.currentPurchaseInput.selectedEmployeeId }
-                    ?: throw IllegalStateException("Selected employee not found"),
+                supplier = currentState.selectedSupplier,
+                user = currentState.currentPurchaseInput.selectedEmployee,
                 paymentType = currentState.currentPurchaseInput.paymentType,
                 amountPaid = currentState.currentPurchaseInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 data = currentState.currentPurchaseInput.date,
@@ -155,6 +188,25 @@ class PurchaseViewModel(
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.failed_to_delete_purchase)))
                 setState(PurchaseContract.Event.LoadingFinished)
             }
+        }
+    }
+
+    private fun observeStockForItem(tempId: String, productId: Long) {
+        stockObservationJobs[tempId]?.cancel()
+        viewModelScope.launch {
+            val employeeId = state.value.currentPurchaseInput.selectedEmployee?.id ?: return@launch
+            val storeId =
+                userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
+            stockObservationJobs[tempId] =
+                stockRepository.getStockQuantityFlow(storeId, productId)
+                    .catch {
+                        snackbarController.sendEvent(
+                            SnackbarEvent(StringResource.FromResource(R.string.error_fetching_stock))
+                        )
+                    }
+                    .onEach { stock ->
+                        setState(PurchaseContract.Event.ItemStockChanged(tempId, stock))
+                    }.launchIn(viewModelScope)
         }
     }
 

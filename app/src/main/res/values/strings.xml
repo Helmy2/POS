@@ -342,4 +342,6 @@
     <string name="failed_to_delete_purchase">failed_to_delete_purchase</string>
     <string name="purchase_saved_successfully">purchase_saved_successfully</string>
     <string name="failed_to_save_purchase">failed_to_save_purchase</string>
+    <string name="error_fetching_stock">error_fetching_stock</string>
+    <string name="purchase_from_with_args">Purchase from %1$s: %2$s</string>
 </resources>

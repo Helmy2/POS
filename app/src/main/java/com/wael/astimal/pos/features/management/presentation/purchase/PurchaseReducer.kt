@@ -26,7 +26,7 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                 previousState.copy(
                     currentUser = event.user,
                     currentPurchaseInput = previousState.currentPurchaseInput.copy(
-                        selectedEmployeeId = event.user?.id
+                        selectedEmployee = event.user
                     )
                 ) to null
 
@@ -55,7 +55,7 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                     selectedPurchase = event.purchase,
                     selectedSupplier = event.purchase.supplier,
                     currentPurchaseInput = PurchaseContract.EditablePurchase(
-                        selectedEmployeeId = event.purchase.user.id,
+                        selectedEmployee = event.purchase.user,
                         paymentType = event.purchase.paymentType,
                         date = event.purchase.data,
                         items = editableItems,
@@ -71,8 +71,10 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                 previousState.copy(
                     isLoading = false,
                     selectedPurchase = null,
-                    selectedSupplier = null,
-                    currentPurchaseInput = PurchaseContract.EditablePurchase(date = Clock.now())
+                    currentPurchaseInput = PurchaseContract.EditablePurchase(
+                        date = Clock.now(),
+                        selectedEmployee = previousState.currentUser,
+                    )
                 ) to null
 
             // Form input updates
@@ -82,7 +84,7 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
             is PurchaseContract.Event.EmployeeChanged ->
                 previousState.copy(
                     currentPurchaseInput = previousState.currentPurchaseInput.copy(
-                        selectedEmployeeId = event.employeeId
+                        selectedEmployee = event.employee
                     )
                 ) to null
 
@@ -120,6 +122,19 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                         items = previousState.currentPurchaseInput.items.filterNot { it.tempEditorId == event.editorId }
                     )
                 ) to null
+
+            is PurchaseContract.Event.ItemStockChanged -> {
+                val updatedItems = previousState.currentPurchaseInput.items.map { item ->
+                    if (item.tempEditorId == event.editorId) {
+                        item.copy(currentStock = event.stock)
+                    } else item
+                }
+                previousState.copy(
+                    currentPurchaseInput = previousState.currentPurchaseInput.copy(
+                        items = updatedItems
+                    )
+                ) to null
+            }
 
             is PurchaseContract.Event.ItemProductChanged -> {
                 val updatedItems = previousState.currentPurchaseInput.items.map { item ->

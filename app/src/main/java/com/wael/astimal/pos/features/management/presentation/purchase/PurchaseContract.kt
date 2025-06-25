@@ -17,7 +17,7 @@ object PurchaseContract {
     )
 
     data class EditablePurchase(
-        val selectedEmployeeId: Long? = null,
+        val selectedEmployee: User? = null,
         val paymentType: PaymentType = PaymentType.CASH,
         val date: Long,
         val items: List<EditableItem> = emptyList(),
@@ -57,7 +57,7 @@ object PurchaseContract {
 
         // Form Input Changes
         data class SupplierSelected(val supplier: BusinessPartner?) : Event
-        data class EmployeeChanged(val employeeId: Long?) : Event
+        data class EmployeeChanged(val employee: User?) : Event
         data class DateChanged(val date: Long) : Event
         data class PaymentTypeChanged(val type: PaymentType) : Event
         data class AmountPaidChanged(val amount: String) : Event
@@ -69,6 +69,7 @@ object PurchaseContract {
         data class ItemMinQuantityChanged(val editorId: String, val quantity: String) : Event
         data class ItemMaxPriceChanged(val editorId: String, val price: String) : Event
         data class ItemMinPriceChanged(val editorId: String, val price: String) : Event
+        data class ItemStockChanged(val editorId: String, val stock: Double) : Event
 
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event
