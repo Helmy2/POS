@@ -1,170 +1,164 @@
 package com.wael.astimal.pos.features.management.presentation.purchase_return
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
-import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
-import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
+import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import kotlinx.coroutines.flow.SharedFlow
+import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PurchaseReturnRoute(
-    viewModel: PurchaseReturnViewModel = koinViewModel(),
-    onBack: () -> Unit
+    viewModel: PurchaseReturnViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val filteredReturns by viewModel.filteredReturnsState.collectAsStateWithLifecycle()
+
     PurchaseReturnScreen(
         state = state,
-        onEvent = viewModel::onEvent,
-        onBack = onBack,
-        eventFlow = viewModel.eventFlow,
+        filteredReturns = filteredReturns,
+        onEvent = viewModel::processEvent,
     )
 }
 
 @Composable
 fun PurchaseReturnScreen(
-    state: PurchaseReturnState,
-    onEvent: (PurchaseReturnEvent) -> Unit,
-    onBack: () -> Unit,
-    eventFlow: SharedFlow<UiEvent>
+    state: PurchaseReturnContract.State,
+    filteredReturns: List<PurchaseReturn>,
+    onEvent: (PurchaseReturnContract.Event) -> Unit,
 ) {
+    val language = LocalAppLocale.current
+    val returnInput = state.currentReturnInput
+
     SearchScreen(
-        eventFlow = eventFlow,
-        query = state.query,
-        isSearchActive = state.isQueryActive,
-        loading = state.loading,
-        isNew = state.isNew,
-        canEdit = state.canEdit,
-        onQueryChange = { onEvent(PurchaseReturnEvent.UpdateQuery(it)) },
-        onSearch = { onEvent(PurchaseReturnEvent.SearchReturns(it)) },
-        onSearchActiveChange = { onEvent(PurchaseReturnEvent.UpdateIsQueryActive(it)) },
-        onBack = onBack,
+        query = state.searchQuery,
+        isSearchActive = state.isSearchActive,
+        isNew = !state.isEditing,
+        canSave = state.canSave,
+        onQueryChange = { onEvent(PurchaseReturnContract.Event.SearchQueryChanged(it)) },
+        onSearch = { onEvent(PurchaseReturnContract.Event.SearchQueryChanged(it)) },
+        onSearchActiveChange = { onEvent(PurchaseReturnContract.Event.SearchActiveChanged(it)) },
+        onBack = { onEvent(PurchaseReturnContract.Event.BackClicked) },
         lastModifiedDate = state.selectedReturn?.updatedAt,
-        onDelete = { onEvent(PurchaseReturnEvent.DeleteReturn) },
-        onCreate = { onEvent(PurchaseReturnEvent.SaveReturn) },
-        onUpdate = { onEvent(PurchaseReturnEvent.SaveReturn) },
-        onNew = { onEvent(PurchaseReturnEvent.OpenNewReturnForm) },
+        onDelete = { onEvent(PurchaseReturnContract.Event.DeleteClicked) },
+        onCreate = { onEvent(PurchaseReturnContract.Event.SaveClicked) },
+        onUpdate = { onEvent(PurchaseReturnContract.Event.SaveClicked) },
+        onNew = { onEvent(PurchaseReturnContract.Event.NewReturnClicked) },
         searchResults = {
             ItemGrid(
-                list = state.returns,
-                onItemClick = { onEvent(PurchaseReturnEvent.SelectReturnToView(it)) },
+                list = filteredReturns,
+                onItemClick = { onEvent(PurchaseReturnContract.Event.ReturnSelected(it)) },
                 label = {
-                    Text(
-                        "Return to ${it.supplier.name.displayName(LocalAppLocale.current)}: ${it.invoiceNumber}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(16.dp)
+                    Label(
+                        stringResource(
+                            R.string.return_from_with_args,
+                            it.supplier.name.displayName(language),
+                            it.invoiceNumber
+                        )
                     )
                 },
-                isSelected = { item -> item.id.local == state.selectedReturn?.id?.local },
+                isSelected = { purchaseReturn -> purchaseReturn.id.local == state.selectedReturn?.id?.local },
             )
         },
         mainContent = {
-            PurchaseReturnForm(state = state, onEvent = onEvent)
-        }
-    )
-}
-
-@Composable
-fun PurchaseReturnForm(
-    state: PurchaseReturnState,
-    onEvent: (PurchaseReturnEvent) -> Unit
-) {
-    val currentLanguage = LocalAppLocale.current
-    FlowRow(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        DataPicker(
-            selectedDateMillis = state.currentReturnInput.date,
-            onDateSelected = { onEvent(PurchaseReturnEvent.UpdateReturnDate(it)) },
-        )
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.supplier),
-            items = state.availableSuppliers,
-            selectedItemId = state.selectedSupplier?.id?.local,
-            onItemSelected = { onEvent(PurchaseReturnEvent.SelectSupplier(it)) },
-            itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id.local },
-            canClearSelection = false,
-        )
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.employee),
-            items = state.availableEmployees,
-            selectedItemId = state.currentReturnInput.selectedEmployeeId,
-            onItemSelected = { onEvent(PurchaseReturnEvent.SelectEmployee(it.id)) },
-            itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id },
-            enabled = state.currentUser?.isAdmin ?: false,
-            canClearSelection = false,
-        )
-
-        OrderInputFields(
-            itemList = state.currentReturnInput.items,
-            selectedPaymentType = state.currentReturnInput.paymentType,
-            amountPaid = state.currentReturnInput.amountPaid,
-            onUpdateAmountPaid = { onEvent(PurchaseReturnEvent.UpdateAmountPaid(it)) },
-            onAddNewItemToOrder = { onEvent(PurchaseReturnEvent.AddItemToReturn) },
-            availableProducts = state.availableProducts,
-            onSelectPaymentType = { onEvent(PurchaseReturnEvent.UpdatePaymentType(it)) },
-            onItemSelected = { tempEditorId, product ->
-                onEvent(PurchaseReturnEvent.UpdateItemProduct(tempEditorId, product))
-            },
-            onRemoveItemFromOrder = { tempEditorId ->
-                onEvent(PurchaseReturnEvent.RemoveItemFromReturn(tempEditorId))
-            },
-            onUpdateItemUnit = { tempEditorId, isMaxUnitSelected ->
-                onEvent(PurchaseReturnEvent.UpdateItemUnit(tempEditorId, isMaxUnitSelected))
-            },
-            onUpdateItemMaxUnitPrice = { tempEditorId, maxUnitPrice ->
-                onEvent(PurchaseReturnEvent.UpdateItemMaxUnitPrice(tempEditorId, maxUnitPrice))
-            },
-            onUpdateItemMinUnitPrice = { tempEditorId, minUnitPrice ->
-                onEvent(PurchaseReturnEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
-            },
-            onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
-                onEvent(
-                    PurchaseReturnEvent.UpdateItemMaxUnitQuantity(
-                        tempEditorId,
-                        maxUnitQuantity
-                    )
-                )
-            },
-            onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
-                onEvent(
-                    PurchaseReturnEvent.UpdateItemMinUnitQuantity(
-                        tempEditorId,
-                        minUnitQuantity
-                    )
+            item {
+                DataPicker(
+                    selectedDateMillis = returnInput.date,
+                    onDateSelected = { onEvent(PurchaseReturnContract.Event.DateChanged(it)) },
+                    modifier = Modifier.padding(8.dp),
                 )
             }
-        )
-
-        OrderTotalsSection(
-            totalAmount = state.currentReturnInput.totalAmount,
-            amountPaid = state.currentReturnInput.amountPaid.toDoubleOrNull() ?: 0.0,
-            amountRemaining = state.currentReturnInput.amountRemaining
-        )
-    }
+            item {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.supplier),
+                    items = state.dropdownData.suppliers,
+                    currentSelection = state.selectedSupplier?.name?.displayName(language) ?: "",
+                    onItemSelected = { onEvent(PurchaseReturnContract.Event.SupplierSelected(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            item {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.employee),
+                    items = state.dropdownData.employees,
+                    currentSelection = returnInput.selectedEmployee?.name?.displayName(language)
+                        ?: "",
+                    onItemSelected = { onEvent(PurchaseReturnContract.Event.EmployeeChanged(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    enabled = state.currentUser?.isAdmin == true,
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            editableOrderItems(
+                itemList = returnInput.items,
+                availableProducts = state.dropdownData.products,
+                onRemoveItemFromOrder = { editorId ->
+                    onEvent(PurchaseReturnContract.Event.RemoveItem(editorId))
+                },
+                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemUnitChanged(
+                            editorId,
+                            isMaxUnitSelected
+                        )
+                    )
+                },
+                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMaxPriceChanged(
+                            editorId,
+                            maxUnitPrice
+                        )
+                    )
+                },
+                onUpdateItemMinUnitPrice = { editorId, minUnitPrice ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMinPriceChanged(
+                            editorId,
+                            minUnitPrice
+                        )
+                    )
+                },
+                onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMaxQuantityChanged(
+                            editorId, maxUnitQuantity
+                        )
+                    )
+                },
+                onUpdateItemMinUnitQuantity = { editorId, minUnitQuantity ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMinQuantityChanged(
+                            editorId, minUnitQuantity
+                        )
+                    )
+                },
+                onUpdateAmountPaid = {
+                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
+                },
+                selectedPaymentType = returnInput.paymentType,
+                onSelectPaymentType = { onEvent(PurchaseReturnContract.Event.PaymentTypeChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
+                },
+                totalAmount = returnInput.totalAmount.toString(),
+                amountRemaining = returnInput.amountRemaining.toString(),
+                amountPaid = returnInput.amountPaid,
+                onAddNewItemToOrder = {
+                    onEvent(PurchaseReturnContract.Event.AddItem)
+                })
+        },
+    )
 }

@@ -129,7 +129,6 @@ fun PurchaseReturnWithDetailsEntity.toDomain(): PurchaseReturn {
 fun PurchaseReturnItemWithDetails.toDomain(): PurchaseReturnItem {
     return PurchaseReturnItem(
         id = Id(purchaseReturnItem.localId, purchaseReturnItem.serverId),
-        purchaseReturnLocalId = purchaseReturnItem.purchaseReturnLocalId,
         product = product?.toDomain() ?: throw NullPointerException(),
         quantity = purchaseReturnItem.quantity,
         purchasePrice = purchaseReturnItem.purchasePrice,

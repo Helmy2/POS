@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
@@ -47,14 +48,17 @@ class BusinessPartnerRepositoryImpl(
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
             db.withTransaction {
-                // Save Client record if applicable
-                val clientId = partnerDao.insertOrUpdate(partner.toEntity())
+                if (partner.id == Id.new) {
+                    val clientId = partnerDao.insertOrUpdate(partner.toEntity())
 
-                createOpeningBalanceTransaction(
-                    partnerLocalId = clientId,
-                    debit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1,
-                    credit = partner.openingBalance.takeIf { it > 0 } ?: 0.0
-                )
+                    createOpeningBalanceTransaction(
+                        partnerLocalId = clientId,
+                        debit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1,
+                        credit = partner.openingBalance.takeIf { it > 0 } ?: 0.0
+                    )
+                } else {
+                    TODO()
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {

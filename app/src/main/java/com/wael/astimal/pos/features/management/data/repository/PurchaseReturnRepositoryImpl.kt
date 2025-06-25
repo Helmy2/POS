@@ -7,12 +7,12 @@ import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
+import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import kotlinx.coroutines.flow.Flow
@@ -53,10 +53,10 @@ class PurchaseReturnRepositoryImpl(
     }
 
     override suspend fun addPurchaseReturn(
-        purchaseReturn: PurchaseReturnEntity,
-        items: List<PurchaseReturnProductEntity>
+        purchaseReturn: PurchaseReturn,
     ): Result<PurchaseReturn> {
         return try {
+            val (purchaseReturn, items) = purchaseReturn.toEntity()
             var insertedId: Long = -1
             database.withTransaction {
                 val employeeId =
@@ -89,9 +89,9 @@ class PurchaseReturnRepositoryImpl(
     }
 
     override suspend fun updatePurchaseReturn(
-        purchaseReturn: PurchaseReturnEntity,
-        items: List<PurchaseReturnProductEntity>
+        purchaseReturn: PurchaseReturn,
     ): Result<PurchaseReturn> {
+        val (purchaseReturn, items) = purchaseReturn.toEntity()
         return try {
             val returnId = purchaseReturn.localId
             database.withTransaction {
