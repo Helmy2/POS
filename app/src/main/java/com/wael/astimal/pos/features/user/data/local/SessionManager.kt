@@ -24,14 +24,12 @@ interface SessionManager {
         accessToken: String,
     )
 
-    suspend fun saveTokens(
-        accessToken: String,
-        refreshToken: String?
-    )
+    suspend fun saveTokens(accessToken: String)
 
     suspend fun clearSession()
-    fun getAccessToken(): Flow<String?>
-    fun getRefreshToken(): Flow<String?>
+
+    suspend fun getAccessToken(): String
+
     fun getSavedEmail(): Flow<String?>
     fun getSavedPassword(): Flow<String?> // Will be encrypted
 
@@ -40,9 +38,7 @@ interface SessionManager {
         val EMAIL = stringPreferencesKey("email")
         val PASSWORD = stringPreferencesKey("password_encrypted")
         val ACCESS_TOKEN = stringPreferencesKey("access_token")
-        val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
     }
 
-    suspend fun getBearerTokens(): BearerTokens?
     suspend fun refreshBearerTokens(client: HttpClient): BearerTokens?
 }

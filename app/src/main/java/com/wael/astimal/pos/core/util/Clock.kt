@@ -6,14 +6,34 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 
 object Clock {
-    @OptIn(ExperimentalTime::class)
     fun now(): Long {
-        return Clock.System.now().toEpochMilliseconds()
+        return Instant.now().toEpochMilli()
+    }
+}
+
+/**
+ * Parses a timestamp string in ISO 8601 format (e.g., "2024-11-16T19:44:34.000000Z")
+ * and converts it to a Long representing milliseconds since the Unix epoch.
+ *
+ * This approach uses the KMP-compatible kotlinx-datetime library, making it safe for
+ * future migration.
+ *
+ * @receiver The nullable String to parse.
+ * @return The time in milliseconds as a Long, or null if the string is null, blank, or invalid.
+ */
+fun String?.parseIsoTimestamp(): Long? {
+    if (this.isNullOrBlank()) {
+        return null
+    }
+    return try {
+        Instant.parse(this).toEpochMilli()
+    } catch (e: Exception) {
+        // Log the exception or handle it as needed
+        e.printStackTrace()
+        null
     }
 }
 

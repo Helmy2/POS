@@ -30,7 +30,7 @@ fun UserEntity.toDomain(): User {
         email = email ?: "",
         phone = phone ?: "",
         // TODO change to userType
-        userType = UserType.ADMIN,
+        userType = UserType.EMPLOYEE,
         isSynced = isSynced,
         lastModified = lastModified,
         avatarUrl = avatarUrl

@@ -7,6 +7,7 @@ import com.wael.astimal.pos.features.user.data.remote.AuthApiServiceImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -38,7 +39,12 @@ val apiModule = module {
             }
             install(Auth) {
                 bearer {
-                    loadTokens { sessionManager.getBearerTokens() }
+                    loadTokens {
+                        BearerTokens(
+                            sessionManager.getAccessToken(),
+                            null
+                        )
+                    }
 
                     refreshTokens { sessionManager.refreshBearerTokens(client) }
 

@@ -62,12 +62,9 @@ class SessionManagerImpl(
         }
     }
 
-    override suspend fun saveTokens(accessToken: String, refreshToken: String?) {
+    override suspend fun saveTokens(accessToken: String) {
         dataStore.edit { preferences ->
             preferences[SessionManager.ACCESS_TOKEN] = accessToken
-            refreshToken?.let {
-                preferences[SessionManager.REFRESH_TOKEN] = it
-            }
         }
     }
 
@@ -77,11 +74,8 @@ class SessionManagerImpl(
         }
     }
 
-    override fun getAccessToken(): Flow<String?> =
-        dataStore.data.catchIO().map { it[SessionManager.ACCESS_TOKEN] }
-
-    override fun getRefreshToken(): Flow<String?> =
-        dataStore.data.catchIO().map { it[SessionManager.REFRESH_TOKEN] }
+    override suspend fun getAccessToken(): String =
+        dataStore.data.catchIO().map { it[SessionManager.ACCESS_TOKEN] }.first() ?: ""
 
     override fun getSavedEmail(): Flow<String?> =
         dataStore.data.catchIO().map { it[SessionManager.EMAIL] }
@@ -91,17 +85,6 @@ class SessionManagerImpl(
             preferences[SessionManager.PASSWORD]?.let { encryptedPassword ->
                 Crypto.decrypt(encryptedPassword)
             }
-        }
-    }
-
-    override suspend fun getBearerTokens(): BearerTokens? {
-        val accessToken = runBlocking { getAccessToken().first() }
-        val refreshToken = runBlocking { getRefreshToken().first() }
-
-        return if (accessToken != null && refreshToken != null) {
-            BearerTokens(accessToken, refreshToken)
-        } else {
-            null
         }
     }
 
@@ -124,8 +107,8 @@ class SessionManagerImpl(
         }.getOrNull()?.body<LoginResponse>()
 
         return response?.let {
-            val newTokens = BearerTokens(it.token, it.token)
-            saveTokens(it.token, it.token)
+            val newTokens = BearerTokens(it.token, null)
+            saveTokens(it.token)
             newTokens
         }
     }

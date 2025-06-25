@@ -14,4 +14,10 @@ interface UnitDao {
 
     @Query("SELECT * FROM units WHERE arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%'")
     fun getAll(query: String): Flow<List<UnitEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(units: List<UnitEntity>)
+
+    @Query("SELECT * FROM units WHERE serverId = :serverId LIMIT 1")
+    suspend fun getUnitByServerId(serverId: Long): UnitEntity?
 }

@@ -3,6 +3,8 @@ package com.wael.astimal.pos.features.inventory.data.repository
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
+import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
@@ -39,5 +41,15 @@ class UnitRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun syncWithServer(units: List<UnitDto>) {
+        val entities = units.map { dto ->
+//            val existingEntity = unitDao.getUnitByServerId(dto.id)
+            dto.toEntity().copy(
+//                localId = existingEntity?.localId ?: 0L
+            )
+        }
+        unitDao.upsertAll(entities)
     }
 }
