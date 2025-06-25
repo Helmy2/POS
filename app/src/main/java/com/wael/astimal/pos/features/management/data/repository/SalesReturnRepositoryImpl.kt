@@ -5,7 +5,6 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
@@ -13,6 +12,7 @@ import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.logic.ReturnAmountLogic
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
+import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
@@ -54,10 +54,10 @@ class SalesReturnRepositoryImpl(
     }
 
     override suspend fun addReturn(
-        returnEntity: OrderReturnEntity,
-        items: List<OrderReturnProductEntity>
+        salesReturn: SalesReturn
     ): Result<SalesReturn> {
         return try {
+            val (returnEntity, items) = salesReturn.toEntity()
             var insertedReturnLocalId: Long = -1
             database.withTransaction {
                 val newInvoiceNumber = generateNextInvoiceNumber()
@@ -80,10 +80,11 @@ class SalesReturnRepositoryImpl(
     }
 
     override suspend fun updateReturn(
-        returnEntity: OrderReturnEntity,
-        items: List<OrderReturnProductEntity>
+        salesReturn: SalesReturn
     ): Result<SalesReturn> {
         return try {
+            val (returnEntity, items) = salesReturn.toEntity()
+
             val returnId = returnEntity.localId
             database.withTransaction {
                 val currentUserId = userRepository.getCurrentUser()?.id

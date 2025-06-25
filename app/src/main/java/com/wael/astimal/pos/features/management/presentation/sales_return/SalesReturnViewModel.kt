@@ -1,338 +1,160 @@
 package com.wael.astimal.pos.features.management.presentation.sales_return
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
+import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
-import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
-import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.EditableItemList
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
+import com.wael.astimal.pos.features.management.domain.entity.SalesReturnItem
+import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
-import com.wael.astimal.pos.features.user.domain.entity.User
-import com.wael.astimal.pos.features.user.domain.entity.UserType
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SalesReturnViewModel(
     private val salesReturnRepository: SalesReturnRepository,
     private val partnerRepository: BusinessPartnerRepository,
     private val productRepository: ProductRepository,
-    private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
-) : ViewModel() {
+    private val snackbarController: SnackbarController,
+    private val navigationController: NavigationController,
+) : BaseViewModel<SalesReturnContract.State, SalesReturnContract.Event, Nothing>(
+    reducer = SalesReturnReducer(),
+    initialState = SalesReturnContract.State(
+        currentReturnInput = SalesReturnContract.EditableReturn(createdAt = Clock.now())
+    )
+) {
+    val filteredReturnsState: StateFlow<List<SalesReturn>> =
+        combine(
+            state,
+            salesReturnRepository.getReturns("")
+        ) { state, allReturns ->
+            if (state.returns != allReturns) {
+                setState(SalesReturnContract.Event.ReturnsLoaded(allReturns))
+            }
+            if (state.searchQuery.isBlank()) {
+                allReturns
+            } else {
+                allReturns.filter { it.matchesQuery(state.searchQuery) }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _state = MutableStateFlow(SalesReturnState())
-    val state: StateFlow<SalesReturnState> = _state.asStateFlow()
-    private var searchJob: Job? = null
-    private val stockObservationJobs = mutableMapOf<String, Job>()
-
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
+    override fun handleEvent(event: SalesReturnContract.Event) {
+        when (event) {
+            is SalesReturnContract.Event.SaveClicked -> saveReturn()
+            is SalesReturnContract.Event.DeleteClicked -> deleteReturn()
+            is SalesReturnContract.Event.BackClicked -> navigateBack()
+            else -> setState(event)
+        }
+    }
 
     init {
-        viewModelScope.launch {
-            updateCurrentUser(userRepository.getCurrentUser())
-        }
-        onEvent(SalesReturnEvent.SearchReturns(""))
-        loadDropdownData()
+        loadInitialData()
     }
 
-    private fun loadDropdownData() {
+    private fun loadInitialData() {
         viewModelScope.launch {
-            partnerRepository.getClients()
-                .collect { result -> _state.update { it.copy(availableClients = result) } }
+            setState(SalesReturnContract.Event.UserLoaded(userRepository.getCurrentUser()))
         }
         viewModelScope.launch {
-            productRepository.getProducts()
-                .collect { result ->
-                    _state.update {
-                        it.copy(
-                            availableProducts = result
-                        )
-                    }
-                }
-        }
-        viewModelScope.launch {
-            userRepository.getEmployeesFlow()
-                .collect { result ->
-                    _state.update {
-                        it.copy(
-                            availableEmployees = result
-                        )
-                    }
-                }
-        }
-    }
-
-    private fun updateCurrentUser(user: User?) {
-        _state.update {
-            when {
-                user == null -> it
-                user.userType == UserType.ADMIN -> it.copy(currentUser = user)
-                else -> it.copy(
-                    currentUser = user,
-                    currentReturnInput = it.currentReturnInput.copy(selectedEmployeeId = user.id)
-                )
+            combine(
+                partnerRepository.getClients(""),
+                productRepository.getProducts(""),
+                userRepository.getEmployeesFlow()
+            ) { clients, products, employees ->
+                SalesReturnContract.DropdownData(clients, products, employees)
+            }.collect {
+                setState(SalesReturnContract.Event.DropdownDataLoaded(it))
             }
-        }
-    }
-
-    fun onEvent(event: SalesReturnEvent) {
-        when (event) {
-            is SalesReturnEvent.SearchReturns -> searchReturns(event.query)
-            is SalesReturnEvent.SelectReturnToView -> updateSelectedReturn(event.salesReturn)
-            is SalesReturnEvent.SelectClient -> _state.update { it.copy(selectedClient = event.client) }
-            is SalesReturnEvent.SelectEmployee -> updateReturnInput { it.copy(selectedEmployeeId = event.employeeId) }
-            is SalesReturnEvent.UpdatePaymentType -> updateReturnInput {
-                it.copy(paymentType = event.type ?: PaymentType.CASH)
-            }
-
-            is SalesReturnEvent.UpdateAmountPaid -> updateReturnInput { it.copy(amountPaid = event.amount) }
-            is SalesReturnEvent.AddItemToReturn -> updateReturnInput { it.copy(items = it.items + EditableItem()) }
-            is SalesReturnEvent.RemoveItemFromReturn -> {
-                stockObservationJobs[event.tempEditorId]?.cancel()
-                stockObservationJobs.remove(event.tempEditorId)
-                updateReturnInput { it.copy(items = it.items.filterNot { item -> item.tempEditorId == event.tempEditorId }) }
-            }
-
-            is SalesReturnEvent.UpdateItemProduct -> {
-                updateReturnItem(event.tempEditorId) {
-                    val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
-                    it.copy(
-                        product = event.product,
-                        minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
-                        maxUnitPrice = event.product?.sellingPrice.toString(),
-                        minUnitQuantity = conversionFactor.toString(),
-                        maxUnitQuantity = "1.0",
-                    )
-                }
-                event.product?.let {
-                    observeStockForItem(event.tempEditorId, it.id.local)
-                }
-            }
-
-            is SalesReturnEvent.UpdateItemUnit -> updateReturnItem(event.tempEditorId) {
-                it.copy(isSelectedUnitIsMax = event.isMaxUnitSelected)
-            }
-
-            is SalesReturnEvent.SaveReturn -> saveReturn()
-            is SalesReturnEvent.UpdateIsQueryActive -> _state.update { it.copy(isQueryActive = event.isActive) }
-            is SalesReturnEvent.UpdateQuery -> _state.update { it.copy(query = event.query) }
-            is SalesReturnEvent.DeleteReturn -> deleteReturn()
-            SalesReturnEvent.OpenNewReturnForm -> clearState()
-            is SalesReturnEvent.UpdateReturnDate -> updateReturnInput {
-                it.copy(date = event.date ?: Clock.now())
-            }
-
-            is SalesReturnEvent.UpdateItemMaxUnitPrice -> updateReturnItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    maxUnitPrice = event.price,
-                    minUnitPrice = (event.price.toDoubleOrNull()?.div(conversionFactor))?.toString()
-                        ?: "0"
-                )
-            }
-
-            is SalesReturnEvent.UpdateItemMinUnitPrice -> updateReturnItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    minUnitPrice = event.price,
-                    maxUnitPrice = (event.price.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0"
-                )
-            }
-
-            is SalesReturnEvent.UpdateItemMaxUnitQuantity -> updateReturnItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    maxUnitQuantity = event.quantity,
-                    minUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.times(conversionFactor))?.toString() ?: "0"
-                )
-            }
-
-            is SalesReturnEvent.UpdateItemMinUnitQuantity -> updateReturnItem(event.tempEditorId) {
-                val conversionFactor = it.product?.subUnitsPerMainUnit ?: 1.0
-                it.copy(
-                    minUnitQuantity = event.quantity,
-                    maxUnitQuantity = (event.quantity.toDoubleOrNull()
-                        ?.div(conversionFactor))?.toString() ?: "0"
-                )
-            }
-        }
-    }
-
-    private fun observeStockForItem(tempId: String, productId: Long) {
-        stockObservationJobs[tempId]?.cancel()
-        viewModelScope.launch {
-            val employeeId = _state.value.currentReturnInput.selectedEmployeeId ?: return@launch
-            val storeId =
-                userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
-            stockObservationJobs[tempId] =
-                stockRepository.getStockQuantityFlow(storeId, productId).onEach { stock ->
-                    updateReturnItem(tempId) { it.copy(currentStock = stock) }
-                }.launchIn(viewModelScope)
-        }
-    }
-
-    private fun deleteReturn() {
-        viewModelScope.launch {
-            salesReturnRepository.deleteReturn(_state.value.selectedReturn?.id?.local ?: 0L)
-                .fold(onSuccess = {
-                    clearState(snackbarMessage = R.string.return_deleted)
-                }, onFailure = {
-                    _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_deleting_return))
-                })
-        }
-    }
-
-    private fun updateSelectedReturn(salesReturn: SalesReturn?) {
-        stockObservationJobs.values.forEach { it.cancel() }
-        stockObservationJobs.clear()
-
-        _state.update {
-            it.copy(
-                isQueryActive = false,
-                selectedReturn = salesReturn,
-                selectedClient = salesReturn?.client,
-                currentReturnInput = if (salesReturn == null) EditableItemList(
-                    selectedEmployeeId = it.currentUser?.id,
-                ) else EditableItemList(
-                    selectedEmployeeId = salesReturn.employee.id,
-                    paymentType = salesReturn.paymentType,
-                    date = salesReturn.data,
-                    items = salesReturn.items.map { item ->
-                        val conversionFactor = item.product.subUnitsPerMainUnit
-                        EditableItem(
-                            tempEditorId = item.id.local.toString(),
-                            product = item.product,
-                            isSelectedUnitIsMax = true,
-                            maxUnitPrice = item.priceAtReturn.toString(),
-                            minUnitPrice = (item.priceAtReturn / conversionFactor).toString(),
-                            maxUnitQuantity = item.quantity.toString(),
-                            minUnitQuantity = (item.quantity * conversionFactor).toString(),
-                        )
-                    },
-                    amountPaid = salesReturn.amountPaid.toString(),
-                )
-            )
-        }
-    }
-
-    private fun updateReturnInput(action: (EditableItemList) -> EditableItemList) {
-        _state.update { it.copy(currentReturnInput = action(it.currentReturnInput)) }
-    }
-
-    private fun updateReturnItem(tempId: String, action: (EditableItem) -> EditableItem) {
-        val currentItems = _state.value.currentReturnInput.items.toMutableList()
-        val index = currentItems.indexOfFirst { it.tempEditorId == tempId }
-        if (index != -1) {
-            currentItems[index] = action(currentItems[index])
-            updateReturnInput { it.copy(items = currentItems) }
-        }
-    }
-
-    private fun searchReturns(query: String) {
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, query = query) }
-            delay(300)
-            salesReturnRepository.getReturns(query).catch {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.error_searching_orders))
-            }.collect { returns -> _state.update { it.copy(loading = false, returns = returns) } }
         }
     }
 
     private fun saveReturn() {
         viewModelScope.launch {
-            val returnInput = _state.value.currentReturnInput
-            val selectedClient = _state.value.selectedClient
-            val loggedInEmployeeId = _state.value.currentUser?.id
-            if (loggedInEmployeeId == null) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.user_not_identified))
+            val currentState = state.value
+            if (!currentState.canSave || currentState.selectedClient == null || currentState.currentReturnInput.selectedEmployee == null) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_some_field_are_required)))
                 return@launch
             }
-            if (selectedClient == null || returnInput.items.isEmpty()) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.client_and_at_least_one_item_are_required))
-                return@launch
+            setState(SalesReturnContract.Event.LoadingStarted)
+
+            val returnItems = currentState.currentReturnInput.items.mapNotNull {
+                val quantity = it.maxUnitQuantity.toDoubleOrNull()
+                val price = it.maxUnitPrice.toDoubleOrNull()
+                if (it.product != null && quantity != null && quantity > 0 && price != null) {
+                    SalesReturnItem(
+                        id = Id.new,
+                        product = it.product,
+                        quantity = quantity,
+                        priceAtReturn = price,
+                        itemTotalValue = it.lineTotal,
+                    )
+                } else null
             }
 
-            val itemEntities = returnInput.items.mapNotNull {
-                val quantity = it.maxUnitQuantity.toDoubleOrNull() ?: 0.0
-                if (it.product == null || quantity <= 0) return@mapNotNull null
-                OrderReturnProductEntity(
-                    productLocalId = it.product.id.local,
-                    quantity = quantity,
-                    priceAtReturn = it.maxUnitPrice.toDoubleOrNull() ?: 0.0,
-                    itemTotalValue = it.lineTotal,
-                    serverId = null,
-                    orderReturnLocalId = 0L,
-                )
-            }
-
-            if (itemEntities.size != returnInput.items.size) {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.one_or_more_order_items_are_invalid))
+            if (returnItems.size != currentState.currentReturnInput.items.size) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.one_or_more_order_items_are_invalid)))
+                setState(SalesReturnContract.Event.LoadingFinished)
                 return@launch
             }
 
-            val returnEntity = OrderReturnEntity(
-                localId = _state.value.selectedReturn?.id?.local ?: 0L,
-                serverId = null,
-                invoiceNumber = "",
-                clientLocalId = selectedClient.clientId?.local ?: throw Exception(),
-                employeeLocalId = returnInput.selectedEmployeeId ?: loggedInEmployeeId,
-                amountPaid = returnInput.amountPaid.toDoubleOrNull() ?: 0.0,
-                amountRemaining = returnInput.amountRemaining,
-                totalAmount = returnInput.totalAmount,
-                paymentType = returnInput.paymentType,
-                createdAt = returnInput.date
+            val returnToSave = SalesReturn(
+                client = currentState.selectedClient,
+                employee = currentState.currentReturnInput.selectedEmployee,
+                paymentType = currentState.currentReturnInput.paymentType,
+                amountPaid = currentState.currentReturnInput.amountPaid.toDoubleOrNull() ?: 0.0,
+                createdAt = currentState.currentReturnInput.createdAt,
+                items = returnItems,
+                totalAmount = currentState.currentReturnInput.totalAmount,
+                id = currentState.selectedReturn?.id ?: Id.new,
+                invoiceNumber = currentState.selectedReturn?.invoiceNumber ?: "",
+                amountRemaining = currentState.currentReturnInput.amountRemaining
             )
 
-            _state.update { it.copy(loading = true) }
-            val result =
-                if (_state.value.isNew) salesReturnRepository.addReturn(returnEntity, itemEntities)
-                else salesReturnRepository.updateReturn(returnEntity, itemEntities)
+            val result = if (currentState.isEditing) {
+                salesReturnRepository.updateReturn(returnToSave)
+            } else {
+                salesReturnRepository.addReturn(returnToSave)
+            }
 
-            result.fold(onSuccess = {
-                clearState(snackbarMessage = R.string.return_saved)
-            }, onFailure = {
-                _eventFlow.emit(UiEvent.ShowSnackbar(R.string.something_went_wrong))
-            })
+            result.onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.return_saved)))
+                setState(SalesReturnContract.Event.SaveSucceeded)
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.something_went_wrong)))
+                setState(SalesReturnContract.Event.LoadingFinished)
+            }
         }
     }
 
-    private fun clearState(snackbarMessage: Int? = null) {
-        _state.update {
-            it.copy(
-                selectedReturn = null,
-                selectedClient = null,
-                currentReturnInput = EditableItemList(),
-                isQueryActive = false,
-            )
-        }
-        updateCurrentUser(state.value.currentUser)
+    private fun deleteReturn() {
+        val returnToDelete = state.value.selectedReturn ?: return
+        setState(SalesReturnContract.Event.LoadingStarted)
         viewModelScope.launch {
-            snackbarMessage?.let {
-                _eventFlow.emit(UiEvent.ShowSnackbar(snackbarMessage))
+            salesReturnRepository.deleteReturn(returnToDelete.id.local).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.return_deleted)))
+                setState(SalesReturnContract.Event.DeleteSucceeded)
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.error_deleting_return)))
+                setState(SalesReturnContract.Event.LoadingFinished)
             }
+        }
+    }
+
+    private fun navigateBack() {
+        viewModelScope.launch {
+            navigationController.navigateBack()
         }
     }
 }

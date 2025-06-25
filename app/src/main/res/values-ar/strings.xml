@@ -139,7 +139,7 @@
     <string name="order_saved">تم حفظ أمر البيع بنجاح.</string>
     <string name="order_deleted">تم حذف أمر البيع بنجاح.</string>
     <string name="error_deleting_order">خطأ: تعذر حذف أمر البيع.</string>
-    <string name="order_return">مرتجع بيع</string>
+    <string name="sales_return">مرتجع بيع</string>
     <string name="return_saved">تم حفظ المرتجع بنجاح.</string>
     <string name="return_deleted">تم حذف المرتجع بنجاح.</string>
     <string name="error_deleting_return">خطأ: تعذر حذف المرتجع.</string>

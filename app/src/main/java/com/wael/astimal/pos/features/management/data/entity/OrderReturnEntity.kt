@@ -119,7 +119,6 @@ fun OrderReturnWithDetailsEntity.toDomain(): SalesReturn {
         amountRemaining = orderReturn.amountRemaining,
         totalAmount = orderReturn.totalAmount,
         paymentType = orderReturn.paymentType,
-        data = orderReturn.createdAt,
         items = itemsWithProductDetails.map { it.toDomain() },
         isSynced = orderReturn.isSynced,
         createdAt = orderReturn.createdAt,
@@ -130,7 +129,6 @@ fun OrderReturnWithDetailsEntity.toDomain(): SalesReturn {
 fun OrderReturnItemWithDetails.toDomain(): SalesReturnItem {
     return SalesReturnItem(
         id = Id(returnItem.localId, returnItem.serverId),
-        returnLocalId = returnItem.orderReturnLocalId,
         product = product?.toDomain() ?: throw NullPointerException(),
         quantity = returnItem.quantity,
         priceAtReturn = returnItem.priceAtReturn,
