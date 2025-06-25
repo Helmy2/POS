@@ -9,6 +9,6 @@ interface BusinessPartnerRepository {
     suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit>
     fun getSuppliers(query: String = ""): Flow<List<BusinessPartner>>
     suspend fun getSupplier(localId: Long): BusinessPartner?
-    fun searchClients(query: String = ""): Flow<List<BusinessPartner>>
+    fun getClients(query: String = ""): Flow<List<BusinessPartner>>
     suspend fun getClient(clientId: Long): BusinessPartner?
 }

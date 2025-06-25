@@ -182,25 +182,6 @@ class DummyDataSeeder(
                 isSynced = false,
                 createdAt = Clock.now(),
             ),
-            Store(
-                id = Id.new,
-                name = LocalizedString(
-                    arName = "فرع أ",
-                    enName = "Branch A"
-                ),
-                type = StoreType.SUB,
-                isSynced = false,
-                createdAt = Clock.now(),
-            ), Store(
-                id = Id.new,
-                name = LocalizedString(
-                    arName = "فرع ب",
-                    enName = "Branch B"
-                ),
-                type = StoreType.SUB,
-                isSynced = false,
-                createdAt = Clock.now(),
-            )
         )
 
         stores.forEach {
@@ -252,7 +233,7 @@ class DummyDataSeeder(
                 sellingPrice = 180.0,
                 openingBalanceQuantity = 50.0,
                 category = categories[0],
-                store = stores[1],
+                store = stores[0],
                 minimumProductUnit = null,
                 maximumProductUnit = units[2],
                 subUnitsPerMainUnit = 1.0,
@@ -267,7 +248,7 @@ class DummyDataSeeder(
                 sellingPrice = 55.0,
                 openingBalanceQuantity = 100.0,
                 category = categories[1],
-                store = stores[1],
+                store = stores[0],
                 minimumProductUnit = null,
                 maximumProductUnit = units[0],
                 subUnitsPerMainUnit = 1.0,
@@ -282,7 +263,7 @@ class DummyDataSeeder(
                 sellingPrice = 15.0,
                 openingBalanceQuantity = 200.0,
                 category = categories[2],
-                store = stores[1],
+                store = stores[0],
                 minimumProductUnit = units[0], // Piece
                 maximumProductUnit = units[1], // Dozen
                 subUnitsPerMainUnit = 12.0,

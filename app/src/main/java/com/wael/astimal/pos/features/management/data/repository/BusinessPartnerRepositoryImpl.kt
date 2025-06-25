@@ -128,7 +128,7 @@ class BusinessPartnerRepositoryImpl(
     }
 
 
-    override fun searchClients(query: String): Flow<List<BusinessPartner>> {
+    override fun getClients(query: String): Flow<List<BusinessPartner>> {
         return getBusinessPartners(query).map {
             it.filter { it -> it.type != PartnerType.SUPPLIER }
         }

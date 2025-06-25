@@ -22,7 +22,7 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                     ),
                     ManagementContract.ManagementItem(
                         Destination.SalesOrders,
-                        R.string.sales_order
+                        R.string.sales
                     ),
                     ManagementContract.ManagementItem(
                         Destination.SalesReturns,

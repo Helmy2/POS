@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.presentation.sales
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -10,146 +8,143 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.core.base.UiEvent
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
-import com.wael.astimal.pos.core.presentation.compoenents.OrderInputFields
-import com.wael.astimal.pos.core.presentation.compoenents.OrderTotalsSection
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import kotlinx.coroutines.flow.SharedFlow
+import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SalesRoute(
-    viewModel: SalesViewModel = koinViewModel(), onBack: () -> Unit
+    viewModel: SalesViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val filteredOrders by viewModel.filteredOrdersState.collectAsStateWithLifecycle()
+
     SalesScreen(
         state = state,
-        eventFlow = viewModel.eventFlow,
-        onEvent = viewModel::onEvent,
-        onBack = onBack,
+        filteredOrders = filteredOrders,
+        onEvent = viewModel::processEvent,
     )
 }
 
 @Composable
 fun SalesScreen(
-    state: OrderState,
-    onEvent: (OrderEvent) -> Unit,
-    onBack: () -> Unit,
-    eventFlow: SharedFlow<UiEvent>,
+    state: SalesContract.State,
+    filteredOrders: List<SalesOrder>,
+    onEvent: (SalesContract.Event) -> Unit,
 ) {
     val language = LocalAppLocale.current
+    val orderInput = state.currentOrderInput
 
     SearchScreen(
-        query = state.query,
-        isSearchActive = state.isQueryActive,
-        loading = state.loading,
-        isNew = state.isNew,
-        canEdit = state.canEdit,
-        onQueryChange = { onEvent(OrderEvent.UpdateQuery(it)) },
-        onSearch = { onEvent(OrderEvent.SearchOrders(it)) },
-        onSearchActiveChange = { onEvent(OrderEvent.UpdateIsQueryActive(it)) },
-        onBack = onBack,
+        query = state.searchQuery,
+        isSearchActive = state.isSearchActive,
+        isNew = !state.isEditing,
+        canSave = state.canSave,
+        onQueryChange = { onEvent(SalesContract.Event.SearchQueryChanged(it)) },
+        onSearch = { onEvent(SalesContract.Event.SearchQueryChanged(it)) },
+        onSearchActiveChange = { onEvent(SalesContract.Event.SearchActiveChanged(it)) },
+        onBack = { onEvent(SalesContract.Event.BackClicked) },
         lastModifiedDate = state.selectedOrder?.updatedAt,
-        onDelete = {
-            state.selectedOrder?.let { onEvent(OrderEvent.DeleteOrder(it.id.local)) }
-        },
-        onCreate = { onEvent(OrderEvent.SaveOrder) },
-        onUpdate = { onEvent(OrderEvent.SaveOrder) },
-        onNew = { onEvent(OrderEvent.OpenNewOrderForm) },
+        onDelete = { onEvent(SalesContract.Event.DeleteClicked) },
+        onCreate = { onEvent(SalesContract.Event.SaveClicked) },
+        onUpdate = { onEvent(SalesContract.Event.SaveClicked) },
+        onNew = { onEvent(SalesContract.Event.NewOrderClicked) },
         searchResults = {
             ItemGrid(
-                list = state.orders,
-                onItemClick = { onEvent(OrderEvent.SelectOrderToView(it)) },
+                list = filteredOrders,
+                onItemClick = { onEvent(SalesContract.Event.OrderSelected(it)) },
                 label = {
-                    Label("Order to ${it.client.name.displayName(language)}: ${it.invoiceNumber}")
+                    Label(
+                        stringResource(
+                            R.string.order_to_with_args,
+                            it.client.name.displayName(language),
+                            it.invoiceNumber
+                        )
+                    )
                 },
-                isSelected = { product -> product.id.local == state.selectedOrder?.id?.local },
+                isSelected = { order -> order.id.local == state.selectedOrder?.id?.local },
             )
         },
         mainContent = {
-            OrderForm(state = state, onEvent = onEvent)
+            item {
+                DataPicker(
+                    selectedDateMillis = orderInput.date,
+                    onDateSelected = { onEvent(SalesContract.Event.DateChanged(it)) },
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            item {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.client),
+                    items = state.dropdownData.clients,
+                    currentSelection = state.selectedClient?.name?.displayName(language) ?: "",
+                    onItemSelected = { onEvent(SalesContract.Event.ClientSelected(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            item {
+                CustomExposedDropdownMenu(
+                    label = stringResource(R.string.employee),
+                    items = state.dropdownData.employees,
+                    currentSelection = orderInput.selectedEmployee?.name?.displayName(language)
+                        ?: "",
+                    onItemSelected = { onEvent(SalesContract.Event.EmployeeChanged(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    enabled = state.currentUser?.isAdmin == true,
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            editableOrderItems(
+                itemList = orderInput.items,
+                availableProducts = state.dropdownData.products,
+                onRemoveItemFromOrder = { editorId ->
+                    onEvent(SalesContract.Event.RemoveItem(editorId))
+                },
+                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
+                    onEvent(SalesContract.Event.ItemUnitChanged(editorId, isMaxUnitSelected))
+                },
+                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
+                    onEvent(SalesContract.Event.ItemMaxPriceChanged(editorId, maxUnitPrice))
+                },
+                onUpdateItemMinUnitPrice = { editorId, minUnitPrice ->
+                    onEvent(SalesContract.Event.ItemMinPriceChanged(editorId, minUnitPrice))
+                },
+                onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
+                    onEvent(
+                        SalesContract.Event.ItemMaxQuantityChanged(
+                            editorId, maxUnitQuantity
+                        )
+                    )
+                },
+                onUpdateItemMinUnitQuantity = { editorId, minUnitQuantity ->
+                    onEvent(
+                        SalesContract.Event.ItemMinQuantityChanged(
+                            editorId, minUnitQuantity
+                        )
+                    )
+                },
+                onUpdateAmountPaid = {
+                    onEvent(SalesContract.Event.AmountPaidChanged(it))
+                },
+                selectedPaymentType = orderInput.paymentType,
+                onSelectPaymentType = { onEvent(SalesContract.Event.PaymentTypeChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(SalesContract.Event.ItemProductChanged(editorId, product))
+                },
+                totalAmount = orderInput.totalAmount.toString(),
+                amountRemaining = orderInput.amountRemaining.toString(),
+                amountPaid = orderInput.amountPaid,
+                onAddNewItemToOrder = {
+                    onEvent(SalesContract.Event.AddItem)
+                },
+            )
         },
-        eventFlow = eventFlow
     )
-}
-
-@Composable
-fun OrderForm(
-    state: OrderState, onEvent: (OrderEvent) -> Unit
-) {
-    val currentLanguage = LocalAppLocale.current
-    val orderInput = state.currentOrderInput
-    FlowRow(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-
-        DataPicker(
-            selectedDateMillis = orderInput.date,
-            onDateSelected = { onEvent(OrderEvent.UpdateTransferDate(it)) },
-        )
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.client),
-            items = state.availableClients,
-            selectedItemId = state.selectedClient?.clientId?.local,
-            onItemSelected = { onEvent(OrderEvent.SelectClient(it)) },
-            itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.clientId?.local },
-            canClearSelection = false,
-        )
-
-        CustomExposedDropdownMenu(
-            label = stringResource(R.string.employee),
-            items = state.availableEmployees,
-            selectedItemId = orderInput.selectedEmployeeId,
-            onItemSelected = { onEvent(OrderEvent.SelectEmployee(it.id)) },
-            itemToDisplayString = { it.name.displayName(currentLanguage) },
-            itemToId = { it.id },
-            enabled = state.currentUser?.isAdmin ?: false,
-            canClearSelection = false,
-        )
-
-        OrderInputFields(
-            itemList = orderInput.items,
-            selectedPaymentType = orderInput.paymentType,
-            amountPaid = orderInput.amountPaid,
-            onUpdateAmountPaid = { onEvent(OrderEvent.UpdateAmountPaid(it)) },
-            onAddNewItemToOrder = { onEvent(OrderEvent.AddItemToOrder) },
-            availableProducts = state.availableProducts,
-            onSelectPaymentType = { onEvent(OrderEvent.UpdatePaymentType(it)) },
-            onItemSelected = { tempEditorId, product ->
-                onEvent(OrderEvent.UpdateItemProduct(tempEditorId, product))
-            },
-            onRemoveItemFromOrder = { tempEditorId ->
-                onEvent(OrderEvent.RemoveItemFromOrder(tempEditorId))
-            },
-            onUpdateItemUnit = { tempEditorId, isMaxUnitSelected ->
-                onEvent(OrderEvent.UpdateItemUnit(tempEditorId, isMaxUnitSelected))
-            },
-            onUpdateItemMaxUnitPrice = { tempEditorId, maxUnitPrice ->
-                onEvent(OrderEvent.UpdateItemMaxUnitPrice(tempEditorId, maxUnitPrice))
-            },
-            onUpdateItemMinUnitPrice = { tempEditorId, minUnitPrice ->
-                onEvent(OrderEvent.UpdateItemMinUnitPrice(tempEditorId, minUnitPrice))
-            },
-            onUpdateItemMaxUnitQuantity = { tempEditorId, maxUnitQuantity ->
-                onEvent(OrderEvent.UpdateItemMaxUnitQuantity(tempEditorId, maxUnitQuantity))
-            },
-            onUpdateItemMinUnitQuantity = { tempEditorId, minUnitQuantity ->
-                onEvent(OrderEvent.UpdateItemMinUnitQuantity(tempEditorId, minUnitQuantity))
-            })
-
-        OrderTotalsSection(
-            totalAmount = orderInput.totalAmount,
-            amountPaid = orderInput.amountPaid.toDoubleOrNull() ?: 0.0,
-            amountRemaining = orderInput.amountRemaining
-        )
-    }
 }

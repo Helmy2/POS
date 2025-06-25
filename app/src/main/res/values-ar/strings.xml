@@ -125,7 +125,7 @@
     <string name="product_not_found_in_store">المنتج غير موجود في المخزن المحدد.</string>
     <string name="not_enough_stock_for">المخزون غير كافٍ لـ: %s</string>
 
-    <string name="sales_order">أمر بيع</string>
+    <string name="sales">أمر بيع</string>
     <string name="items">الأصناف</string>
     <string name="add_item">إضافة صنف</string>
     <string name="remove_item">إزالة صنف</string>

@@ -57,7 +57,7 @@ class SalesReturnViewModel(
 
     private fun loadDropdownData() {
         viewModelScope.launch {
-            partnerRepository.searchClients()
+            partnerRepository.getClients()
                 .collect { result -> _state.update { it.copy(availableClients = result) } }
         }
         viewModelScope.launch {

@@ -8,8 +8,8 @@ data class LocalizedString(
     fun contains(
         value: String
     ): Boolean {
-        return arName?.contains(value, ignoreCase = true) == true ||
-                enName?.contains(value, ignoreCase = true) == true
+        return arName?.lowercase()?.contains(value.lowercase(), ignoreCase = true) == true ||
+                enName?.lowercase()?.contains(value.lowercase(), ignoreCase = true) == true
     }
 
     fun displayName(

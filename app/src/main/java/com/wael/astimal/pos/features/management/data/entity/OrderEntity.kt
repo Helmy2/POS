@@ -117,7 +117,6 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
 fun OrderProductItemWithDetails.toDomain(): SalesOrderItem {
     return SalesOrderItem(
         id = Id(orderItem.localId, orderItem.serverId),
-        orderLocalId = orderItem.orderLocalId,
         product = product?.toDomain() ?: throw NullPointerException(),
         quantity = orderItem.quantity,
         unitSellingPrice = orderItem.unitSellingPrice,

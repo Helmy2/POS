@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.management.data.entity.OrderEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
@@ -14,6 +13,7 @@ import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
+import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
@@ -56,14 +56,14 @@ class SalesOrderRepositoryImpl(
 
 
     override suspend fun addOrder(
-        order: OrderEntity,
-        items: List<OrderProductEntity>
+        order: SalesOrder,
     ): Result<SalesOrder> {
         return try {
+            val (orderEntity, items) = order.toEntity()
             var insertedOrderLocalId: Long = -1
             database.withTransaction {
                 val newInvoiceNumber = generateNextInvoiceNumber()
-                val orderWithInvoice = order.copy(invoiceNumber = newInvoiceNumber)
+                val orderWithInvoice = orderEntity.copy(invoiceNumber = newInvoiceNumber)
                 insertedOrderLocalId = salesOrderDao.insertOrUpdateOrder(orderWithInvoice)
                 val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
                 salesOrderDao.insertOrderItems(itemsWithCorrectId)
@@ -108,11 +108,12 @@ class SalesOrderRepositoryImpl(
     }
 
     override suspend fun updateOrder(
-        order: OrderEntity,
-        items: List<OrderProductEntity>
+        order: SalesOrder,
     ): Result<SalesOrder> {
         return try {
-            val orderId = order.localId
+            val (orderEntity, items) = order.toEntity()
+
+            val orderId = orderEntity.localId
             database.withTransaction {
                 val currentUserId = userRepository.getCurrentUser()?.id
                     ?: throw Exception("User not authenticated for update operation")
@@ -132,7 +133,7 @@ class SalesOrderRepositoryImpl(
 
                 // Update the order and its items
                 val entityToUpdate =
-                    order.copy(isSynced = false, updatedAt = Clock.now())
+                    orderEntity.copy(isSynced = false, updatedAt = Clock.now())
                 salesOrderDao.updateOrderWithItems(entityToUpdate, items)
 
                 // Re-process the non-financial logic
