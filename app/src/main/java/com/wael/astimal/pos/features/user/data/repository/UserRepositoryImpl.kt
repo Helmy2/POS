@@ -1,6 +1,8 @@
 package com.wael.astimal.pos.features.user.data.repository
 
 import com.wael.astimal.pos.core.util.Connectivity
+import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
+import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
 import com.wael.astimal.pos.features.user.data.local.SessionManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
@@ -63,6 +65,16 @@ class UserRepositoryImpl(
             userDao.insertOrUpdate(userEntity)
 
             userEntity.toDomain()
+        }
+    }
+
+    override suspend fun syncWithServer(users: List<UserEntity>) {
+        userDao.upsertAll(users)
+    }
+
+    override suspend fun assignStoreToEmployee(userId: Long, storeId: Long): Result<Unit> {
+        return runCatching {
+            userDao.assignStoreToEmployee(EmployeeStoreEntity(userId, storeId))
         }
     }
 }

@@ -33,7 +33,9 @@ class SyncManagerImpl(
 
     override fun getLastSyncDate(): Flow<String> {
         return dataStore.data.map { preferences ->
-            preferences[PreferencesKeys.LAST_SYNC_DATE] ?: getDefaultSyncDate()
+            // todo
+//            preferences[PreferencesKeys.LAST_SYNC_DATE] ?: getDefaultSyncDate()
+            getDefaultSyncDate()
         }
     }
 

@@ -45,9 +45,9 @@ class UnitRepositoryImpl(
 
     override suspend fun syncWithServer(units: List<UnitDto>) {
         val entities = units.map { dto ->
-//            val existingEntity = unitDao.getUnitByServerId(dto.id)
+            val existingEntity = unitDao.getUnitByServerId(dto.id)
             dto.toEntity().copy(
-//                localId = existingEntity?.localId ?: 0L
+                localId = existingEntity?.localId ?: 0L
             )
         }
         unitDao.upsertAll(entities)

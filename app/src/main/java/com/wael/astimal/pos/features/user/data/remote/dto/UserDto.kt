@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.user.data.remote.dto
 
 import com.wael.astimal.pos.core.util.ApiRoutes.PROFILE_IMAGE_BASE_URL
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.domain.entity.UserType
 import kotlinx.serialization.SerialName
@@ -43,5 +44,6 @@ fun UserDto.toEntity(): UserEntity {
         email = email,
         phone = phone,
         avatarUrl = PROFILE_IMAGE_BASE_URL + avatar,
+        createdAt = Clock.now()
     )
 }

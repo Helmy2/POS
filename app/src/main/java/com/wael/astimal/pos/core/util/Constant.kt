@@ -11,5 +11,6 @@ object ApiRoutes {
     const val PROFILE_IMAGE_BASE_URL = "https://$HOST"
     const val LOGIN = "$BASE_URL/login"
     const val SYNC_UNITS = "https://wael.astimal.com/api/Global/units"
+    const val SYNC_EMPLOYEES = "https://wael.astimal.com/api/Global/employees"
 }
 

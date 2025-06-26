@@ -17,4 +17,11 @@ interface StoreDao {
 
     @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY arName ASC, enName ASC")
     fun searchStoresFlow(query: String): Flow<List<StoreEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(stores: List<StoreEntity>)
+
+    @Query("SELECT * FROM stores WHERE serverId = :serverId LIMIT 1")
+    suspend fun getStoreByServerId(serverId: Long): StoreEntity?
+
 }

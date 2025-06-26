@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -29,6 +30,15 @@ class StoreRepositoryImpl(
         }
     }
 
+    override suspend fun getStoreBySeverId(localId: Long): Result<Store> {
+        return runCatching {
+            val entity = storeDao.getStoreByServerId(localId)
+            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with localId $localId is marked as deleted locally.")
+            entity?.toDomain()
+                ?: throw NoSuchElementException("No store found with localId $localId.")
+        }
+    }
+
     override suspend fun saveStore(store: Store): Result<Unit> {
         return runCatching {
             if (store.name.arName.isNullOrBlank() && store.name.arName.isNullOrBlank()) {
@@ -47,5 +57,16 @@ class StoreRepositoryImpl(
             storeDao.insertOrUpdate(storeToMarkAsDeleted)
             Result.success(Unit)
         }
+    }
+
+    override suspend fun syncWithServer(stores: List<StoreEntity>) {
+        val entitiesToUpsert = stores.map { serverEntity ->
+            val existingLocal = serverEntity.serverId?.let { storeDao.getStoreByServerId(it) }
+            serverEntity.copy(
+                localId = existingLocal?.localId ?: 0L,
+                createdAt = existingLocal?.createdAt ?: serverEntity.createdAt
+            )
+        }
+        storeDao.upsertAll(entitiesToUpsert)
     }
 }

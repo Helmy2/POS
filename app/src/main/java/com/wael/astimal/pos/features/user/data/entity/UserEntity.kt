@@ -19,7 +19,8 @@ data class UserEntity(
     val avatarUrl: String?,
     val userType: UserType,
     var isSynced: Boolean = false,
-    var lastModified: Long = Clock.now(),
+    var createdAt: Long,
+    var updatedAt: Long = Clock.now(),
 )
 
 fun UserEntity.toDomain(): User {
@@ -32,7 +33,7 @@ fun UserEntity.toDomain(): User {
         // TODO change to userType
         userType = UserType.EMPLOYEE,
         isSynced = isSynced,
-        lastModified = lastModified,
+        lastModified = updatedAt,
         avatarUrl = avatarUrl
     )
 }

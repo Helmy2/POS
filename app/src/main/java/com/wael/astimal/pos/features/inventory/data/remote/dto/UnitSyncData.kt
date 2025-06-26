@@ -8,6 +8,13 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
+data class UnitSyncData(
+    val units: List<UnitDto>,
+    @SerialName("date")
+    val nextSyncDate: String
+)
+
+@Serializable
 data class UnitDto(
     val id: Long,
     val rate: String,
@@ -22,7 +29,7 @@ data class UnitDto(
 @Serializable
 data class TranslationDto(
     val locale: String,
-    val name: String
+    val name: String?
 )
 
 fun UnitDto.toEntity(): UnitEntity {
@@ -35,6 +42,7 @@ fun UnitDto.toEntity(): UnitEntity {
         arName = arName ?: "",
         enName = enName ?: this.name,
         updatedAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
-        createdAt = updatedAt.parseIsoTimestamp() ?: Clock.now()
+        createdAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
+        isSynced = true
     )
 }

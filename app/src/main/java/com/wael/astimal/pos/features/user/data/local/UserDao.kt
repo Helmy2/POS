@@ -58,4 +58,7 @@ interface UserDao {
     //findByEmail
     @Query("SELECT * FROM users WHERE email = :email")
     suspend fun findByEmail(email: String): UserEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(users: List<UserEntity>)
 }

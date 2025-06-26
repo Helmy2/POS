@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.user.domain.repository
 
+import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.Flow
 
@@ -10,4 +11,6 @@ interface UserRepository {
     suspend fun isUserLoggedIn(): Boolean
     suspend fun getCurrentUser(): User?
     suspend fun logout()
+    suspend fun syncWithServer(users: List<UserEntity>)
+    suspend fun assignStoreToEmployee(userId: Long, storeId: Long): Result<Unit>
 }
