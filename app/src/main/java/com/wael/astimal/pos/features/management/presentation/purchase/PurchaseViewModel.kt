@@ -91,6 +91,16 @@ class PurchaseViewModel(
                 }
                 setState(event)
             }
+
+            is PurchaseContract.Event.SupplierSelected -> {
+                viewModelScope.launch {
+                    event.supplier?.let {
+                        val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
+                        setState(PurchaseContract.Event.PartnerBalanceChanged(balance))
+                    }
+                    setState(event)
+                }
+            }
             else -> setState(event)
         }
     }

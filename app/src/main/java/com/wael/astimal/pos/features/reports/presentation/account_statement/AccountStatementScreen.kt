@@ -229,7 +229,7 @@ fun StatementDetailView(
                 }
                 if (partner != null) {
                     StatementFooter(
-                        finalBalance = transactions.lastOrNull()?.balance
+                        finalBalance = transactions.lastOrNull()?.balance ?: 0.0
                     )
                 }
             }
@@ -342,9 +342,7 @@ fun TransactionRow(transaction: AccountTransaction) {
 }
 
 @Composable
-fun StatementFooter(finalBalance: Double?) {
-    if (finalBalance == null) return
-
+fun StatementFooter(finalBalance: Double, modifier: Modifier = Modifier) {
     val language = LocalAppLocale.current
 
     val numberFormat =
@@ -363,7 +361,7 @@ fun StatementFooter(finalBalance: Double?) {
         else -> stringResource(R.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
     }
 
-    Surface(modifier = Modifier.fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 4.dp) {
+    Surface(modifier = modifier.fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 4.dp) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,

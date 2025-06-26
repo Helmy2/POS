@@ -85,6 +85,16 @@ class SalesViewModel(
                 setState(event)
             }
 
+            is SalesContract.Event.ClientSelected -> {
+                viewModelScope.launch {
+                    event.client?.let {
+                        val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
+                        setState(SalesContract.Event.PartnerBalanceChanged(balance))
+                    }
+                    setState(event)
+                }
+            }
+
             is SalesContract.Event.ItemProductChanged -> {
                 event.product?.let {
                     observeStockForItem(event.editorId, it.id.local)

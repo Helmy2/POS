@@ -6,58 +6,113 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.R
+import com.wael.astimal.pos.features.reports.presentation.account_statement.StatementFooter
 
 @Composable
 fun OrderTotalsSection(
     totalAmount: Double,
     amountPaid: Double,
     amountRemaining: Double,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    partnerBalance: Double,
+    partnerBalanceAfterThisOrder: Double
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
+    Column {
+        Card(
+            modifier = modifier.fillMaxWidth(),
         ) {
-            Spacer(modifier = Modifier.padding(vertical = 4.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.total_amount),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    "%.2f".format(totalAmount),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(R.string.paid), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "%.2f".format(amountPaid),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            Column(
+                modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Spacer(modifier = Modifier.padding(vertical = 4.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(R.string.total_amount),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(totalAmount),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(R.string.paid),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(amountPaid),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    stringResource(R.string.remaining), style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    "%.2f".format(amountRemaining),
-                    style = MaterialTheme.typography.titleLarge
-                )
+                HorizontalDivider()
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(R.string.remaining),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        "%.2f".format(amountRemaining),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
             }
         }
+        Card(
+            modifier = modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(R.string.partner_previous_balance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(partnerBalance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                HorizontalDivider()
+
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(R.string.partner_current_balance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(partnerBalanceAfterThisOrder),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+
+            }
+        }
+        StatementFooter(
+            partnerBalanceAfterThisOrder,
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = 10.dp,
+                        bottomEnd = 10.dp
+                    )
+                )
+        )
     }
 }

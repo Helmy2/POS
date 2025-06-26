@@ -22,9 +22,11 @@ object PurchaseContract {
         val date: Long,
         val items: List<EditableItem> = emptyList(),
         val amountPaid: String = "0.0",
+        val partnerBalance: Double = 0.0
     ) {
         val totalAmount: Double get() = items.sumOf { it.lineTotal }
         val amountRemaining: Double get() = totalAmount - (amountPaid.toDoubleOrNull() ?: 0.0)
+        val partnerBalanceAfterThisOrder: Double get() = partnerBalance + amountRemaining
     }
 
     data class State(
@@ -70,6 +72,7 @@ object PurchaseContract {
         data class ItemMaxPriceChanged(val editorId: String, val price: String) : Event
         data class ItemMinPriceChanged(val editorId: String, val price: String) : Event
         data class ItemStockChanged(val editorId: String, val stock: Double) : Event
+        data class PartnerBalanceChanged(val balance: Double) : Event
 
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event

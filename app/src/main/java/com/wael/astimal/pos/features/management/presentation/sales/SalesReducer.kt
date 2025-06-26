@@ -19,6 +19,13 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
             is SalesContract.Event.SearchQueryChanged ->
                 previousState.copy(searchQuery = event.query) to null
 
+            is SalesContract.Event.PartnerBalanceChanged ->
+                previousState.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        partnerBalance = event.balance
+                    )
+                ) to null
+
             is SalesContract.Event.SearchActiveChanged ->
                 previousState.copy(isSearchActive = event.isActive) to null
 

@@ -55,6 +55,15 @@ class SalesReturnViewModel(
             is SalesReturnContract.Event.SaveClicked -> saveReturn()
             is SalesReturnContract.Event.DeleteClicked -> deleteReturn()
             is SalesReturnContract.Event.BackClicked -> navigateBack()
+            is SalesReturnContract.Event.ClientSelected -> {
+                viewModelScope.launch {
+                    event.client?.let {
+                        val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
+                        setState(SalesReturnContract.Event.PartnerBalanceChanged(balance))
+                    }
+                    setState(event)
+                }
+            }
             else -> setState(event)
         }
     }

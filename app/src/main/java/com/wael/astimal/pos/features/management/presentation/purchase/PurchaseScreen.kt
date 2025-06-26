@@ -102,19 +102,26 @@ fun PurchaseScreen(
                 )
             }
             editableOrderItems(
+                partnerBalance = purchaseInput.partnerBalance,
+                partnerBalanceAfterThisOrder = purchaseInput.partnerBalanceAfterThisOrder,
+                totalAmount = purchaseInput.totalAmount,
+                amountRemaining = purchaseInput.amountRemaining,
                 itemList = purchaseInput.items,
+                selectedPaymentType = purchaseInput.paymentType,
+                amountPaid = purchaseInput.amountPaid,
+                onUpdateAmountPaid = {
+                    onEvent(PurchaseContract.Event.AmountPaidChanged(it))
+                },
+                onAddNewItemToOrder = {
+                    onEvent(PurchaseContract.Event.AddItem)
+                },
                 availableProducts = state.dropdownData.products,
+                onSelectPaymentType = { onEvent(PurchaseContract.Event.PaymentTypeChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(PurchaseContract.Event.ItemProductChanged(editorId, product))
+                },
                 onRemoveItemFromOrder = { editorId ->
                     onEvent(PurchaseContract.Event.RemoveItem(editorId))
-                },
-                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
-                    onEvent(PurchaseContract.Event.ItemUnitChanged(editorId, isMaxUnitSelected))
-                },
-                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
-                    onEvent(PurchaseContract.Event.ItemMaxPriceChanged(editorId, maxUnitPrice))
-                },
-                onUpdateItemMinUnitPrice = { editorId, minUnitPrice ->
-                    onEvent(PurchaseContract.Event.ItemMinPriceChanged(editorId, minUnitPrice))
                 },
                 onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
                     onEvent(
@@ -130,20 +137,16 @@ fun PurchaseScreen(
                         )
                     )
                 },
-                onUpdateAmountPaid = {
-                    onEvent(PurchaseContract.Event.AmountPaidChanged(it))
+                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
+                    onEvent(PurchaseContract.Event.ItemUnitChanged(editorId, isMaxUnitSelected))
                 },
-                selectedPaymentType = purchaseInput.paymentType,
-                onSelectPaymentType = { onEvent(PurchaseContract.Event.PaymentTypeChanged(it)) },
-                onItemProductChanged = { editorId, product ->
-                    onEvent(PurchaseContract.Event.ItemProductChanged(editorId, product))
+                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
+                    onEvent(PurchaseContract.Event.ItemMaxPriceChanged(editorId, maxUnitPrice))
                 },
-                totalAmount = purchaseInput.totalAmount.toString(),
-                amountRemaining = purchaseInput.amountRemaining.toString(),
-                amountPaid = purchaseInput.amountRemaining.toString(),
-                onAddNewItemToOrder = {
-                    onEvent(PurchaseContract.Event.AddItem)
-                })
+                onUpdateItemMinUnitPrice = { editorId, minUnitPrice ->
+                    onEvent(PurchaseContract.Event.ItemMinPriceChanged(editorId, minUnitPrice))
+                },
+            )
         },
     )
 }

@@ -138,9 +138,11 @@ fun SalesScreen(
                 onItemProductChanged = { editorId, product ->
                     onEvent(SalesContract.Event.ItemProductChanged(editorId, product))
                 },
-                totalAmount = orderInput.totalAmount.toString(),
-                amountRemaining = orderInput.amountRemaining.toString(),
+                totalAmount = orderInput.totalAmount,
+                amountRemaining = orderInput.amountRemaining,
                 amountPaid = orderInput.amountPaid,
+                partnerBalance = orderInput.partnerBalance,
+                partnerBalanceAfterThisOrder = orderInput.partnerBalanceAfterThisOrder,
                 onAddNewItemToOrder = {
                     onEvent(SalesContract.Event.AddItem)
                 },

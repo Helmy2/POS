@@ -22,6 +22,13 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
             is PurchaseContract.Event.SearchActiveChanged ->
                 previousState.copy(isSearchActive = event.isActive) to null
 
+            is PurchaseContract.Event.PartnerBalanceChanged ->
+                previousState.copy(
+                    currentPurchaseInput = previousState.currentPurchaseInput.copy(
+                        partnerBalance = event.balance
+                    )
+                ) to null
+
             is PurchaseContract.Event.UserLoaded ->
                 previousState.copy(
                     currentUser = event.user,
@@ -33,7 +40,6 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
             is PurchaseContract.Event.DropdownDataLoaded ->
                 previousState.copy(
                     dropdownData = event.data,
-                    selectedSupplier = event.data.suppliers.first()
                 ) to null
 
             is PurchaseContract.Event.PurchasesLoaded ->

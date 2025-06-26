@@ -56,6 +56,15 @@ class PurchaseReturnViewModel(
             is PurchaseReturnContract.Event.SaveClicked -> saveReturn()
             is PurchaseReturnContract.Event.DeleteClicked -> deleteReturn()
             is PurchaseReturnContract.Event.BackClicked -> navigateBack()
+            is PurchaseReturnContract.Event.SupplierSelected -> {
+                viewModelScope.launch {
+                    event.supplier?.let {
+                        val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
+                        setState(PurchaseReturnContract.Event.PartnerBalanceChanged(balance))
+                    }
+                    setState(event)
+                }
+            }
             else -> setState(event)
         }
     }

@@ -351,4 +351,6 @@
     <string name="return_from_with_args">Return from %1$s: %2$s</string>
     <string name="error_no_order_selected">error_no_order_selected</string>
     <string name="partner_type">partner_type</string>
+    <string name="partner_previous_balance">Previous Balance</string>
+    <string name="partner_current_balance">Current balance</string>
 </resources>

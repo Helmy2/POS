@@ -23,6 +23,13 @@ class SalesReturnReducer() :
             is SalesReturnContract.Event.SearchActiveChanged ->
                 previousState.copy(isSearchActive = event.isActive) to null
 
+            is SalesReturnContract.Event.PartnerBalanceChanged ->
+                previousState.copy(
+                    currentReturnInput = previousState.currentReturnInput.copy(
+                        partnerBalance = event.balance
+                    )
+                ) to null
+
             is SalesReturnContract.Event.UserLoaded ->
                 previousState.copy(
                     currentUser = event.user,

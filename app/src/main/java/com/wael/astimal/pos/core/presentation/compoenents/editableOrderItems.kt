@@ -29,11 +29,13 @@ import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 
 fun LazyStaggeredGridScope.editableOrderItems(
-    totalAmount: String,
-    amountRemaining: String,
+    totalAmount: Double,
+    amountRemaining: Double,
+    partnerBalance: Double,
+    partnerBalanceAfterThisOrder: Double,
+    amountPaid: String,
     itemList: List<EditableItem>,
     selectedPaymentType: PaymentType,
-    amountPaid: String,
     onUpdateAmountPaid: (String) -> Unit,
     onAddNewItemToOrder: () -> Unit,
     availableProducts: List<Product>,
@@ -102,9 +104,11 @@ fun LazyStaggeredGridScope.editableOrderItems(
             )
 
             OrderTotalsSection(
-                totalAmount = totalAmount.toDoubleOrNull() ?: 0.0,
+                totalAmount = totalAmount,
                 amountPaid = amountPaid.toDoubleOrNull() ?: 0.0,
-                amountRemaining = amountRemaining.toDoubleOrNull() ?: 0.0,
+                amountRemaining = amountRemaining,
+                partnerBalance = partnerBalance,
+                partnerBalanceAfterThisOrder = partnerBalanceAfterThisOrder,
                 modifier = Modifier.padding(8.dp),
             )
         }

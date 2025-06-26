@@ -102,10 +102,40 @@ fun PurchaseReturnScreen(
                 )
             }
             editableOrderItems(
+                partnerBalance = returnInput.partnerBalance,
+                partnerBalanceAfterThisOrder = returnInput.partnerBalanceAfterThisOrder,
+                totalAmount = returnInput.totalAmount,
+                amountRemaining = returnInput.amountRemaining,
                 itemList = returnInput.items,
+                selectedPaymentType = returnInput.paymentType,
+                amountPaid = returnInput.amountPaid,
+                onUpdateAmountPaid = {
+                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
+                },
+                onAddNewItemToOrder = {
+                    onEvent(PurchaseReturnContract.Event.AddItem)
+                },
                 availableProducts = state.dropdownData.products,
+                onSelectPaymentType = { onEvent(PurchaseReturnContract.Event.PaymentTypeChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
+                },
                 onRemoveItemFromOrder = { editorId ->
                     onEvent(PurchaseReturnContract.Event.RemoveItem(editorId))
+                },
+                onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMaxQuantityChanged(
+                            editorId, maxUnitQuantity
+                        )
+                    )
+                },
+                onUpdateItemMinUnitQuantity = { editorId, minUnitQuantity ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMinQuantityChanged(
+                            editorId, minUnitQuantity
+                        )
+                    )
                 },
                 onUpdateItemUnit = { editorId, isMaxUnitSelected ->
                     onEvent(
@@ -131,34 +161,7 @@ fun PurchaseReturnScreen(
                         )
                     )
                 },
-                onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemMaxQuantityChanged(
-                            editorId, maxUnitQuantity
-                        )
-                    )
-                },
-                onUpdateItemMinUnitQuantity = { editorId, minUnitQuantity ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemMinQuantityChanged(
-                            editorId, minUnitQuantity
-                        )
-                    )
-                },
-                onUpdateAmountPaid = {
-                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
-                },
-                selectedPaymentType = returnInput.paymentType,
-                onSelectPaymentType = { onEvent(PurchaseReturnContract.Event.PaymentTypeChanged(it)) },
-                onItemProductChanged = { editorId, product ->
-                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
-                },
-                totalAmount = returnInput.totalAmount.toString(),
-                amountRemaining = returnInput.amountRemaining.toString(),
-                amountPaid = returnInput.amountPaid,
-                onAddNewItemToOrder = {
-                    onEvent(PurchaseReturnContract.Event.AddItem)
-                })
+            )
         },
     )
 }
