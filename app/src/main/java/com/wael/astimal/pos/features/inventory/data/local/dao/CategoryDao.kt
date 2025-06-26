@@ -17,4 +17,10 @@ interface CategoryDao {
 
     @Query("SELECT * FROM categories WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY enName ASC, arName ASC")
     fun searchCategoriesFlow(query: String): Flow<List<CategoryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(categories: List<CategoryEntity>)
+
+    @Query("SELECT * FROM categories WHERE serverId = :serverId LIMIT 1")
+    suspend fun getCategoryByServerId(serverId: Long): CategoryEntity?
 }

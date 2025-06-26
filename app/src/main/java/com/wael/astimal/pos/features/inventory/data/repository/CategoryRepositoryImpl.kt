@@ -3,6 +3,8 @@ package com.wael.astimal.pos.features.inventory.data.repository
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
+import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
@@ -42,5 +44,15 @@ class CategoryRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun syncWithServer(categoriesDto: List<CategoryDto>) {
+        val entities = categoriesDto.map { dto ->
+            val existingEntity = categoryDao.getCategoryByServerId(dto.id)
+            dto.toEntity().copy(
+                localId = existingEntity?.localId ?: 0L
+            )
+        }
+        categoryDao.upsertAll(entities)
     }
 }

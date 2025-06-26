@@ -4,6 +4,7 @@ import com.wael.astimal.pos.core.data.remote.SyncApiService
 import com.wael.astimal.pos.core.data.remote.dto.SyncRequest
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
@@ -21,6 +22,7 @@ class SyncServiceImpl(
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
     private val partnerRepository: BusinessPartnerRepository,
+    private val categoryRepository: CategoryRepository
 ) : SyncService {
 
     override suspend fun performFullSync(): Result<Unit> {
@@ -31,6 +33,7 @@ class SyncServiceImpl(
             syncUnits(syncRequest)
             syncEmployee(syncRequest)
             syncPartners(syncRequest)
+            syncCategory(syncRequest)
 
 //            syncManager.updateLastSyncDate(response.data.nextSyncDate)
             Result.success(Unit)
@@ -80,6 +83,12 @@ class SyncServiceImpl(
         } + supplierResult.getOrThrow().data.suppliers.map { it.toEntity() }
 
         partnerRepository.syncWithServer(data)
+    }
+
+    private suspend fun syncCategory(syncRequest: SyncRequest) {
+        val categoryResult = syncApiService.syncCategories(syncRequest)
+        val data = categoryResult.getOrThrow().data.categories
+        categoryRepository.syncWithServer(data)
     }
 }
 

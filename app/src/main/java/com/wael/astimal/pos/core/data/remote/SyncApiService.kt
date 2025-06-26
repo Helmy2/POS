@@ -3,6 +3,7 @@ package com.wael.astimal.pos.core.data.remote
 import com.wael.astimal.pos.core.data.remote.dto.SyncApiResponse
 import com.wael.astimal.pos.core.data.remote.dto.SyncRequest
 import com.wael.astimal.pos.core.util.ApiRoutes
+import com.wael.astimal.pos.features.inventory.data.remote.dto.CategorySyncData
 import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitSyncData
 import com.wael.astimal.pos.features.management.data.remote.dto.ClientSyncData
 import com.wael.astimal.pos.features.management.data.remote.dto.SupplierSyncData
@@ -19,6 +20,7 @@ interface SyncApiService {
     suspend fun syncEmployees(request: SyncRequest): Result<SyncApiResponse<EmployeeSyncData>>
     suspend fun syncClients(request: SyncRequest): Result<SyncApiResponse<ClientSyncData>>
     suspend fun syncSuppliers(request: SyncRequest): Result<SyncApiResponse<SupplierSyncData>>
+    suspend fun syncCategories(request: SyncRequest): Result<SyncApiResponse<CategorySyncData>>
 }
 
 class SyncApiServiceImpl(
@@ -68,6 +70,19 @@ class SyncApiServiceImpl(
     override suspend fun syncSuppliers(request: SyncRequest): Result<SyncApiResponse<SupplierSyncData>> {
         return try {
             val response = client.post(ApiRoutes.SYNC_SUPPLIERS) {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            Result.success(response.body())
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun syncCategories(request: SyncRequest): Result<SyncApiResponse<CategorySyncData>> {
+        return try {
+            val response = client.post(ApiRoutes.SYNC_CATEGORIES) {
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
