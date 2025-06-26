@@ -18,7 +18,7 @@ interface PartnerTransactionDao {
     @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :partnerLocalId")
     fun getTransactionsForPartner(partnerLocalId: Long): Flow<List<PartnerTransactionEntity>>
 
-    @Query("SELECT SUM(credit) - SUM(debit) FROM partner_transactions WHERE partnerLocalId = :clientId")
+    @Query("SELECT SUM(debit) - SUM(credit) FROM partner_transactions WHERE partnerLocalId = :clientId")
     suspend fun getPartnerBalance(clientId: Long): Double?
 
     @Query("DELETE FROM partner_transactions WHERE sourceTransactionId = :sourceId AND transactionType = :type")
@@ -29,5 +29,11 @@ interface PartnerTransactionDao {
         sourceId: Long,
         type1: TransactionType,
         type2: TransactionType
+    )
+
+    @Query("DELETE FROM partner_transactions WHERE partnerLocalId = :partnerId AND transactionType = :type")
+    suspend fun deleteTransactionsByPartner(
+        partnerId: Long,
+        type: TransactionType,
     )
 }

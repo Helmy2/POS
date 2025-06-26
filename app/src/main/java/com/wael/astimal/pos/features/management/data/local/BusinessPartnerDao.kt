@@ -33,4 +33,7 @@ interface BusinessPartnerDao {
     @Transaction
     @Query("SELECT * FROM business_partners WHERE localId = :localId LIMIT 1")
     suspend fun getPartnerByLocalId(localId: Long): BusinessPartnerWithDetailsEntity?
+
+    @Query("SELECT * FROM business_partners WHERE serverId = :id LIMIT 1")
+    suspend fun getPartnerBySeverId(id: Long): BusinessPartnerEntity?
 }

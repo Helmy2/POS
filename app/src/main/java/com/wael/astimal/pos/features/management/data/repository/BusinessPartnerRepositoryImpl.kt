@@ -31,38 +31,71 @@ class BusinessPartnerRepositoryImpl(
     override fun getClients(query: String): Flow<List<BusinessPartner>> {
         return partnerDao.searchPartnersFlow(query).map { entities ->
             entities.filter {
-                it.businessPartner.type != PartnerType.SUPPLIER && it.businessPartner.type != PartnerType.SUPPLIER_AND_CAN_BE_CLIENT
+                it.businessPartner.type != PartnerType.SUPPLIER
             }.map { it.toDomain() }
-
         }
     }
 
     override fun getSuppliers(query: String): Flow<List<BusinessPartner>> {
         return partnerDao.searchPartnersFlow(query).map { entities ->
             entities.filter {
-                it.businessPartner.type != PartnerType.CLIENT && it.businessPartner.type != PartnerType.CLIENT_AND_CAN_BE_SUPPLIER
+                it.businessPartner.type != PartnerType.CLIENT
             }.map { it.toDomain() }
         }
     }
 
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
-            db.withTransaction {
-                if (partner.id == Id.new) {
-                    val clientId = partnerDao.insertOrUpdate(partner.toEntity())
-
-                    createOpeningBalanceTransaction(
-                        partnerLocalId = clientId,
-                        debit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1,
-                        credit = partner.openingBalance.takeIf { it > 0 } ?: 0.0
-                    )
-                } else {
-                    TODO()
-                }
-            }
+            saveBusinessPartner(partner.toEntity())
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private suspend fun saveBusinessPartner(
+        partner: BusinessPartnerEntity
+    ) {
+        db.withTransaction {
+            if (partner.localId == Id.new.local) {
+                val clientId = partnerDao.insertOrUpdate(partner)
+
+                createOpeningBalanceTransaction(
+                    partnerLocalId = clientId,
+                    debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
+                    credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
+                )
+            } else {
+                partnerTransactionDao.deleteTransactionsByPartner(
+                    partner.localId,
+                    TransactionType.OPENING_BALANCE
+                )
+                val clientId = partnerDao.insertOrUpdate(partner)
+
+                createOpeningBalanceTransaction(
+                    partnerLocalId = clientId,
+                    debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
+                    credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
+                )
+            }
+        }
+    }
+
+    override suspend fun syncWithServer(
+        list: List<BusinessPartnerEntity>
+    ): Result<Unit> {
+        return runCatching {
+            list.map { serverEntity ->
+                val existingLocal = partnerDao.getPartnerBySeverId(
+                    serverEntity.serverId ?: throw Exception("serverId is null")
+                )
+
+                serverEntity.copy(
+                    localId = existingLocal?.localId ?: 0L,
+                )
+            }.forEach {
+                saveBusinessPartner(it)
+            }
         }
     }
 
@@ -96,6 +129,12 @@ class BusinessPartnerRepositoryImpl(
                 credit = credit,
             )
         )
+    }
+
+    override suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double> {
+        return runCatching {
+            partnerTransactionDao.getPartnerBalance(partner.id.local) ?: 0.0
+        }
     }
 }
 

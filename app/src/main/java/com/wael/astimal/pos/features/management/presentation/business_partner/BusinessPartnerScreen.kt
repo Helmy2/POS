@@ -41,7 +41,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,14 +54,14 @@ import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
+import com.wael.astimal.pos.core.presentation.theme.CreditColor
+import com.wael.astimal.pos.core.presentation.theme.DebitColor
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.abs
 
-val PositiveBalanceColor = Color(0xFF43A047) // Green for when they owe you
-val NegativeBalanceColor = Color(0xFFE53935) // Red for when you owe them
 
 @Composable
 fun BusinessPartnerRoute(
@@ -423,17 +422,20 @@ fun PartnerTypeChip(partnerType: PartnerType) {
 @Composable
 fun BalanceText(partner: BusinessPartner) {
     val balance = partner.openingBalance
+
     val (balanceText, balanceColor) = when {
-        // They owe you (positive balance)
+        // They owe you (negative balance)
         balance > 0.01 -> stringResource(
-            R.string.opining_balance_positive_with_args,
-            "%.2f".format(balance)
-        ) to PositiveBalanceColor
-        // You owe them (negative balance)
-        balance < -0.01 -> stringResource(
             R.string.opining_balance_negative_with_args,
             "%.2f".format(abs(balance))
-        ) to NegativeBalanceColor
+        ) to DebitColor
+
+        // You owe them (positive balance)
+        balance < -0.01 -> stringResource(
+            R.string.opining_balance_positive_with_args,
+            "%.2f".format(balance * -1)
+        ) to CreditColor
+
         // Settled
         else -> stringResource(R.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
     }

@@ -1,4 +1,4 @@
-package com.example.compose
+package com.wael.astimal.pos.core.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -73,3 +73,7 @@ val surfaceContainerLowDark = Color(0xFF171D1E)
 val surfaceContainerDark = Color(0xFF1B2122)
 val surfaceContainerHighDark = Color(0xFF252B2C)
 val surfaceContainerHighestDark = Color(0xFF303637)
+
+
+val DebitColor = Color(0xFFD32F2F)
+val CreditColor = Color(0xFF388E3C)

@@ -1,10 +1,9 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
-import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
-import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
@@ -43,10 +42,11 @@ class UnitRepositoryImpl(
         }
     }
 
-    override suspend fun syncWithServer(units: List<UnitDto>) {
-        val entities = units.map { dto ->
-            val existingEntity = unitDao.getUnitByServerId(dto.id)
-            dto.toEntity().copy(
+    override suspend fun syncWithServer(units: List<UnitEntity>) {
+        val entities = units.map { entity ->
+            val existingEntity =
+                unitDao.getUnitByServerId(entity.serverId ?: throw Exception("Server id is null"))
+            entity.copy(
                 localId = existingEntity?.localId ?: 0L
             )
         }

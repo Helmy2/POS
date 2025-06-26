@@ -12,5 +12,7 @@ object ApiRoutes {
     const val LOGIN = "$BASE_URL/login"
     const val SYNC_UNITS = "https://wael.astimal.com/api/Global/units"
     const val SYNC_EMPLOYEES = "https://wael.astimal.com/api/Global/employees"
+    const val SYNC_CLIENTS = "https://wael.astimal.com/api/Global/clients"
+    const val SYNC_SUPPLIERS = "https://wael.astimal.com/api/Global/suppliers"
 }
 
