@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
     fun getCategories(query: String = ""): Flow<List<Category>>
-    suspend fun saveCategory(category: Category): Result<Unit>
+    suspend fun saveCategory(category: Category): Result<Long>
     suspend fun deleteCategory(category: Category): Result<Unit>
     suspend fun syncWithServer(categoriesDto: List<CategoryDto>)
+    suspend fun getCategoryByServerId(id: Long): Result<Category>
 }

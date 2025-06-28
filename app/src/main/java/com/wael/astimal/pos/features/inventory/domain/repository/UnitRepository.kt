@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface UnitRepository {
     fun getUnits(query: String): Flow<List<ProductUnit>>
-    suspend fun saveUnit(unit: ProductUnit): Result<Unit>
+    suspend fun saveUnit(unit: ProductUnit): Result<Long>
     suspend fun deleteUnit(unit: ProductUnit): Result<Unit>
     suspend fun syncWithServer(units: List<UnitEntity>)
+    suspend fun getUnitByServerId(id: Long): Result<ProductUnit>
 }

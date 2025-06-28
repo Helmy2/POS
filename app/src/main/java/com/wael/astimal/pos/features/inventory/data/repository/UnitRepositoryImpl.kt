@@ -21,7 +21,7 @@ class UnitRepositoryImpl(
         }
     }
 
-    override suspend fun saveUnit(unit: ProductUnit): Result<Unit> {
+    override suspend fun saveUnit(unit: ProductUnit): Result<Long> {
         return runCatching {
             if (unit.name.arName.isNullOrBlank() && unit.name.arName.isNullOrBlank()) {
                 return Result.failure(IllegalArgumentException("Arabic and English names must be provided."))
@@ -51,5 +51,13 @@ class UnitRepositoryImpl(
             )
         }
         unitDao.upsertAll(entities)
+    }
+
+    override suspend fun getUnitByServerId(
+        id: Long
+    ): Result<ProductUnit> {
+        return runCatching {
+            unitDao.getUnitByServerId(id)?.toDomain() ?: throw Exception("Unit not found")
+        }
     }
 }

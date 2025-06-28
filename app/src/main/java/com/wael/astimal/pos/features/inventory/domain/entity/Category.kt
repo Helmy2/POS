@@ -12,7 +12,19 @@ data class Category(
     override val isSynced: Boolean = false,
     override val createdAt: Long,
     override val updatedAt: Long = Clock.now()
-) : Item
+) : Item {
+    companion object {
+        fun getUnspecifiedCategory(serverId: Long): Category {
+            return Category(
+                name = LocalizedString(arName = "Unspecified", enName = "Unspecified"),
+                id = Id.new.copy(server = serverId),
+                isSynced = false,
+                createdAt = Clock.now(),
+                updatedAt = Clock.now()
+            )
+        }
+    }
+}
 
 fun Category.toEntity(): CategoryEntity {
     return CategoryEntity(

@@ -30,4 +30,11 @@ interface ProductDao {
         ORDER BY enName ASC, arName ASC
     """)
     fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetailsEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(products: List<ProductEntity>)
+
+    @Query("SELECT * FROM products WHERE serverId = :serverId LIMIT 1")
+    suspend fun getProductByServerId(serverId: Long): ProductEntity?
+
 }

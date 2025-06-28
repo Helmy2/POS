@@ -30,16 +30,16 @@ class StoreRepositoryImpl(
         }
     }
 
-    override suspend fun getStoreBySeverId(localId: Long): Result<Store> {
+    override suspend fun getStoreBySeverId(id: Long): Result<Store> {
         return runCatching {
-            val entity = storeDao.getStoreByServerId(localId)
-            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with localId $localId is marked as deleted locally.")
+            val entity = storeDao.getStoreByServerId(id)
+            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with server id $id is marked as deleted locally.")
             entity?.toDomain()
-                ?: throw NoSuchElementException("No store found with localId $localId.")
+                ?: throw NoSuchElementException("No store found with server id $id.")
         }
     }
 
-    override suspend fun saveStore(store: Store): Result<Unit> {
+    override suspend fun saveStore(store: Store): Result<Long> {
         return runCatching {
             if (store.name.arName.isNullOrBlank() && store.name.arName.isNullOrBlank()) {
                 return Result.failure(IllegalArgumentException("Arabic and English names must be provided."))

@@ -24,12 +24,13 @@ data class StoreEntity(
 ) : ItemEntity
 
 enum class StoreType {
-    MAIN, SUB;
+    MAIN, SUB, UNSPECIFIED;
 
     fun getStringResourceId(): Int {
         return when (this) {
             MAIN -> R.string.store_type_main
             SUB -> R.string.store_type_sub
+            UNSPECIFIED -> R.string.store_type_unspecified
         }
     }
 }

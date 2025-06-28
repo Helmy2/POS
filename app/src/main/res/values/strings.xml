@@ -353,4 +353,5 @@
     <string name="partner_type">partner_type</string>
     <string name="partner_previous_balance">Previous Balance</string>
     <string name="partner_current_balance">Current balance</string>
+    <string name="store_type_unspecified">Unspecified</string>
 </resources>

@@ -24,7 +24,7 @@ class CategoryRepositoryImpl(
 
     override suspend fun saveCategory(
         category: Category
-    ): Result<Unit> {
+    ): Result<Long> {
         return runCatching {
             if (category.name.arName.isNullOrBlank() && category.name.enName.isNullOrBlank()) {
                 return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the category."))
@@ -54,5 +54,14 @@ class CategoryRepositoryImpl(
             )
         }
         categoryDao.upsertAll(entities)
+    }
+
+    override suspend fun getCategoryByServerId(
+        id: Long
+    ): Result<Category> {
+        return runCatching {
+            categoryDao.getCategoryByServerId(id)?.toDomain()
+                ?: throw Exception("Category not found")
+        }
     }
 }

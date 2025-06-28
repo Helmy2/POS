@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
@@ -135,5 +136,17 @@ class ProductRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun syncWithServer(productsDto: List<ProductEntity>) {
+        val entities = productsDto.map { dto ->
+            val existingEntity = productDao.getProductByServerId(
+                dto.serverId ?: throw Exception("Server ID not found")
+            )
+            dto.copy(
+                localId = existingEntity?.localId ?: 0L
+            )
+        }
+        productDao.upsertAll(entities)
     }
 }
