@@ -120,7 +120,7 @@
     <string name="stock_adjustment_reason_other">Other</string>
     <string name="filter_by_store">Filter by Store</string>
     <string name="search_products">Search Products</string>
-    <string name="in_stock">In Stock: %s</string>
+    <string name="in_stock_with_args">In Stock: %s</string>
     <string name="not_enough_stock">Not enough stock available.</string>
     <string name="insufficient_stock">Insufficient stock for the requested quantity.</string>
     <string name="product_not_found_in_store">Product not found in the selected store.</string>
@@ -354,4 +354,5 @@
     <string name="partner_previous_balance">Previous Balance</string>
     <string name="partner_current_balance">Current balance</string>
     <string name="store_type_unspecified">Unspecified</string>
+    <string name="payment_type_undefined">Undefined</string>
 </resources>

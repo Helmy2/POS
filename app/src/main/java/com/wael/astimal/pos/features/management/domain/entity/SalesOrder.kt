@@ -17,6 +17,7 @@ data class SalesOrder(
     val totalAmount: Double,
     val paymentType: PaymentType,
     val items: List<SalesOrderItem>,
+    val orderDate: Long,
     override val id: Id,
     override val createdAt: Long,
     override val updatedAt: Long = Clock.now(),
@@ -44,7 +45,8 @@ fun SalesOrder.toEntity(): Pair<OrderEntity, List<OrderProductEntity>> {
         paymentType = paymentType,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        isSynced = isSynced
+        isSynced = isSynced,
+        orderDate = orderDate
     ) to items.map { item ->
         OrderProductEntity(
             localId = item.id.local,

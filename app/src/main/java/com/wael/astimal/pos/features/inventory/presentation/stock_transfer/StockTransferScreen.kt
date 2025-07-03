@@ -253,8 +253,11 @@ fun StockTransferItemRow(
             }
 
             Text(
-                text = "${stringResource(R.string.in_stock)}: ${
-                    if (item.isSelectedUnitMax) item.currentMaxStock else item.currentMaxStock * product.subUnitsPerMainUnit
+                text = "${
+                    stringResource(
+                        R.string.in_stock_with_args,
+                        if (item.isSelectedUnitMax) item.currentMaxStock else item.currentMaxStock * product.subUnitsPerMainUnit
+                    )
                 } ${
                     if (item.isSelectedUnitMax) product.maximumProductUnit.name.displayName(language)
                     else product.minimumProductUnit?.name?.displayName(language)

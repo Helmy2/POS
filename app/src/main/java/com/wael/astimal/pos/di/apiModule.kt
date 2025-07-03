@@ -49,9 +49,7 @@ val apiModule = module {
                     refreshTokens { sessionManager.refreshBearerTokens(client) }
 
                     sendWithoutRequest { request ->
-                        val url = request.url.encodedPath
-                        request.url.host == ApiRoutes.HOST &&
-                                url != ApiRoutes.LOGIN
+                        request.url.encodedPath == ApiRoutes.LOGIN
                     }
                 }
             }

@@ -120,7 +120,7 @@
     <string name="stock_adjustment_reason_other">أخرى</string>
     <string name="filter_by_store">تصفية حسب المخزن</string>
     <string name="search_products">بحث عن منتجات</string>
-    <string name="in_stock">في المخزون: %s</string>
+    <string name="in_stock_with_args">في المخزون: %s</string>
     <string name="not_enough_stock">المخزون المتوفر غير كافٍ.</string>
     <string name="insufficient_stock">مخزون غير كافٍ للكمية المطلوبة.</string>
     <string name="product_not_found_in_store">المنتج غير موجود في المخزن المحدد.</string>

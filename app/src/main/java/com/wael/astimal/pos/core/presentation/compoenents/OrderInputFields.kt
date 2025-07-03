@@ -155,7 +155,7 @@ fun OrderItemRow(
         AnimatedVisibility(item.product?.maximumProductUnit != null) {
             Text(
                 text = stringResource(
-                    R.string.in_stock, item.currentStock
+                    R.string.in_stock_with_args, item.currentStock
                 ) + " " + item.product?.maximumProductUnit?.name?.displayName(language).orEmpty(),
                 style = MaterialTheme.typography.bodySmall
             )

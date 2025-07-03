@@ -46,7 +46,8 @@ class CategoryRepositoryImpl(
         }
     }
 
-    override suspend fun syncWithServer(categoriesDto: List<CategoryDto>) {
+    override suspend fun syncWithServer(categoriesDto: List<CategoryDto>): Result<Unit> {
+        return runCatching {
         val entities = categoriesDto.map { dto ->
             val existingEntity = categoryDao.getCategoryByServerId(dto.id)
             dto.toEntity().copy(
@@ -54,6 +55,7 @@ class CategoryRepositoryImpl(
             )
         }
         categoryDao.upsertAll(entities)
+        }
     }
 
     override suspend fun getCategoryByServerId(

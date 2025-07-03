@@ -16,5 +16,6 @@ object ApiRoutes {
     const val SYNC_SUPPLIERS = "https://wael.astimal.com/api/Global/suppliers"
     const val SYNC_CATEGORIES = "https://wael.astimal.com/api/Global/categories"
     const val SYNC_PRODUCTS = "https://wael.astimal.com/api/Global/products"
+    const val SYNC_ORDERS = "https://wael.astimal.com/api/Order/index"
 }
 

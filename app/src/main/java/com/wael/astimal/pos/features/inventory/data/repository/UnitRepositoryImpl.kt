@@ -42,15 +42,19 @@ class UnitRepositoryImpl(
         }
     }
 
-    override suspend fun syncWithServer(units: List<UnitEntity>) {
-        val entities = units.map { entity ->
-            val existingEntity =
-                unitDao.getUnitByServerId(entity.serverId ?: throw Exception("Server id is null"))
-            entity.copy(
-                localId = existingEntity?.localId ?: 0L
-            )
+    override suspend fun syncWithServer(units: List<UnitEntity>): Result<Unit> {
+        return runCatching {
+            val entities = units.map { entity ->
+                val existingEntity =
+                    unitDao.getUnitByServerId(
+                        entity.serverId ?: throw Exception("Server id is null")
+                    )
+                entity.copy(
+                    localId = existingEntity?.localId ?: 0L
+                )
+            }
+            unitDao.upsertAll(entities)
         }
-        unitDao.upsertAll(entities)
     }
 
     override suspend fun getUnitByServerId(

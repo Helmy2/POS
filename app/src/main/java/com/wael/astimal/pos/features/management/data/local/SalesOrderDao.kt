@@ -69,4 +69,14 @@ interface SalesOrderDao {
 
     @Query("SELECT MAX(invoiceNumber) FROM orders WHERE invoiceNumber LIKE :pattern")
     suspend fun getLastInvoiceNumber(pattern: String): String?
+
+    @Query("SELECT * FROM orders WHERE serverId = :serverId LIMIT 1")
+    suspend fun getOrderByServerId(serverId: Long): OrderEntity?
+
+    @Query("SELECT * FROM order_products WHERE serverId = :serverId LIMIT 1")
+    suspend fun getOrderProductByServerId(serverId: Long): OrderProductEntity?
+
+    @Transaction
+    @Query("SELECT * FROM orders WHERE isSynced = 0")
+    suspend fun getUnsyncedOrders(): List<OrderWithDetailsEntity>
 }

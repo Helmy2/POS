@@ -136,6 +136,12 @@ class BusinessPartnerRepositoryImpl(
             partnerTransactionDao.getPartnerBalance(partner.id.local) ?: 0.0
         }
     }
+
+    override suspend fun getBusinessPartnerByServerId(serverId: Long): Result<BusinessPartnerEntity> {
+        return runCatching {
+            partnerDao.getPartnerBySeverId(serverId) ?: throw Exception("Partner not found")
+        }
+    }
 }
 
 private fun BusinessPartner.toEntity(): BusinessPartnerEntity {

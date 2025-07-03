@@ -40,7 +40,8 @@ data class OrderEntity(
     override val createdAt: Long = Clock.now(),
     override val updatedAt: Long = Clock.now(),
     override var isDeletedLocally: Boolean = false,
-    var invoiceNumber: String,
+    val orderDate: Long,
+    val invoiceNumber: String,
     val businessPartnerLocalId: Long,
     val employeeLocalId: Long,
     val amountPaid: Double,
@@ -112,7 +113,8 @@ fun OrderWithDetailsEntity.toDomain(): SalesOrder {
         client = clientWithUser?.toDomain() ?: throw NullPointerException(),
         employee = employeeUser?.toDomain() ?: throw NullPointerException(),
         createdAt = order.createdAt,
-        updatedAt = order.updatedAt
+        updatedAt = order.updatedAt,
+        orderDate = order.orderDate
     )
 }
 

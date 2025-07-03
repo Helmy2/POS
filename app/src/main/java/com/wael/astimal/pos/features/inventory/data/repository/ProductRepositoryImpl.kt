@@ -13,6 +13,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReas
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -22,7 +23,8 @@ class ProductRepositoryImpl(
     private val appDatabase: AppDatabase,
     private val productDao: ProductDao,
     private val stockRepository: StockRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val storeRepository: StoreRepository,
 ) : ProductRepository {
 
     override fun getProducts(query: String): Flow<List<Product>> {
@@ -35,17 +37,22 @@ class ProductRepositoryImpl(
     override suspend fun getProductByLocalId(localId: Long): Result<Product> {
         return runCatching {
             val entity = productDao.getProductWithDetailsByLocalId(localId)
-            if (entity?.product?.isDeletedLocally == true)
-                throw Exception("Product not found")
+            if (entity?.product?.isDeletedLocally == true) throw Exception("Product not found")
             entity?.toDomain() ?: throw Exception("Product not found")
         }
     }
 
     override suspend fun saveProduct(product: Product): Result<Unit> {
         return runCatching {
+            saveProduct(product.toEntity()).getOrThrow()
+        }
+    }
+
+    private suspend fun saveProduct(product: ProductEntity): Result<Unit> {
+        return runCatching {
             appDatabase.withTransaction {
-                if (product.id.local == 0L) {
-                    val newProductId = productDao.insertOrUpdate(product.toEntity())
+                if (product.localId == 0L) {
+                    val newProductId = productDao.insertOrUpdate(product)
 
                     val openingBalance = product.openingBalanceQuantity
                     val currentUser = userRepository.getCurrentUser()
@@ -66,10 +73,10 @@ class ProductRepositoryImpl(
                         stockRepository.addStockAdjustment(adjustment)
                     }
                 } else {
-                    val oldProductEntity = productDao.getProductByLocalId(product.id.local)
-                        ?: throw NoSuchElementException("Product not found for update with localId: ${product.id.local}")
+                    val oldProductEntity = productDao.getProductByLocalId(product.localId)
+                        ?: throw NoSuchElementException("Product not found for update with localId: ${product.localId}")
 
-                    productDao.insertOrUpdate(product.toEntity())
+                    productDao.insertOrUpdate(product)
 
                     val openingBalanceDifference =
                         product.openingBalanceQuantity - oldProductEntity.openingBalanceQuantity
@@ -77,7 +84,11 @@ class ProductRepositoryImpl(
                     if (openingBalanceDifference != 0.0) {
                         val currentUser = userRepository.getCurrentUser()
                             ?: throw Exception("User not authenticated for stock adjustment.")
-                        val store = product.store
+
+                        val store = product.storeId?.let { storeRepository.getStoreByLocalId(it) }
+                            ?.getOrThrow() ?: throw Exception("Store not found")
+                        val product = getProductByLocalId(product.localId).getOrThrow()
+
 
                         val adjustment = StockAdjustment(
                             id = Id.new,
@@ -106,8 +117,7 @@ class ProductRepositoryImpl(
                 // Fetch all stock entries for this product to zero them out
                 val allStocks =
                     stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
-                val productStocks = allStocks
-                    .filter { it.product.id.local == product.id.local }
+                val productStocks = allStocks.filter { it.product.id.local == product.id.local }
 
                 for (stockItem in productStocks) {
                     if (stockItem.quantity != 0.0) {
@@ -126,9 +136,7 @@ class ProductRepositoryImpl(
                 }
 
                 val productToMarkAsDeleted = product.toEntity().copy(
-                    isDeletedLocally = true,
-                    isSynced = false,
-                    updatedAt = Clock.now()
+                    isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
                 )
                 productDao.insertOrUpdate(productToMarkAsDeleted)
             }
@@ -138,15 +146,25 @@ class ProductRepositoryImpl(
         }
     }
 
-    override suspend fun syncWithServer(productsDto: List<ProductEntity>) {
-        val entities = productsDto.map { dto ->
-            val existingEntity = productDao.getProductByServerId(
-                dto.serverId ?: throw Exception("Server ID not found")
-            )
-            dto.copy(
-                localId = existingEntity?.localId ?: 0L
-            )
+    override suspend fun syncWithServer(productsDto: List<ProductEntity>): Result<Unit> {
+        return runCatching {
+            productsDto.map { dto ->
+                val existingEntity = productDao.getProductByServerId(
+                    dto.serverId ?: throw Exception("Server ID not found")
+                )
+                dto.copy(
+                    localId = existingEntity?.product?.localId ?: 0L
+                )
+            }.forEach {
+                saveProduct(it)
+            }
         }
-        productDao.upsertAll(entities)
+    }
+
+    override suspend fun getProductByServerId(serverId: Long): Result<Product> {
+        return runCatching {
+            productDao.getProductByServerId(serverId)?.toDomain()
+                ?: throw Exception("Product not found")
+        }
     }
 }

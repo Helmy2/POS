@@ -140,7 +140,6 @@ class OrderAmountLogic(
                 )
             )
         }
-        employeeFinancesDao.deleteAllCommissionsBySource(orderId, SourceTransactionType.SALE)
     }
 
 }

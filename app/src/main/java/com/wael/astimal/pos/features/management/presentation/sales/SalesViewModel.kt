@@ -161,14 +161,15 @@ class SalesViewModel(
                 employee = currentState.currentOrderInput.selectedEmployee,
                 paymentType = currentState.currentOrderInput.paymentType,
                 amountPaid = currentState.currentOrderInput.amountPaid.toDoubleOrNull() ?: 0.0,
-                createdAt = currentState.currentOrderInput.date,
+                createdAt = currentState.selectedOrder?.createdAt ?: Clock.now(),
                 items = orderItems,
                 isSynced = false,
                 totalAmount = currentState.currentOrderInput.totalAmount,
                 updatedAt = currentState.selectedOrder?.updatedAt ?: Clock.now(),
                 id = currentState.selectedOrder?.id ?: Id.new,
                 invoiceNumber = currentState.selectedOrder?.invoiceNumber ?: "",
-                amountRemaining = currentState.currentOrderInput.amountRemaining
+                amountRemaining = currentState.currentOrderInput.amountRemaining,
+                orderDate = currentState.currentOrderInput.date
             )
 
             val result = if (currentState.isEditing) {
@@ -181,6 +182,7 @@ class SalesViewModel(
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.order_saved)))
                 setState(SalesContract.Event.SaveSucceeded)
             }.onFailure {
+                it.printStackTrace()
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(R.string.something_went_wrong)))
                 setState(SalesContract.Event.LoadingFinished)
             }

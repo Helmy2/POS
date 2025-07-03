@@ -21,7 +21,16 @@ data class Product(
     override val isSynced: Boolean = false,
     override val createdAt: Long,
     override val updatedAt: Long = Clock.now()
-) : Item
+) : Item {
+
+    fun convertToMaxUnitQuantity(quantity: Double): Double {
+        return quantity * subUnitsPerMainUnit
+    }
+
+    fun convertToMaxUnitPrice(price: Double): Double {
+        return price / subUnitsPerMainUnit
+    }
+}
 
 
 fun Product.toEntity(): ProductEntity {
