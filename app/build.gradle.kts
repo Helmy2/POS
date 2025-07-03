@@ -1,95 +1,192 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
+}
+kotlin {
+    androidTarget {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+
+    jvm("desktop")
+
+    sourceSets {
+        val desktopMain by getting
+
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
+            implementation(libs.ktor.android)
+            implementation(libs.androidx.core.splashscreen)
+
+            // todo remove this
+            implementation(libs.ktor.auth)
+            implementation("androidx.datastore:datastore-preferences:1.1.7")
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
+            implementation(compose.material3AdaptiveNavigationSuite)
+            implementation(compose.ui)
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
+
+            implementation(libs.adaptive)
+            implementation(libs.adaptive.layout)
+            implementation(libs.adaptive.navigation)
+            implementation(libs.material3.window.size)
+
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.kotlinx.coroutines.core)
+
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.serialization)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.androidx.navigation.composee)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.coil)
+            implementation(libs.coil.network.ktor)
+
+            implementation(libs.supabase.auth)
+            implementation(libs.supabase.postgrest)
+            implementation(libs.supabase.realtime)
+            implementation(libs.supabase.storage)
+            implementation(libs.supabase.functions)
+            implementation(libs.supabase.compose.auth)
+
+            implementation(libs.filekit.compose)
+
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.sqlite.bundled)
+
+            implementation(libs.vico.multiplatform)
+        }
+
+//        commonMain.dependencies {
+//            implementation(compose.runtime)
+//            implementation(compose.foundation)
+//            implementation(compose.material3)
+//            implementation(compose.materialIconsExtended)
+//            implementation(compose.material3AdaptiveNavigationSuite)
+//            implementation(compose.ui)
+//            implementation(compose.components.resources)
+//            implementation(compose.components.uiToolingPreview)
+//
+//            implementation(libs.adaptive)
+//            implementation(libs.adaptive.layout)
+//            implementation(libs.adaptive.navigation)
+//            implementation(libs.material3.window.size)
+//
+//            implementation(libs.androidx.lifecycle.viewmodel)
+//            implementation(libs.androidx.lifecycle.runtime.compose)
+//            implementation(libs.kotlinx.coroutines.core)
+//
+//            implementation(libs.ktor.client.core)
+//            implementation(libs.ktor.client.content.negotiation)
+//            implementation(libs.ktor.client.serialization)
+//            implementation(libs.ktor.client.logging)
+//            implementation(libs.androidx.navigation.composee)
+//            implementation(libs.kotlinx.serialization.json)
+//            implementation(libs.koin.core)
+//            implementation(libs.koin.compose)
+//            implementation(libs.coil)
+//            implementation(libs.coil.network.ktor)
+//
+//            implementation(libs.supabase.auth)
+//            implementation(libs.supabase.postgrest)
+//            implementation(libs.supabase.realtime)
+//            implementation(libs.supabase.storage)
+//            implementation(libs.supabase.functions)
+//            implementation(libs.supabase.compose.auth)
+//
+//            implementation(libs.filekit.compose)
+//
+//            implementation(libs.androidx.room.runtime)
+//            implementation(libs.sqlite.bundled)
+//
+//            implementation(libs.vico.multiplatform)
+//        }
+
+        desktopMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.ktor.client.okhttp)
+        }
+    }
 }
 
 android {
     namespace = "com.wael.astimal.pos"
-    compileSdk = 35
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.wael.astimal.pos"
-        minSdk = 27
-        targetSdk = 35
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
 }
 
 dependencies {
+    ksp(libs.androidx.room.compiler)
+    debugImplementation(compose.uiTooling)
+}
 
-    // Compose
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.material.icons)
-    implementation(libs.androidx.material3.adaptive.navigation)
+room {
+    schemaDirectory("$projectDir/schemas")
+}
 
-    implementation(libs.androidx.splashscreen)
+compose.desktop {
+    application {
+        mainClass = "com.wael.astimal.pos.MainKt"
 
-    // Koin
-    implementation(libs.koin.compose)
-    implementation(libs.koin.navigation)
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "com.wael.astimal.pos"
+            packageVersion = "1.0.0"
+        }
+    }
+}
 
-    // navigation
-    implementation(libs.navigation.compose)
+buildkonfig {
+    packageName = "com.wael.astimal.pos"
 
-    // serialization
-    implementation(libs.kotlin.serialization.json)
+    defaultConfigs {
 
-    // datastore
-    implementation(libs.datastore.preferences)
-
-    // room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.adaptive.navigation.android)
-    annotationProcessor(libs.androidx.room.room.compiler)
-    ksp(libs.androidx.room.room.compiler)
-    implementation(libs.androidx.room.ktx)
-
-    implementation(libs.vico.compose.m3)
-
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
-    implementation(libs.coil.network.okhttp)
-
-    // ktor
-    implementation(libs.ktor.core)
-    implementation(libs.ktor.android)
-    implementation(libs.ktor.auth)
-    implementation(libs.ktor.negotiation)
-    implementation(libs.ktor.json)
-    implementation(libs.ktor.logging)
-
-    debugImplementation(libs.androidx.ui.tooling)
+    }
 }
