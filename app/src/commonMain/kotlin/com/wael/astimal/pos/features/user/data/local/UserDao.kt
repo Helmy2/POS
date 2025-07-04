@@ -7,8 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.domain.entity.UserType
-import com.wael.astimal.pos.features.user.domain.entity.UserType.EMPLOYEE
+import com.wael.astimal.pos.features.user.domain.entity.UserRole
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -32,9 +31,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE id = :localId")
     fun getUserFLowById(localId: Long): Flow<UserEntity?>
 
-    @Query("SELECT * FROM users WHERE userType = :userType")
+    @Query("SELECT * FROM users WHERE role = :role")
     fun getAllEmployeesFlow(
-        userType: UserType = EMPLOYEE
+        role: UserRole = UserRole.EMPLOYEE
     ): Flow<List<UserEntity>>
 
     @Query("SELECT * FROM users WHERE isSynced = 0")
@@ -61,4 +60,7 @@ interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(users: List<UserEntity>)
+
+    @Query("SELECT * FROM users WHERE supabaseId = :supabaseId LIMIT 1")
+    fun getUserBySupabaseId(supabaseId: String): Flow<UserEntity?>
 }

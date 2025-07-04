@@ -131,7 +131,7 @@ fun EditTransactionDialog(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.employee),
                     items = state.employeesForDropdown,
-                    selectedItemId = state.dialogState.selectedEmployee?.id,
+                    selectedItemId = state.dialogState.selectedEmployee?.id?.local,
                     onItemSelected = {
                         onEvent(
                             EmployeeAccountContract.Event.DialogEmployeeSelected(
@@ -139,8 +139,8 @@ fun EditTransactionDialog(
                             )
                         )
                     },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    itemToId = { it.id.local },
                     enabled = state.canUserEdit
                 )
 
@@ -228,7 +228,7 @@ fun TransactionItem(
             modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = transaction.employee.name.displayName(language),
+                text = transaction.employee.localizedName.displayName(language),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Row(

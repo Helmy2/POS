@@ -221,7 +221,7 @@ class SalesViewModel(
         viewModelScope.launch {
             val employeeId = state.value.currentOrderInput.selectedEmployee?.id ?: return@launch
             val storeId =
-                userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
+                userRepository.getStoreIdForEmployee(employeeId.local).getOrNull() ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId)
                     .catch {

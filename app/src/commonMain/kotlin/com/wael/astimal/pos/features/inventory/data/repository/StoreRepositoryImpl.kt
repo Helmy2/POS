@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
@@ -21,12 +22,12 @@ class StoreRepositoryImpl(
         }
     }
 
-    override suspend fun getStoreByLocalId(localId: Long): Result<Store> {
+    override suspend fun getStoreByLocalId(id: Id): Result<Store> {
         return runCatching {
-            val entity = storeDao.getStoreByLocalId(localId)
-            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with localId $localId is marked as deleted locally.")
+            val entity = storeDao.getStoreByLocalId(id.local)
+            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with localId ${id.local} is marked as deleted locally.")
             entity?.toDomain()
-                ?: throw NoSuchElementException("No store found with localId $localId.")
+                ?: throw NoSuchElementException("No store found with localId ${id.local}.")
         }
     }
 

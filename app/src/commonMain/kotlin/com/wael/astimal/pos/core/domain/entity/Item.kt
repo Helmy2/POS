@@ -22,7 +22,8 @@ interface Item {
  */
 data class Id(
     val local: Long,
-    val server: Long?
+    val server: Long? = null,
+    val serverStringId: String? = null
 ) {
     companion object {
         val new = Id(0, null)

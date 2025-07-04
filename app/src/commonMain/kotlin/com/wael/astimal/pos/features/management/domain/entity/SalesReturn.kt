@@ -38,7 +38,7 @@ fun SalesReturn.toEntity(): Pair<OrderReturnEntity, List<OrderReturnProductEntit
         serverId = id.server,
         invoiceNumber = invoiceNumber,
         businessPartnerLocalId = client.id.local,
-        employeeLocalId = employee.id,
+        employeeLocalId = employee.id.local,
         amountPaid = amountPaid,
         amountRemaining = amountRemaining,
         totalAmount = totalAmount,

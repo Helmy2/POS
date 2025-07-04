@@ -94,7 +94,7 @@ class StockTransferReducer() :
                 previousState.copy(
                     currentUser = event.user,
                     currentTransferInput = previousState.currentTransferInput.copy(
-                        selectedEmployeeId = event.user?.id,
+                        selectedEmployeeId = event.user?.id?.local,
                         fromStore = if (previousState.currentUser?.isAdmin == false) event.fromStore else previousState.currentTransferInput.fromStore
                     )
                 ) to null
@@ -135,7 +135,7 @@ class StockTransferReducer() :
                     selectedTransfer = null,
                     currentTransferInput = StockTransferContract.EditableStockTransfer(
                         transferDate = Clock.now(),
-                        selectedEmployeeId = previousState.currentUser?.id,
+                        selectedEmployeeId = previousState.currentUser?.id?.local,
                         fromStore = if (previousState.currentUser?.isAdmin == false) previousState.currentTransferInput.fromStore else null
                     )
                 ) to null

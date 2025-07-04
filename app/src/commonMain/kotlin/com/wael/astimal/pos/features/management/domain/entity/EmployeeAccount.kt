@@ -77,8 +77,8 @@ fun EmployeeAccountTransaction.toEntity(): EmployeeAccountTransactionEntity {
     return EmployeeAccountTransactionEntity(
         localId = id.local,
         serverId = id.server,
-        employeeId = employee.id,
-        createdByEmployeeId = createdByEmployee.id,
+        employeeId = employee.id.local,
+        createdByEmployeeId = createdByEmployee.id.local,
         type = type,
         amount = amount,
         relatedCommissionId = relatedCommission?.id?.local,

@@ -213,7 +213,7 @@ class PurchaseViewModel(
         viewModelScope.launch {
             val employeeId = state.value.currentPurchaseInput.selectedEmployee?.id ?: return@launch
             val storeId =
-                userRepository.getStoreIdForEmployee(employeeId).getOrNull() ?: return@launch
+                userRepository.getStoreIdForEmployee(employeeId.local).getOrNull() ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId)
                     .catch {

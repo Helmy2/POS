@@ -41,7 +41,7 @@ fun PurchaseReturn.toEntity(): Pair<PurchaseReturnEntity, List<PurchaseReturnPro
         invoiceNumber = invoiceNumber,
         businessPartnerLocalId = supplier.id.local,
         paymentType = paymentType,
-        employeeLocalId = employee.id,
+        employeeLocalId = employee.id.local,
         totalAmount = totalAmount,
         amountRemaining = amountRemaining,
         amountPaid = amountPaid

@@ -147,7 +147,7 @@ private fun BusinessPartner.toEntity(): BusinessPartnerEntity {
         enName = name.enName.orEmpty(),
         phone = phone,
         address = address,
-        responsibleEmployeeLocalId = responsibleEmployee.id,
+        responsibleEmployeeLocalId = responsibleEmployee.id.local,
         createdAt = createdAt,
         updatedAt = updatedAt,
         type = type,

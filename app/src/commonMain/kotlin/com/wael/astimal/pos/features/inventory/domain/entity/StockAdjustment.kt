@@ -46,7 +46,7 @@ fun StockAdjustment.toEntity(): StockAdjustmentEntity {
         serverId = id.server,
         storeId = store.id.local,
         productId = product.id.local,
-        userId = user.id,
+        userId = user.id.local,
         reason = reason,
         notes = notes,
         quantityChange = quantityChange,

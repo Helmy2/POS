@@ -81,7 +81,8 @@ class ProductRepositoryImpl(
                     val currentUser = userRepository.getCurrentUser()
                         ?: throw Exception("User not authenticated for stock adjustment.")
 
-                    val store = product.storeId?.let { storeRepository.getStoreByLocalId(it) }
+                    val store =
+                        product.storeId?.let { storeRepository.getStoreByLocalId(Id(local = it)) }
                         ?.getOrThrow() ?: throw Exception("Store not found")
                     val product = getProductByLocalId(product.localId).getOrThrow()
 

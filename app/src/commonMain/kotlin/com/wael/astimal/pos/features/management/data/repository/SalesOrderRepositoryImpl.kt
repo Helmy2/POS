@@ -138,7 +138,7 @@ class SalesOrderRepositoryImpl(
             val oldItems = salesOrderDao.getItemsForOrder(orderId)
 
             // Revert non-financial logic (stock, commissions)
-            orderAmountLogic.revertOrder(oldOrderEntity, oldItems, currentUserId)
+            orderAmountLogic.revertOrder(oldOrderEntity, oldItems, currentUserId.local)
             // Delete old financial ledger entries
             partnerTransactionDao.deleteTransactionsBySource(
                 orderId, TransactionType.SALE, TransactionType.PAYMENT_RECEIVED
@@ -173,7 +173,7 @@ class SalesOrderRepositoryImpl(
 
             if (!orderEntity.isDeletedLocally) {
                 val items = salesOrderDao.getItemsForOrder(orderLocalId)
-                orderAmountLogic.revertOrder(orderEntity, items, currentUserId)
+                orderAmountLogic.revertOrder(orderEntity, items, currentUserId.local)
                 partnerTransactionDao.deleteTransactionsBySource(
                     orderLocalId, TransactionType.SALE, TransactionType.PAYMENT_RECEIVED
                 )

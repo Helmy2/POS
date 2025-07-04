@@ -1,25 +1,27 @@
 package com.wael.astimal.pos.features.user.data.repository
 
-import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.entity.toDomain
-import com.wael.astimal.pos.features.user.data.local.SessionManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
-import com.wael.astimal.pos.features.user.data.remote.AuthApiService
-import com.wael.astimal.pos.features.user.data.remote.dto.LoginRequest
+import com.wael.astimal.pos.features.user.data.remote.ProfileApiService
+import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.status.SessionStatus
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class UserRepositoryImpl(
     private val userDao: UserDao,
-    private val sessionManager: SessionManager,
-    private val authApiService: AuthApiService,
-    private val connectivity: Connectivity
+    private val supabaseClient: SupabaseClient,
+    private val profileApiService: ProfileApiService
 ) : UserRepository {
 
     override fun getEmployeesFlow(): Flow<List<User>> {
@@ -36,40 +38,67 @@ class UserRepositoryImpl(
     }
 
     override suspend fun getCurrentUser(): User? {
-        val userId = sessionManager.getCurrentUserId() ?: return null
-        return userDao.getUserById(userId)?.toDomain()
-    }
-
-    override suspend fun logout() {
-        sessionManager.clearSession()
+        val id = supabaseClient.auth.currentUserOrNull()?.id ?: return null
+        val user = userDao.getUserBySupabaseId(id).first()
+        return user?.toDomain()
     }
 
     override suspend fun isUserLoggedIn(): Boolean {
-        return sessionManager.isUserLoggedIn()
+        // Wait for the session status to be updated
+        delay(100)
+        return supabaseClient.auth.sessionStatus.first() is SessionStatus.Authenticated
     }
 
 
     override suspend fun login(email: String, password: String): Result<User> {
-        return runCatching {
-            if (connectivity.statusUpdates.first().isDisconnected) throw Exception("No internet connection")
+        return try {
+            supabaseClient.auth.signInWith(Email) {
+                this.email = email
+                this.password = password
+            }
 
-            val response =
-                authApiService.login(LoginRequest(email = email, password = password)).getOrThrow()
-            val userEntity = response.user.toEntity()
-            sessionManager.saveUserSession(
-                userId = userEntity.id,
-                email = email,
-                password = password,
-                accessToken = response.token,
-            )
-            userDao.insertOrUpdate(userEntity)
+            val supabaseUser = supabaseClient.auth.currentUserOrNull()
+                ?: return Result.failure(Exception("Could not retrieve user after login."))
 
-            userEntity.toDomain()
+            val profileResult = profileApiService.getProfile(supabaseUser.id)
+
+            profileResult.onSuccess { profileDto ->
+                // Step 4: Sync the fetched profile with the local database
+                val syncedUserEntity = syncProfile(profileDto)
+                return Result.success(syncedUserEntity.toDomain())
+            }.onFailure {
+                // If fetching the profile fails, the login is considered incomplete.
+                return Result.failure(it)
+            }
+
+            Result.failure(Exception("Unknown error during profile fetch."))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 
-    override suspend fun syncWithServer(users: List<UserEntity>) {
-        userDao.upsertAll(users)
+    /**
+     * Inserts or updates a user profile in the local database based on data from the server.
+     * Preserves the local primary key if the user already exists.
+     */
+    private suspend fun syncProfile(profileDto: ProfileDto): UserEntity {
+        val existingUser = userDao.getUserBySupabaseId(profileDto.id).first()
+        val userEntity = profileDto.toEntity().copy(
+            id = existingUser?.id ?: 0L,
+            createdAt = existingUser?.createdAt ?: profileDto.toEntity().createdAt
+        )
+        userDao.insertOrUpdate(userEntity)
+        return userEntity
+    }
+
+    override suspend fun logout(): Result<Unit> {
+        return try {
+            supabaseClient.auth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun assignStoreToEmployee(userId: Long, storeId: Long): Result<Unit> {

@@ -34,7 +34,7 @@ class LoginViewModel(
         viewModelScope.launch {
             userRepository.login(state.value.email, state.value.password).fold(
                 onSuccess = {
-                    setState(LoginContract.Event.LoginSuccess(it.userName))
+                    setState(LoginContract.Event.LoginSuccess(it.name))
                     launch {
                         syncService.performFullSync()
                     }

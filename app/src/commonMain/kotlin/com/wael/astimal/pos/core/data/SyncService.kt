@@ -23,9 +23,7 @@ import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.data.remote.dto.toEntities
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import kotlinx.coroutines.flow.first
 
 
 class SyncServiceImpl(
@@ -45,25 +43,25 @@ class SyncServiceImpl(
         return try {
             // TODO Remove
             userRepository.login(
-                "s@mail.com",
-                "46554655"
+                "admin@mail.com",
+                "adminadmin"
             ).getOrThrow()
             navigationController.navigate(
                 Destination.Dashboard,
                 popUpToRoute = Destination.Login,
             )
 
-//            userRepository.getCurrentUser() ?: throw Exception("User not authenticated")
-
-            val lastSyncDate = syncManager.getLastSyncDate().first()
-            val syncRequest = SyncRequest(lastSyncDate = lastSyncDate)
-
-            syncUnits(syncRequest)
-            syncEmployee(syncRequest)
-            syncPartners(syncRequest)
-            syncCategory(syncRequest)
-            syncProducts(syncRequest)
-            syncOrders(syncRequest)
+            userRepository.getCurrentUser() ?: throw Exception("User not authenticated")
+//
+//            val lastSyncDate = syncManager.getLastSyncDate().first()
+//            val syncRequest = SyncRequest(lastSyncDate = lastSyncDate)
+//
+//            syncUnits(syncRequest)
+//            syncEmployee(syncRequest)
+//            syncPartners(syncRequest)
+//            syncCategory(syncRequest)
+//            syncProducts(syncRequest)
+//            syncOrders(syncRequest)
 
 //            syncManager.updateLastSyncDate(response.data.nextSyncDate)
             Result.success(Unit)
@@ -81,14 +79,14 @@ class SyncServiceImpl(
     }
 
     private suspend fun syncEmployee(syncRequest: SyncRequest) {
-        val employeeResult = syncApiService.syncEmployees(syncRequest)
-        val result = employeeResult.getOrThrow().data.employees.map { it.toEntities() }
-        val (userEntities, storeEntities) = result.unzip()
-
-        storeRepository.syncWithServer(storeEntities.filterNotNull())
-        userRepository.syncWithServer(userEntities)
-
-        assignStoreToEmployee(result)
+//        val employeeResult = syncApiService.syncEmployees(syncRequest)
+//        val result = employeeResult.getOrThrow().data.employees.map { it.toEntities() }
+//        val (userEntities, storeEntities) = result.unzip()
+//
+//        storeRepository.syncWithServer(storeEntities.filterNotNull())
+//        userRepository.syncWithServer(userEntities)
+//
+//        assignStoreToEmployee(result)
     }
 
     private suspend fun assignStoreToEmployee(result: List<Pair<UserEntity, StoreEntity?>>) {

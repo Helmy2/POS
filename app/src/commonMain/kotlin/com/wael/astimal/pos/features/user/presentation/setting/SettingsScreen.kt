@@ -44,7 +44,7 @@ fun SettingsRoute(
     }
 
     SettingsScreen(
-        userName = state.user?.name?.displayName(language)
+        userName = state.user?.localizedName?.displayName(language)
             ?: stringResource(Res.string.unknown_user),
         avatarUrl = state.user?.avatarUrl ?: "",
         themeMode = state.themeMode,

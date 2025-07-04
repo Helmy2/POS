@@ -60,7 +60,7 @@ class ReturnAmountLogic(
 
         val commissionAmount = returnEntity.totalAmount * RETURN_COMMISSION_PERCENTAGE
 
-        if (responsibleEmployeeId == returningEmployeeId) {
+        if (responsibleEmployeeId?.local == returningEmployeeId) {
             createCommission(
                 employeeId = returningEmployeeId,
                 returnId = returnId,
@@ -78,7 +78,7 @@ class ReturnAmountLogic(
             )
             if (responsibleEmployeeId != null) {
                 createCommission(
-                    employeeId = responsibleEmployeeId,
+                    employeeId = responsibleEmployeeId.local,
                     returnId = returnId,
                     commissionAmount = -commissionAmount, // Negative for return
                     invoiceNumber = returnEntity.invoiceNumber,

@@ -52,5 +52,5 @@ fun ReceivePayVoucher.toEntity() = ReceivePayVoucherEntity(
     updatedAt = updatedAt,
     isSynced = isSynced,
     partnerLocalId = party.id.local,
-    employeeLocalId = createdBy.id,
+    employeeLocalId = createdBy.id.local,
 )

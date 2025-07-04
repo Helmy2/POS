@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -71,9 +73,6 @@ kotlin {
             implementation(libs.supabase.auth)
             implementation(libs.supabase.postgrest)
             implementation(libs.supabase.realtime)
-            implementation(libs.supabase.storage)
-            implementation(libs.supabase.functions)
-            implementation(libs.supabase.compose.auth)
 
             implementation(libs.filekit.compose)
 
@@ -139,10 +138,22 @@ compose.desktop {
     }
 }
 
+
 buildkonfig {
     packageName = "com.wael.astimal.pos"
 
     defaultConfigs {
+        val localProperties = gradleLocalProperties(
+            projectRootDir = rootDir,
+            providers = providers
+        )
+        val supabaseKey = localProperties.getProperty("supabaseKey")
+        val supabaseUrl = localProperties.getProperty("supabaseUrl")
 
+        require(supabaseKey.isNotEmpty())
+        require(supabaseUrl.isNotEmpty())
+
+        buildConfigField(STRING, "supabaseKey", supabaseKey)
+        buildConfigField(STRING, "supabaseUrl", supabaseUrl)
     }
 }

@@ -96,10 +96,12 @@ fun PurchaseReturnScreen(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.employee),
                     items = state.dropdownData.employees,
-                    currentSelection = returnInput.selectedEmployee?.name?.displayName(language)
+                    currentSelection = returnInput.selectedEmployee?.localizedName?.displayName(
+                        language
+                    )
                         ?: "",
                     onItemSelected = { onEvent(PurchaseReturnContract.Event.EmployeeChanged(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
                     modifier = Modifier.padding(8.dp),
                 )

@@ -9,11 +9,11 @@ expect val platformModule: Module
 val appModule = module {
     includes(
         coreModule,
-        apiModule,
+        supabaseModule,
         userModule,
         inventoryModule,
         managementModule,
         dashboardModule,
-        reportsModule
+        reportsModule,
     )
 }

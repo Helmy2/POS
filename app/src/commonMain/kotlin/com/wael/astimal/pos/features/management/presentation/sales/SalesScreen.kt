@@ -96,10 +96,12 @@ fun SalesScreen(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.employee),
                     items = state.dropdownData.employees,
-                    currentSelection = orderInput.selectedEmployee?.name?.displayName(language)
+                    currentSelection = orderInput.selectedEmployee?.localizedName?.displayName(
+                        language
+                    )
                         ?: "",
                     onItemSelected = { onEvent(SalesContract.Event.EmployeeChanged(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
                     modifier = Modifier.padding(8.dp),
                 )

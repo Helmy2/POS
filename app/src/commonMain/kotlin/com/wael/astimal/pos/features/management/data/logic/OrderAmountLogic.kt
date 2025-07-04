@@ -52,7 +52,7 @@ class OrderAmountLogic(
 
         val commissionAmount = order.totalAmount * ORDER_COMMISSION_PERCENTAGE
 
-        if (responsibleEmployeeId == sellingEmployeeId) {
+        if (responsibleEmployeeId?.local == sellingEmployeeId) {
             createCommission(
                 employeeId = sellingEmployeeId,
                 orderId = orderId,
@@ -70,7 +70,7 @@ class OrderAmountLogic(
             )
             if (responsibleEmployeeId != null) {
                 createCommission(
-                    employeeId = responsibleEmployeeId,
+                    employeeId = responsibleEmployeeId.local,
                     orderId = orderId,
                     commissionAmount = commissionAmount,
                     invoiceNumber = order.invoiceNumber,

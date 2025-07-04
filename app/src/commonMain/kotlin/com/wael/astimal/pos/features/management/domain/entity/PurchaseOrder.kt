@@ -46,7 +46,7 @@ fun PurchaseOrder.toEntity(): Pair<PurchaseEntity, List<PurchaseProductEntity>> 
         localId = id.local,
         serverId = id.server,
         invoiceNumber = invoiceNumber,
-        employeeLocalId = user.id,
+        employeeLocalId = user.id.local,
         amountPaid = amountPaid,
         amountRemaining = amountRemaining,
         totalAmount = totalAmount,

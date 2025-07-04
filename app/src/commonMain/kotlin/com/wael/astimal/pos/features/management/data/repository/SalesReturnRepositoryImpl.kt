@@ -91,7 +91,7 @@ class SalesReturnRepositoryImpl(
                 ?: throw NoSuchElementException("Original return not found")
             val oldItems = orderReturnDao.getItemsForReturn(returnId)
 
-            returnAmountLogic.revertReturn(oldReturnEntity, oldItems, currentUserId)
+            returnAmountLogic.revertReturn(oldReturnEntity, oldItems, currentUserId.local)
             partnerTransactionDao.deleteTransactionsBySource(
                 returnId, TransactionType.SALE_RETURN, TransactionType.PAYMENT_SENT
             )
@@ -120,7 +120,7 @@ class SalesReturnRepositoryImpl(
 
             if (!returnEntity.isDeletedLocally) {
                 val items = orderReturnDao.getItemsForReturn(returnLocalId)
-                returnAmountLogic.revertReturn(returnEntity, items, currentUserId)
+                returnAmountLogic.revertReturn(returnEntity, items, currentUserId.local)
                 partnerTransactionDao.deleteTransactionsBySource(
                     returnLocalId, TransactionType.SALE_RETURN, TransactionType.PAYMENT_SENT
                 )

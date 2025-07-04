@@ -96,10 +96,12 @@ fun PurchaseScreen(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.employee),
                     items = state.dropdownData.employees,
-                    currentSelection = purchaseInput.selectedEmployee?.name?.displayName(language)
+                    currentSelection = purchaseInput.selectedEmployee?.localizedName?.displayName(
+                        language
+                    )
                         ?: "",
                     onItemSelected = { onEvent(PurchaseContract.Event.EmployeeChanged(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToDisplayString = { it.localizedName.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
                     modifier = Modifier.padding(8.dp),
                 )

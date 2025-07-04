@@ -207,7 +207,7 @@ class StockTransferViewModel(
                 transferLocalId = state.value.selectedTransfer!!.id.local,
                 fromStoreId = currentInput.fromStore.id.local,
                 toStoreId = currentInput.toStore.id.local,
-                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id,
+                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id.local,
                 items = transferItems,
                 transferDate = Clock.now()
             )
@@ -215,7 +215,7 @@ class StockTransferViewModel(
             stockTransferRepository.addStockTransfer(
                 fromStoreId = currentInput.fromStore.id.local,
                 toStoreId = currentInput.toStore.id.local,
-                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id,
+                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id.local,
                 items = transferItems,
                 transferDate = Clock.now()
             )
