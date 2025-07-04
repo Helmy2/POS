@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -22,7 +20,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 class PurchaseReturnRepositoryImpl(
-    private val database: AppDatabase,
     private val purchaseReturnDao: PurchaseReturnDao,
     private val employeeDao: UserDao,
     private val stockRepository: StockRepository,
@@ -57,29 +54,27 @@ class PurchaseReturnRepositoryImpl(
     ): Result<PurchaseReturn> {
         return try {
             val (purchaseReturn, items) = purchaseReturn.toEntity()
-            var insertedId: Long = -1
-            database.withTransaction {
-                val employeeId =
-                    purchaseReturn.employeeLocalId
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Store not found.")
+            val employeeId =
+                purchaseReturn.employeeLocalId
+            val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                ?: throw Exception("Store not found.")
 
-                val newInvoiceNumber = generateNextInvoiceNumber()
-                val returnWithInvoice = purchaseReturn.copy(invoiceNumber = newInvoiceNumber)
+            val newInvoiceNumber = generateNextInvoiceNumber()
+            val returnWithInvoice = purchaseReturn.copy(invoiceNumber = newInvoiceNumber)
 
-                insertedId =
-                    purchaseReturnDao.insertPurchaseReturnWithItems(returnWithInvoice, items)
+            val insertedId: Long =
+                purchaseReturnDao.insertPurchaseReturnWithItems(returnWithInvoice, items)
 
-                items.forEach { item ->
-                    stockRepository.adjustStock(
-                        storeId = employeeStoreId,
-                        productId = item.productLocalId,
-                        transactionQuantity = -item.quantity
-                    )
-                }
-
-                addPurchaseReturnLedgerEntries(returnWithInvoice, insertedId)
+            items.forEach { item ->
+                stockRepository.adjustStock(
+                    storeId = employeeStoreId,
+                    productId = item.productLocalId,
+                    transactionQuantity = -item.quantity
+                )
             }
+
+            addPurchaseReturnLedgerEntries(returnWithInvoice, insertedId)
+
             val createdReturn = getPurchaseReturnDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase return after insert."))
             Result.success(createdReturn)
@@ -94,40 +89,39 @@ class PurchaseReturnRepositoryImpl(
         val (purchaseReturn, items) = purchaseReturn.toEntity()
         return try {
             val returnId = purchaseReturn.localId
-            database.withTransaction {
-                val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(returnId)
-                    ?: throw NoSuchElementException("Original return not found")
-                val employeeId =
-                    purchaseReturn.employeeLocalId
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Store not found.")
+            val oldReturn = purchaseReturnDao.getPurchaseReturnWithDetails(returnId)
+                ?: throw NoSuchElementException("Original return not found")
+            val employeeId =
+                purchaseReturn.employeeLocalId
+            val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                ?: throw Exception("Store not found.")
 
-                oldReturn.itemsWithProductDetails.forEach { oldItem ->
-                    stockRepository.adjustStock(
-                        storeId = employeeStoreId,
-                        productId = oldItem.purchaseReturnItem.productLocalId,
-                        transactionQuantity = oldItem.purchaseReturnItem.quantity
-                    )
-                }
-                partnerTransactionDao.deleteTransactionsBySource(
-                    returnId,
-                    TransactionType.PURCHASE_RETURN,
-                    TransactionType.PAYMENT_RECEIVED
+            oldReturn.itemsWithProductDetails.forEach { oldItem ->
+                stockRepository.adjustStock(
+                    storeId = employeeStoreId,
+                    productId = oldItem.purchaseReturnItem.productLocalId,
+                    transactionQuantity = oldItem.purchaseReturnItem.quantity
                 )
-
-                val entityToUpdate =
-                    purchaseReturn.copy(isSynced = false, updatedAt = Clock.now())
-                purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
-
-                items.forEach { newItem ->
-                    stockRepository.adjustStock(
-                        storeId = employeeStoreId,
-                        productId = newItem.productLocalId,
-                        transactionQuantity = -newItem.quantity
-                    )
-                }
-                addPurchaseReturnLedgerEntries(entityToUpdate, returnId)
             }
+            partnerTransactionDao.deleteTransactionsBySource(
+                returnId,
+                TransactionType.PURCHASE_RETURN,
+                TransactionType.PAYMENT_RECEIVED
+            )
+
+            val entityToUpdate =
+                purchaseReturn.copy(isSynced = false, updatedAt = Clock.now())
+            purchaseReturnDao.updatePurchaseReturnWithItems(entityToUpdate, items)
+
+            items.forEach { newItem ->
+                stockRepository.adjustStock(
+                    storeId = employeeStoreId,
+                    productId = newItem.productLocalId,
+                    transactionQuantity = -newItem.quantity
+                )
+            }
+            addPurchaseReturnLedgerEntries(entityToUpdate, returnId)
+
             val updatedReturn = getPurchaseReturnDetails(returnId) ?: return Result.failure(
                 IllegalStateException("Failed to retrieve return after update.")
             )
@@ -139,36 +133,34 @@ class PurchaseReturnRepositoryImpl(
 
     override suspend fun deletePurchaseReturn(localId: Long): Result<Unit> {
         return try {
-            database.withTransaction {
-                val returnToDelete = purchaseReturnDao.getPurchaseReturnWithDetails(localId)
-                    ?: throw NoSuchElementException("Return not found")
+            val returnToDelete = purchaseReturnDao.getPurchaseReturnWithDetails(localId)
+                ?: throw NoSuchElementException("Return not found")
 
-                if (!returnToDelete.purchaseReturn.isDeletedLocally) {
-                    val employeeId = returnToDelete.purchaseReturn.employeeLocalId
-                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                        ?: throw Exception("Store not found.")
+            if (!returnToDelete.purchaseReturn.isDeletedLocally) {
+                val employeeId = returnToDelete.purchaseReturn.employeeLocalId
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                    ?: throw Exception("Store not found.")
 
-                    returnToDelete.itemsWithProductDetails.forEach { item ->
-                        stockRepository.adjustStock(
-                            storeId = employeeStoreId,
-                            productId = item.purchaseReturnItem.productLocalId,
-                            transactionQuantity = item.purchaseReturnItem.quantity
-                        )
-                    }
-
-                    partnerTransactionDao.deleteTransactionsBySource(
-                        localId,
-                        TransactionType.PURCHASE_RETURN,
-                        TransactionType.PAYMENT_RECEIVED
+                returnToDelete.itemsWithProductDetails.forEach { item ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = item.purchaseReturnItem.productLocalId,
+                        transactionQuantity = item.purchaseReturnItem.quantity
                     )
-
-                    val entityToMarkAsDeleted = returnToDelete.purchaseReturn.copy(
-                        isDeletedLocally = true,
-                        isSynced = false,
-                        updatedAt = Clock.now()
-                    )
-                    purchaseReturnDao.updatePurchaseReturn(entityToMarkAsDeleted)
                 }
+
+                partnerTransactionDao.deleteTransactionsBySource(
+                    localId,
+                    TransactionType.PURCHASE_RETURN,
+                    TransactionType.PAYMENT_RECEIVED
+                )
+
+                val entityToMarkAsDeleted = returnToDelete.purchaseReturn.copy(
+                    isDeletedLocally = true,
+                    isSynced = false,
+                    updatedAt = Clock.now()
+                )
+                purchaseReturnDao.updatePurchaseReturn(entityToMarkAsDeleted)
             }
             Result.success(Unit)
         } catch (e: Exception) {

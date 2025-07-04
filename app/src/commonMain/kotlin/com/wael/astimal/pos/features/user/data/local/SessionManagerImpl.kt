@@ -57,7 +57,7 @@ class SessionManagerImpl(
         dataStore.edit { preferences ->
             preferences[SessionManager.USER_ID] = userId
             preferences[SessionManager.EMAIL] = email
-            preferences[SessionManager.PASSWORD] = Crypto.encrypt(password)
+            preferences[SessionManager.PASSWORD] = password
             preferences[SessionManager.ACCESS_TOKEN] = accessToken
         }
     }
@@ -82,9 +82,7 @@ class SessionManagerImpl(
 
     override fun getSavedPassword(): Flow<String?> {
         return dataStore.data.catchIO().map { preferences ->
-            preferences[SessionManager.PASSWORD]?.let { encryptedPassword ->
-                Crypto.decrypt(encryptedPassword)
-            }
+            preferences[SessionManager.PASSWORD]
         }
     }
 

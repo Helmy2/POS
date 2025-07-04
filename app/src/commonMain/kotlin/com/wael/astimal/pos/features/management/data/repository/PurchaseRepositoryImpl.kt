@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -22,7 +20,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 class PurchaseRepositoryImpl(
-    private val database: AppDatabase,
     private val purchaseDao: PurchaseDao,
     private val employeeDao: UserDao,
     private val stockRepository: StockRepository,
@@ -58,26 +55,25 @@ class PurchaseRepositoryImpl(
         return try {
             val (purchaseEntity, items) = purchase.toEntity()
 
-            var insertedId: Long = -1
-            database.withTransaction {
-                val employeeId = purchaseEntity.employeeLocalId
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Could not find an assigned store for the employee.")
 
-                val newInvoiceNumber = generateNextInvoiceNumber()
-                val purchaseWithInvoice = purchaseEntity.copy(invoiceNumber = newInvoiceNumber)
+            val employeeId = purchaseEntity.employeeLocalId
+            val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                ?: throw Exception("Could not find an assigned store for the employee.")
 
-                insertedId = purchaseDao.insertPurchaseWithItems(purchaseWithInvoice, items)
+            val newInvoiceNumber = generateNextInvoiceNumber()
+            val purchaseWithInvoice = purchaseEntity.copy(invoiceNumber = newInvoiceNumber)
 
-                items.forEach { item ->
-                    stockRepository.adjustStock(
-                        storeId = employeeStoreId,
-                        productId = item.productLocalId,
-                        transactionQuantity = item.quantity
-                    )
-                }
-                addPurchaseLedgerEntries(purchaseWithInvoice, insertedId)
+            val insertedId: Long = purchaseDao.insertPurchaseWithItems(purchaseWithInvoice, items)
+
+            items.forEach { item ->
+                stockRepository.adjustStock(
+                    storeId = employeeStoreId,
+                    productId = item.productLocalId,
+                    transactionQuantity = item.quantity
+                )
             }
+            addPurchaseLedgerEntries(purchaseWithInvoice, insertedId)
+
             val createdPurchase = getPurchaseDetails(insertedId)
                 ?: return Result.failure(IllegalStateException("Failed to retrieve purchase after insert."))
             Result.success(createdPurchase)
@@ -93,45 +89,44 @@ class PurchaseRepositoryImpl(
             val (purchaseEntity, items) = purchase.toEntity()
 
             val purchaseId = purchaseEntity.localId
-            database.withTransaction {
-                val oldPurchase = purchaseDao.getPurchaseWithDetails(purchaseId)
-                    ?: throw NoSuchElementException("Original purchase not found")
-                val employeeId = purchaseEntity.employeeLocalId
-                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                    ?: throw Exception("Store not found.")
+            val oldPurchase = purchaseDao.getPurchaseWithDetails(purchaseId)
+                ?: throw NoSuchElementException("Original purchase not found")
+            val employeeId = purchaseEntity.employeeLocalId
+            val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                ?: throw Exception("Store not found.")
 
-                // Revert old stock adjustments
-                oldPurchase.itemsWithProductDetails.forEach { oldItem ->
-                    stockRepository.adjustStock(
-                        storeId = employeeStoreId,
-                        productId = oldItem.purchaseItem.productLocalId,
-                        transactionQuantity = -oldItem.purchaseItem.quantity
-                    )
-                }
-                // Delete old ledger entries
-                partnerTransactionDao.deleteTransactionsBySource(
-                    purchaseId,
-                    TransactionType.PURCHASE,
-                    TransactionType.PAYMENT_SENT
+            // Revert old stock adjustments
+            oldPurchase.itemsWithProductDetails.forEach { oldItem ->
+                stockRepository.adjustStock(
+                    storeId = employeeStoreId,
+                    productId = oldItem.purchaseItem.productLocalId,
+                    transactionQuantity = -oldItem.purchaseItem.quantity
                 )
-
-                // Update purchase and items
-                val entityToUpdate =
-                    purchaseEntity.copy(isSynced = false, updatedAt = Clock.now())
-                purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
-
-                // Apply new adjustments
-                items.forEach { newItem ->
-                    stockRepository.adjustStock(
-                        storeId = employeeStoreId,
-                        productId = newItem.productLocalId,
-                        transactionQuantity = newItem.quantity
-                    )
-                }
-
-                // Re-add new ledger entries
-                addPurchaseLedgerEntries(entityToUpdate, purchaseId)
             }
+            // Delete old ledger entries
+            partnerTransactionDao.deleteTransactionsBySource(
+                purchaseId,
+                TransactionType.PURCHASE,
+                TransactionType.PAYMENT_SENT
+            )
+
+            // Update purchase and items
+            val entityToUpdate =
+                purchaseEntity.copy(isSynced = false, updatedAt = Clock.now())
+            purchaseDao.updatePurchaseWithItems(entityToUpdate, items)
+
+            // Apply new adjustments
+            items.forEach { newItem ->
+                stockRepository.adjustStock(
+                    storeId = employeeStoreId,
+                    productId = newItem.productLocalId,
+                    transactionQuantity = newItem.quantity
+                )
+            }
+
+            // Re-add new ledger entries
+            addPurchaseLedgerEntries(entityToUpdate, purchaseId)
+
             val updatedPurchase =
                 getPurchaseDetails(purchaseEntity.localId) ?: return Result.failure(
                     IllegalStateException("Failed to retrieve purchase after update.")
@@ -144,37 +139,35 @@ class PurchaseRepositoryImpl(
 
     override suspend fun deletePurchase(purchaseLocalId: Long): Result<Unit> {
         return try {
-            database.withTransaction {
-                val purchaseToDelete = purchaseDao.getPurchaseWithDetails(purchaseLocalId)
-                    ?: throw NoSuchElementException("Purchase not found")
+            val purchaseToDelete = purchaseDao.getPurchaseWithDetails(purchaseLocalId)
+                ?: throw NoSuchElementException("Purchase not found")
 
-                if (!purchaseToDelete.purchase.isDeletedLocally) {
-                    val employeeId = purchaseToDelete.purchase.employeeLocalId
-                    val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
-                        ?: throw Exception("Store not found.")
+            if (!purchaseToDelete.purchase.isDeletedLocally) {
+                val employeeId = purchaseToDelete.purchase.employeeLocalId
+                val employeeStoreId = employeeDao.getStoreIdForEmployee(employeeId)
+                    ?: throw Exception("Store not found.")
 
-                    purchaseToDelete.itemsWithProductDetails.forEach { item ->
-                        stockRepository.adjustStock(
-                            storeId = employeeStoreId,
-                            productId = item.purchaseItem.productLocalId,
-                            transactionQuantity = -item.purchaseItem.quantity
-                        )
-                    }
-
-                    // Delete ledger entries
-                    partnerTransactionDao.deleteTransactionsBySource(
-                        purchaseLocalId,
-                        TransactionType.PURCHASE,
-                        TransactionType.PAYMENT_SENT
+                purchaseToDelete.itemsWithProductDetails.forEach { item ->
+                    stockRepository.adjustStock(
+                        storeId = employeeStoreId,
+                        productId = item.purchaseItem.productLocalId,
+                        transactionQuantity = -item.purchaseItem.quantity
                     )
-
-                    val entityToMarkAsDeleted = purchaseToDelete.purchase.copy(
-                        isDeletedLocally = true,
-                        isSynced = false,
-                        updatedAt = Clock.now()
-                    )
-                    purchaseDao.updatePurchase(entityToMarkAsDeleted)
                 }
+
+                // Delete ledger entries
+                partnerTransactionDao.deleteTransactionsBySource(
+                    purchaseLocalId,
+                    TransactionType.PURCHASE,
+                    TransactionType.PAYMENT_SENT
+                )
+
+                val entityToMarkAsDeleted = purchaseToDelete.purchase.copy(
+                    isDeletedLocally = true,
+                    isSynced = false,
+                    updatedAt = Clock.now()
+                )
+                purchaseDao.updatePurchase(entityToMarkAsDeleted)
             }
             Result.success(Unit)
         } catch (e: Exception) {

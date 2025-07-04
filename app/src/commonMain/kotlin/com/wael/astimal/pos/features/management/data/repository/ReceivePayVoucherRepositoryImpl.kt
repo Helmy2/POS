@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
@@ -17,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ReceivePayVoucherRepositoryImpl(
-    private val database: AppDatabase,
     private val voucherDao: ReceivePayVoucherDao,
     private val partnerTransactionDao: PartnerTransactionDao
 ) : ReceivePayVoucherRepository {
@@ -31,38 +28,32 @@ class ReceivePayVoucherRepositoryImpl(
     override suspend fun saveVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return runCatching {
             if (voucher.id == Id.new) {
-                database.withTransaction {
-                    val voucherId = voucherDao.insertVoucher(voucher.toEntity())
-                    partnerTransactionDao.insertTransaction(
-                        voucher.toEntity().toLedgerEntry(voucherId)
-                    )
-                }
+                val voucherId = voucherDao.insertVoucher(voucher.toEntity())
+                partnerTransactionDao.insertTransaction(
+                    voucher.toEntity().toLedgerEntry(voucherId)
+                )
             } else {
-                database.withTransaction {
-                    voucherDao.updateVoucher(voucher.toEntity())
+                voucherDao.updateVoucher(voucher.toEntity())
 
-                    // Delete the old ledger entry and insert the updated one
-                    partnerTransactionDao.deleteTransactionsBySource(
-                        voucher.id.local,
-                        voucher.getTransactionType()
-                    )
-                    partnerTransactionDao.insertTransaction(
-                        voucher.toEntity().toLedgerEntry(voucher.id.local)
-                    )
-                }
+                // Delete the old ledger entry and insert the updated one
+                partnerTransactionDao.deleteTransactionsBySource(
+                    voucher.id.local,
+                    voucher.getTransactionType()
+                )
+                partnerTransactionDao.insertTransaction(
+                    voucher.toEntity().toLedgerEntry(voucher.id.local)
+                )
             }
         }
     }
 
     override suspend fun deleteVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return try {
-            database.withTransaction {
-                partnerTransactionDao.deleteTransactionsBySource(
-                    voucher.id.local,
-                    voucher.getTransactionType()
-                )
-                voucherDao.deleteVoucher(voucher.id.local)
-            }
+            partnerTransactionDao.deleteTransactionsBySource(
+                voucher.id.local,
+                voucher.getTransactionType()
+            )
+            voucherDao.deleteVoucher(voucher.id.local)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

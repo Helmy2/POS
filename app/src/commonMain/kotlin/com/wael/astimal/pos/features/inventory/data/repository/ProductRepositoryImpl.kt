@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
@@ -20,7 +18,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class ProductRepositoryImpl(
-    private val appDatabase: AppDatabase,
     private val productDao: ProductDao,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
@@ -50,58 +47,56 @@ class ProductRepositoryImpl(
 
     private suspend fun saveProduct(product: ProductEntity): Result<Unit> {
         return runCatching {
-            appDatabase.withTransaction {
-                if (product.localId == 0L) {
-                    val newProductId = productDao.insertOrUpdate(product)
+            if (product.localId == 0L) {
+                val newProductId = productDao.insertOrUpdate(product)
 
-                    val openingBalance = product.openingBalanceQuantity
+                val openingBalance = product.openingBalanceQuantity
+                val currentUser = userRepository.getCurrentUser()
+                val fullProduct =
+                    productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
+
+                if (openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
+                    val adjustment = StockAdjustment(
+                        id = Id.new,
+                        store = fullProduct.store,
+                        product = fullProduct,
+                        user = currentUser,
+                        reason = StockAdjustmentReason.INITIAL_COUNT,
+                        notes = "Opening Balance",
+                        quantityChange = openingBalance,
+                        createdAt = Clock.now()
+                    )
+                    stockRepository.addStockAdjustment(adjustment)
+                }
+            } else {
+                val oldProductEntity = productDao.getProductByLocalId(product.localId)
+                    ?: throw NoSuchElementException("Product not found for update with localId: ${product.localId}")
+
+                productDao.insertOrUpdate(product)
+
+                val openingBalanceDifference =
+                    product.openingBalanceQuantity - oldProductEntity.openingBalanceQuantity
+
+                if (openingBalanceDifference != 0.0) {
                     val currentUser = userRepository.getCurrentUser()
-                    val fullProduct =
-                        productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
+                        ?: throw Exception("User not authenticated for stock adjustment.")
 
-                    if (openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
-                        val adjustment = StockAdjustment(
-                            id = Id.new,
-                            store = fullProduct.store,
-                            product = fullProduct,
-                            user = currentUser,
-                            reason = StockAdjustmentReason.INITIAL_COUNT,
-                            notes = "Opening Balance",
-                            quantityChange = openingBalance,
-                            createdAt = Clock.now()
-                        )
-                        stockRepository.addStockAdjustment(adjustment)
-                    }
-                } else {
-                    val oldProductEntity = productDao.getProductByLocalId(product.localId)
-                        ?: throw NoSuchElementException("Product not found for update with localId: ${product.localId}")
-
-                    productDao.insertOrUpdate(product)
-
-                    val openingBalanceDifference =
-                        product.openingBalanceQuantity - oldProductEntity.openingBalanceQuantity
-
-                    if (openingBalanceDifference != 0.0) {
-                        val currentUser = userRepository.getCurrentUser()
-                            ?: throw Exception("User not authenticated for stock adjustment.")
-
-                        val store = product.storeId?.let { storeRepository.getStoreByLocalId(it) }
-                            ?.getOrThrow() ?: throw Exception("Store not found")
-                        val product = getProductByLocalId(product.localId).getOrThrow()
+                    val store = product.storeId?.let { storeRepository.getStoreByLocalId(it) }
+                        ?.getOrThrow() ?: throw Exception("Store not found")
+                    val product = getProductByLocalId(product.localId).getOrThrow()
 
 
-                        val adjustment = StockAdjustment(
-                            id = Id.new,
-                            store = store,
-                            product = product,
-                            user = currentUser,
-                            reason = StockAdjustmentReason.RECOUNT,
-                            notes = "Opening balance updated.",
-                            quantityChange = openingBalanceDifference,
-                            createdAt = Clock.now(),
-                        )
-                        stockRepository.addStockAdjustment(adjustment)
-                    }
+                    val adjustment = StockAdjustment(
+                        id = Id.new,
+                        store = store,
+                        product = product,
+                        user = currentUser,
+                        reason = StockAdjustmentReason.RECOUNT,
+                        notes = "Opening balance updated.",
+                        quantityChange = openingBalanceDifference,
+                        createdAt = Clock.now(),
+                    )
+                    stockRepository.addStockAdjustment(adjustment)
                 }
             }
         }
@@ -109,37 +104,36 @@ class ProductRepositoryImpl(
 
     override suspend fun deleteProduct(product: Product): Result<Unit> {
         return try {
-            appDatabase.withTransaction {
-                val currentUser = userRepository.getCurrentUser()
-                    ?: throw Exception("User not authenticated for delete operation")
+            val currentUser = userRepository.getCurrentUser()
+                ?: throw Exception("User not authenticated for delete operation")
 
 
-                // Fetch all stock entries for this product to zero them out
-                val allStocks =
-                    stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
-                val productStocks = allStocks.filter { it.product.id.local == product.id.local }
+            // Fetch all stock entries for this product to zero them out
+            val allStocks =
+                stockRepository.getStoreStocks(query = "", selectedStoreId = null).first()
+            val productStocks = allStocks.filter { it.product.id.local == product.id.local }
 
-                for (stockItem in productStocks) {
-                    if (stockItem.quantity != 0.0) {
-                        val adjustment = StockAdjustment(
-                            id = Id.new,
-                            store = stockItem.store,
-                            product = stockItem.product,
-                            user = currentUser,
-                            reason = StockAdjustmentReason.OTHER,
-                            notes = "Product ${product.name.arName} deleted.",
-                            quantityChange = -stockItem.quantity,
-                            createdAt = Clock.now(),
-                        )
-                        stockRepository.addStockAdjustment(adjustment)
-                    }
+            for (stockItem in productStocks) {
+                if (stockItem.quantity != 0.0) {
+                    val adjustment = StockAdjustment(
+                        id = Id.new,
+                        store = stockItem.store,
+                        product = stockItem.product,
+                        user = currentUser,
+                        reason = StockAdjustmentReason.OTHER,
+                        notes = "Product ${product.name.arName} deleted.",
+                        quantityChange = -stockItem.quantity,
+                        createdAt = Clock.now(),
+                    )
+                    stockRepository.addStockAdjustment(adjustment)
                 }
-
-                val productToMarkAsDeleted = product.toEntity().copy(
-                    isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
-                )
-                productDao.insertOrUpdate(productToMarkAsDeleted)
             }
+
+            val productToMarkAsDeleted = product.toEntity().copy(
+                isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
+            )
+            productDao.insertOrUpdate(productToMarkAsDeleted)
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

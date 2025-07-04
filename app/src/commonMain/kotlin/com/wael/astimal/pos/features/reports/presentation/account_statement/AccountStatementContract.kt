@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.reports.presentation.account_statement
 
-import android.net.Uri
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
@@ -25,12 +24,15 @@ object AccountStatementContract {
         data class StatementLoaded(val transactions: List<AccountTransaction>) : Event
         data object StatementLoading : Event
         data object PartnerListLoading : Event
-        data class GenerateStatementPdfSuccessfully(val fileUri: Uri) : Event
+
+        // todo create pdf
+        data class GenerateStatementPdfSuccessfully(val fileUri: Any) : Event
 
         data object NavigateBack : Event
     }
 
     sealed interface Effect : Reducer.ViewEffect {
-        data class SharePdf(val fileUri: Uri) : Effect
+        // todo create pdf
+        data class SharePdf(val fileUri: Any) : Effect
     }
 }

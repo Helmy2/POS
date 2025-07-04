@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
@@ -17,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class BusinessPartnerRepositoryImpl(
-    private val db: AppDatabase,
     private val partnerDao: BusinessPartnerDao,
     private val partnerTransactionDao: PartnerTransactionDao,
 ) : BusinessPartnerRepository {
@@ -56,28 +53,26 @@ class BusinessPartnerRepositoryImpl(
     private suspend fun saveBusinessPartner(
         partner: BusinessPartnerEntity
     ) {
-        db.withTransaction {
-            if (partner.localId == Id.new.local) {
-                val clientId = partnerDao.insertOrUpdate(partner)
+        if (partner.localId == Id.new.local) {
+            val clientId = partnerDao.insertOrUpdate(partner)
 
-                createOpeningBalanceTransaction(
-                    partnerLocalId = clientId,
-                    debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
-                    credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
-                )
-            } else {
-                partnerTransactionDao.deleteTransactionsByPartner(
-                    partner.localId,
-                    TransactionType.OPENING_BALANCE
-                )
-                val clientId = partnerDao.insertOrUpdate(partner)
+            createOpeningBalanceTransaction(
+                partnerLocalId = clientId,
+                debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
+                credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
+            )
+        } else {
+            partnerTransactionDao.deleteTransactionsByPartner(
+                partner.localId,
+                TransactionType.OPENING_BALANCE
+            )
+            val clientId = partnerDao.insertOrUpdate(partner)
 
-                createOpeningBalanceTransaction(
-                    partnerLocalId = clientId,
-                    debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
-                    credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
-                )
-            }
+            createOpeningBalanceTransaction(
+                partnerLocalId = clientId,
+                debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
+                credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
+            )
         }
     }
 

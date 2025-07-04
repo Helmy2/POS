@@ -1,8 +1,5 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import android.util.Log
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.inventory.data.entity.StoreProductStockEntity
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
@@ -18,7 +15,6 @@ import kotlinx.coroutines.flow.map
 
 
 class StockRepositoryImpl(
-    private val database: AppDatabase,
     private val stockDao: StoreProductStockDao,
     private val stockAdjustmentDao: StockAdjustmentDao,
     private val productDao: ProductDao
@@ -70,22 +66,19 @@ class StockRepositoryImpl(
     }
 
     override suspend fun addStockAdjustment(adjustment: StockAdjustment) {
-        database.withTransaction {
-            Log.d("TAG", "addStockAdjustment: $adjustment")
-            stockAdjustmentDao.insert(adjustment.toEntity())
+        stockAdjustmentDao.insert(adjustment.toEntity())
 
-            val currentStock = stockDao.getStockByStoreAndProduct(
-                adjustment.store.id.local, adjustment.product.id.local
-            ).map { it?.quantity ?: 0.0 }.first()
-            val newQuantity = currentStock + adjustment.quantityChange
+        val currentStock = stockDao.getStockByStoreAndProduct(
+            adjustment.store.id.local, adjustment.product.id.local
+        ).map { it?.quantity ?: 0.0 }.first()
+        val newQuantity = currentStock + adjustment.quantityChange
 
-            stockDao.insertOrUpdateStock(
-                StoreProductStockEntity(
-                    storeLocalId = adjustment.store.id.local,
-                    productLocalId = adjustment.product.id.local,
-                    quantity = newQuantity
-                )
+        stockDao.insertOrUpdateStock(
+            StoreProductStockEntity(
+                storeLocalId = adjustment.store.id.local,
+                productLocalId = adjustment.product.id.local,
+                quantity = newQuantity
             )
-        }
+        )
     }
 }

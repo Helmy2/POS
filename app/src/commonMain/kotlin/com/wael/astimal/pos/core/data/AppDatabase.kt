@@ -1,7 +1,9 @@
 package com.wael.astimal.pos.core.data
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.entity.StockAdjustmentEntity
@@ -68,10 +70,9 @@ import com.wael.astimal.pos.features.user.data.local.UserDao
         ReceivePayVoucherEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 1,
-    exportSchema = false
+    version = 2,
 )
-
+@ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun unitDao(): UnitDao
@@ -89,4 +90,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
     abstract fun receivePayVoucherDao(): ReceivePayVoucherDao
     abstract fun partnerTransactionDao(): PartnerTransactionDao
+}
+
+@Suppress("NO_ACTUAL_FOR_EXPECT")
+expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
+    override fun initialize(): AppDatabase
 }

@@ -1,8 +1,5 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import android.util.Log
-import androidx.room.withTransaction
-import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
@@ -27,7 +24,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 class SalesOrderRepositoryImpl(
-    private val database: AppDatabase,
     private val salesOrderDao: SalesOrderDao,
     private val orderAmountLogic: OrderAmountLogic,
     private val partnerTransactionDao: PartnerTransactionDao,
@@ -66,9 +62,7 @@ class SalesOrderRepositoryImpl(
         return runCatching {
             val (orderEntity, items) = order.toEntity()
             addOrder(
-                orderEntity,
-                items,
-                newInvoiceNumber = generateNextInvoiceNumber()
+                orderEntity, items, newInvoiceNumber = generateNextInvoiceNumber()
             ).getOrThrow()
         }
     }
@@ -79,44 +73,40 @@ class SalesOrderRepositoryImpl(
         newInvoiceNumber: String? = null,
     ): Result<SalesOrder> {
         return runCatching {
-            Log.d("SyncService", "addOrder: $orderEntity")
-            var insertedOrderLocalId: Long = -1
-            database.withTransaction {
-                val orderWithInvoice =
-                    newInvoiceNumber?.let { orderEntity.copy(invoiceNumber = it) } ?: orderEntity
+            val orderWithInvoice =
+                newInvoiceNumber?.let { orderEntity.copy(invoiceNumber = it) } ?: orderEntity
 
-                insertedOrderLocalId = salesOrderDao.insertOrUpdateOrder(orderWithInvoice)
-                val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
-                salesOrderDao.insertOrderItems(itemsWithCorrectId)
+            val insertedOrderLocalId: Long = salesOrderDao.insertOrUpdateOrder(orderWithInvoice)
+            val itemsWithCorrectId = items.map { it.copy(orderLocalId = insertedOrderLocalId) }
+            salesOrderDao.insertOrderItems(itemsWithCorrectId)
 
-                orderAmountLogic.processNewOrder(orderWithInvoice, items, insertedOrderLocalId)
+            orderAmountLogic.processNewOrder(orderWithInvoice, items, insertedOrderLocalId)
 
-                // Create ledger entry for the sale
+            // Create ledger entry for the sale
+            partnerTransactionDao.insertTransaction(
+                PartnerTransactionEntity(
+                    partnerLocalId = orderWithInvoice.businessPartnerLocalId,
+                    sourceTransactionId = insertedOrderLocalId,
+                    transactionType = TransactionType.SALE,
+                    createdAt = orderWithInvoice.createdAt,
+                    updatedAt = orderWithInvoice.updatedAt,
+                    debit = orderWithInvoice.totalAmount,
+                    credit = 0.0,
+                    serverId = null,
+                )
+            )
+            if (orderWithInvoice.amountPaid > 0) {
                 partnerTransactionDao.insertTransaction(
                     PartnerTransactionEntity(
                         partnerLocalId = orderWithInvoice.businessPartnerLocalId,
                         sourceTransactionId = insertedOrderLocalId,
-                        transactionType = TransactionType.SALE,
+                        transactionType = TransactionType.PAYMENT_RECEIVED,
                         createdAt = orderWithInvoice.createdAt,
-                        updatedAt = orderWithInvoice.updatedAt,
-                        debit = orderWithInvoice.totalAmount,
-                        credit = 0.0,
+                        updatedAt = orderWithInvoice.updatedAt, debit = 0.0,
+                        credit = orderWithInvoice.amountPaid,
                         serverId = null,
                     )
                 )
-                if (orderWithInvoice.amountPaid > 0) {
-                    partnerTransactionDao.insertTransaction(
-                        PartnerTransactionEntity(
-                            partnerLocalId = orderWithInvoice.businessPartnerLocalId,
-                            sourceTransactionId = insertedOrderLocalId,
-                            transactionType = TransactionType.PAYMENT_RECEIVED,
-                            createdAt = orderWithInvoice.createdAt,
-                            updatedAt = orderWithInvoice.updatedAt, debit = 0.0,
-                            credit = orderWithInvoice.amountPaid,
-                            serverId = null,
-                        )
-                    )
-                }
             }
             val createdOrder =
                 getOrderDetailsFlow(insertedOrderLocalId).first() ?: return Result.failure(
@@ -140,30 +130,28 @@ class SalesOrderRepositoryImpl(
     ): Result<SalesOrder> {
         return runCatching {
             val orderId = orderEntity.localId
-            database.withTransaction {
-                val currentUserId = userRepository.getCurrentUser()?.id
-                    ?: throw Exception("User not authenticated for update operation")
+            val currentUserId = userRepository.getCurrentUser()?.id
+                ?: throw Exception("User not authenticated for update operation")
 
-                val oldOrderEntity = salesOrderDao.getOrderEntityByLocalId(orderId)
-                    ?: throw NoSuchElementException("Original order not found for update.")
-                val oldItems = salesOrderDao.getItemsForOrder(orderId)
+            val oldOrderEntity = salesOrderDao.getOrderEntityByLocalId(orderId)
+                ?: throw NoSuchElementException("Original order not found for update.")
+            val oldItems = salesOrderDao.getItemsForOrder(orderId)
 
-                // Revert non-financial logic (stock, commissions)
-                orderAmountLogic.revertOrder(oldOrderEntity, oldItems, currentUserId)
-                // Delete old financial ledger entries
-                partnerTransactionDao.deleteTransactionsBySource(
-                    orderId, TransactionType.SALE, TransactionType.PAYMENT_RECEIVED
-                )
+            // Revert non-financial logic (stock, commissions)
+            orderAmountLogic.revertOrder(oldOrderEntity, oldItems, currentUserId)
+            // Delete old financial ledger entries
+            partnerTransactionDao.deleteTransactionsBySource(
+                orderId, TransactionType.SALE, TransactionType.PAYMENT_RECEIVED
+            )
 
-                // Update the order and its items
-                val entityToUpdate = orderEntity.copy(isSynced = false, updatedAt = Clock.now())
-                salesOrderDao.updateOrderWithItems(entityToUpdate, items)
+            // Update the order and its items
+            val entityToUpdate = orderEntity.copy(isSynced = false, updatedAt = Clock.now())
+            salesOrderDao.updateOrderWithItems(entityToUpdate, items)
 
-                // Re-process the non-financial logic
-                orderAmountLogic.processNewOrder(entityToUpdate, items, orderId)
-                // Re-create the financial ledger entries
-                addOrderLedgerEntries(entityToUpdate, orderId)
-            }
+            // Re-process the non-financial logic
+            orderAmountLogic.processNewOrder(entityToUpdate, items, orderId)
+            // Re-create the financial ledger entries
+            addOrderLedgerEntries(entityToUpdate, orderId)
             val updatedOrderWithDetails =
                 salesOrderDao.getOrderWithDetailsFlow(orderId).first() ?: return Result.failure(
                     IllegalStateException("Failed to retrieve order after update.")
@@ -175,25 +163,25 @@ class SalesOrderRepositoryImpl(
 
     override suspend fun deleteOrder(orderLocalId: Long): Result<Unit> {
         return try {
-            database.withTransaction {
-                val currentUserId = userRepository.getCurrentUser()?.id
-                    ?: throw Exception("User not authenticated for delete operation")
+            val currentUserId = userRepository.getCurrentUser()?.id
+                ?: throw Exception("User not authenticated for delete operation")
 
-                val orderEntity = salesOrderDao.getOrderEntityByLocalId(orderLocalId)
-                    ?: throw NoSuchElementException("Order not found with localId: $orderLocalId")
+            val orderEntity =
+                salesOrderDao.getOrderEntityByLocalId(orderLocalId) ?: throw NoSuchElementException(
+                    "Order not found with localId: $orderLocalId"
+                )
 
-                if (!orderEntity.isDeletedLocally) {
-                    val items = salesOrderDao.getItemsForOrder(orderLocalId)
-                    orderAmountLogic.revertOrder(orderEntity, items, currentUserId)
-                    partnerTransactionDao.deleteTransactionsBySource(
-                        orderLocalId, TransactionType.SALE, TransactionType.PAYMENT_RECEIVED
-                    )
+            if (!orderEntity.isDeletedLocally) {
+                val items = salesOrderDao.getItemsForOrder(orderLocalId)
+                orderAmountLogic.revertOrder(orderEntity, items, currentUserId)
+                partnerTransactionDao.deleteTransactionsBySource(
+                    orderLocalId, TransactionType.SALE, TransactionType.PAYMENT_RECEIVED
+                )
 
-                    val orderToMarkAsDeleted = orderEntity.copy(
-                        isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
-                    )
-                    salesOrderDao.updateOrder(orderToMarkAsDeleted)
-                }
+                val orderToMarkAsDeleted = orderEntity.copy(
+                    isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
+                )
+                salesOrderDao.updateOrder(orderToMarkAsDeleted)
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -245,16 +233,14 @@ class SalesOrderRepositoryImpl(
 
     override suspend fun syncWithServer(orderEntities: List<Pair<OrderEntity, List<OrderProductEntity>>>): Result<Unit> {
         return runCatching {
-            database.withTransaction {
-                orderEntities.forEach { (order, items) ->
-                    val existingOrder = salesOrderDao.getOrderByServerId(order.serverId!!)
-                    val newOrder = order.copy(localId = existingOrder?.localId ?: 0L)
+            orderEntities.forEach { (order, items) ->
+                val existingOrder = salesOrderDao.getOrderByServerId(order.serverId!!)
+                val newOrder = order.copy(localId = existingOrder?.localId ?: 0L)
 
-                    if (newOrder.localId != 0L) {
-                        updateOrder(newOrder, items)
-                    } else {
-                        addOrder(newOrder, items)
-                    }
+                if (newOrder.localId != 0L) {
+                    updateOrder(newOrder, items)
+                } else {
+                    addOrder(newOrder, items)
                 }
             }
         }
