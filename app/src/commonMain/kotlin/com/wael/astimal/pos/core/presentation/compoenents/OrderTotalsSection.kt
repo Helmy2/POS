@@ -1,0 +1,123 @@
+package com.wael.astimal.pos.core.presentation.compoenents
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import com.wael.astimal.pos.features.reports.presentation.account_statement.StatementFooter
+import org.jetbrains.compose.resources.stringResource
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.paid
+import pos.app.generated.resources.partner_current_balance
+import pos.app.generated.resources.partner_previous_balance
+import pos.app.generated.resources.remaining
+import pos.app.generated.resources.total_amount
+
+@Composable
+fun OrderTotalsSection(
+    totalAmount: Double,
+    amountPaid: Double,
+    amountRemaining: Double,
+    modifier: Modifier = Modifier,
+    partnerBalance: Double,
+    partnerBalanceAfterThisOrder: Double
+) {
+    Column {
+        Card(
+            modifier = modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Spacer(modifier = Modifier.padding(vertical = 4.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(Res.string.total_amount),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(totalAmount),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(Res.string.paid),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(amountPaid),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                HorizontalDivider()
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(Res.string.remaining),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        "%.2f".format(amountRemaining),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
+        }
+        Card(
+            modifier = modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(Res.string.partner_previous_balance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(partnerBalance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                HorizontalDivider()
+
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        stringResource(Res.string.partner_current_balance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "%.2f".format(partnerBalanceAfterThisOrder),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+
+            }
+        }
+        StatementFooter(
+            partnerBalanceAfterThisOrder,
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = 10.dp,
+                        bottomEnd = 10.dp
+                    )
+                )
+        )
+    }
+}

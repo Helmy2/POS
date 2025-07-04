@@ -34,10 +34,11 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.ktor.android)
             implementation(libs.androidx.core.splashscreen)
+        }
 
-            // todo remove this
+        commonMain.dependencies {
             implementation(libs.ktor.auth)
-            implementation("androidx.datastore:datastore-preferences:1.1.7")
+            implementation(libs.datastore)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -81,51 +82,6 @@ kotlin {
 
             implementation(libs.vico.multiplatform)
         }
-
-//        commonMain.dependencies {
-//            implementation(compose.runtime)
-//            implementation(compose.foundation)
-//            implementation(compose.material3)
-//            implementation(compose.materialIconsExtended)
-//            implementation(compose.material3AdaptiveNavigationSuite)
-//            implementation(compose.ui)
-//            implementation(compose.components.resources)
-//            implementation(compose.components.uiToolingPreview)
-//
-//            implementation(libs.adaptive)
-//            implementation(libs.adaptive.layout)
-//            implementation(libs.adaptive.navigation)
-//            implementation(libs.material3.window.size)
-//
-//            implementation(libs.androidx.lifecycle.viewmodel)
-//            implementation(libs.androidx.lifecycle.runtime.compose)
-//            implementation(libs.kotlinx.coroutines.core)
-//
-//            implementation(libs.ktor.client.core)
-//            implementation(libs.ktor.client.content.negotiation)
-//            implementation(libs.ktor.client.serialization)
-//            implementation(libs.ktor.client.logging)
-//            implementation(libs.androidx.navigation.composee)
-//            implementation(libs.kotlinx.serialization.json)
-//            implementation(libs.koin.core)
-//            implementation(libs.koin.compose)
-//            implementation(libs.coil)
-//            implementation(libs.coil.network.ktor)
-//
-//            implementation(libs.supabase.auth)
-//            implementation(libs.supabase.postgrest)
-//            implementation(libs.supabase.realtime)
-//            implementation(libs.supabase.storage)
-//            implementation(libs.supabase.functions)
-//            implementation(libs.supabase.compose.auth)
-//
-//            implementation(libs.filekit.compose)
-//
-//            implementation(libs.androidx.room.runtime)
-//            implementation(libs.sqlite.bundled)
-//
-//            implementation(libs.vico.multiplatform)
-//        }
 
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

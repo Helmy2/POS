@@ -9,7 +9,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-class ConnectivityImp(
+actual class ConnectivityImp(
     private val context: Context,
 ) : Connectivity {
     private var networkLost: Boolean = false

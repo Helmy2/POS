@@ -1,0 +1,306 @@
+package com.wael.astimal.pos.features.management.presentation.employee_account
+
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.FAB
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.add_transaction
+import pos.app.generated.resources.amount
+import pos.app.generated.resources.are_you_sure_you_want_to_delete_this_transaction
+import pos.app.generated.resources.cancel
+import pos.app.generated.resources.confirm_delete
+import pos.app.generated.resources.delete
+import pos.app.generated.resources.edit_transaction
+import pos.app.generated.resources.employee
+import pos.app.generated.resources.for_invoice
+import pos.app.generated.resources.new_transaction
+import pos.app.generated.resources.notes_optional
+import pos.app.generated.resources.save
+import pos.app.generated.resources.transaction_type
+
+
+@Composable
+fun EmployeeAccountRoute(
+    viewModel: EmployeeAccountViewModel = koinViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val filteredTransactions by viewModel.filteredTransactionsState.collectAsStateWithLifecycle()
+
+    EmployeeAccountScreen(
+        state = state,
+        filteredTransactions = filteredTransactions,
+        onEvent = viewModel::processEvent,
+    )
+}
+
+@Composable
+fun EmployeeAccountScreen(
+    state: EmployeeAccountContract.State,
+    filteredTransactions: List<EmployeeAccountTransaction>,
+    onEvent: (EmployeeAccountContract.Event) -> Unit
+) {
+    if (state.dialogState.show) {
+        EditTransactionDialog(state = state, onEvent = onEvent)
+    }
+
+    Screen(topBar = {
+        SearchBarWithBackButton(
+            query = state.searchQuery,
+            onBack = { onEvent(EmployeeAccountContract.Event.NavigateBack) },
+            onQueryChange = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
+            onSearch = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },
+            modifier = Modifier.statusBarsPadding()
+        )
+    }, floatingActionButton = {
+        FAB(
+            enable = state.canUserEdit,
+            onClick = { onEvent(EmployeeAccountContract.Event.AddTransactionClicked) }) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = stringResource(Res.string.add_transaction),
+            )
+        }
+    }) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TransactionList(
+                transactions = filteredTransactions, canEdit = state.canUserEdit, onEvent = onEvent
+            )
+        }
+    }
+}
+
+@Composable
+fun EditTransactionDialog(
+    state: EmployeeAccountContract.State, onEvent: (EmployeeAccountContract.Event) -> Unit
+) {
+    val language = LocalAppLocale.current
+
+    AlertDialog(
+        onDismissRequest = { onEvent(EmployeeAccountContract.Event.DismissDialog) },
+        title = {
+            val titleRes =
+                if (state.dialogState.selectedTransaction == null) Res.string.new_transaction else Res.string.edit_transaction
+            Text(stringResource(titleRes))
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CustomExposedDropdownMenu(
+                    label = stringResource(Res.string.employee),
+                    items = state.employeesForDropdown,
+                    selectedItemId = state.dialogState.selectedEmployee?.id,
+                    onItemSelected = {
+                        onEvent(
+                            EmployeeAccountContract.Event.DialogEmployeeSelected(
+                                it
+                            )
+                        )
+                    },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToId = { it.id },
+                    enabled = state.canUserEdit
+                )
+
+                CustomExposedDropdownMenu(
+                    label = stringResource(Res.string.transaction_type),
+                    items = EmployeeTransactionType.entries,
+                    selectedItemId = state.dialogState.transactionType.ordinal.toLong(),
+                    onItemSelected = {
+                        onEvent(
+                            EmployeeAccountContract.Event.DialogTransactionTypeSelected(
+                                it
+                            )
+                        )
+                    },
+                    itemToDisplayString = { stringResource(it.getStringResId()) },
+                    itemToId = { it.ordinal.toLong() },
+                    enabled = state.canUserEdit
+                )
+                LabeledTextField(
+                    value = state.dialogState.amount,
+                    onValueChange = { onEvent(EmployeeAccountContract.Event.DialogAmountChanged(it)) },
+                    label = stringResource(Res.string.amount),
+                    enabled = state.canUserEdit
+                )
+                LabeledTextField(
+                    value = state.dialogState.notes,
+                    onValueChange = { onEvent(EmployeeAccountContract.Event.DialogNotesChanged(it)) },
+                    label = stringResource(Res.string.notes_optional),
+                    enabled = state.canUserEdit
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onEvent(EmployeeAccountContract.Event.SaveChangesClicked) },
+                enabled = state.canUserEdit
+            ) {
+                Text(stringResource(Res.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onEvent(EmployeeAccountContract.Event.DismissDialog) }) {
+                Text(stringResource(Res.string.cancel))
+            }
+        })
+}
+
+@Composable
+fun TransactionList(
+    transactions: List<EmployeeAccountTransaction>,
+    canEdit: Boolean,
+    onEvent: (EmployeeAccountContract.Event) -> Unit
+) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(top = 16.dp)
+    ) {
+        items(transactions, key = { it.id.local }) { transaction ->
+            TransactionItem(
+                transaction = transaction,
+                canEdit = canEdit,
+                onEdit = { onEvent(EmployeeAccountContract.Event.EditTransactionClicked(transaction)) },
+                onDelete = {
+                    onEvent(
+                        EmployeeAccountContract.Event.DeleteTransactionClicked(
+                            transaction
+                        )
+                    )
+                })
+        }
+    }
+}
+
+@Composable
+fun TransactionItem(
+    transaction: EmployeeAccountTransaction,
+    canEdit: Boolean,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    val language = LocalAppLocale.current
+    Card {
+        Column(
+            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = transaction.employee.name.displayName(language),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(transaction.type.getStringResId()),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "%.2f".format(transaction.amount),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (transaction.amount >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.weight(1f))
+                AnimatedVisibility(canEdit && transaction.relatedCommission == null) {
+                    Row {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
+                        IconButton(onClick = { showDeleteConfirm = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+            transaction.relatedCommission?.let { commission ->
+                Text(
+                    text = stringResource(commission.sourceTransactionType.getStringResId()) + " " + stringResource(
+                        Res.string.for_invoice, commission.sourceInvoiceNumber
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            transaction.notes?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(Res.string.confirm_delete)) },
+            text = { Text(stringResource(Res.string.are_you_sure_you_want_to_delete_this_transaction)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(Res.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            })
+    }
+}
