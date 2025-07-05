@@ -9,6 +9,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
 
 data class ProductUnit(
     val name: LocalizedString,
+    val abbreviation: LocalizedString,
     override val id: Id,
     override val isSynced: Boolean = false,
     override val createdAt: Long,
@@ -18,10 +19,11 @@ data class ProductUnit(
         fun getUnspecifiedUnit(serverId: Long): ProductUnit {
             return ProductUnit(
                 name = LocalizedString(arName = "Unspecified", enName = "Unspecified"),
+                abbreviation = LocalizedString(arName = "Unspecified", enName = "Unspecified"),
                 id = Id.new.copy(server = serverId),
                 isSynced = false,
                 createdAt = Clock.now(),
-                updatedAt = Clock.now()
+                updatedAt = Clock.now(),
             )
         }
     }
@@ -35,6 +37,8 @@ fun ProductUnit.toEntity(): UnitEntity {
         enName = name.enName ?: "",
         isSynced = isSynced,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        arAbbreviation = abbreviation.arName ?: "",
+        enAbbreviation = abbreviation.enName ?: ""
     )
 }

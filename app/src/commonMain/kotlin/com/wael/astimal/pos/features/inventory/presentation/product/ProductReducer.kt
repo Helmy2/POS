@@ -36,10 +36,12 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
                     inputEnName = event.product.name.enName ?: "",
                     inputPurchasePrice = event.product.averagePrice.toString(),
                     inputSellingPrice = event.product.sellingPrice.toString(),
-                    inputOpeningBalance = event.product.openingBalanceQuantity.toString(),
+                    // todo remove inputOpeningBalance
+                    inputOpeningBalance = "",
                     inputSubUnitsPerMainUnit = event.product.subUnitsPerMainUnit.toString(),
-                    selectedCategoryId = event.product.category.id.local,
-                    selectedStoreId = event.product.store.id.local,
+                    selectedCategoryId = event.product.category?.id?.local,
+                    // remove the selected store id
+                    selectedStoreId = 0L,
                     selectedMaximumUnitId = event.product.maximumProductUnit.id.local,
                     selectedMinimumUnitId = event.product.minimumProductUnit?.id?.local,
                     isSearchActive = false

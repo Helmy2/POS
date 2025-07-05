@@ -128,16 +128,16 @@ class ProductViewModel(
                     name = LocalizedString(currentState.inputArName, currentState.inputEnName),
                     averagePrice = currentState.inputPurchasePrice.toDouble(),
                     sellingPrice = currentState.inputSellingPrice.toDouble(),
-                    openingBalanceQuantity = currentState.inputOpeningBalance.toDoubleOrNull()
-                        ?: 0.0,
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
                     category = currentState.dropdownData.categories.find { it.id.local == currentState.selectedCategoryId }!!,
-                    store = currentState.dropdownData.stores.find { it.id.local == currentState.selectedStoreId }!!,
                     maximumProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMaximumUnitId }!!,
                     minimumProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMinimumUnitId },
-                createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
-            )
+                    createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
+                    purchasePrice = currentState.inputPurchasePrice.toDouble(),
+                    // handle barcode
+                    barcode = "",
+                )
 
                 val result = productRepository.saveProduct(productToSave)
 

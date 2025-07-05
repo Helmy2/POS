@@ -9,11 +9,11 @@ import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
 
 data class Product(
     val name: LocalizedString,
-    val openingBalanceQuantity: Double,
-    val category: Category,
-    val store: Store,
+    val category: Category?,
     val averagePrice: Double,
+    val purchasePrice: Double,
     val sellingPrice: Double,
+    val barcode: String,
     val minimumProductUnit: ProductUnit?,
     val maximumProductUnit: ProductUnit,
     val subUnitsPerMainUnit: Double,
@@ -21,17 +21,7 @@ data class Product(
     override val isSynced: Boolean = false,
     override val createdAt: Long,
     override val updatedAt: Long = Clock.now()
-) : Item {
-
-    fun convertToMaxUnitQuantity(quantity: Double): Double {
-        return quantity * subUnitsPerMainUnit
-    }
-
-    fun convertToMaxUnitPrice(price: Double): Double {
-        return price / subUnitsPerMainUnit
-    }
-}
-
+) : Item
 
 fun Product.toEntity(): ProductEntity {
     return ProductEntity(
@@ -39,17 +29,17 @@ fun Product.toEntity(): ProductEntity {
         serverId = id.server,
         arName = name.arName ?: "",
         enName = name.enName ?: "",
-        openingBalanceQuantity = openingBalanceQuantity,
-        categoryId = category.id.local,
-        storeId = store.id.local,
-        averagePrice = averagePrice,
+        categoryId = category?.id?.local,
+        averagePurchasePrice = averagePrice,
         sellingPrice = sellingPrice,
-        minimumUnitId = minimumProductUnit?.id?.local,
-        maximumUnitId = maximumProductUnit.id.local,
+        subUnitId = minimumProductUnit?.id?.local,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         isSynced = isSynced,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        barcode = barcode,
+        purchasePrice = purchasePrice,
+        mainUnitId = maximumProductUnit.id.local
     )
 }
 

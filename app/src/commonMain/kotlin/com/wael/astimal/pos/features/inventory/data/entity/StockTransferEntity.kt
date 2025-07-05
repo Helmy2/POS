@@ -94,7 +94,7 @@ data class StockTransferItemWithProductDetails(
 
     @Relation(
         parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class
-    ) val product: ProductWithDetailsEntity?,
+    ) val product: ProductWithDetails?,
 )
 
 

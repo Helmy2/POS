@@ -11,7 +11,6 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReas
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -21,7 +20,6 @@ class ProductRepositoryImpl(
     private val productDao: ProductDao,
     private val stockRepository: StockRepository,
     private val userRepository: UserRepository,
-    private val storeRepository: StoreRepository,
 ) : ProductRepository {
 
     override fun getProducts(query: String): Flow<List<Product>> {
@@ -47,59 +45,7 @@ class ProductRepositoryImpl(
 
     private suspend fun saveProduct(product: ProductEntity): Result<Unit> {
         return runCatching {
-            if (product.localId == 0L) {
-                val newProductId = productDao.insertOrUpdate(product)
-
-                val openingBalance = product.openingBalanceQuantity
-                val currentUser = userRepository.getCurrentUser()
-                val fullProduct =
-                    productDao.getProductWithDetailsByLocalId(newProductId)?.toDomain()
-
-                if (openingBalance > 0 && currentUser != null && fullProduct?.store != null) {
-                    val adjustment = StockAdjustment(
-                        id = Id.new,
-                        store = fullProduct.store,
-                        product = fullProduct,
-                        user = currentUser,
-                        reason = StockAdjustmentReason.INITIAL_COUNT,
-                        notes = "Opening Balance",
-                        quantityChange = openingBalance,
-                        createdAt = Clock.now()
-                    )
-                    stockRepository.addStockAdjustment(adjustment)
-                }
-            } else {
-                val oldProductEntity = productDao.getProductByLocalId(product.localId)
-                    ?: throw NoSuchElementException("Product not found for update with localId: ${product.localId}")
-
-                productDao.insertOrUpdate(product)
-
-                val openingBalanceDifference =
-                    product.openingBalanceQuantity - oldProductEntity.openingBalanceQuantity
-
-                if (openingBalanceDifference != 0.0) {
-                    val currentUser = userRepository.getCurrentUser()
-                        ?: throw Exception("User not authenticated for stock adjustment.")
-
-                    val store =
-                        product.storeId?.let { storeRepository.getStoreByLocalId(Id(local = it)) }
-                        ?.getOrThrow() ?: throw Exception("Store not found")
-                    val product = getProductByLocalId(product.localId).getOrThrow()
-
-
-                    val adjustment = StockAdjustment(
-                        id = Id.new,
-                        store = store,
-                        product = product,
-                        user = currentUser,
-                        reason = StockAdjustmentReason.RECOUNT,
-                        notes = "Opening balance updated.",
-                        quantityChange = openingBalanceDifference,
-                        createdAt = Clock.now(),
-                    )
-                    stockRepository.addStockAdjustment(adjustment)
-                }
-            }
+            productDao.insertOrUpdate(product)
         }
     }
 

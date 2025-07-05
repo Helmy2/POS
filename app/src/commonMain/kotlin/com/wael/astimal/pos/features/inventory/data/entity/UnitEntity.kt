@@ -1,30 +1,47 @@
 package com.wael.astimal.pos.features.inventory.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 
-@Entity(tableName = "units")
+/**
+ * Represents a measurement unit in the local Room database.
+ */
+@Entity(
+    tableName = "units",
+    indices = [Index(value = ["serverId"], unique = true)]
+)
 data class UnitEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    override val localId: Long = 0L,
     override val serverId: Long?,
     override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
+    override val createdAt: Long,
+    override var updatedAt: Long,
     override var isDeletedLocally: Boolean = false,
 
-    var arName: String,
-    var enName: String,
+    val arName: String?,
+    val enName: String,
+    val arAbbreviation: String?,
+    val enAbbreviation: String?
+
 ) : ItemEntity
 
+/**
+ * Maps the local UnitEntity from the database to the ProductUnit domain model
+ * used throughout the application's business logic.
+ */
 fun UnitEntity.toDomain(): ProductUnit {
     return ProductUnit(
-        id = Id(localId, serverId), name = LocalizedString(
-            arName = arName, enName = enName
-        ), isSynced = isSynced, createdAt = createdAt, updatedAt = updatedAt
+        id = Id(local = this.localId, server = this.serverId),
+        name = LocalizedString(arName = this.arName, enName = this.enName),
+        abbreviation = LocalizedString(arName = this.arAbbreviation, enName = this.enAbbreviation),
+        isSynced = this.isSynced,
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt
     )
 }

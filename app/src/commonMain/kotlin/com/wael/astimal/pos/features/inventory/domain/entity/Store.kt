@@ -9,6 +9,7 @@ import com.wael.astimal.pos.features.inventory.data.entity.StoreType
 
 data class Store(
     val name: LocalizedString,
+    val address: String,
     val type: StoreType,
     override val id: Id,
     override val createdAt: Long,
@@ -22,7 +23,8 @@ data class Store(
                 type = StoreType.UNSPECIFIED,
                 id = Id.new.copy(server = serverId),
                 createdAt = Clock.now(),
-                isSynced = false
+                isSynced = false,
+                address = "",
             )
         }
     }
@@ -37,6 +39,7 @@ fun Store.toEntity(): StoreEntity {
         type = this.type,
         isSynced = this.isSynced,
         createdAt = this.createdAt,
-        updatedAt = this.updatedAt
+        updatedAt = this.updatedAt,
+        address = this.address
     )
 }

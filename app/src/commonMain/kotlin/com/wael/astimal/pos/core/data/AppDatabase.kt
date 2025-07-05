@@ -70,7 +70,7 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         ReceivePayVoucherEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 3,
+    version = 5,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {

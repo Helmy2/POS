@@ -48,7 +48,7 @@ data class StoreStockWithDetails(
         entityColumn = "localId",
         entity = ProductEntity::class
     )
-    val productWithDetails: ProductWithDetailsEntity?
+    val productWithDetails: ProductWithDetails?
 )
 
 fun StoreStockWithDetails.toDomain(): StoreStock {

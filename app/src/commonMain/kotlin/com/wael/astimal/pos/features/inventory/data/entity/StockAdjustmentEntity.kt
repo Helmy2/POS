@@ -55,7 +55,7 @@ data class StockAdjustmentWithDetails(
         parentColumn = "storeId", entityColumn = "localId"
     ) val store: StoreEntity?, @Relation(
         parentColumn = "productId", entityColumn = "localId", entity = ProductEntity::class
-    ) val productWithDetails: ProductWithDetailsEntity?, @Relation(
+    ) val productWithDetails: ProductWithDetails?, @Relation(
         parentColumn = "userId", entityColumn = "id"
     ) val user: UserEntity?
 )

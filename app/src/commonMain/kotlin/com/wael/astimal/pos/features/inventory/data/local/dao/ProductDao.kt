@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
+import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,7 +17,7 @@ interface ProductDao {
 
     @Transaction
     @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
-    suspend fun getProductWithDetailsByLocalId(localId: Long): ProductWithDetailsEntity?
+    suspend fun getProductWithDetailsByLocalId(localId: Long): ProductWithDetails?
 
     @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
     suspend fun getProductByLocalId(localId: Long): ProductEntity?
@@ -29,9 +29,9 @@ interface ProductDao {
         AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%')
         ORDER BY enName ASC, arName ASC
     """)
-    fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetailsEntity>>
+    fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetails>>
 
     @Query("SELECT * FROM products WHERE serverId = :serverId LIMIT 1")
-    suspend fun getProductByServerId(serverId: Long): ProductWithDetailsEntity?
+    suspend fun getProductByServerId(serverId: Long): ProductWithDetails?
 
 }

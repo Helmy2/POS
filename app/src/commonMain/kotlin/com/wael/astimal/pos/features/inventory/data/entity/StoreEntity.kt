@@ -24,6 +24,7 @@ data class StoreEntity(
 
     val arName: String,
     val enName: String,
+    val address: String,
     val type: StoreType,
 ) : ItemEntity
 
@@ -46,6 +47,7 @@ fun StoreEntity.toDomain(): Store {
         type = type,
         isSynced = isSynced,
         updatedAt = updatedAt,
-        createdAt = createdAt
+        createdAt = createdAt,
+        address = address
     )
 }

@@ -10,7 +10,7 @@ import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetailsEntity
+import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetails
 import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
@@ -105,7 +105,7 @@ data class PurchaseReturnItemWithDetails(
     @Embedded
     val purchaseReturnItem: PurchaseReturnProductEntity,
     @Relation(parentColumn = "productLocalId", entityColumn = "localId", entity = ProductEntity::class)
-    val product: ProductWithDetailsEntity?,
+    val product: ProductWithDetails?,
 )
 
 fun PurchaseReturnWithDetailsEntity.toDomain(): PurchaseReturn {

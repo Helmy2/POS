@@ -9,10 +9,12 @@ import androidx.room.Relation
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 
-
+/**
+ * Represents a product in the local Room database.
+ * This entity is designed to be the offline source of truth for product information.
+ */
 @Entity(
     tableName = "products",
     foreignKeys = [
@@ -20,83 +22,84 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Product
             entity = CategoryEntity::class,
             parentColumns = ["localId"],
             childColumns = ["categoryId"],
-        ),
-        ForeignKey(
-            entity = StoreEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["storeId"],
+            onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
             entity = UnitEntity::class,
             parentColumns = ["localId"],
-            childColumns = ["minimumUnitId"],
+            childColumns = ["mainUnitId"],
+            onDelete = ForeignKey.RESTRICT
         ),
         ForeignKey(
             entity = UnitEntity::class,
             parentColumns = ["localId"],
-            childColumns = ["maximumUnitId"],
+            childColumns = ["subUnitId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
+        Index("serverId", unique = true),
         Index("categoryId"),
-        Index("storeId"),
-        Index("minimumUnitId"),
-        Index("maximumUnitId")
+        Index("mainUnitId"),
+        Index("subUnitId"),
     ]
 )
 data class ProductEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    override val localId: Long = 0L,
     override val serverId: Long?,
     override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
+    override val createdAt: Long,
+    override var updatedAt: Long,
     override var isDeletedLocally: Boolean = false,
 
-
-    val arName: String,
+    val arName: String?,
     val enName: String,
+    val barcode: String?,
+    val purchasePrice: Double,
+    val sellingPrice: Double,
+    val averagePurchasePrice: Double,
     val categoryId: Long?,
-    val storeId: Long?,
-    val openingBalanceQuantity: Double,
-    val averagePrice: Double = 0.0,
-    val sellingPrice: Double = 0.0,
-    val minimumUnitId: Long?,
-    val maximumUnitId: Long?,
+    val mainUnitId: Long,
+    val subUnitId: Long?,
     val subUnitsPerMainUnit: Double,
+
 ) : ItemEntity
 
-data class ProductWithDetailsEntity(
+/**
+ * A data class to hold a ProductEntity and its related parent entities (Category, Units, Store)
+ * when queried from the database. This avoids the need for multiple separate queries.
+ */
+data class ProductWithDetails(
     @Embedded val product: ProductEntity,
-    @Relation(
-        parentColumn = "categoryId", entityColumn = "localId"
-    ) val category: CategoryEntity?,
-    @Relation(
-        parentColumn = "storeId", entityColumn = "localId"
-    ) val store: StoreEntity?,
-    @Relation(
-        parentColumn = "minimumUnitId", entityColumn = "localId"
-    ) val minimumUnit: UnitEntity?,
-    @Relation(
-        parentColumn = "maximumUnitId", entityColumn = "localId"
-    ) val maximumUnit: UnitEntity?,
+
+    @Relation(parentColumn = "categoryId", entityColumn = "localId")
+    val category: CategoryEntity?,
+
+    @Relation(parentColumn = "mainUnitId", entityColumn = "localId")
+    val mainUnit: UnitEntity?,
+
+    @Relation(parentColumn = "subUnitId", entityColumn = "localId")
+    val minimumUnit: UnitEntity?,
 )
 
-fun ProductWithDetailsEntity.toDomain(): Product {
+/**
+ * Maps the rich ProductWithDetails object from the database to the clean Product domain model.
+ */
+fun ProductWithDetails.toDomain(): Product {
     return Product(
-        name = LocalizedString(
-            arName = product.arName, enName = product.enName
-        ),
-        category = category?.toDomain() ?: throw NullPointerException(),
-        store = store?.toDomain() ?: throw NullPointerException(),
-        averagePrice = product.averagePrice,
+        id = Id(local = product.localId, server = product.serverId),
+        name = LocalizedString(arName = product.arName, enName = product.enName),
+        category = category?.toDomain(),
+        averagePrice = product.averagePurchasePrice,
         sellingPrice = product.sellingPrice,
         minimumProductUnit = minimumUnit?.toDomain(),
-        maximumProductUnit = maximumUnit?.toDomain() ?: throw NullPointerException(),
+        maximumProductUnit = mainUnit!!.toDomain(),
         subUnitsPerMainUnit = product.subUnitsPerMainUnit,
         isSynced = product.isSynced,
-        openingBalanceQuantity = product.openingBalanceQuantity,
-        updatedAt = product.updatedAt,
         createdAt = product.createdAt,
-        id = Id(product.localId, product.serverId)
+        updatedAt = product.updatedAt,
+        purchasePrice = product.purchasePrice,
+        barcode = product.barcode ?: ""
     )
 }

@@ -98,7 +98,12 @@ class UnitViewModel(
                         createdAt = currentState.selectedUnit?.createdAt
                             ?: Clock.now(),
                         updatedAt = Clock.now(),
-                        isSynced = false
+                        isSynced = false,
+                        // TODO: Add abbreviation
+                        abbreviation = LocalizedString(
+                            arName = "",
+                            enName = ""
+                        )
                     )
 
                 val result =
