@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 
 data class StockTransfer(
     val fromStore: Store,

@@ -14,8 +14,8 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTra
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.SaleCommission
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.data.entity.toDomain
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 
 @Entity(
     tableName = "employee_sale_commissions",

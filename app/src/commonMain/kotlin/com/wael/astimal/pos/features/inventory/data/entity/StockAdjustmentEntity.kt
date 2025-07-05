@@ -11,8 +11,8 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.data.entity.toDomain
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 
 @Entity(
     tableName = "stock_adjustments",

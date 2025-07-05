@@ -91,7 +91,8 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
             text = stringResource(Res.string.login),
             onClick = { processEvent(LoginContract.Event.LoginClicked) },
             isLoading = state.loading,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.sizeIn(maxWidth = 600.dp)
+                .fillMaxWidth()
         )
         Spacer(modifier = Modifier.weight(2f))
     }

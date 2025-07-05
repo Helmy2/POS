@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.user.data.remote.dto
 
 import com.wael.astimal.pos.core.util.parseIsoTimestamp
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.domain.entity.UserRole
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

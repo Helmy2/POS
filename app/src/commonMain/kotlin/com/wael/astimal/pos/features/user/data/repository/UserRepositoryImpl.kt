@@ -1,9 +1,9 @@
 package com.wael.astimal.pos.features.user.data.repository
 
-import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
-import com.wael.astimal.pos.features.user.data.entity.toDomain
 import com.wael.astimal.pos.features.user.data.local.UserDao
+import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 import com.wael.astimal.pos.features.user.data.remote.ProfileApiService
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
@@ -88,7 +88,7 @@ class UserRepositoryImpl(
             id = existingUser?.id ?: 0L,
             createdAt = existingUser?.createdAt ?: profileDto.toEntity().createdAt
         )
-        userDao.insertOrUpdate(userEntity)
+        userDao.upsert(userEntity)
         return userEntity
     }
 

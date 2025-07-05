@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.user.data.entity
+package com.wael.astimal.pos.features.user.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

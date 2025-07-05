@@ -40,9 +40,9 @@ import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
-import com.wael.astimal.pos.features.user.data.entity.EmployeeStoreEntity
-import com.wael.astimal.pos.features.user.data.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.UserDao
+import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 
 @Database(
     entities = [

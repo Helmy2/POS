@@ -3,11 +3,6 @@ package com.wael.astimal.pos.features.user.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
-import org.jetbrains.compose.resources.StringResource
-import pos.app.generated.resources.Res
-import pos.app.generated.resources.admin
-import pos.app.generated.resources.employee
-import pos.app.generated.resources.unknown
 
 /**
  * Represents a user or employee in the application's domain layer.
@@ -26,16 +21,4 @@ data class User(
     override val createdAt: Long,
     override val updatedAt: Long,
 ) : Item
-
-enum class UserType {
-    ADMIN, EMPLOYEE, UNKNOWN;
-
-    fun stringResource(type: UserType = this): StringResource {
-        return when (type) {
-            EMPLOYEE -> Res.string.employee
-            ADMIN -> Res.string.admin
-            UNKNOWN -> Res.string.unknown
-        }
-    }
-}
 
