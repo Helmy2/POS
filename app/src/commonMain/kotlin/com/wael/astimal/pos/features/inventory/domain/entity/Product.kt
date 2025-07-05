@@ -4,7 +4,9 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
 
 
 data class Product(
@@ -37,6 +39,24 @@ fun Product.toEntity(): ProductEntity {
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt,
+        barcode = barcode,
+        purchasePrice = purchasePrice,
+        mainUnitId = mainProductUnit.id.local
+    )
+}
+
+fun Product.toDto(): ProductDto {
+    return ProductDto(
+        id = id.server ?: 0,
+        arName = name.arName ?: "",
+        enName = name.enName ?: "",
+        categoryId = category?.id?.local,
+        averagePurchasePrice = averagePrice,
+        sellingPrice = sellingPrice,
+        subUnitId = subProductUnit?.id?.local,
+        subUnitsPerMainUnit = subUnitsPerMainUnit,
+        createdAt = createdAt.toDateString(),
+        updatedAt = updatedAt.toDateString(),
         barcode = barcode,
         purchasePrice = purchasePrice,
         mainUnitId = mainProductUnit.id.local

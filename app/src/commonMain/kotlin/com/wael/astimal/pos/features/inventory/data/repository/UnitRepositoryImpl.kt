@@ -1,18 +1,23 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
+import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
-import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 
 class UnitRepositoryImpl(
-    private val unitDao: UnitDao
+    private val unitDao: UnitDao,
+    private val supabaseClient: SupabaseClient
 ) : UnitRepository {
 
     override fun getUnits(query: String): Flow<List<ProductUnit>> {
@@ -22,21 +27,37 @@ class UnitRepositoryImpl(
     }
 
     override suspend fun saveUnit(unit: ProductUnit): Result<Long> {
-        return runCatching {
-            if (unit.name.arName.isNullOrBlank() && unit.name.arName.isNullOrBlank()) {
-                return Result.failure(IllegalArgumentException("Arabic and English names must be provided."))
+        return try {
+            val entity = unit.toDto()
+
+            val result = if (unit.id == Id.new) {
+                supabaseClient.from("units").insert(entity) {
+                    select()
+                }.decodeSingle<UnitDto>()
+            } else {
+                supabaseClient.from("units").update(entity) {
+                    filter {
+                        eq("id", entity.id)
+                    }
+                    select()
+                }.decodeSingle<UnitDto>()
             }
-            unitDao.insertOrUpdate(unit.toEntity())
+
+            val localId = unitDao.insertOrUpdate(
+                result.toEntity().copy(localId = unit.id.local)
+            )
+
+            Result.success(localId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 
     override suspend fun deleteUnit(unit: ProductUnit): Result<Unit> {
         return try {
-            val unitToDelete = unit.toEntity().copy(
-                isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
-            )
-            unitDao.insertOrUpdate(unitToDelete)
-            Result.success(Unit)
+            // TODO: delete unit from database
+            TODO()
         } catch (e: Exception) {
             Result.failure(e)
         }

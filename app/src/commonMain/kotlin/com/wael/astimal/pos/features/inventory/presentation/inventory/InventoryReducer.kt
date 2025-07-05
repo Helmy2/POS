@@ -23,13 +23,13 @@ class InventoryReducer : Reducer<InventoryContract.State, InventoryContract.Even
                     InventoryContract.InventoryItem(Destination.Categories, Res.string.categories),
                     InventoryContract.InventoryItem(Destination.Products, Res.string.products),
                     InventoryContract.InventoryItem(
+                        Destination.StockManagement,
+                        Res.string.stock_management
+                    ),
+                    InventoryContract.InventoryItem(
                         Destination.StockTransfer,
                         Res.string.stock_transfer
                     ),
-                    InventoryContract.InventoryItem(
-                        Destination.StockManagement,
-                        Res.string.stock_management
-                    )
                 )
                 previousState.copy(items = inventoryItems) to null
             }

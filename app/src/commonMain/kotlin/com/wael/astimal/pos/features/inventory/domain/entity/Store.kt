@@ -4,8 +4,10 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreType
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
 
 data class Store(
     val name: LocalizedString,
@@ -19,14 +21,26 @@ data class Store(
 
 fun Store.toEntity(): StoreEntity {
     return StoreEntity(
-        localId = this.id.local,
-        serverId = this.id.server,
-        arName = this.name.arName ?: "",
-        enName = this.name.enName ?: "",
-        type = this.type,
-        isSynced = this.isSynced,
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
-        address = this.address
+        localId = id.local,
+        serverId = id.server,
+        arName = name.arName ?: "",
+        enName = name.enName ?: "",
+        type = type,
+        isSynced = isSynced,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        address = address
+    )
+}
+
+fun Store.toDto(): StoreDto {
+    return StoreDto(
+        id = id.server ?: 0,
+        arName = name.arName,
+        enName = name.enName ?: "",
+        address = address,
+        type = type.name.lowercase(),
+        createdAt = createdAt.toDateString(),
+        updatedAt = updatedAt.toDateString()
     )
 }

@@ -1,17 +1,22 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
+import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
-import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class CategoryRepositoryImpl(
     private val categoryDao: CategoryDao,
+    private val supabaseClient: SupabaseClient,
 ) : CategoryRepository {
 
 
@@ -24,22 +29,37 @@ class CategoryRepositoryImpl(
     override suspend fun saveCategory(
         category: Category
     ): Result<Long> {
-        return runCatching {
-            if (category.name.arName.isNullOrBlank() && category.name.enName.isNullOrBlank()) {
-                return Result.failure(IllegalArgumentException("At least one name (Arabic or English) must be provided for the category."))
+        return try {
+            val entity = category.toDto()
+
+            val result = if (category.id == Id.new) {
+                supabaseClient.from("categories").insert(entity) {
+                    select()
+                }.decodeSingle<CategoryDto>()
+            } else {
+                supabaseClient.from("categories").update(entity) {
+                    filter {
+                        eq("id", entity.id)
+                    }
+                    select()
+                }.decodeSingle<CategoryDto>()
             }
 
-            categoryDao.insertOrUpdate(category.toEntity())
+            val localId = categoryDao.insertOrUpdate(
+                result.toEntity().copy(localId = category.id.local)
+            )
+
+            Result.success(localId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 
     override suspend fun deleteCategory(category: Category): Result<Unit> {
         return try {
-            val categoryToMarkAsDeleted = category.toEntity().copy(
-                isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
-            )
-            categoryDao.insertOrUpdate(categoryToMarkAsDeleted)
-            Result.success(Unit)
+            // TODO: delete category from database
+            TODO()
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -52,8 +72,8 @@ class CategoryRepositoryImpl(
                     dto.serverId ?: throw Exception("Server ID not found")
                 )
                 dto.copy(localId = existingEntity?.localId ?: 0L)
-        }
-        categoryDao.upsertAll(entities)
+            }
+            categoryDao.upsertAll(entities)
         }
     }
 

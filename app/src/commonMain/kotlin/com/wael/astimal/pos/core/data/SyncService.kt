@@ -12,8 +12,6 @@ import com.wael.astimal.pos.features.inventory.domain.repository.CategoryReposit
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
-import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
-import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 
@@ -24,10 +22,8 @@ class SyncServiceImpl(
     private val unitRepository: UnitRepository,
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
-    private val partnerRepository: BusinessPartnerRepository,
     private val categoryRepository: CategoryRepository,
     private val productRepository: ProductRepository,
-    private val salesOrderRepository: SalesOrderRepository,
     private val navigationController: NavigationController
 ) : SyncService {
 
@@ -35,38 +31,48 @@ class SyncServiceImpl(
         return try {
             // TODO Remove
             userRepository.login(
-                "admin@mail.com",
-                "adminadmin"
+                "admin@mail.com", "adminadmin"
             ).getOrThrow()
             navigationController.navigate(
                 Destination.Dashboard,
-                popUpToRoute = Destination.Login,
+                popUpToRoute = Destination.Auth,
             )
 
             userRepository.getCurrentUser() ?: throw Exception("User not authenticated")
 
             supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
                 storeRepository.syncWithServer(
-                    it.map { storeDto -> storeDto.toEntity() }
-                )
+                    it.map { storeDto -> storeDto.toEntity() })
             }
 
             supabaseClient.fetchAll<CategoryDto>("categories").getOrThrow().also {
                 categoryRepository.syncWithServer(
-                    it.map { categoryDto -> categoryDto.toEntity() }
-                )
+                    it.map { categoryDto -> categoryDto.toEntity() })
             }
 
             supabaseClient.fetchAll<UnitDto>("units").getOrThrow().also {
                 unitRepository.syncWithServer(
-                    it.map { unitDto -> unitDto.toEntity() }
-                )
+                    it.map { unitDto -> unitDto.toEntity() })
             }
 
             supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
                 productRepository.syncWithServer(
-                    it.map { unitDto -> unitDto.toEntity() }
-                )
+                    it.map { unitDto ->
+                        unitDto.toEntity(
+                            categoryId = unitDto.categoryId?.let { id ->
+                                categoryRepository.getCategoryByServerId(
+                                    id
+                                )
+                            }?.getOrThrow()?.id?.local,
+                            mainUnitId = unitRepository.getUnitByServerId(unitDto.mainUnitId)
+                                .getOrThrow().id.local,
+                            subUnitId = unitDto.subUnitId?.let { id ->
+                                unitRepository.getUnitByServerId(
+                                    id
+                                )
+                            }?.getOrThrow()?.id?.local
+                        )
+                    })
             }
 
             Result.success(Unit)

@@ -34,20 +34,22 @@ data class ProductDto(
     val subUnitsPerMainUnit: Double,
 )
 
-fun ProductDto.toEntity(): ProductEntity {
+fun ProductDto.toEntity(
+    categoryId: Long?, mainUnitId: Long, subUnitId: Long?
+): ProductEntity {
     return ProductEntity(
-        serverId = this.id,
-        arName = this.arName,
-        enName = this.enName,
-        barcode = this.barcode,
-        purchasePrice = this.purchasePrice,
-        sellingPrice = this.sellingPrice,
-        averagePurchasePrice = this.averagePurchasePrice,
-        categoryId = this.categoryId,
-        mainUnitId = this.mainUnitId,
-        subUnitId = this.subUnitId,
-        subUnitsPerMainUnit = this.subUnitsPerMainUnit,
-        createdAt = this.createdAt.parseIsoTimestamp() ?: Clock.now(),
-        updatedAt = this.updatedAt.parseIsoTimestamp() ?: Clock.now()
+        serverId = id,
+        arName = arName,
+        enName = enName,
+        barcode = barcode,
+        purchasePrice = purchasePrice,
+        sellingPrice = sellingPrice,
+        averagePurchasePrice = averagePurchasePrice,
+        categoryId = categoryId,
+        mainUnitId = mainUnitId,
+        subUnitId = subUnitId,
+        subUnitsPerMainUnit = subUnitsPerMainUnit,
+        createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
+        updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now()
     )
 }

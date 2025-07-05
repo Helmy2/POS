@@ -47,3 +47,9 @@ fun Long.toLocalDateTime(): LocalDateTime {
     val zoneId = ZoneId.systemDefault()
     return LocalDateTime.ofInstant(instant, zoneId)
 }
+
+fun Long.toDateString(): String {
+    val instant = Instant.ofEpochMilli(this)
+    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSSXXX", Locale.getDefault())
+    return formatter.format(Date.from(instant))
+}

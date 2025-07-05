@@ -5,15 +5,21 @@ import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 
 class StoreRepositoryImpl(
     private val storeDao: StoreDao,
+    private val supabaseClient: SupabaseClient,
 ) : StoreRepository {
 
     override fun getStores(query: String): Flow<List<Store>> {
@@ -41,12 +47,30 @@ class StoreRepositoryImpl(
     }
 
     override suspend fun saveStore(store: Store): Result<Long> {
-        return runCatching {
-            if (store.name.arName.isNullOrBlank() && store.name.arName.isNullOrBlank()) {
-                return Result.failure(IllegalArgumentException("Arabic and English names must be provided."))
+        return try {
+            val entity = store.toDto()
+
+            val result = if (store.id == Id.new) {
+                supabaseClient.from("stores").insert(entity) {
+                    select()
+                }.decodeSingle<StoreDto>()
+            } else {
+                supabaseClient.from("stores").update(entity) {
+                    filter {
+                        eq("id", entity.id)
+                    }
+                    select()
+                }.decodeSingle<StoreDto>()
             }
 
-            storeDao.insertOrUpdate(store.toEntity())
+            val localId = storeDao.insertOrUpdate(
+                result.toEntity().copy(localId = store.id.local)
+            )
+
+            Result.success(localId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 

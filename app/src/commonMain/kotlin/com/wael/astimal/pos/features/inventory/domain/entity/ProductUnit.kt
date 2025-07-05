@@ -4,7 +4,9 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
 
 
 data class ProductUnit(
@@ -27,5 +29,17 @@ fun ProductUnit.toEntity(): UnitEntity {
         updatedAt = updatedAt,
         arAbbreviation = abbreviation.arName ?: "",
         enAbbreviation = abbreviation.enName ?: ""
+    )
+}
+
+fun ProductUnit.toDto(): UnitDto {
+    return UnitDto(
+        id = id.server ?: 0,
+        arName = name.arName,
+        enName = name.enName ?: "",
+        arAbbreviation = abbreviation.arName,
+        enAbbreviation = abbreviation.enName,
+        createdAt = createdAt.toDateString(),
+        updatedAt = updatedAt.toDateString()
     )
 }
