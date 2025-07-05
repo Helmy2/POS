@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.inventory.domain.repository
 
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import kotlinx.coroutines.flow.Flow
 

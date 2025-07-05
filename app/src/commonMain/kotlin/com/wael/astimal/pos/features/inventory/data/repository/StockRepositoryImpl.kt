@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.features.inventory.data.entity.StoreProductStockEntity
-import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
+import com.wael.astimal.pos.features.inventory.data.local.entity.StoreProductStockEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity

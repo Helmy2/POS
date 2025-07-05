@@ -5,9 +5,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferItemEntity
-import com.wael.astimal.pos.features.inventory.data.entity.StockTransferWithItemsAndDetails
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferWithItemsAndDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao

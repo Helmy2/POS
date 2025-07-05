@@ -177,7 +177,7 @@ fun StockItemCard(
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = "${stringResource(Res.string.current_quantity)}: ${it.quantity} ${
-                            it.product.maximumProductUnit.name.displayName(
+                            it.product.mainProductUnit.name.displayName(
                                 language
                             )
                         }", style = MaterialTheme.typography.bodySmall

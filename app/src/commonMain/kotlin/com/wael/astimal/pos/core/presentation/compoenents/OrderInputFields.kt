@@ -80,32 +80,32 @@ fun OrderItemRow(
             }
         }
 
-        AnimatedVisibility(item.product?.maximumProductUnit != null) {
+        AnimatedVisibility(item.product?.mainProductUnit != null) {
             Text(
                 text = stringResource(
                     Res.string.in_stock_with_args, item.currentStock
-                ) + " " + item.product?.maximumProductUnit?.name?.displayName(language).orEmpty(),
+                ) + " " + item.product?.mainProductUnit?.name?.displayName(language).orEmpty(),
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
 
-        AnimatedVisibility(item.product?.minimumProductUnit != null) {
+        AnimatedVisibility(item.product?.subProductUnit != null) {
             Column {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.unit),
                     items = listOfNotNull(
-                        item.product?.minimumProductUnit, item.product?.maximumProductUnit
+                        item.product?.subProductUnit, item.product?.mainProductUnit
                     ),
                     currentSelection = if (item.isSelectedUnitIsMax) {
-                        item.product?.maximumProductUnit?.name?.displayName(language).orEmpty()
+                        item.product?.mainProductUnit?.name?.displayName(language).orEmpty()
                     } else {
-                        item.product?.minimumProductUnit?.name?.displayName(language).orEmpty()
+                        item.product?.subProductUnit?.name?.displayName(language).orEmpty()
                     },
                     onItemSelected = { unit ->
                         onUpdateItemUnit(
                             item.tempEditorId,
-                            unit.id.local == item.product?.maximumProductUnit?.id?.local
+                            unit.id.local == item.product?.mainProductUnit?.id?.local
                         )
                     },
                     itemToDisplayString = { it.name.displayName(language) },
@@ -116,7 +116,7 @@ fun OrderItemRow(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Label(
-                        item.product?.minimumProductUnit?.name?.displayName(language) ?: "",
+                        item.product?.subProductUnit?.name?.displayName(language) ?: "",
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     TextInputField(
@@ -138,7 +138,7 @@ fun OrderItemRow(
                 }
             }
         }
-        AnimatedVisibility(item.product?.maximumProductUnit != null) {
+        AnimatedVisibility(item.product?.mainProductUnit != null) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -147,7 +147,7 @@ fun OrderItemRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Label(
-                        item.product?.maximumProductUnit?.name?.displayName(language) ?: ""
+                        item.product?.mainProductUnit?.name?.displayName(language) ?: ""
                     )
                     TextInputField(
                         value = item.maxUnitQuantity,

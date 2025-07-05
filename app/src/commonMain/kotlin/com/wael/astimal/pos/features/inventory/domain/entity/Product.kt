@@ -4,7 +4,7 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
 
 
 data class Product(
@@ -14,8 +14,8 @@ data class Product(
     val purchasePrice: Double,
     val sellingPrice: Double,
     val barcode: String,
-    val minimumProductUnit: ProductUnit?,
-    val maximumProductUnit: ProductUnit,
+    val subProductUnit: ProductUnit?,
+    val mainProductUnit: ProductUnit,
     val subUnitsPerMainUnit: Double,
     override val id: Id,
     override val isSynced: Boolean = false,
@@ -32,14 +32,14 @@ fun Product.toEntity(): ProductEntity {
         categoryId = category?.id?.local,
         averagePurchasePrice = averagePrice,
         sellingPrice = sellingPrice,
-        subUnitId = minimumProductUnit?.id?.local,
+        subUnitId = subProductUnit?.id?.local,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt,
         barcode = barcode,
         purchasePrice = purchasePrice,
-        mainUnitId = maximumProductUnit.id.local
+        mainUnitId = mainProductUnit.id.local
     )
 }
 

@@ -244,15 +244,15 @@ fun StockTransferItemRow(
 
         if (product != null) {
             // Show unit selection only if a minimum unit exists
-            AnimatedVisibility(visible = product.minimumProductUnit != null) {
+            AnimatedVisibility(visible = product.subProductUnit != null) {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.unit),
-                    items = listOfNotNull(product.maximumProductUnit, product.minimumProductUnit),
-                    selectedItemId = if (item.isSelectedUnitMax) product.maximumProductUnit.id.local else product.minimumProductUnit?.id?.local,
+                    items = listOfNotNull(product.mainProductUnit, product.subProductUnit),
+                    selectedItemId = if (item.isSelectedUnitMax) product.mainProductUnit.id.local else product.subProductUnit?.id?.local,
                     onItemSelected = { unit ->
                         onEvent(
                             StockTransferContract.Event.ItemUnitChanged(
-                                item.editorId, unit.id.local == product.maximumProductUnit.id.local
+                                item.editorId, unit.id.local == product.mainProductUnit.id.local
                             )
                         )
                     },
@@ -269,8 +269,8 @@ fun StockTransferItemRow(
                         if (item.isSelectedUnitMax) item.currentMaxStock else item.currentMaxStock * product.subUnitsPerMainUnit
                     )
                 } ${
-                    if (item.isSelectedUnitMax) product.maximumProductUnit.name.displayName(language)
-                    else product.minimumProductUnit?.name?.displayName(language)
+                    if (item.isSelectedUnitMax) product.mainProductUnit.name.displayName(language)
+                    else product.subProductUnit?.name?.displayName(language)
                 }",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 8.dp)
@@ -290,15 +290,15 @@ fun StockTransferItemRow(
                             )
                         )
                     },
-                    label = product.maximumProductUnit.name.displayName(language),
+                    label = product.mainProductUnit.name.displayName(language),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
-                    enabled = enabled && (product.minimumProductUnit == null || item.isSelectedUnitMax)
+                    enabled = enabled && (product.subProductUnit == null || item.isSelectedUnitMax)
                 )
 
                 // Min Unit Quantity (only visible if it exists)
                 AnimatedVisibility(
-                    visible = product.minimumProductUnit != null, modifier = Modifier.weight(1f)
+                    visible = product.subProductUnit != null, modifier = Modifier.weight(1f)
                 ) {
                     LabeledTextField(
                         value = item.minUnitQuantity,
@@ -309,7 +309,7 @@ fun StockTransferItemRow(
                                 )
                             )
                         },
-                        label = product.minimumProductUnit!!.name.displayName(language),
+                        label = product.subProductUnit!!.name.displayName(language),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         enabled = enabled && !item.isSelectedUnitMax
                     )

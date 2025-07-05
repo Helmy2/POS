@@ -99,10 +99,9 @@ class UnitViewModel(
                             ?: Clock.now(),
                         updatedAt = Clock.now(),
                         isSynced = false,
-                        // TODO: Add abbreviation
                         abbreviation = LocalizedString(
-                            arName = "",
-                            enName = ""
+                            arName = currentState.inputArAbbreviation,
+                            enName = currentState.inputEnAbbreviation
                         )
                     )
 

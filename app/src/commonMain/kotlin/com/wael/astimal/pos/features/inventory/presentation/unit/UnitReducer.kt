@@ -31,6 +31,8 @@ class UnitReducer : Reducer<UnitContract.State, UnitContract.Event, Nothing> {
                     selectedUnit = event.unit,
                     inputArName = event.unit.name.arName ?: "",
                     inputEnName = event.unit.name.enName ?: "",
+                    inputArAbbreviation = event.unit.abbreviation.arName ?: "",
+                    inputEnAbbreviation = event.unit.abbreviation.enName ?: "",
                     isSearchActive = false
                 ) to null
 
@@ -51,6 +53,12 @@ class UnitReducer : Reducer<UnitContract.State, UnitContract.Event, Nothing> {
 
             is UnitContract.Event.EnNameChanged ->
                 previousState.copy(inputEnName = event.name) to null
+
+            is UnitContract.Event.ArAbbreviationChanged ->
+                previousState.copy(inputArAbbreviation = event.name) to null
+
+            is UnitContract.Event.EnAbbreviationChanged ->
+                previousState.copy(inputEnAbbreviation = event.name) to null
 
             // Events that trigger sagas in ViewModel but don't change state directly
             is UnitContract.Event.BackClicked,

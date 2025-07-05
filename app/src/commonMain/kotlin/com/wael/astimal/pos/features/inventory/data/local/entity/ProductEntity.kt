@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.inventory.data.entity
+package com.wael.astimal.pos.features.inventory.data.local.entity
 
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -64,7 +64,7 @@ data class ProductEntity(
     val subUnitId: Long?,
     val subUnitsPerMainUnit: Double,
 
-) : ItemEntity
+    ) : ItemEntity
 
 /**
  * A data class to hold a ProductEntity and its related parent entities (Category, Units, Store)
@@ -80,7 +80,7 @@ data class ProductWithDetails(
     val mainUnit: UnitEntity?,
 
     @Relation(parentColumn = "subUnitId", entityColumn = "localId")
-    val minimumUnit: UnitEntity?,
+    val subUnit: UnitEntity?,
 )
 
 /**
@@ -93,8 +93,8 @@ fun ProductWithDetails.toDomain(): Product {
         category = category?.toDomain(),
         averagePrice = product.averagePurchasePrice,
         sellingPrice = product.sellingPrice,
-        minimumProductUnit = minimumUnit?.toDomain(),
-        maximumProductUnit = mainUnit!!.toDomain(),
+        subProductUnit = subUnit?.toDomain(),
+        mainProductUnit = mainUnit!!.toDomain(),
         subUnitsPerMainUnit = product.subUnitsPerMainUnit,
         isSynced = product.isSynced,
         createdAt = product.createdAt,

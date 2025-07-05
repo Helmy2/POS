@@ -70,36 +70,36 @@ fun SearchScreen(
 
     val fabActions =
         remember(isNew, canEdit, openNewString, deleteString, createString, updateString) {
-        buildList {
-            if (isNew.not()) {
-                add(
-                    FabAction(
-                        icon = Icons.Default.FileCopy,
-                        label = openNewString,
-                        onClick = onNew
+            buildList {
+                if (isNew.not()) {
+                    add(
+                        FabAction(
+                            icon = Icons.Default.FileCopy,
+                            label = openNewString,
+                            onClick = onNew
+                        )
                     )
-                )
+                    if (canEdit) {
+                        add(
+                            FabAction(
+                                icon = Icons.Default.Delete,
+                                label = deleteString,
+                                onClick = onDelete
+                            )
+                        )
+                    }
+                }
                 if (canEdit) {
                     add(
                         FabAction(
-                            icon = Icons.Default.Delete,
-                            label = deleteString,
-                            onClick = onDelete
+                            icon = Icons.Default.Check,
+                            label = if (isNew) createString else updateString,
+                            onClick = if (isNew) onCreate else onUpdate
                         )
                     )
                 }
             }
-            if (canEdit) {
-                add(
-                    FabAction(
-                        icon = Icons.Default.Check,
-                        label = if (isNew) createString else updateString,
-                        onClick = if (isNew) onCreate else onUpdate
-                    )
-                )
-            }
         }
-    }
 
     BackHandler {
         if (isSearchActive) onSearchActiveChange(false)
@@ -143,7 +143,9 @@ fun SearchScreen(
                 expanded = isSearchActive,
                 onExpandedChange = onSearchActiveChange,
             ) {
-                searchResults()
+                Box(Modifier.padding(8.dp)) {
+                    searchResults()
+                }
             }
         },
         floatingActionButton = {
@@ -166,7 +168,9 @@ fun SearchScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                 ) {
-                    Row {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                    ) {
                         Spacer(Modifier.weight(1f))
                         Text(
                             text = stringResource(Res.string.update_at),

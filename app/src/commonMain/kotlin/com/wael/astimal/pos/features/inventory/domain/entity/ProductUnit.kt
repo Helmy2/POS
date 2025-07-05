@@ -4,7 +4,7 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 
 
 data class ProductUnit(
@@ -14,20 +14,7 @@ data class ProductUnit(
     override val isSynced: Boolean = false,
     override val createdAt: Long,
     override val updatedAt: Long = Clock.now(),
-) : Item {
-    companion object {
-        fun getUnspecifiedUnit(serverId: Long): ProductUnit {
-            return ProductUnit(
-                name = LocalizedString(arName = "Unspecified", enName = "Unspecified"),
-                abbreviation = LocalizedString(arName = "Unspecified", enName = "Unspecified"),
-                id = Id.new.copy(server = serverId),
-                isSynced = false,
-                createdAt = Clock.now(),
-                updatedAt = Clock.now(),
-            )
-        }
-    }
-}
+) : Item
 
 fun ProductUnit.toEntity(): UnitEntity {
     return UnitEntity(

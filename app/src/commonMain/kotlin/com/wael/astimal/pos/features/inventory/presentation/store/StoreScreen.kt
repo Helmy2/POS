@@ -16,10 +16,11 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.inventory.data.entity.StoreType
+import com.wael.astimal.pos.features.inventory.data.local.entity.StoreType
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.address
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.en_name
 import pos.app.generated.resources.store_type
@@ -90,6 +91,18 @@ fun StoreScreen(
                     modifier = Modifier.padding(8.dp)
                 )
             }
+
+            item {
+                LabeledTextField(
+                    value = state.inputAddress,
+                    onValueChange = { onEvent(StoreContract.Event.AddressChanged(it)) },
+                    label = stringResource(Res.string.address),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
             item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.store_type),

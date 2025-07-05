@@ -17,7 +17,9 @@ import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.ar_abbreviation
 import pos.app.generated.resources.ar_name
+import pos.app.generated.resources.en_abbreviation
 import pos.app.generated.resources.en_name
 
 @Composable
@@ -80,9 +82,31 @@ fun UnitScreen(
             }
             item {
                 LabeledTextField(
+                    value = state.inputEnAbbreviation,
+                    onValueChange = { onEvent(UnitContract.Event.EnAbbreviationChanged(it)) },
+                    label = stringResource(Res.string.en_abbreviation),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            item {
+                LabeledTextField(
                     value = state.inputArName,
                     onValueChange = { onEvent(UnitContract.Event.ArNameChanged(it)) },
                     label = stringResource(Res.string.ar_name),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    enabled = state.canUserEdit,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            item {
+                LabeledTextField(
+                    value = state.inputArAbbreviation,
+                    onValueChange = { onEvent(UnitContract.Event.ArAbbreviationChanged(it)) },
+                    label = stringResource(Res.string.ar_abbreviation),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)

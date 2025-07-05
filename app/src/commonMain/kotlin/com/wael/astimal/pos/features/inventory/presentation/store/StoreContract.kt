@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
-import com.wael.astimal.pos.features.inventory.data.entity.StoreType
+import com.wael.astimal.pos.features.inventory.data.local.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -16,6 +16,7 @@ object StoreContract {
         val currentUser: User? = null,
         val inputArName: String = "",
         val inputEnName: String = "",
+        val inputAddress: String = "",
         val inputType: StoreType = StoreType.SUB
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedStore != null
@@ -35,6 +36,7 @@ object StoreContract {
 
         data class ArNameChanged(val name: String) : Event
         data class EnNameChanged(val name: String) : Event
+        data class AddressChanged(val address: String) : Event
         data class TypeChanged(val type: StoreType) : Event
 
         data class UserLoaded(val user: User?) : Event

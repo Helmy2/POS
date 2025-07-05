@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

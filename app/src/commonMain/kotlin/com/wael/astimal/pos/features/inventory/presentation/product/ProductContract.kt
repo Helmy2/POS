@@ -28,12 +28,10 @@ object ProductContract {
         val inputEnName: String = "",
         val inputPurchasePrice: String = "",
         val inputSellingPrice: String = "",
-        val inputOpeningBalance: String = "",
-        val inputSubUnitsPerMainUnit: String = "1.0",
+        val inputSubUnitsPerMainUnit: String = "1",
         val selectedCategoryId: Long? = null,
-        val selectedStoreId: Long? = null,
-        val selectedMaximumUnitId: Long? = null,
-        val selectedMinimumUnitId: Long? = null
+        val selectedMainUnitId: Long? = null,
+        val selectedSubUnitId: Long? = null
 
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedProduct != null
@@ -43,8 +41,7 @@ object ProductContract {
                     inputPurchasePrice.isNotBlank() &&
                     inputSellingPrice.isNotBlank() &&
                     selectedCategoryId != null &&
-                    selectedStoreId != null &&
-                    selectedMaximumUnitId != null
+                    selectedMainUnitId != null
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -62,12 +59,10 @@ object ProductContract {
         data class EnNameChanged(val name: String) : Event
         data class PurchasePriceChanged(val price: String) : Event
         data class SellingPriceChanged(val price: String) : Event
-        data class OpeningBalanceChanged(val qty: String) : Event
         data class SubUnitsPerMainUnitChanged(val value: String) : Event
         data class CategoryIdChanged(val id: Long?) : Event
-        data class StoreIdChanged(val id: Long?) : Event
-        data class MaximumUnitIdChanged(val id: Long?) : Event
-        data class MinimumUnitIdChanged(val id: Long?) : Event
+        data class MainUnitIdChanged(val id: Long?) : Event
+        data class SubUnitIdChanged(val id: Long?) : Event
 
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event

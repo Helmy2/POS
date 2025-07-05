@@ -21,13 +21,11 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.category
 import pos.app.generated.resources.en_name
-import pos.app.generated.resources.max_stock_unit
-import pos.app.generated.resources.min_stock_unit
-import pos.app.generated.resources.min_unit_per_max_unit
-import pos.app.generated.resources.opening_balance_qty
+import pos.app.generated.resources.main_unit
 import pos.app.generated.resources.purchase_price
 import pos.app.generated.resources.selling_price
-import pos.app.generated.resources.store
+import pos.app.generated.resources.sub_unit
+import pos.app.generated.resources.sub_unit_per_main_unit
 
 @Composable
 fun ProductRoute(
@@ -116,16 +114,6 @@ fun ProductScreen(
                 )
             }
             item {
-                LabeledTextField(
-                    value = state.inputOpeningBalance,
-                    onValueChange = { onEvent(ProductContract.Event.OpeningBalanceChanged(it)) },
-                    label = stringResource(Res.string.opening_balance_qty),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state.canUserEdit && !state.isEditing,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.category),
                     items = state.dropdownData.categories,
@@ -139,47 +127,37 @@ fun ProductScreen(
             }
             item {
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.store),
-                    items = state.dropdownData.stores,
-                    selectedItemId = state.selectedStoreId,
-                    onItemSelected = { onEvent(ProductContract.Event.StoreIdChanged(it.id.local)) },
+                    label = stringResource(Res.string.main_unit),
+                    items = state.dropdownData.units,
+                    selectedItemId = state.selectedMainUnitId,
+                    onItemSelected = { onEvent(ProductContract.Event.MainUnitIdChanged(it.id.local)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )
             }
+
             item {
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.max_stock_unit),
+                    label = stringResource(Res.string.sub_unit),
                     items = state.dropdownData.units,
-                    selectedItemId = state.selectedMaximumUnitId,
-                    onItemSelected = { onEvent(ProductContract.Event.MaximumUnitIdChanged(it.id.local)) },
+                    selectedItemId = state.selectedSubUnitId,
+                    onItemSelected = { onEvent(ProductContract.Event.SubUnitIdChanged(it.id.local)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id.local },
+                    canClearSelection = true,
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )
             }
+
             item {
                 LabeledTextField(
                     value = state.inputSubUnitsPerMainUnit,
                     onValueChange = { onEvent(ProductContract.Event.SubUnitsPerMainUnitChanged(it)) },
-                    label = stringResource(Res.string.min_unit_per_max_unit),
+                    label = stringResource(Res.string.sub_unit_per_main_unit),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.min_stock_unit),
-                    items = state.dropdownData.units,
-                    selectedItemId = state.selectedMinimumUnitId,
-                    onItemSelected = { onEvent(ProductContract.Event.MinimumUnitIdChanged(it.id.local)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
-                    canClearSelection = true,
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )

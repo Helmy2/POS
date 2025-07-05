@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.user.data.local.entity
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import com.wael.astimal.pos.features.inventory.data.entity.StoreEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 
 @Entity(
     tableName = "employee_stores",

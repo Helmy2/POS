@@ -131,11 +131,11 @@ class ProductViewModel(
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
                     category = currentState.dropdownData.categories.find { it.id.local == currentState.selectedCategoryId }!!,
-                    maximumProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMaximumUnitId }!!,
-                    minimumProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMinimumUnitId },
+                    mainProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMainUnitId }!!,
+                    subProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedSubUnitId },
                     createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
                     purchasePrice = currentState.inputPurchasePrice.toDouble(),
-                    // handle barcode
+                    // todo handle barcode
                     barcode = "",
                 )
 

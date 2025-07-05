@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.inventory.data.entity
+package com.wael.astimal.pos.features.inventory.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Embedded

@@ -9,9 +9,9 @@ import androidx.room.Relation
 import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetails
-import com.wael.astimal.pos.features.inventory.data.entity.toDomain
+import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.ProductWithDetails
+import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrderItem

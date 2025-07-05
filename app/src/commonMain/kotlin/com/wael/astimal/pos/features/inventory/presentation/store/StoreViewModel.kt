@@ -103,8 +103,7 @@ class StoreViewModel(
                     ),
                     type = currentState.inputType,
                     createdAt = currentState.selectedStore?.createdAt ?: Clock.now(),
-                    // TODO: Add address
-                    address = ""
+                    address = currentState.inputAddress
                 )
 
                 val result = storeRepository.saveStore(storeToSave)

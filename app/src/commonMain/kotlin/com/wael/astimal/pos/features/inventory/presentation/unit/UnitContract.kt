@@ -16,6 +16,8 @@ object UnitContract {
         // Form input state
         val inputArName: String = "",
         val inputEnName: String = "",
+        val inputArAbbreviation: String = "",
+        val inputEnAbbreviation: String = "",
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedUnit != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
@@ -36,6 +38,8 @@ object UnitContract {
         // Form Input Changes
         data class ArNameChanged(val name: String) : Event
         data class EnNameChanged(val name: String) : Event
+        data class ArAbbreviationChanged(val name: String) : Event
+        data class EnAbbreviationChanged(val name: String) : Event
 
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event

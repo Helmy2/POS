@@ -59,6 +59,11 @@
     <string name="name">Name</string>
     <string name="ar_name">Name (Arabic)</string>
     <string name="en_name">Name (English)</string>
+    <string name="en_abbreviation">Abbreviation (English)</string>
+    <string name="ar_abbreviation">Abbreviation (Arabic)</string>
+    <string name="sub_unit">Sub Unit</string>
+    <string name="main_unit">Main Unit</string>
+
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="unit">Unit</string>
@@ -249,7 +254,7 @@
     <string name="error_loading_dashboard_data">Error: Could not load dashboard data.</string>
 
     <string name="error_some_field_are_required">Please fill in all required fields.</string>
-    <string name="min_unit_per_max_unit">Smallest units per largest unit</string>
+    <string name="sub_unit_per_main_unit">Sub units per Main unit</string>
     <string name="error_fetching_units">Error: Could not fetch units.</string>
     <string name="failed_to_load_units">Failed to load units.</string>
     <string name="error_loading_units">Error loading units.</string>

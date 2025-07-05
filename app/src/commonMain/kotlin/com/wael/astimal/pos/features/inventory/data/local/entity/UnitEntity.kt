@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.inventory.data.entity
+package com.wael.astimal.pos.features.inventory.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.Index
@@ -37,11 +37,11 @@ data class UnitEntity(
  */
 fun UnitEntity.toDomain(): ProductUnit {
     return ProductUnit(
-        id = Id(local = this.localId, server = this.serverId),
-        name = LocalizedString(arName = this.arName, enName = this.enName),
-        abbreviation = LocalizedString(arName = this.arAbbreviation, enName = this.enAbbreviation),
-        isSynced = this.isSynced,
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt
+        id = Id(local = localId, server = serverId),
+        name = LocalizedString(arName = arName, enName = enName),
+        abbreviation = LocalizedString(arName = arAbbreviation, enName = enAbbreviation),
+        isSynced = isSynced,
+        createdAt = createdAt,
+        updatedAt = updatedAt
     )
 }

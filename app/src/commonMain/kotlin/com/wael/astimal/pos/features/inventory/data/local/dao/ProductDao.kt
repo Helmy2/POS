@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
-import com.wael.astimal.pos.features.inventory.data.entity.ProductWithDetails
+import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.ProductWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao

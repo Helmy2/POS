@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.remote.dto
 
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.parseIsoTimestamp
-import com.wael.astimal.pos.features.inventory.data.entity.UnitEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -31,13 +31,13 @@ data class UnitDto(
  */
 fun UnitDto.toEntity(): UnitEntity {
     return UnitEntity(
-        serverId = this.id,
+        serverId = id,
         localId = 0L,
-        arName = this.arName ?: "",
-        enName = this.enName,
-        arAbbreviation = this.arAbbreviation,
-        enAbbreviation = this.enAbbreviation,
-        createdAt = this.createdAt.parseIsoTimestamp() ?: Clock.now(),
-        updatedAt = this.updatedAt.parseIsoTimestamp() ?: Clock.now()
+        arName = arName ?: "",
+        enName = enName,
+        arAbbreviation = arAbbreviation,
+        enAbbreviation = enAbbreviation,
+        createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
+        updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now()
     )
 }

@@ -36,14 +36,12 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
                     inputEnName = event.product.name.enName ?: "",
                     inputPurchasePrice = event.product.averagePrice.toString(),
                     inputSellingPrice = event.product.sellingPrice.toString(),
-                    // todo remove inputOpeningBalance
-                    inputOpeningBalance = "",
+
                     inputSubUnitsPerMainUnit = event.product.subUnitsPerMainUnit.toString(),
                     selectedCategoryId = event.product.category?.id?.local,
                     // remove the selected store id
-                    selectedStoreId = 0L,
-                    selectedMaximumUnitId = event.product.maximumProductUnit.id.local,
-                    selectedMinimumUnitId = event.product.minimumProductUnit?.id?.local,
+                    selectedSubUnitId = event.product.subProductUnit?.id?.local,
+                    selectedMainUnitId = event.product.mainProductUnit.id.local,
                     isSearchActive = false
                 ) to null
 
@@ -58,12 +56,10 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
                     inputEnName = "",
                     inputPurchasePrice = "",
                     inputSellingPrice = "",
-                    inputOpeningBalance = "",
                     inputSubUnitsPerMainUnit = "1",
                     selectedCategoryId = null,
-                    selectedStoreId = null,
-                    selectedMaximumUnitId = null,
-                    selectedMinimumUnitId = null
+                    selectedMainUnitId = null,
+                    selectedSubUnitId = null
                 ) to null
 
             // Form input updates
@@ -71,19 +67,17 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
             is ProductContract.Event.EnNameChanged -> previousState.copy(inputEnName = event.name) to null
             is ProductContract.Event.PurchasePriceChanged -> previousState.copy(inputPurchasePrice = event.price) to null
             is ProductContract.Event.SellingPriceChanged -> previousState.copy(inputSellingPrice = event.price) to null
-            is ProductContract.Event.OpeningBalanceChanged -> previousState.copy(inputOpeningBalance = event.qty) to null
             is ProductContract.Event.SubUnitsPerMainUnitChanged -> previousState.copy(
                 inputSubUnitsPerMainUnit = event.value
             ) to null
 
             is ProductContract.Event.CategoryIdChanged -> previousState.copy(selectedCategoryId = event.id) to null
-            is ProductContract.Event.StoreIdChanged -> previousState.copy(selectedStoreId = event.id) to null
-            is ProductContract.Event.MaximumUnitIdChanged -> previousState.copy(
-                selectedMaximumUnitId = event.id
+            is ProductContract.Event.SubUnitIdChanged -> previousState.copy(
+                selectedSubUnitId = event.id
             ) to null
 
-            is ProductContract.Event.MinimumUnitIdChanged -> previousState.copy(
-                selectedMinimumUnitId = event.id
+            is ProductContract.Event.MainUnitIdChanged -> previousState.copy(
+                selectedMainUnitId = event.id
             ) to null
 
             is ProductContract.Event.BackClicked,

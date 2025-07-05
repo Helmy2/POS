@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.remote.dto
 
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.parseIsoTimestamp
-import com.wael.astimal.pos.features.inventory.data.entity.ProductEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

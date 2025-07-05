@@ -1,9 +1,9 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.data.entity.CategoryEntity
-import com.wael.astimal.pos.features.inventory.data.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
+import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
@@ -48,7 +48,9 @@ class CategoryRepositoryImpl(
     override suspend fun syncWithServer(entities: List<CategoryEntity>): Result<Unit> {
         return runCatching {
             val entities = entities.map { dto ->
-                val existingEntity = categoryDao.getCategoryByServerId(dto.localId)
+                val existingEntity = categoryDao.getCategoryByServerId(
+                    dto.serverId ?: throw Exception("Server ID not found")
+                )
                 dto.copy(localId = existingEntity?.localId ?: 0L)
         }
         categoryDao.upsertAll(entities)
