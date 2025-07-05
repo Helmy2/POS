@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -9,7 +8,6 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.toDto
-import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -76,11 +74,7 @@ class StoreRepositoryImpl(
 
     override suspend fun deleteStore(store: Store): Result<Unit> {
         return runCatching {
-            val storeToMarkAsDeleted = store.toEntity().copy(
-                isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
-            )
-            storeDao.insertOrUpdate(storeToMarkAsDeleted)
-            Result.success(Unit)
+            TODO()
         }
     }
 

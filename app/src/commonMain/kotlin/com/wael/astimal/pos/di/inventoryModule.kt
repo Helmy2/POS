@@ -32,7 +32,6 @@ val inventoryModule = module {
     single { get<AppDatabase>().productDao() }
     single { get<AppDatabase>().stockTransferDao() }
     single { get<AppDatabase>().salesOrderDao() }
-    single { get<AppDatabase>().storeProductStockDao() }
     single { get<AppDatabase>().stockAdjustmentDao() }
 
     singleOf(::UnitRepositoryImpl) { bind<UnitRepository>() }

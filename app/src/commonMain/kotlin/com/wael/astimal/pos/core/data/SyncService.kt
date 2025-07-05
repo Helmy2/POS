@@ -5,13 +5,17 @@ import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.fetchAll
 import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
+import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
+import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 
@@ -24,6 +28,7 @@ class SyncServiceImpl(
     private val storeRepository: StoreRepository,
     private val categoryRepository: CategoryRepository,
     private val productRepository: ProductRepository,
+    private val stockRepository: StockRepository,
     private val navigationController: NavigationController
 ) : SyncService {
 
@@ -32,13 +37,21 @@ class SyncServiceImpl(
             // TODO Remove
             userRepository.login(
                 "admin@mail.com", "adminadmin"
-            ).getOrThrow()
-            navigationController.navigate(
-                Destination.Dashboard,
-                popUpToRoute = Destination.Auth,
-            )
+            ).onSuccess {
+                navigationController.navigate(
+                    Destination.Dashboard,
+                    popUpToRoute = Destination.Auth,
+                )
+            }.getOrThrow()
+
 
             userRepository.getCurrentUser() ?: throw Exception("User not authenticated")
+
+            supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
+                userRepository.syncWithServer(
+                    it.map { profileDto -> profileDto.toEntity() },
+                )
+            }
 
             supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
                 storeRepository.syncWithServer(
@@ -72,7 +85,26 @@ class SyncServiceImpl(
                                 )
                             }?.getOrThrow()?.id?.local
                         )
-                    })
+                    },
+                )
+            }
+
+            supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
+                stockRepository.syncWithServer(
+                    it.map { stockAdjustmentDto ->
+                        stockAdjustmentDto.toEntity(
+                            storeId = storeRepository.getStoreBySeverId(
+                                stockAdjustmentDto.storeId
+                            ).getOrThrow().id.local,
+                            productId = productRepository.getProductByServerId(
+                                stockAdjustmentDto.productId
+                            ).getOrThrow().id.local,
+                            userId = userRepository.getUserByServerId(
+                                stockAdjustmentDto.userId
+                            ).getOrThrow()!!.id.local
+                        )
+                    },
+                )
             }
 
             Result.success(Unit)

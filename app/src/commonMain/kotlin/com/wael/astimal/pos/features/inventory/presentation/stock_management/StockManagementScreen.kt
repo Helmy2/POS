@@ -35,16 +35,15 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.adjust_stock
 import pos.app.generated.resources.cancel
-import pos.app.generated.resources.current_quantity
 import pos.app.generated.resources.notes
 import pos.app.generated.resources.product
-import pos.app.generated.resources.products
 import pos.app.generated.resources.quantity_change_by
 import pos.app.generated.resources.reason
 import pos.app.generated.resources.save
@@ -89,9 +88,7 @@ fun StockManagementScreen(
         },
     ) {
         Box(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxSize()
+            modifier = Modifier.padding(8.dp).fillMaxSize()
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -102,13 +99,13 @@ fun StockManagementScreen(
                     verticalItemSpacing = 8.dp,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(
-                        state.productBundles, key = { "${it.store.id.local}" }) { stockItem ->
+                    items(state.stockAdjustments, key = { "${it.id}" }) { stockItem ->
                         StockItemCard(
-                            productBundle = stockItem, onClick = {
+                            stockAdjustment = stockItem,
+                            onClick = {
                                 onEvent(
-                                    StockManagementContract.Event.ShowAdjustmentDialogWithStore(
-                                        stockItem.store
+                                    StockManagementContract.Event.SelectedAdjustmentChanged(
+                                        stockItem
                                     )
                                 )
                             }, enabled = state.canUserEdit
@@ -127,7 +124,8 @@ fun StockManagementScreen(
 
 @Composable
 fun StockItemCard(
-    productBundle: StockManagementContract.ProductBundle, onClick: () -> Unit, enabled: Boolean
+    stockAdjustment: StockAdjustment,
+    onClick: () -> Unit, enabled: Boolean
 ) {
     val language = LocalAppLocale.current
 
@@ -137,13 +135,23 @@ fun StockItemCard(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
-                        text = productBundle.store.name.displayName(language),
+                        text = stockAdjustment.store.name.displayName(language),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(Res.string.products),
+                        text = stockAdjustment.product.name.displayName(language),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = stockAdjustment.quantityChange.toString(),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = stringResource(stockAdjustment.reason.getStringResource()),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -160,27 +168,6 @@ fun StockItemCard(
                         Icons.Default.Edit,
                         contentDescription = stringResource(Res.string.adjust_stock),
                         modifier = Modifier.padding(8.dp)
-                    )
-                }
-            }
-
-            productBundle.quantities.forEach {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
-                ) {
-                    Text(
-                        text = it.product.name.displayName(
-                            language
-                        ), style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = "${stringResource(Res.string.current_quantity)}: ${it.quantity} ${
-                            it.product.mainProductUnit.name.displayName(
-                                language
-                            )
-                        }", style = MaterialTheme.typography.bodySmall
                     )
                 }
             }

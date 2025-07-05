@@ -9,7 +9,6 @@ import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
@@ -17,7 +16,6 @@ import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
-import com.wael.astimal.pos.features.inventory.data.local.entity.StoreProductStockEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
@@ -63,14 +61,13 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         PurchaseProductEntity::class,
         PurchaseReturnEntity::class,
         PurchaseReturnProductEntity::class,
-        StoreProductStockEntity::class,
         SaleCommissionEntity::class,
         EmployeeAccountTransactionEntity::class,
         StockAdjustmentEntity::class,
         ReceivePayVoucherEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 5,
+    version = 7,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -85,7 +82,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun orderReturnDao(): OrderReturnDao
     abstract fun purchaseOrderDao(): PurchaseDao
     abstract fun purchaseReturnDao(): PurchaseReturnDao
-    abstract fun storeProductStockDao(): StoreProductStockDao
     abstract fun employeeFinancesDao(): EmployeeFinancesDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
     abstract fun receivePayVoucherDao(): ReceivePayVoucherDao

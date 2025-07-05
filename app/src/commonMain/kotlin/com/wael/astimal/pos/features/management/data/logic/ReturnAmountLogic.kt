@@ -42,15 +42,16 @@ class ReturnAmountLogic(
         items: List<OrderReturnProductEntity>,
         isReverting: Boolean
     ) {
-        val employeeId =
-            returnEntity.employeeLocalId
-        val storeId = employeeDao.getStoreIdForEmployee(employeeId)
-            ?: throw Exception("Could not find a store for the employee.")
-
-        items.forEach { item ->
-            val quantityChange = if (isReverting) -item.quantity else item.quantity
-            stockRepository.adjustStock(storeId, item.productLocalId, quantityChange)
-        }
+//        val employeeId =
+//            returnEntity.employeeLocalId
+//        val storeId = employeeDao.getStoreIdForEmployee(employeeId)
+//            ?: throw Exception("Could not find a store for the employee.")
+//
+//        items.forEach { item ->
+//            val quantityChange = if (isReverting) -item.quantity else item.quantity
+//            stockRepository.adjustStock(storeId, item.productLocalId, quantityChange)
+//        }
+        TODO()
     }
 
     private suspend fun handleCommissions(returnEntity: OrderReturnEntity, returnId: Long) {

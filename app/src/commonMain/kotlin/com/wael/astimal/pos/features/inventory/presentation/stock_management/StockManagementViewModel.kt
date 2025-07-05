@@ -15,6 +15,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -26,7 +27,6 @@ import pos.app.generated.resources.error_missing_data
 import pos.app.generated.resources.error_updating_stock
 import pos.app.generated.resources.insufficient_stock
 import pos.app.generated.resources.invalid_quantity
-import pos.app.generated.resources.product_not_found_in_store
 import pos.app.generated.resources.stock_updated_successfully
 
 class StockManagementViewModel(
@@ -60,6 +60,7 @@ class StockManagementViewModel(
                     navigationController.navigateBack()
                 }
             }
+
             else -> setState(event)
         }
     }
@@ -94,10 +95,9 @@ class StockManagementViewModel(
             query = state.value.query, selectedStoreId = null
         ).catch {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_loading_stock)))
-            setState(StockManagementContract.Event.StocksLoaded(emptyList())) // Clear list on error
-
+            setState(StockManagementContract.Event.StocksAdjustmentLoaded(emptyList())) // Clear list on error
         }.onEach {
-            setState(StockManagementContract.Event.StocksLoaded(it))
+            setState(StockManagementContract.Event.StocksAdjustmentLoaded(it))
         }.launchIn(viewModelScope)
     }
 
@@ -119,19 +119,18 @@ class StockManagementViewModel(
                 return@launch
             }
 
-            state.value.productBundles.first { it.store == adjustmentStore }.quantities.firstOrNull { it.product == adjustmentProduct }
-                ?.let { productQuantity ->
-                    if (productQuantity.quantity + quantityChange < 0) {
-                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.insufficient_stock)))
-                        return@launch
-                    }
-                } ?: run {
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.product_not_found_in_store)))
+            val currentQuantity = stockRepository.getStockQuantityFlow(
+                adjustmentStore.id.local,
+                adjustmentProduct.id.local
+            ).first()
+
+            if (currentQuantity + quantityChange < 0) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.insufficient_stock)))
                 return@launch
             }
 
             val adjustment = StockAdjustment(
-                id = Id.new,
+                id = state.value.adjustmentId ?: Id.new,
                 store = adjustmentStore,
                 product = adjustmentProduct,
                 user = currentUser,

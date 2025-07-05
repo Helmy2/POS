@@ -17,20 +17,10 @@ class StockManagementReducer :
 
             is StockManagementContract.Event.StoresLoaded -> previousState.copy(stores = event.stores) to null
 
-            is StockManagementContract.Event.StocksLoaded -> previousState.copy(
+            is StockManagementContract.Event.StocksAdjustmentLoaded -> previousState.copy(
                 isLoading = false,
-                productBundles = event.stocks.filter { it.quantity != 0.0 }.groupBy {
-                    it.store
-                }.map {
-                    StockManagementContract.ProductBundle(
-                        store = it.key,
-                        quantities = it.value.map { stock ->
-                            StockManagementContract.ProductQuantity(
-                                product = stock.product, quantity = stock.quantity
-                            )
-                        },
-                    )
-                }) to null
+                stockAdjustments = event.stockAdjustments
+            ) to null
 
             is StockManagementContract.Event.ProductsLoaded -> previousState.copy(products = event.products) to null
 
@@ -43,13 +33,15 @@ class StockManagementReducer :
                 adjustmentProduct = null
             ) to null
 
-            is StockManagementContract.Event.ShowAdjustmentDialogWithStore -> previousState.copy(
+            is StockManagementContract.Event.SelectedAdjustmentChanged -> previousState.copy(
                 showAdjustmentDialog = true,
-                adjustmentQuantityChange = "",
-                adjustmentReason = StockAdjustmentReason.RECOUNT,
-                adjustmentNotes = "",
-                adjustmentStore = event.store,
-                adjustmentProduct = null
+                adjustmentId = event.adjustment?.id,
+                adjustmentStore = event.adjustment?.store,
+                adjustmentProduct = event.adjustment?.product,
+                adjustmentNotes = event.adjustment?.notes ?: "",
+                adjustmentReason = event.adjustment?.reason ?: StockAdjustmentReason.RECOUNT,
+                adjustmentQuantityChange = event.adjustment?.quantityChange.toString(),
+                isLoading = false
             ) to null
 
             is StockManagementContract.Event.DismissAdjustmentDialog, is StockManagementContract.Event.AdjustmentSucceeded -> previousState.copy(

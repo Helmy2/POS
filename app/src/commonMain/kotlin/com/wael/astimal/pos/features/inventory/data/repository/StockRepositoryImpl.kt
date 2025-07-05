@@ -1,84 +1,46 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
-import com.wael.astimal.pos.features.inventory.data.local.dao.StoreProductStockDao
-import com.wael.astimal.pos.features.inventory.data.local.entity.StoreProductStockEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
-import com.wael.astimal.pos.features.inventory.domain.entity.StoreStock
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 
 class StockRepositoryImpl(
-    private val stockDao: StoreProductStockDao,
     private val stockAdjustmentDao: StockAdjustmentDao,
-    private val productDao: ProductDao
 ) : StockRepository {
 
     override fun getStoreStocks(
         query: String,
         selectedStoreId: Long?
-    ): Flow<List<StoreStock>> {
-        return stockDao.getStoreStocks().map { list ->
-            list.map { it.toDomain() }.filter {
-                val storeCondition =
-                    selectedStoreId == null || it.store.id.local == selectedStoreId
-                val queryCondition =
-                    query.isBlank() || it.product.name.contains(query) || it.store.name.contains(
-                        query
-                    )
-                storeCondition && queryCondition
-            }
+    ): Flow<List<StockAdjustment>> {
+        return stockAdjustmentDao.getAll().map { entities ->
+            entities.map { it.toDomain() }
         }
     }
 
     override fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Double> {
-        return stockDao.getStockQuantity(storeId, productId).map { it ?: 0.0 }
-    }
-
-    override suspend fun adjustStock(
-        storeId: Long,
-        productId: Long,
-        transactionQuantity: Double
-    ) {
-        val currentStock =
-            stockDao.getStockByStoreAndProduct(storeId, productId).map { it?.quantity ?: 0.0 }
-                .first()
-        val newQuantity = currentStock + transactionQuantity
-
-        if (newQuantity < 0) {
-            val product = productDao.getProductByLocalId(productId)
-            throw IllegalStateException("Stock level for ${product?.enName ?: "Product"} cannot be negative. Current stock is $currentStock, attempted change is $transactionQuantity.")
-        }
-
-        stockDao.insertOrUpdateStock(
-            StoreProductStockEntity(
-                storeLocalId = storeId,
-                productLocalId = productId,
-                quantity = newQuantity
-            )
-        )
+        return stockAdjustmentDao.getStockQuantity(storeId, productId).map { it ?: 0.0 }
     }
 
     override suspend fun addStockAdjustment(adjustment: StockAdjustment) {
         stockAdjustmentDao.insert(adjustment.toEntity())
+    }
 
-        val currentStock = stockDao.getStockByStoreAndProduct(
-            adjustment.store.id.local, adjustment.product.id.local
-        ).map { it?.quantity ?: 0.0 }.first()
-        val newQuantity = currentStock + adjustment.quantityChange
-
-        stockDao.insertOrUpdateStock(
-            StoreProductStockEntity(
-                storeLocalId = adjustment.store.id.local,
-                productLocalId = adjustment.product.id.local,
-                quantity = newQuantity
-            )
-        )
+    override suspend fun syncWithServer(adjustments: List<StockAdjustmentEntity>): Result<Unit> {
+        return runCatching {
+            adjustments.map {
+                val existingEntity = stockAdjustmentDao.getAdjustmentByServerId(
+                    it.serverId ?: throw Exception("Server ID not found")
+                )
+                it.copy(localId = existingEntity?.localId ?: 0L)
+            }.also {
+                stockAdjustmentDao.upsertAll(it)
+            }
+        }
     }
 }

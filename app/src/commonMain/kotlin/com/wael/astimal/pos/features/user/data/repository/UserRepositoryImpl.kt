@@ -106,4 +106,23 @@ class UserRepositoryImpl(
             userDao.assignStoreToEmployee(EmployeeStoreEntity(userId, storeId))
         }
     }
+
+    override suspend fun getUserByServerId(id: String): Result<User?> {
+        return runCatching {
+            userDao.getUserBySupabaseId(id).first()?.toDomain()
+        }
+    }
+
+    override suspend fun syncWithServer(users: List<UserEntity>): Result<Unit> {
+        return runCatching {
+            users.map {
+                val existingEntity = userDao.getUserBySupabaseId(
+                    it.supabaseId ?: throw Exception("Supabase ID not found")
+                ).first()
+                it.copy(id = existingEntity?.id ?: 0L)
+            }.also {
+                userDao.upsertAll(it)
+            }
+        }
+    }
 }

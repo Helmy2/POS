@@ -37,12 +37,13 @@ class OrderAmountLogic(
     private suspend fun handleStockUpdate(
         employeeId: Long, items: List<OrderProductEntity>, isReturn: Boolean
     ) {
-        val storeId = employeeDao.getStoreIdForEmployee(employeeId)
-            ?: throw Exception("Could not find a store for the employee.")
-        items.forEach { item ->
-            val quantityChange = if (isReturn) item.quantity else -item.quantity
-            stockRepository.adjustStock(storeId, item.productLocalId, quantityChange)
-        }
+//        val storeId = employeeDao.getStoreIdForEmployee(employeeId)
+//            ?: throw Exception("Could not find a store for the employee.")
+//        items.forEach { item ->
+//            val quantityChange = if (isReturn) item.quantity else -item.quantity
+//            stockRepository.adjustStock(storeId, item.productLocalId, quantityChange)
+//        }
+        TODO()
     }
 
     private suspend fun handleCommissions(order: OrderEntity, orderId: Long) {

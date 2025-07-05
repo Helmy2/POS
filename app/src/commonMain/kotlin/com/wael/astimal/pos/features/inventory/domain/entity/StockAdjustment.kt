@@ -27,13 +27,13 @@ data class StockAdjustment(
 ) : Item
 
 enum class StockAdjustmentReason {
-    INITIAL_COUNT, RECOUNT, DAMAGED_GOODS, THEFT, OTHER;
+    OPENING_BALANCE, RECOUNT, DAMAGE, THEFT, OTHER;
 
     fun getStringResource(): StringResource {
         return when (this) {
-            INITIAL_COUNT -> Res.string.stock_adjustment_reason_initial_count
+            OPENING_BALANCE -> Res.string.stock_adjustment_reason_initial_count
             RECOUNT -> Res.string.stock_adjustment_reason_recount
-            DAMAGED_GOODS -> Res.string.stock_adjustment_reason_damaged_goods
+            DAMAGE -> Res.string.stock_adjustment_reason_damaged_goods
             THEFT -> Res.string.stock_adjustment_reason_theft
             OTHER -> Res.string.stock_adjustment_reason_other
         }
