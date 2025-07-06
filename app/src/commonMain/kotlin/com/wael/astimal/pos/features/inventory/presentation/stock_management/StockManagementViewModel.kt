@@ -53,7 +53,7 @@ class StockManagementViewModel(
                 loadStocks()
             }
 
-            is StockManagementContract.Event.SaveAdjustmentClicked -> saveStockAdjustment()
+            is StockManagementContract.Event.SaveClicked -> saveStockAdjustment()
 
             is StockManagementContract.Event.NavigateBack -> {
                 viewModelScope.launch {
@@ -110,7 +110,6 @@ class StockManagementViewModel(
 
             if (adjustmentStore == null || adjustmentProduct == null || currentUser == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_missing_data)))
-                setState(StockManagementContract.Event.DismissAdjustmentDialog)
                 return@launch
             }
 
@@ -130,7 +129,7 @@ class StockManagementViewModel(
             }
 
             val adjustment = StockAdjustment(
-                id = state.value.adjustmentId ?: Id.new,
+                id = state.value.selectedAdjustment?.id ?: Id.new,
                 store = adjustmentStore,
                 product = adjustmentProduct,
                 user = currentUser,
@@ -152,7 +151,7 @@ class StockManagementViewModel(
                         )
                     )
                 )
-                setState(StockManagementContract.Event.DismissAdjustmentDialog)
+                setState(StockManagementContract.Event.AdjustmentFailed)
             }
         }
     }

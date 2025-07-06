@@ -18,34 +18,20 @@ class StockManagementReducer :
             is StockManagementContract.Event.StoresLoaded -> previousState.copy(stores = event.stores) to null
 
             is StockManagementContract.Event.StocksAdjustmentLoaded -> previousState.copy(
-                isLoading = false,
-                stockAdjustments = event.stockAdjustments
+                isLoading = false, stockAdjustments = event.stockAdjustments
             ) to null
 
             is StockManagementContract.Event.ProductsLoaded -> previousState.copy(products = event.products) to null
 
-            is StockManagementContract.Event.ShowAdjustmentDialog -> previousState.copy(
-                showAdjustmentDialog = true,
-                adjustmentQuantityChange = "",
-                adjustmentReason = StockAdjustmentReason.RECOUNT,
-                adjustmentNotes = "",
-                adjustmentStore = null,
-                adjustmentProduct = null
-            ) to null
-
             is StockManagementContract.Event.SelectedAdjustmentChanged -> previousState.copy(
-                showAdjustmentDialog = true,
-                adjustmentId = event.adjustment?.id,
+                isSearchActive = false,
+                selectedAdjustment = event.adjustment,
                 adjustmentStore = event.adjustment?.store,
                 adjustmentProduct = event.adjustment?.product,
                 adjustmentNotes = event.adjustment?.notes ?: "",
                 adjustmentReason = event.adjustment?.reason ?: StockAdjustmentReason.RECOUNT,
                 adjustmentQuantityChange = event.adjustment?.quantityChange.toString(),
                 isLoading = false
-            ) to null
-
-            is StockManagementContract.Event.DismissAdjustmentDialog, is StockManagementContract.Event.AdjustmentSucceeded -> previousState.copy(
-                showAdjustmentDialog = false
             ) to null
 
             is StockManagementContract.Event.AdjustmentQuantityChanged -> previousState.copy(
@@ -68,8 +54,21 @@ class StockManagementReducer :
                 adjustmentStore = event.store
             ) to null
 
-            is StockManagementContract.Event.SaveAdjustmentClicked, StockManagementContract.Event.NavigateBack -> previousState to null
+            is StockManagementContract.Event.SearchActiveChanged -> previousState.copy(
+                isSearchActive = event.isActive
+            ) to null
 
+            is StockManagementContract.Event.NewStockAdjustmentClicked -> previousState.copy(
+                isSearchActive = false,
+                adjustmentQuantityChange = "",
+                adjustmentReason = StockAdjustmentReason.RECOUNT,
+                adjustmentNotes = "",
+                adjustmentStore = null,
+                adjustmentProduct = null,
+                selectedAdjustment = null
+            ) to null
+
+            is StockManagementContract.Event.SaveClicked, is StockManagementContract.Event.DeleteClicked, is StockManagementContract.Event.NavigateBack, is StockManagementContract.Event.AdjustmentSucceeded, is StockManagementContract.Event.AdjustmentFailed -> previousState to null
         }
     }
 }
