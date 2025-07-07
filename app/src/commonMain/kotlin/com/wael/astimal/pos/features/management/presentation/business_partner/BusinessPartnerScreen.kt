@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.management.presentation.business_partner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +30,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
@@ -52,8 +52,6 @@ import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
-import com.wael.astimal.pos.core.presentation.theme.CreditColor
-import com.wael.astimal.pos.core.presentation.theme.DebitColor
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
@@ -62,27 +60,19 @@ import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_partner
 import pos.app.generated.resources.address
-import pos.app.generated.resources.address_placeholder
+import pos.app.generated.resources.address_with_args
 import pos.app.generated.resources.ar_name
-import pos.app.generated.resources.balance_summary_settled
 import pos.app.generated.resources.cancel
-import pos.app.generated.resources.client
-import pos.app.generated.resources.client_and_supplier
 import pos.app.generated.resources.confirm_delete
 import pos.app.generated.resources.confirm_delete_partner_message
 import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit
 import pos.app.generated.resources.edit_partner
 import pos.app.generated.resources.en_name
-import pos.app.generated.resources.opening_balance
-import pos.app.generated.resources.opining_balance_negative_with_args
-import pos.app.generated.resources.opining_balance_positive_with_args
 import pos.app.generated.resources.partner_type
 import pos.app.generated.resources.phone
 import pos.app.generated.resources.phone_placeholder
 import pos.app.generated.resources.save
-import pos.app.generated.resources.supplier
-import kotlin.math.abs
 
 
 @Composable
@@ -142,9 +132,7 @@ fun BusinessPartnerScreen(
             Dialog(onDismissRequest = { onEvent(BusinessPartnerContract.Event.DismissDialog) }) {
                 Card {
                     BusinessPartnerDetailView(
-                        partner = dialog.partner,
-                        isAdmin = state.canUserEdit,
-                        onEvent = onEvent
+                        partner = dialog.partner, isAdmin = state.canUserEdit, onEvent = onEvent
                     )
                 }
             }
@@ -162,8 +150,7 @@ fun BusinessPartnerScreen(
                             partner,
                         )
                     )
-                }
-            )
+                })
         }
 
         is BusinessPartnerContract.Dialog.None -> { /* Do nothing */
@@ -204,8 +191,7 @@ fun BusinessPartnerDetailView(
                 TextButton(onClick = {
                     showDeleteConfirmDialog = false
                 }) { Text(stringResource(Res.string.cancel)) }
-            }
-        )
+            })
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -214,19 +200,14 @@ fun BusinessPartnerDetailView(
             PartnerTypeChip(partnerType = partner.type)
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(stringResource(Res.string.address_placeholder, partner.address))
+        Text(stringResource(Res.string.address_with_args, partner.address))
         Text(stringResource(Res.string.phone_placeholder, partner.phone))
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- CHANGE: Unified Balance Display ---
-        BalanceText(partner = partner)
-
         AnimatedVisibility(visible = isAdmin) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 IconButton(onClick = { showDeleteConfirmDialog = true }) {
@@ -258,34 +239,25 @@ fun BusinessPartnerList(
     modifier: Modifier = Modifier
 ) {
     val language = LocalAppLocale.current
-    LazyVerticalGrid(modifier = modifier, columns = GridCells.Adaptive(250.dp)) {
+    LazyVerticalGrid(
+        modifier = modifier.padding(top = 16.dp), columns = GridCells.Adaptive(250.dp)
+    ) {
         items(partners, key = { it.id.local }) { partner ->
-            Card(modifier = Modifier.clickable { onPartnerClick(partner) }) {
-                ListItem(
-                    headlineContent = {
-                        Column {
-                            Text(
-                                partner.name.displayName(language),
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
-                            )
-                            PartnerTypeChip(partnerType = partner.type)
-                        }
-                    },
-                    supportingContent = {
-                        Column {
-                            partner.address.let {
-                                Text(
-                                    text = it,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(Modifier.height(4.dp))
-                            }
-                            BalanceText(partner = partner)
-                        }
-                    },
-                )
+            Box(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Card(modifier = Modifier.clickable { onPartnerClick(partner) }.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp)
+                    ) {
+                        Text(
+                            partner.name.displayName(language),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                        PartnerTypeChip(partnerType = partner.type)
+                    }
+                }
             }
         }
     }
@@ -304,7 +276,6 @@ fun BusinessPartnerEditDialog(
     var address by remember(partner.address) { mutableStateOf(partner.address) }
     var phone by remember(partner.phone) { mutableStateOf(partner.phone) }
 
-    var openingBalance by remember { mutableStateOf("0.0") }
     val isNewPartner = partner.id == Id.new
     var type by remember {
         mutableStateOf(partner.type)
@@ -313,15 +284,12 @@ fun BusinessPartnerEditDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())
             ) {
                 Text(
                     text = if (isNewPartner) stringResource(Res.string.add_partner) else stringResource(
                         Res.string.edit_partner
-                    ),
-                    style = MaterialTheme.typography.headlineSmall
+                    ), style = MaterialTheme.typography.headlineSmall
                 )
 
                 // Form Fields
@@ -335,15 +303,6 @@ fun BusinessPartnerEditDialog(
                     value = arName,
                     onValueChange = { arName = it },
                     label = stringResource(Res.string.ar_name),
-                    enabled = canEdit
-                )
-                LabeledTextField(
-                    value = openingBalance,
-                    onValueChange = { openingBalance = it },
-                    label = stringResource(Res.string.opening_balance),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone
-                    ),
                     enabled = canEdit
                 )
 
@@ -362,18 +321,6 @@ fun BusinessPartnerEditDialog(
                     ),
                     enabled = canEdit
                 )
-
-                AnimatedVisibility(visible = isNewPartner) {
-                    Column {
-                        LabeledTextField(
-                            value = openingBalance,
-                            onValueChange = { openingBalance = it },
-                            label = stringResource(Res.string.opening_balance),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            enabled = canEdit
-                        )
-                    }
-                }
             }
 
             CustomExposedDropdownMenu(
@@ -384,20 +331,16 @@ fun BusinessPartnerEditDialog(
                 itemToDisplayString = { it.name },
                 onItemSelected = {
                     type = it
-                }, modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    onClick = onDismiss,
-                    enabled = !isSaving
+                    onClick = onDismiss, enabled = !isSaving
                 ) { Text(stringResource(Res.string.cancel)) }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
@@ -407,13 +350,11 @@ fun BusinessPartnerEditDialog(
                             address = address,
                             phone = phone,
                             type = type,
-                            openingBalance = openingBalance.toDoubleOrNull() ?: 0.0
                         )
                         onSave(
                             updatedPartner,
                         )
-                    },
-                    enabled = !isSaving && (enName.isNotBlank() || arName.isNotBlank())
+                    }, enabled = !isSaving && (enName.isNotBlank() || arName.isNotBlank())
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(
@@ -432,39 +373,14 @@ fun BusinessPartnerEditDialog(
 
 @Composable
 fun PartnerTypeChip(partnerType: PartnerType) {
-    val text = when (partnerType) {
-        PartnerType.CLIENT -> stringResource(Res.string.client)
-        PartnerType.SUPPLIER -> stringResource(Res.string.supplier)
-        else -> stringResource(Res.string.client_and_supplier)
-    }
-    SuggestionChip(onClick = {}, label = { Text(text, maxLines = 1) })
-}
-
-
-@Composable
-fun BalanceText(partner: BusinessPartner) {
-    val balance = partner.openingBalance
-
-    val (balanceText, balanceColor) = when {
-        // They owe you (negative balance)
-        balance > 0.01 -> stringResource(
-            Res.string.opining_balance_negative_with_args,
-            "%.2f".format(abs(balance))
-        ) to DebitColor
-
-        // You owe them (positive balance)
-        balance < -0.01 -> stringResource(
-            Res.string.opining_balance_positive_with_args,
-            "%.2f".format(balance * -1)
-        ) to CreditColor
-
-        // Settled
-        else -> stringResource(Res.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
-    }
-    Text(
-        text = balanceText,
-        fontWeight = FontWeight.SemiBold,
-        color = balanceColor,
-        style = MaterialTheme.typography.bodyMedium
+    SuggestionChip(
+        onClick = {},
+        label = {
+            Text(
+                stringResource(
+                    partnerType.getStringRes()
+                ), maxLines = 1
+            )
+        },
     )
 }

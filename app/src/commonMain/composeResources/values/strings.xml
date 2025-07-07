@@ -90,7 +90,7 @@
     <string name="phones">Phones:</string>
     <string name="address_with_args">Address: %1$s</string>
     <string name="address">Address</string>
-    <string name="address_placeholder">Address: %s</string>
+    <string name="address_placeholder">Address: %1$s</string>
     <string name="rate">Rate</string>
     <string name="quantity">Quantity</string>
     <string name="qty">Qty</string>
@@ -125,11 +125,11 @@
     <string name="stock_adjustment_reason_other">Other</string>
     <string name="filter_by_store">Filter by Store</string>
     <string name="search_products">Search Products</string>
-    <string name="in_stock_with_args">In Stock: %s</string>
+    <string name="in_stock_with_args">In Stock: %1$s</string>
     <string name="not_enough_stock">Not enough stock available.</string>
     <string name="insufficient_stock">Insufficient stock for the requested quantity.</string>
     <string name="product_not_found_in_store">Product not found in the selected store.</string>
-    <string name="not_enough_stock_for">Not enough stock for: %s</string>
+    <string name="not_enough_stock_for">Not enough stock for: %1$s</string>
     <string name="sales">Sales</string>
     <string name="items">Items</string>
     <string name="add_item">Add Item</string>
@@ -202,18 +202,18 @@
     <string name="withdrawal">Withdrawal</string>
     <string name="sale_return_commission">Sales Return Commission</string>
     <string name="sale_commission">Sales Commission</string>
-    <string name="for_invoice">For Invoice #%s</string>
+    <string name="for_invoice">For Invoice #%1$s</string>
     <string name="client_info">Client Info</string>
     <string name="supplier_info">Supplier Info</string>
     <string name="debt">Debt: %1$s</string>
-    <string name="indebtedness">Indebtedness: %s</string>
+    <string name="indebtedness">Indebtedness: %1$s</string>
     <string name="previous_debt">Previous Debt</string>
     <string name="debt_address">Debt: %1$s | Address: %2$s</string>
     <string name="indebtedness_address">Indebtedness: %1$s | Address: %2$s</string>
-    <string name="net_balance_positive">Net Balance (You Owe): %s</string>
-    <string name="opining_balance_positive_with_args">Opining Balance (You Owe): %s</string>
-    <string name="net_balance_negative">Net Balance (Owed to You): %s</string>
-    <string name="opining_balance_negative_with_args">Opining Balance (Owed to You): %s</string>
+    <string name="net_balance_positive">Net Balance (You Owe): %1$s</string>
+    <string name="opining_balance_positive_with_args">Opining Balance (You Owe): %1$s</string>
+    <string name="net_balance_negative">Net Balance (Owed to You): %1$s</string>
+    <string name="opining_balance_negative_with_args">Opining Balance (Owed to You): %1$s</string>
     <string name="error_searching_clients">Error: Could not search for clients.</string>
     <string name="error_searching_business_partners">Error: Could not search for business partners.</string>
     <string name="partner_saved_successfully">Partner saved successfully.</string>
@@ -221,7 +221,7 @@
     <string name="partner_deleted_successfully">Partner deleted successfully.</string>
     <string name="error_deleting_partner">Error: Could not delete partner.</string>
     <string name="confirm_delete">Confirm Deletion</string>
-    <string name="confirm_delete_partner_message">Are you sure you want to delete %s? This action cannot be undone.</string>
+    <string name="confirm_delete_partner_message">Are you sure you want to delete %1$s? This action cannot be undone.</string>
 
     <string name="account_statement">Account Statement</string>
     <string name="error_loading_partner_details">Error: Could not load partner details.</string>
@@ -240,8 +240,8 @@
     <string name="sale_return">Sale Return</string>
     <string name="payment_received">Payment Received</string>
     <string name="payment_sent">Payment Sent</string>
-    <string name="balance_summary_positive">Final Balance: You owe this partner %s.</string>
-    <string name="balance_summary_negative">Final Balance: This partner owes you %s.</string>
+    <string name="balance_summary_positive">Final Balance: You owe this partner %1$s.</string>
+    <string name="balance_summary_negative">Final Balance: This partner owes you %1$s.</string>
     <string name="balance_summary_settled">The account is settled.</string>
 
     <string name="total_revenue">Total Revenue</string>
@@ -337,7 +337,7 @@
     <string name="unknown_name">Unknown Name</string>
     <string name="open_new">Open new</string>
     <string name="back_button_icon">Back button icon</string>
-    <string name="phone_placeholder">Phone: %s</string>
+    <string name="phone_placeholder">Phone: %1$s</string>
     <string name="phone">phone</string>
     <string name="opening_debt">opening_debt</string>
     <string name="opening_indebtedness">opening_indebtedness</string>

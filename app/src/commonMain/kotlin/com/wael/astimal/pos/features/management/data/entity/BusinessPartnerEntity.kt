@@ -28,7 +28,8 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
     indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
 data class BusinessPartnerEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    override val localId: Long = 0L,
     override val serverId: Long?,
     override var isSynced: Boolean = false,
     override val createdAt: Long = Clock.now(),
@@ -39,7 +40,6 @@ data class BusinessPartnerEntity(
     val enName: String,
     val phone: String,
     val address: String,
-    val openingBalance: Double,
     val type: PartnerType,
     val responsibleEmployeeLocalId: Long,
 ) : ItemEntity
@@ -61,7 +61,6 @@ fun BusinessPartnerWithDetailsEntity.toDomain(): BusinessPartner {
         phone = businessPartner.phone,
         type = businessPartner.type,
         isSynced = businessPartner.isSynced,
-        openingBalance = businessPartner.openingBalance,
         responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
         createdAt = businessPartner.createdAt,
         updatedAt = businessPartner.updatedAt,

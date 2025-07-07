@@ -85,9 +85,9 @@ class ReceivePayVoucherViewModel(
                 voucherRepository.getVouchers()
             ) { partners, vouchers ->
                 val clients =
-                    partners.filter { it.type == PartnerType.CLIENT || it.type == PartnerType.CLIENT_AND_CAN_BE_SUPPLIER }
+                    partners.filter { it.type == PartnerType.CLIENT || it.type == PartnerType.Both }
                 val suppliers =
-                    partners.filter { it.type == PartnerType.SUPPLIER || it.type == PartnerType.SUPPLIER_AND_CAN_BE_CLIENT }
+                    partners.filter { it.type == PartnerType.SUPPLIER || it.type == PartnerType.Both }
 
                 setState(
                     ReceivePayVoucherContract.Event.DropdownDataLoaded(

@@ -72,7 +72,6 @@ class BusinessPartnerReducer :
             phone = "",
             responsibleEmployee = currentUser,
             type = PartnerType.CLIENT,
-            openingBalance = 0.0,
             isSynced = false,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),

@@ -1,21 +1,26 @@
 package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
+import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
+import com.wael.astimal.pos.features.management.domain.entity.toDto
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class BusinessPartnerRepositoryImpl(
     private val partnerDao: BusinessPartnerDao,
+    private val supabaseClient: SupabaseClient,
+    private val userRepository: UserRepository,
     private val partnerTransactionDao: PartnerTransactionDao,
 ) : BusinessPartnerRepository {
 
@@ -43,36 +48,34 @@ class BusinessPartnerRepositoryImpl(
 
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
-            saveBusinessPartner(partner.toEntity())
+            val entity = partner.toDto()
+
+            val result = if (partner.id == Id.new) {
+                supabaseClient.from("business_partners").insert(entity) {
+                    select()
+                }.decodeSingle<BusinessPartnerDto>()
+            } else {
+                println(entity)
+                supabaseClient.from("business_partners").update(entity) {
+                    filter {
+                        eq("id", entity.id)
+                    }
+                    select()
+                }.decodeSingle<BusinessPartnerDto>()
+            }
+
+            partnerDao.insertOrUpdate(
+                result.toEntity(
+                    responsibleId = userRepository.getUserByServerId(
+                        result.responsibleId
+                    ).getOrThrow()!!.id.local
+                ).copy(localId = partner.id.local)
+            )
+
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
-        }
-    }
-
-    private suspend fun saveBusinessPartner(
-        partner: BusinessPartnerEntity
-    ) {
-        if (partner.localId == Id.new.local) {
-            val clientId = partnerDao.insertOrUpdate(partner)
-
-            createOpeningBalanceTransaction(
-                partnerLocalId = clientId,
-                debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
-                credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
-            )
-        } else {
-            partnerTransactionDao.deleteTransactionsByPartner(
-                partner.localId,
-                TransactionType.OPENING_BALANCE
-            )
-            val clientId = partnerDao.insertOrUpdate(partner)
-
-            createOpeningBalanceTransaction(
-                partnerLocalId = clientId,
-                debit = (partner.openingBalance.takeIf { it > 0 } ?: 0.0),
-                credit = (partner.openingBalance.takeIf { it < 0 } ?: 0.0) * -1
-            )
         }
     }
 
@@ -89,7 +92,7 @@ class BusinessPartnerRepositoryImpl(
                     localId = existingLocal?.localId ?: 0L,
                 )
             }.forEach {
-                saveBusinessPartner(it)
+                partnerDao.insertOrUpdate(it)
             }
         }
     }
@@ -104,28 +107,6 @@ class BusinessPartnerRepositoryImpl(
         return partnerDao.getPartnerByLocalId(clientId)?.toDomain()
     }
 
-
-    private suspend fun createOpeningBalanceTransaction(
-        partnerLocalId: Long? = null,
-        debit: Double,
-        credit: Double,
-    ) {
-        if (debit == 0.0 && credit == 0.0) return
-
-        partnerTransactionDao.insertTransaction(
-            PartnerTransactionEntity(
-                serverId = null,
-                partnerLocalId = partnerLocalId,
-                sourceTransactionId = 0L,
-                transactionType = TransactionType.OPENING_BALANCE,
-                createdAt = Clock.now(),
-                updatedAt = Clock.now(),
-                debit = debit,
-                credit = credit,
-            )
-        )
-    }
-
     override suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double> {
         return runCatching {
             partnerTransactionDao.getPartnerBalance(partner.id.local) ?: 0.0
@@ -137,20 +118,4 @@ class BusinessPartnerRepositoryImpl(
             partnerDao.getPartnerBySeverId(serverId) ?: throw Exception("Partner not found")
         }
     }
-}
-
-private fun BusinessPartner.toEntity(): BusinessPartnerEntity {
-    return BusinessPartnerEntity(
-        localId = id.local,
-        serverId = id.server,
-        arName = name.arName.orEmpty(),
-        enName = name.enName.orEmpty(),
-        phone = phone,
-        address = address,
-        responsibleEmployeeLocalId = responsibleEmployee.id.local,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        type = type,
-        openingBalance = openingBalance
-    )
 }

@@ -14,6 +14,9 @@ import com.wael.astimal.pos.features.inventory.domain.repository.ProductReposito
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
+import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
+import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -29,6 +32,7 @@ class SyncServiceImpl(
     private val categoryRepository: CategoryRepository,
     private val productRepository: ProductRepository,
     private val stockRepository: StockRepository,
+    private val businessPartnerRepository: BusinessPartnerRepository,
     private val navigationController: NavigationController
 ) : SyncService {
 
@@ -101,6 +105,18 @@ class SyncServiceImpl(
                             ).getOrThrow().id.local,
                             userId = userRepository.getUserByServerId(
                                 stockAdjustmentDto.userId
+                            ).getOrThrow()!!.id.local
+                        )
+                    },
+                )
+            }
+
+            supabaseClient.fetchAll<BusinessPartnerDto>("business_partners").getOrThrow().also {
+                businessPartnerRepository.syncWithServer(
+                    it.map { businessPartnerDto ->
+                        businessPartnerDto.toEntity(
+                            responsibleId = userRepository.getUserByServerId(
+                                businessPartnerDto.responsibleId
                             ).getOrThrow()!!.id.local
                         )
                     },

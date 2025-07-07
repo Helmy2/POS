@@ -3,12 +3,14 @@ package com.wael.astimal.pos.core.presentation.compoenents
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,6 +50,7 @@ fun SearchBarWithBackButton(
             ) {
                 BackButton(onClick = onBack)
                 SearchBarDefaults.InputField(
+                    modifier = modifier.height(OutlinedTextFieldDefaults.MinHeight).weight(1f),
                     query = query,
                     onQueryChange = onQueryChange,
                     onSearch = onSearch,
@@ -59,7 +62,6 @@ fun SearchBarWithBackButton(
                             Icon(Icons.Default.Search, contentDescription = null)
                         }
                     },
-                    modifier = Modifier.Companion.weight(1f),
                 )
             }
         }
