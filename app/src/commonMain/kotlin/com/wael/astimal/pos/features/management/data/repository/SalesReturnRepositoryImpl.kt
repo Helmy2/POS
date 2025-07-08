@@ -1,10 +1,7 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
@@ -81,30 +78,31 @@ class SalesReturnRepositoryImpl(
         salesReturn: SalesReturn
     ): Result<SalesReturn> {
         return try {
-            val (returnEntity, items) = salesReturn.toEntity()
-
-            val returnId = returnEntity.localId
-            val currentUserId =
-                userRepository.getCurrentUser()?.id ?: throw Exception("User not authenticated")
-
-            val oldReturnEntity = orderReturnDao.getReturnEntityByLocalId(returnId)
-                ?: throw NoSuchElementException("Original return not found")
-            val oldItems = orderReturnDao.getItemsForReturn(returnId)
-
-            returnAmountLogic.revertReturn(oldReturnEntity, oldItems, currentUserId.local)
-            partnerTransactionDao.deleteTransactionsBySource(
-                returnId, TransactionType.SALE_RETURN, TransactionType.PAYMENT_SENT
-            )
-
-            val entityToUpdate = returnEntity.copy(isSynced = false, updatedAt = Clock.now())
-            orderReturnDao.updateReturnWithItems(entityToUpdate, items)
-
-            returnAmountLogic.processNewReturn(entityToUpdate, items, returnId)
-            addReturnLedgerEntries(entityToUpdate, returnId)
-            val updatedReturn = getReturnDetailsFlow(returnId).first() ?: return Result.failure(
-                IllegalStateException("Failed to retrieve return after update.")
-            )
-            Result.success(updatedReturn)
+//            val (returnEntity, items) = salesReturn.toEntity()
+//
+//            val returnId = returnEntity.localId
+//            val currentUserId =
+//                userRepository.getCurrentUser()?.id ?: throw Exception("User not authenticated")
+//
+//            val oldReturnEntity = orderReturnDao.getReturnEntityByLocalId(returnId)
+//                ?: throw NoSuchElementException("Original return not found")
+//            val oldItems = orderReturnDao.getItemsForReturn(returnId)
+//
+//            returnAmountLogic.revertReturn(oldReturnEntity, oldItems, currentUserId.local)
+//            partnerTransactionDao.deleteTransactionsBySource(
+//                returnId, TransactionType.SALE_RETURN, TransactionType.PAYMENT_SENT
+//            )
+//
+//            val entityToUpdate = returnEntity.copy(isSynced = false, updatedAt = Clock.now())
+//            orderReturnDao.updateReturnWithItems(entityToUpdate, items)
+//
+//            returnAmountLogic.processNewReturn(entityToUpdate, items, returnId)
+//            addReturnLedgerEntries(entityToUpdate, returnId)
+//            val updatedReturn = getReturnDetailsFlow(returnId).first() ?: return Result.failure(
+//                IllegalStateException("Failed to retrieve return after update.")
+//            )
+//            Result.success(updatedReturn)
+            TODO()
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -112,25 +110,26 @@ class SalesReturnRepositoryImpl(
 
     override suspend fun deleteReturn(returnLocalId: Long): Result<Unit> {
         return try {
-            val currentUserId =
-                userRepository.getCurrentUser()?.id ?: throw Exception("User not authenticated")
-
-            val returnEntity = orderReturnDao.getReturnEntityByLocalId(returnLocalId)
-                ?: throw NoSuchElementException("Return not found")
-
-            if (!returnEntity.isDeletedLocally) {
-                val items = orderReturnDao.getItemsForReturn(returnLocalId)
-                returnAmountLogic.revertReturn(returnEntity, items, currentUserId.local)
-                partnerTransactionDao.deleteTransactionsBySource(
-                    returnLocalId, TransactionType.SALE_RETURN, TransactionType.PAYMENT_SENT
-                )
-
-                val returnToMarkAsDeleted = returnEntity.copy(
-                    isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
-                )
-                orderReturnDao.updateReturn(returnToMarkAsDeleted)
-            }
-            Result.success(Unit)
+//            val currentUserId =
+//                userRepository.getCurrentUser()?.id ?: throw Exception("User not authenticated")
+//
+//            val returnEntity = orderReturnDao.getReturnEntityByLocalId(returnLocalId)
+//                ?: throw NoSuchElementException("Return not found")
+//
+//            if (!returnEntity.isDeletedLocally) {
+//                val items = orderReturnDao.getItemsForReturn(returnLocalId)
+//                returnAmountLogic.revertReturn(returnEntity, items, currentUserId.local)
+//                partnerTransactionDao.deleteTransactionsBySource(
+//                    returnLocalId, TransactionType.SALE_RETURN, TransactionType.PAYMENT_SENT
+//                )
+//
+//                val returnToMarkAsDeleted = returnEntity.copy(
+//                    isDeletedLocally = true, isSynced = false, updatedAt = Clock.now()
+//                )
+//                orderReturnDao.updateReturn(returnToMarkAsDeleted)
+//            }
+//            Result.success(Unit)
+            TODO()
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -138,32 +137,32 @@ class SalesReturnRepositoryImpl(
 
     private suspend fun addReturnLedgerEntries(returnEntity: OrderReturnEntity, returnId: Long) {
         // Create ledger entry for the sales return
-        partnerTransactionDao.insertTransaction(
-            PartnerTransactionEntity(
-                serverId = null,
-                partnerLocalId = returnEntity.businessPartnerLocalId,
-                sourceTransactionId = returnId,
-                transactionType = TransactionType.SALE_RETURN,
-                createdAt = returnEntity.createdAt,
-                updatedAt = returnEntity.updatedAt,
-                debit = 0.0,
-                credit = returnEntity.totalAmount // A sales return is a credit to the client
-            )
-        )
-        // If you refunded money, it's a debit to the client's account
-        if (returnEntity.amountPaid > 0) {
-            partnerTransactionDao.insertTransaction(
-                PartnerTransactionEntity(
-                    serverId = null,
-                    partnerLocalId = returnEntity.businessPartnerLocalId,
-                    sourceTransactionId = returnId,
-                    transactionType = TransactionType.PAYMENT_SENT,
-                    createdAt = returnEntity.createdAt,
-                    updatedAt = returnEntity.updatedAt,
-                    debit = returnEntity.amountPaid,
-                    credit = 0.0
-                )
-            )
-        }
+//        partnerTransactionDao.insertTransaction(
+//            PartnerTransactionEntity(
+//                serverId = null,
+//                partnerLocalId = returnEntity.businessPartnerLocalId,
+//                sourceTransactionId = returnId,
+//                transactionType = TransactionType.SALE_RETURN,
+//                createdAt = returnEntity.createdAt,
+//                updatedAt = returnEntity.updatedAt,
+//                debit = 0.0,
+//                credit = returnEntity.totalAmount // A sales return is a credit to the client
+//            )
+//        )
+//        // If you refunded money, it's a debit to the client's account
+//        if (returnEntity.amountPaid > 0) {
+//            partnerTransactionDao.insertTransaction(
+//                PartnerTransactionEntity(
+//                    serverId = null,
+//                    partnerLocalId = returnEntity.businessPartnerLocalId,
+//                    sourceTransactionId = returnId,
+//                    transactionType = TransactionType.PAYMENT_SENT,
+//                    createdAt = returnEntity.createdAt,
+//                    updatedAt = returnEntity.updatedAt,
+//                    debit = returnEntity.amountPaid,
+//                    credit = 0.0
+//                )
+//            )
+//        }
     }
 }

@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +9,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -40,24 +41,23 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
-import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_voucher
 import pos.app.generated.resources.amount
 import pos.app.generated.resources.are_you_sure_you_want_to_delete_this_voucher
+import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.cancel
-import pos.app.generated.resources.client
 import pos.app.generated.resources.confirm_delete
 import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit_voucher
 import pos.app.generated.resources.new_voucher
 import pos.app.generated.resources.notes_optional
-import pos.app.generated.resources.party_type
 import pos.app.generated.resources.save
-import pos.app.generated.resources.supplier
+import pos.app.generated.resources.transaction_type
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -112,9 +112,7 @@ fun ReceivePayVoucherScreen(
         },
     ) {
         LazyColumn(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp),
             contentPadding = PaddingValues(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -150,72 +148,49 @@ fun VoucherEditDialog(
             Text(stringResource(titleRes))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.party_type),
-                    items = VoucherPartyType.entries,
-                    selectedItemId = dialogState.partyType.ordinal.toLong(),
+                    label = stringResource(Res.string.transaction_type),
+                    items = TransactionType.getTypesForDropdown(),
+                    selectedItemId = dialogState.transactionType.ordinal.toLong(),
                     onItemSelected = {
                         onEvent(
-                            ReceivePayVoucherContract.Event.DialogPartyTypeChanged(
+                            ReceivePayVoucherContract.Event.DialogTransactionTypeSelected(
                                 it
                             )
                         )
                     },
                     itemToDisplayString = { stringResource(it.getStringRes()) },
                     itemToId = { it.ordinal.toLong() },
-                    enabled = state.canUserEdit && dialogState.voucherToEdit == null // Can't change type when editing
+                    enabled = state.canUserEdit
                 )
 
-                AnimatedContent(targetState = dialogState.partyType) { partyType ->
-                    when (partyType) {
-                        VoucherPartyType.CLIENT -> CustomExposedDropdownMenu(
-                            label = stringResource(Res.string.client),
-                            items = state.dropdownData.clients,
-                            selectedItemId = dialogState.selectedPartnerId,
-                            onItemSelected = {
-                                onEvent(
-                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                        it.id.local
-                                    )
-                                )
-                            },
-                            itemToDisplayString = { it.name.displayName(language) },
-                            itemToId = { it.id.local },
-                            onClearItem = {
-                                onEvent(
-                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                        null
-                                    )
-                                )
-                            },
-                            enabled = state.canUserEdit && dialogState.voucherToEdit == null
-                        )
 
-                        VoucherPartyType.SUPPLIER -> CustomExposedDropdownMenu(
-                            label = stringResource(Res.string.supplier),
-                            items = state.dropdownData.suppliers,
-                            selectedItemId = dialogState.selectedPartnerId,
-                            onItemSelected = {
-                                onEvent(
-                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                        it.id.local
-                                    )
-                                )
-                            },
-                            itemToDisplayString = { it.name.displayName(language) },
-                            itemToId = { it.id.local },
-                            onClearItem = {
-                                onEvent(
-                                    ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                        null
-                                    )
-                                )
-                            },
-                            enabled = state.canUserEdit && dialogState.voucherToEdit == null,
+                CustomExposedDropdownMenu(
+                    label = stringResource(Res.string.business_partner),
+                    items = state.partyDropdownData,
+                    selectedItemId = dialogState.selectedPartnerId,
+                    onItemSelected = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogPartnerSelected(
+                                it.id.local
+                            )
                         )
-                    }
-                }
+                    },
+                    itemToDisplayString = { it.name.displayName(language) },
+                    itemToId = { it.id.local },
+                    onClearItem = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogPartnerSelected(
+                                null
+                            )
+                        )
+                    },
+                    enabled = state.canUserEdit && dialogState.voucherToEdit == null
+                )
 
                 LabeledTextField(
                     value = dialogState.amount,
@@ -290,14 +265,21 @@ fun VoucherItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = voucher.party.name.displayName(language),
+                    text = voucher.partner.name.displayName(language),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = stringResource(voucher.partyType.getStringRes()),
+                    text = stringResource(voucher.partner.type.getStringRes()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                Text(
+                    text = stringResource(voucher.transactionType.getStringRes()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+
                 if (voucher.notes.isNotBlank()) {
                     Text(text = voucher.notes, style = MaterialTheme.typography.bodySmall)
                 }

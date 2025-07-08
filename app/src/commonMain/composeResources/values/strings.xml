@@ -235,6 +235,8 @@
     <string name="money_out">Money Out</string>
     <string name="money_in">Money In</string>
     <string name="opening_balance">Opening Balance</string>
+    <string name="invoice">Invoice</string>
+    <string name="payment">Payment</string>
     <string name="sale">Sale</string>
     <string name="purchase">Purchase</string>
     <string name="sale_return">Sale Return</string>

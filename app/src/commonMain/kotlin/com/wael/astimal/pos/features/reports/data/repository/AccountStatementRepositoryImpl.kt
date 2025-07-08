@@ -26,15 +26,15 @@ class AccountStatementRepositoryImpl(
 
             var runningBalance = 0.0
             ledgerEntries.forEach { entry ->
-                runningBalance += (entry.debit - entry.credit)
+                runningBalance += entry.balance
                 statement.add(
                     AccountTransaction(
                         date = entry.createdAt.toLocalDateTime(),
-                        transactionId = "${entry.transactionType}-${entry.sourceTransactionId}",
-                        invoiceNumber = "Ref #${entry.sourceTransactionId}", // This can be enhanced later if needed
+                        transactionId = "${entry.transactionType}-${entry.localId}",
+                        invoiceNumber = "Ref #${entry.invoiceId}", // This can be enhanced later if needed
                         transactionType = entry.transactionType,
-                        debit = entry.debit,
-                        credit = entry.credit,
+                        debit = if (entry.balance > 0) entry.balance else 0.0,
+                        credit = if (entry.balance < 0) -entry.balance else 0.0,
                         balance = runningBalance
                     )
                 )

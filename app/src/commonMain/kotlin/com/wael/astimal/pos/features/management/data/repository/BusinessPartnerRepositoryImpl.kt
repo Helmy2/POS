@@ -113,7 +113,7 @@ class BusinessPartnerRepositoryImpl(
         }
     }
 
-    override suspend fun getBusinessPartnerByServerId(serverId: Long): Result<BusinessPartnerEntity> {
+    override suspend fun getBusinessPartnerByServerId(serverId: Long): Result<BusinessPartnerEntity?> {
         return runCatching {
             partnerDao.getPartnerBySeverId(serverId) ?: throw Exception("Partner not found")
         }

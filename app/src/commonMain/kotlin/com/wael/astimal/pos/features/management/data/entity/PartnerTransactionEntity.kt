@@ -1,58 +1,103 @@
 package com.wael.astimal.pos.features.management.data.entity
 
+import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.wael.astimal.pos.core.data.entity.ItemEntity
+import androidx.room.Relation
+import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
+import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.invoice
 import pos.app.generated.resources.opening_balance
-import pos.app.generated.resources.payment_received
-import pos.app.generated.resources.payment_sent
-import pos.app.generated.resources.purchase
-import pos.app.generated.resources.purchase_return
-import pos.app.generated.resources.sale
-import pos.app.generated.resources.sale_return
+import pos.app.generated.resources.payment
 
 
 @Entity(
-    tableName = "partner_transactions",
-    indices = [Index("partnerLocalId")]
+    tableName = "partner_transactions", foreignKeys = [ForeignKey(
+        entity = BusinessPartnerEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["partnerLocalId"],
+    ), ForeignKey(
+        entity = UserEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["employeeLocalId"],
+    )], indices = [Index("partnerLocalId"), Index("employeeLocalId")]
 )
 data class PartnerTransactionEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
-    override val serverId: Long?,
-    override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
-    override var isDeletedLocally: Boolean = false,
-    val partnerLocalId: Long?,
-    val sourceTransactionId: Long,
+    @PrimaryKey(autoGenerate = true)
+    val localId: Long = 0L,
+    val serverId: String?,
+    var isSynced: Boolean = false,
+    val createdAt: Long = Clock.now(),
+    val updatedAt: Long = Clock.now(),
+    var isDeletedLocally: Boolean = false,
+    val partnerLocalId: Long,
+    val employeeLocalId: Long,
+    val invoiceId: String?,
     val transactionType: TransactionType,
-    val debit: Double = 0.0,
-    val credit: Double = 0.0
-) : ItemEntity
-
+    val notes: String?,
+    val balance: Double
+)
 
 enum class TransactionType {
     OPENING_BALANCE,
-    SALE,
-    PURCHASE,
-    SALE_RETURN,
-    PURCHASE_RETURN,
-    PAYMENT_RECEIVED,
-    PAYMENT_SENT;
+    INVOICE,
+    PAYMENT;
 
-    fun getStringRes(type: TransactionType = this): StringResource {
-        return when (type) {
-            OPENING_BALANCE -> Res.string.opening_balance
-            SALE -> Res.string.sale
-            PURCHASE -> Res.string.purchase
-            SALE_RETURN -> Res.string.sale_return
-            PURCHASE_RETURN -> Res.string.purchase_return
-            PAYMENT_RECEIVED -> Res.string.payment_received
-            PAYMENT_SENT -> Res.string.payment_sent
+    companion object {
+        fun getTypesForDropdown(): List<TransactionType> {
+            return listOf(
+                OPENING_BALANCE,
+                PAYMENT
+            )
         }
     }
+
+    fun getStringRes(): StringResource {
+        return when (this) {
+            OPENING_BALANCE -> Res.string.opening_balance
+            INVOICE -> Res.string.invoice
+            PAYMENT -> Res.string.payment
+        }
+    }
+}
+
+data class PartnerTransactionWithDetails(
+    @Embedded val voucher: PartnerTransactionEntity,
+
+    @Relation(
+        parentColumn = "partnerLocalId",
+        entityColumn = "localId",
+        entity = BusinessPartnerEntity::class
+    ) val partner: BusinessPartnerWithDetailsEntity?,
+
+    @Relation(
+        parentColumn = "employeeLocalId", entityColumn = "id", entity = UserEntity::class
+    ) val createdByUser: UserEntity?
+)
+
+fun PartnerTransactionWithDetails.toDomain(): ReceivePayVoucher {
+    val creator = createdByUser?.toDomain()
+        ?: throw IllegalStateException("Voucher #${voucher.localId} must have a creator employee.")
+
+    return ReceivePayVoucher(
+        id = Id(voucher.localId, serverStringId = voucher.serverId),
+        amount = voucher.balance,
+        partner = partner?.toDomain() ?: throw IllegalStateException(
+            "Voucher #${voucher.localId} must have a partner."
+        ),
+        notes = voucher.notes ?: "",
+        createdBy = creator,
+        createdAt = voucher.createdAt,
+        updatedAt = voucher.updatedAt,
+        isSynced = voucher.isSynced,
+        transactionType = voucher.transactionType,
+        invoiceId = voucher.invoiceId ?: ""
+    )
 }

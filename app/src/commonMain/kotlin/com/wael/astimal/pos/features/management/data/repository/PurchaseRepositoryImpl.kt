@@ -2,9 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseDao
@@ -177,31 +175,31 @@ class PurchaseRepositoryImpl(
     }
 
     private suspend fun addPurchaseLedgerEntries(purchase: PurchaseEntity, purchaseId: Long) {
-        partnerTransactionDao.insertTransaction(
-            PartnerTransactionEntity(
-                serverId = null,
-                partnerLocalId = purchase.businessPartnerLocalId,
-                sourceTransactionId = purchaseId,
-                transactionType = TransactionType.PURCHASE,
-                createdAt = purchase.createdAt,
-                updatedAt = purchase.updatedAt,
-                debit = 0.0,
-                credit = purchase.totalAmount
-            )
-        )
-        if (purchase.amountPaid > 0) {
-            partnerTransactionDao.insertTransaction(
-                PartnerTransactionEntity(
-                    serverId = null,
-                    partnerLocalId = purchase.businessPartnerLocalId,
-                    sourceTransactionId = purchaseId,
-                    transactionType = TransactionType.PAYMENT_SENT,
-                    createdAt = purchase.createdAt,
-                    updatedAt = purchase.updatedAt,
-                    debit = purchase.amountPaid,
-                    credit = 0.0
-                )
-            )
-        }
+//        partnerTransactionDao.insertTransaction(
+//            PartnerTransactionEntity(
+//                serverId = null,
+//                partnerLocalId = purchase.businessPartnerLocalId,
+//                sourceTransactionId = purchaseId,
+//                transactionType = TransactionType.PURCHASE,
+//                createdAt = purchase.createdAt,
+//                updatedAt = purchase.updatedAt,
+//                debit = 0.0,
+//                credit = purchase.totalAmount
+//            )
+//        )
+//        if (purchase.amountPaid > 0) {
+//            partnerTransactionDao.insertTransaction(
+//                PartnerTransactionEntity(
+//                    serverId = null,
+//                    partnerLocalId = purchase.businessPartnerLocalId,
+//                    sourceTransactionId = purchaseId,
+//                    transactionType = TransactionType.PAYMENT_SENT,
+//                    createdAt = purchase.createdAt,
+//                    updatedAt = purchase.updatedAt,
+//                    debit = purchase.amountPaid,
+//                    credit = 0.0
+//                )
+//            )
+//        }
     }
 }

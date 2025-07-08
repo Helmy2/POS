@@ -2,9 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.entity.toDomain
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
@@ -174,31 +172,31 @@ class PurchaseReturnRepositoryImpl(
         purchaseReturn: PurchaseReturnEntity,
         returnId: Long
     ) {
-        partnerTransactionDao.insertTransaction(
-            PartnerTransactionEntity(
-                serverId = null,
-                partnerLocalId = purchaseReturn.businessPartnerLocalId,
-                sourceTransactionId = returnId,
-                transactionType = TransactionType.PURCHASE_RETURN,
-                createdAt = purchaseReturn.createdAt,
-                updatedAt = purchaseReturn.updatedAt,
-                debit = purchaseReturn.totalAmount, // A purchase return reduces what you owe them
-                credit = 0.0
-            )
-        )
-        if (purchaseReturn.amountPaid > 0) {
-            partnerTransactionDao.insertTransaction(
-                PartnerTransactionEntity(
-                    serverId = null,
-                    partnerLocalId = purchaseReturn.businessPartnerLocalId,
-                    sourceTransactionId = returnId,
-                    transactionType = TransactionType.PAYMENT_RECEIVED,
-                    createdAt = purchaseReturn.createdAt,
-                    updatedAt = purchaseReturn.updatedAt,
-                    debit = 0.0,
-                    credit = purchaseReturn.amountPaid // Money received from a supplier is a credit
-                )
-            )
-        }
+//        partnerTransactionDao.insertTransaction(
+//            PartnerTransactionEntity(
+//                serverId = null,
+//                partnerLocalId = purchaseReturn.businessPartnerLocalId,
+//                sourceTransactionId = returnId,
+//                transactionType = TransactionType.PURCHASE_RETURN,
+//                createdAt = purchaseReturn.createdAt,
+//                updatedAt = purchaseReturn.updatedAt,
+//                debit = purchaseReturn.totalAmount, // A purchase return reduces what you owe them
+//                credit = 0.0
+//            )
+//        )
+//        if (purchaseReturn.amountPaid > 0) {
+//            partnerTransactionDao.insertTransaction(
+//                PartnerTransactionEntity(
+//                    serverId = null,
+//                    partnerLocalId = purchaseReturn.businessPartnerLocalId,
+//                    sourceTransactionId = returnId,
+//                    transactionType = TransactionType.PAYMENT_RECEIVED,
+//                    createdAt = purchaseReturn.createdAt,
+//                    updatedAt = purchaseReturn.updatedAt,
+//                    debit = 0.0,
+//                    credit = purchaseReturn.amountPaid // Money received from a supplier is a credit
+//                )
+//            )
+//        }
     }
 }

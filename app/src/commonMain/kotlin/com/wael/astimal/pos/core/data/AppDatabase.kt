@@ -28,7 +28,6 @@ import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.entity.PurchaseReturnProductEntity
-import com.wael.astimal.pos.features.management.data.entity.ReceivePayVoucherEntity
 import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.data.local.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
@@ -36,7 +35,6 @@ import com.wael.astimal.pos.features.management.data.local.OrderReturnDao
 import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseDao
 import com.wael.astimal.pos.features.management.data.local.PurchaseReturnDao
-import com.wael.astimal.pos.features.management.data.local.ReceivePayVoucherDao
 import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
@@ -64,10 +62,9 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         SaleCommissionEntity::class,
         EmployeeAccountTransactionEntity::class,
         StockAdjustmentEntity::class,
-        ReceivePayVoucherEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 8,
+    version = 10,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -84,7 +81,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun purchaseReturnDao(): PurchaseReturnDao
     abstract fun employeeFinancesDao(): EmployeeFinancesDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
-    abstract fun receivePayVoucherDao(): ReceivePayVoucherDao
     abstract fun partnerTransactionDao(): PartnerTransactionDao
 }
 

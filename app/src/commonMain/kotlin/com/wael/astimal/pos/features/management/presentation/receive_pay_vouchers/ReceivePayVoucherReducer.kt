@@ -2,7 +2,6 @@ package com.wael.astimal.pos.features.management.presentation.receive_pay_vouche
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.management.domain.entity.VoucherPartyType
 
 class ReceivePayVoucherReducer() :
     Reducer<ReceivePayVoucherContract.State, ReceivePayVoucherContract.Event, Nothing> {
@@ -18,7 +17,7 @@ class ReceivePayVoucherReducer() :
                 previousState.copy(currentUser = event.user) to null
 
             is ReceivePayVoucherContract.Event.DropdownDataLoaded ->
-                previousState.copy(dropdownData = event.data) to null
+                previousState.copy(partyDropdownData = event.data) to null
 
             is ReceivePayVoucherContract.Event.VouchersLoaded ->
                 previousState.copy(isLoading = false, vouchers = event.vouchers) to null
@@ -31,8 +30,7 @@ class ReceivePayVoucherReducer() :
                     dialogState = ReceivePayVoucherContract.DialogState(
                         show = true,
                         voucherToEdit = event.voucher,
-                        partyType = event.voucher.partyType,
-                        selectedPartnerId = if (event.voucher.partyType == VoucherPartyType.CLIENT) event.voucher.party.id.local else event.voucher.party.id.local,
+                        selectedPartnerId = event.voucher.partner.id.local,
                         amount = event.voucher.amount.toString(),
                         notes = event.voucher.notes,
                         date = event.voucher.createdAt
@@ -49,13 +47,6 @@ class ReceivePayVoucherReducer() :
                 ) to null
 
             // Dialog state updates
-            is ReceivePayVoucherContract.Event.DialogPartyTypeChanged ->
-                previousState.copy(
-                    dialogState = previousState.dialogState.copy(
-                        partyType = event.type,
-                        selectedPartnerId = null
-                    )
-                ) to null
 
             is ReceivePayVoucherContract.Event.DialogPartnerSelected ->
                 previousState.copy(dialogState = previousState.dialogState.copy(selectedPartnerId = event.partnerId)) to null
@@ -68,6 +59,9 @@ class ReceivePayVoucherReducer() :
 
             is ReceivePayVoucherContract.Event.DialogDateChanged ->
                 previousState.copy(dialogState = previousState.dialogState.copy(date = event.date)) to null
+
+            is ReceivePayVoucherContract.Event.DialogTransactionTypeSelected ->
+                previousState.copy(dialogState = previousState.dialogState.copy(transactionType = event.type)) to null
 
             is ReceivePayVoucherContract.Event.SearchQueryChanged ->
                 previousState.copy(searchQuery = event.query) to null

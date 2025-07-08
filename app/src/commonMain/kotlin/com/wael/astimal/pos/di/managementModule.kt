@@ -5,16 +5,16 @@ import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.data.logic.ReturnAmountLogic
 import com.wael.astimal.pos.features.management.data.repository.BusinessPartnerRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.EmployeeAccountRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.PartnerTransactionRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PurchaseRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PurchaseReturnRepositoryImpl
-import com.wael.astimal.pos.features.management.data.repository.ReceivePayVoucherRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesOrderRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesReturnRepositoryImpl
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
+import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
-import com.wael.astimal.pos.features.management.domain.repository.ReceivePayVoucherRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesOrderRepository
 import com.wael.astimal.pos.features.management.domain.repository.SalesReturnRepository
 import com.wael.astimal.pos.features.management.presentation.business_partner.BusinessPartnerViewModel
@@ -36,7 +36,6 @@ val managementModule = module {
     single { get<AppDatabase>().purchaseOrderDao() }
     single { get<AppDatabase>().purchaseReturnDao() }
     single { get<AppDatabase>().employeeFinancesDao() }
-    single { get<AppDatabase>().receivePayVoucherDao() }
     single { get<AppDatabase>().partnerTransactionDao() }
 
     singleOf(::OrderAmountLogic)
@@ -48,7 +47,7 @@ val managementModule = module {
     singleOf(::PurchaseRepositoryImpl) { bind<PurchaseRepository>() }
     singleOf(::PurchaseReturnRepositoryImpl) { bind<PurchaseReturnRepository>() }
     singleOf(::EmployeeAccountRepositoryImpl) { bind<EmployeeAccountRepository>() }
-    singleOf(::ReceivePayVoucherRepositoryImpl) { bind<ReceivePayVoucherRepository>() }
+    singleOf(::PartnerTransactionRepositoryImpl) { bind<PartnerTransactionRepository>() }
     singleOf(::BusinessPartnerRepositoryImpl) { bind<BusinessPartnerRepository>() }
 
 
