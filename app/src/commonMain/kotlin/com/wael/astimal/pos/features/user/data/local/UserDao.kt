@@ -37,4 +37,7 @@ interface UserDao {
 
     @Query("SELECT * FROM users WHERE supabaseId = :supabaseId LIMIT 1")
     fun getUserBySupabaseId(supabaseId: String): Flow<UserEntity?>
+
+    @Query("SELECT * FROM users WHERE id = :localId LIMIT 1")
+    suspend fun getUserById(localId: Long): UserEntity?
 }

@@ -9,4 +9,5 @@ interface PartnerTransactionRepository {
     suspend fun saveVoucher(voucher: ReceivePayVoucher): Result<Unit>
     suspend fun deleteVoucher(voucher: ReceivePayVoucher): Result<Unit>
     suspend fun syncWithServer(entities: List<PartnerTransactionEntity>): Result<Unit>
+    suspend fun getUnsyncedTransactions(): Result<List<ReceivePayVoucher>>
 }

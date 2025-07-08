@@ -26,3 +26,19 @@ suspend inline fun <reified T : Any> SupabaseClient.fetchAll(tableName: String):
         Result.failure(e)
     }
 }
+
+
+suspend inline fun <reified T : Any> SupabaseClient.pushAll(
+    tableName: String,
+    data: () -> List<T>
+): Result<List<T>> {
+    return try {
+        val result = this.postgrest[tableName]
+            .insert(data())
+            .decodeList<T>()
+        Result.success(result)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Result.failure(e)
+    }
+}

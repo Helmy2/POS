@@ -39,7 +39,7 @@ interface PartnerTransactionDao {
 
 
     @Query("DELETE FROM partner_transactions WHERE localId = :id")
-    suspend fun deleteVoucher(id: Long)
+    suspend fun deleteTransactionById(id: Long)
 
     @Transaction
     @Query("SELECT * FROM partner_transactions WHERE localId = :id")
@@ -48,4 +48,8 @@ interface PartnerTransactionDao {
 
     @Query("SELECT * FROM partner_transactions WHERE serverId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): PartnerTransactionEntity?
+
+    @Transaction
+    @Query("SELECT * FROM partner_transactions WHERE isSynced = 0")
+    suspend fun getUnsyncedTransactions(): List<PartnerTransactionWithDetails>
 }

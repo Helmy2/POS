@@ -113,6 +113,12 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun getUserById(id: Long): Result<User?> {
+        return runCatching {
+            userDao.getUserById(id)?.toDomain()
+        }
+    }
+
     override suspend fun syncWithServer(users: List<UserEntity>): Result<Unit> {
         return runCatching {
             users.map {

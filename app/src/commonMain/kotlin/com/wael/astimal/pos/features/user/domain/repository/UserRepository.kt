@@ -13,5 +13,6 @@ interface UserRepository {
     suspend fun logout(): Result<Unit>
     suspend fun assignStoreToEmployee(userId: Long, storeId: Long): Result<Unit>
     suspend fun getUserByServerId(id: String): Result<User?>
+    suspend fun getUserById(id: Long): Result<User?>
     suspend fun syncWithServer(users: List<UserEntity>): Result<Unit>
 }

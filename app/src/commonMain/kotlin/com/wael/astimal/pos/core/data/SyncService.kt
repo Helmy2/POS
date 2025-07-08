@@ -3,6 +3,7 @@ package com.wael.astimal.pos.core.data
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.fetchAll
+import com.wael.astimal.pos.core.util.pushAll
 import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
@@ -17,6 +18,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
 import com.wael.astimal.pos.features.management.data.remote.dto.PartnerTransactionDto
 import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.management.domain.entity.toDto
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
@@ -125,6 +127,12 @@ class SyncServiceImpl(
                     },
                 )
             }
+
+            partnerTransactionRepository.getUnsyncedTransactions().getOrThrow().map {
+                it.toDto()
+            }.takeIf { it.isNotEmpty() }?.let {
+                supabaseClient.pushAll<PartnerTransactionDto>("partner_transactions") { it }
+            }?.getOrThrow()
 
             supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions").getOrThrow()
                 .also {
