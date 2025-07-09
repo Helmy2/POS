@@ -2,10 +2,10 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.PurchaseEntity
-import com.wael.astimal.pos.features.management.data.entity.toDomain
-import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
-import com.wael.astimal.pos.features.management.data.local.PurchaseDao
+import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.local.dao.PurchaseDao
+import com.wael.astimal.pos.features.management.data.local.entity.PurchaseEntity
+import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.user.data.local.UserDao

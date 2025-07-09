@@ -48,7 +48,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButto
 import com.wael.astimal.pos.core.presentation.theme.CreditColor
 import com.wael.astimal.pos.core.presentation.theme.DebitColor
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import org.jetbrains.compose.resources.stringResource

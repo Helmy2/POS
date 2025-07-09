@@ -2,8 +2,8 @@ package com.wael.astimal.pos.features.management.data.remote.dto
 
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.parseIsoTimestamp
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

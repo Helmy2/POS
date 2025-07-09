@@ -1,9 +1,9 @@
 package com.wael.astimal.pos.features.management.domain.repository
 
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
-import com.wael.astimal.pos.features.management.data.entity.OrderEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderWithDetailsEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderProductEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderWithDetailsEntity
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import kotlinx.coroutines.flow.Flow
 

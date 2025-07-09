@@ -7,7 +7,7 @@ import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import androidx.core.content.FileProvider
 import com.wael.astimal.pos.R
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import java.io.File
@@ -222,14 +222,6 @@ actual class PdfGeneratorImpl(private val context: Context) : PdfGenerator {
     }
 
     private fun getTransactionTypeString(type: TransactionType): String {
-        return when (type) {
-            TransactionType.OPENING_BALANCE -> context.getString(R.string.opening_balance)
-            TransactionType.SALE -> context.getString(R.string.sale)
-            TransactionType.PURCHASE -> context.getString(R.string.purchase)
-            TransactionType.SALE_RETURN -> context.getString(R.string.sale_return)
-            TransactionType.PURCHASE_RETURN -> context.getString(R.string.purchase_return)
-            TransactionType.PAYMENT_RECEIVED -> context.getString(R.string.payment_received)
-            TransactionType.PAYMENT_SENT -> context.getString(R.string.payment_sent)
-        }
+        TODO()
     }
 }

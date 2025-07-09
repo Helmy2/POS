@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.management.data.entity
+package com.wael.astimal.pos.features.management.data.local.entity
 
 import androidx.room.Embedded
 import androidx.room.Entity

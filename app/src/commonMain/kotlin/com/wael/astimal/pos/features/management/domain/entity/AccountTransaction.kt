@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import java.time.LocalDateTime
 
 data class AccountTransaction(

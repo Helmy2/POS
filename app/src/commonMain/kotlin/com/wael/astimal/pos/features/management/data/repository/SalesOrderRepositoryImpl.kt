@@ -2,12 +2,12 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.util.formatSequence
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
-import com.wael.astimal.pos.features.management.data.entity.OrderEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderWithDetailsEntity
-import com.wael.astimal.pos.features.management.data.entity.toDomain
-import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
-import com.wael.astimal.pos.features.management.data.local.SalesOrderDao
+import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.local.dao.SalesOrderDao
+import com.wael.astimal.pos.features.management.data.local.entity.OrderEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderProductEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderWithDetailsEntity
+import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
 import com.wael.astimal.pos.features.management.domain.entity.toEntity

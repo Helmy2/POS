@@ -4,8 +4,8 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.remote.dto.PartnerTransactionDto
 import com.wael.astimal.pos.features.user.domain.entity.User
 

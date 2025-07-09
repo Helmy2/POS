@@ -3,11 +3,11 @@ package com.wael.astimal.pos.features.management.data.logic
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.ORDER_COMMISSION_PERCENTAGE
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
-import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderProductEntity
-import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
-import com.wael.astimal.pos.features.management.data.local.EmployeeFinancesDao
+import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesDao
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderProductEntity
+import com.wael.astimal.pos.features.management.data.local.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository

@@ -4,8 +4,8 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnProductEntity
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 

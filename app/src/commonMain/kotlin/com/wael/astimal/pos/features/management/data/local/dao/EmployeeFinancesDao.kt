@@ -1,13 +1,13 @@
-package com.wael.astimal.pos.features.management.data.local
+package com.wael.astimal.pos.features.management.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionWithDetailsEntity
-import com.wael.astimal.pos.features.management.data.entity.SaleCommissionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionWithDetailsEntity
+import com.wael.astimal.pos.features.management.data.local.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
 import kotlinx.coroutines.flow.Flow
 

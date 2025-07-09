@@ -7,7 +7,7 @@ import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository

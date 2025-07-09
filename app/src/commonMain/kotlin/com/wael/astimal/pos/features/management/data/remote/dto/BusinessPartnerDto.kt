@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.management.data.remote.dto
 
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.parseIsoTimestamp
-import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
+import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

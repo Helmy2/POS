@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.management.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.management.data.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionEntity
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res

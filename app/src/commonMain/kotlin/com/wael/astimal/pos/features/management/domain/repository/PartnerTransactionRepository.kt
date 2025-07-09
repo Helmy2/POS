@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.repository
 
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import kotlinx.coroutines.flow.Flow
 

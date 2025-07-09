@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.management.presentation.receive_pay_vouche
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.management.data.entity.TransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.user.domain.entity.User

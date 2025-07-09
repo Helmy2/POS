@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
-import com.wael.astimal.pos.features.management.data.entity.toDomain
-import com.wael.astimal.pos.features.management.data.local.BusinessPartnerDao
-import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.local.dao.BusinessPartnerDao
+import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
+import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
 import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
@@ -55,7 +55,6 @@ class BusinessPartnerRepositoryImpl(
                     select()
                 }.decodeSingle<BusinessPartnerDto>()
             } else {
-                println(entity)
                 supabaseClient.from("business_partners").update(entity) {
                     filter {
                         eq("id", entity.id)
@@ -99,7 +98,14 @@ class BusinessPartnerRepositoryImpl(
 
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return runCatching {
-            TODO()
+            supabaseClient.from("business_partners").delete {
+                filter {
+                    eq("id", partner.id.server!!)
+                }
+            }
+            partnerDao.deletePartnerByLocalId(partner.id.local)
+        }.onFailure {
+            it.printStackTrace()
         }
     }
 

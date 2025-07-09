@@ -23,9 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -47,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.Id
+import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
@@ -63,8 +62,6 @@ import pos.app.generated.resources.address
 import pos.app.generated.resources.address_with_args
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.cancel
-import pos.app.generated.resources.confirm_delete
-import pos.app.generated.resources.confirm_delete_partner_message
 import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit
 import pos.app.generated.resources.edit_partner
@@ -166,33 +163,14 @@ fun BusinessPartnerDetailView(
     val language = LocalAppLocale.current
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
-    if (showDeleteConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text(stringResource(Res.string.confirm_delete)) },
-            text = {
-                Text(
-                    stringResource(
-                        Res.string.confirm_delete_partner_message,
-                        partner.name.displayName(language)
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onEvent(BusinessPartnerContract.Event.DeletePartnerClicked(partner))
-                        showDeleteConfirmDialog = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text(stringResource(Res.string.delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDeleteConfirmDialog = false
-                }) { Text(stringResource(Res.string.cancel)) }
-            })
-    }
+    ConfirmDeleteDialog(
+        show = showDeleteConfirmDialog,
+        onConfirm = {
+            showDeleteConfirmDialog = false
+            onEvent(BusinessPartnerContract.Event.DeletePartnerClicked(partner))
+        },
+        onDismiss = { showDeleteConfirmDialog = false }
+    )
 
     Column(modifier = Modifier.padding(16.dp)) {
         Column {

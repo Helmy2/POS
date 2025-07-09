@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.management.data.local
+package com.wael.astimal.pos.features.management.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -6,9 +6,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnProductEntity
-import com.wael.astimal.pos.features.management.data.entity.OrderReturnWithDetailsEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnProductEntity
+import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnWithDetailsEntity
 import kotlinx.coroutines.flow.Flow
 
 

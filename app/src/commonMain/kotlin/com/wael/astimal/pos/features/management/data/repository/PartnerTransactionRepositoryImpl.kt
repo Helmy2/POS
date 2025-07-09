@@ -1,8 +1,8 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import com.wael.astimal.pos.features.management.data.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.entity.toDomain
-import com.wael.astimal.pos.features.management.data.local.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
+import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository

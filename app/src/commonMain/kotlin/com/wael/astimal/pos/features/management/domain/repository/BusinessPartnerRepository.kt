@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.repository
 
-import com.wael.astimal.pos.features.management.data.entity.BusinessPartnerEntity
+import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import kotlinx.coroutines.flow.Flow
 
