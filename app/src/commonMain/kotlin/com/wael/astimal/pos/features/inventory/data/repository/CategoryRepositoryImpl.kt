@@ -62,7 +62,6 @@ class CategoryRepositoryImpl(
                 filter {
                     eq("id", category.id.server!!)
                 }
-                select()
             }
             categoryDao.deleteCategoryByLocalId(category.id.local)
             Result.success(Unit)

@@ -20,4 +20,7 @@ interface UnitDao {
 
     @Query("SELECT * FROM units WHERE serverId = :serverId LIMIT 1")
     suspend fun getUnitByServerId(serverId: Long): UnitEntity?
+
+    @Query("DELETE FROM units WHERE localId = :localId")
+    suspend fun deleteUnitByLocalId(localId: Long)
 }

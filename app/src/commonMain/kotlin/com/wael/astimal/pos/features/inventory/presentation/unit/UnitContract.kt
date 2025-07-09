@@ -18,6 +18,7 @@ object UnitContract {
         val inputEnName: String = "",
         val inputArAbbreviation: String = "",
         val inputEnAbbreviation: String = "",
+        val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedUnit != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
@@ -34,6 +35,9 @@ object UnitContract {
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
+        data object DeleteConfirmed : Event
+        data object DeleteCanceled : Event
+
 
         // Form Input Changes
         data class ArNameChanged(val name: String) : Event

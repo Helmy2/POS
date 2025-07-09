@@ -56,8 +56,13 @@ class UnitRepositoryImpl(
 
     override suspend fun deleteUnit(unit: ProductUnit): Result<Unit> {
         return try {
-            // TODO: delete unit from database
-            TODO()
+            supabaseClient.from("units").delete {
+                filter {
+                    eq("id", unit.id.server!!)
+                }
+            }
+            unitDao.deleteUnitByLocalId(unit.id.local)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

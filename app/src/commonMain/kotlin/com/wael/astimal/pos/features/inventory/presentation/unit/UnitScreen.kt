@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
@@ -110,6 +111,14 @@ fun UnitScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            item {
+                ConfirmDeleteDialog(
+                    onConfirm = { onEvent(UnitContract.Event.DeleteConfirmed) },
+                    onDismiss = { onEvent(UnitContract.Event.DeleteCanceled) },
+                    show = state.showDeleteDialog
                 )
             }
         },

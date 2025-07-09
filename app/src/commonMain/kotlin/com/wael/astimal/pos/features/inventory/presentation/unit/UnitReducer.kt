@@ -45,6 +45,8 @@ class UnitReducer : Reducer<UnitContract.State, UnitContract.Event, Nothing> {
                     selectedUnit = null,
                     inputArName = "",
                     inputEnName = "",
+                    inputArAbbreviation = "",
+                    inputEnAbbreviation = ""
                 ) to null
 
             // Form input updates
@@ -60,10 +62,17 @@ class UnitReducer : Reducer<UnitContract.State, UnitContract.Event, Nothing> {
             is UnitContract.Event.EnAbbreviationChanged ->
                 previousState.copy(inputEnAbbreviation = event.name) to null
 
+            is UnitContract.Event.DeleteClicked -> previousState.copy(
+                showDeleteDialog = true
+            ) to null
+
+            is UnitContract.Event.DeleteCanceled, is UnitContract.Event.DeleteConfirmed -> previousState.copy(
+                showDeleteDialog = false
+            ) to null
+
             // Events that trigger sagas in ViewModel but don't change state directly
             is UnitContract.Event.BackClicked,
-            is UnitContract.Event.SaveClicked,
-            is UnitContract.Event.DeleteClicked -> previousState to null
+            is UnitContract.Event.SaveClicked -> previousState to null
         }
     }
 }

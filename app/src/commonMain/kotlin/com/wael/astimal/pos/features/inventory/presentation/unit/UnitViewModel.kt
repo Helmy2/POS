@@ -51,7 +51,7 @@ class UnitViewModel(
             }
 
             is UnitContract.Event.SaveClicked -> saveUnit()
-            is UnitContract.Event.DeleteClicked -> deleteUnit()
+            is UnitContract.Event.DeleteConfirmed -> deleteUnit()
             is UnitContract.Event.BackClicked -> navigateBack()
             else -> setState(event)
         }
@@ -122,6 +122,7 @@ class UnitViewModel(
     }
 
     private fun deleteUnit() {
+        setState(UnitContract.Event.DeleteConfirmed)
         val unitToDelete = state.value.selectedUnit ?: return
         setState(UnitContract.Event.LoadingStarted)
         viewModelScope.launch {
