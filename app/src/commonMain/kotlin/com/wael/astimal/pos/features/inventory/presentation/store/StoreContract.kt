@@ -17,7 +17,8 @@ object StoreContract {
         val inputArName: String = "",
         val inputEnName: String = "",
         val inputAddress: String = "",
-        val inputType: StoreType = StoreType.SUB
+        val inputType: StoreType = StoreType.SUB,
+        val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedStore != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
@@ -33,6 +34,8 @@ object StoreContract {
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
+        data object DeleteConfirmed : Event
+        data object DeleteCanceled : Event
 
         data class ArNameChanged(val name: String) : Event
         data class EnNameChanged(val name: String) : Event

@@ -74,7 +74,12 @@ class StoreRepositoryImpl(
 
     override suspend fun deleteStore(store: Store): Result<Unit> {
         return runCatching {
-            TODO()
+            supabaseClient.from("stores").delete {
+                filter {
+                    eq("id", store.id.server!!)
+                }
+            }
+            storeDao.deleteStoreByLocalId(store.id.local)
         }
     }
 

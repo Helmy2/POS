@@ -24,4 +24,6 @@ interface StoreDao {
     @Query("SELECT * FROM stores WHERE serverId = :serverId LIMIT 1")
     suspend fun getStoreByServerId(serverId: Long): StoreEntity?
 
+    @Query("DELETE FROM stores WHERE localId = :localId")
+    suspend fun deleteStoreByLocalId(localId: Long)
 }

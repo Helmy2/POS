@@ -47,7 +47,15 @@ class StoreReducer : Reducer<StoreContract.State, StoreContract.Event, Nothing> 
 
             is StoreContract.Event.TypeChanged -> previousState.copy(inputType = event.type) to null
 
-            is StoreContract.Event.BackClicked, is StoreContract.Event.SaveClicked, is StoreContract.Event.DeleteClicked -> previousState to null
+            is StoreContract.Event.DeleteClicked -> previousState.copy(
+                showDeleteDialog = true,
+            ) to null
+
+            is StoreContract.Event.DeleteConfirmed, is StoreContract.Event.DeleteCanceled -> previousState.copy(
+                showDeleteDialog = false,
+            ) to null
+
+            is StoreContract.Event.BackClicked, is StoreContract.Event.SaveClicked -> previousState to null
         }
     }
 }

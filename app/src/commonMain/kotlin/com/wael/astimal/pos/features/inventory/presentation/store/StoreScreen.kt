@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
@@ -112,6 +113,14 @@ fun StoreScreen(
                     enabled = state.canUserEdit,
                     itemToDisplayString = { stringResource(it.getStringResourceId()) },
                     modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            item {
+                ConfirmDeleteDialog(
+                    onConfirm = { onEvent(StoreContract.Event.DeleteConfirmed) },
+                    onDismiss = { onEvent(StoreContract.Event.DeleteCanceled) },
+                    show = state.showDeleteDialog
                 )
             }
         },
