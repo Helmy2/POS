@@ -50,16 +50,16 @@ fun Product.toDto(): ProductDto {
         id = id.server ?: 0,
         arName = name.arName ?: "",
         enName = name.enName ?: "",
-        categoryId = category?.id?.local,
+        categoryId = category?.id?.server,
         averagePurchasePrice = averagePrice,
         sellingPrice = sellingPrice,
-        subUnitId = subProductUnit?.id?.local,
+        subUnitId = subProductUnit?.id?.server!!,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),
         barcode = barcode,
         purchasePrice = purchasePrice,
-        mainUnitId = mainProductUnit.id.local
+        mainUnitId = mainProductUnit.id.server!!
     )
 }
 

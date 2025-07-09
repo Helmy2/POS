@@ -34,4 +34,7 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE serverId = :serverId LIMIT 1")
     suspend fun getProductByServerId(serverId: Long): ProductWithDetails?
 
+    @Query("DELETE FROM products WHERE localId = :localId")
+    suspend fun deleteProductByLocalId(localId: Long)
+
 }

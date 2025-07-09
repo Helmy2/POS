@@ -31,7 +31,8 @@ object ProductContract {
         val inputSubUnitsPerMainUnit: String = "1",
         val selectedCategoryId: Long? = null,
         val selectedMainUnitId: Long? = null,
-        val selectedSubUnitId: Long? = null
+        val selectedSubUnitId: Long? = null,
+        val showDeleteDialog: Boolean = false
 
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedProduct != null
@@ -53,6 +54,8 @@ object ProductContract {
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
+        data object DeleteConfirmed : Event
+        data object DeleteCanceled : Event
 
         // Form Input Changes
         data class ArNameChanged(val name: String) : Event

@@ -61,7 +61,7 @@ class ProductViewModel(
             }
 
             is ProductContract.Event.SaveClicked -> saveProduct()
-            is ProductContract.Event.DeleteClicked -> deleteProduct()
+            is ProductContract.Event.DeleteConfirmed -> deleteProduct()
             is ProductContract.Event.BackClicked -> navigateBack()
             else -> setState(event)
         }
@@ -154,6 +154,7 @@ class ProductViewModel(
     }
 
     private fun deleteProduct() {
+        setState(ProductContract.Event.DeleteConfirmed)
         val productToDelete = state.value.selectedProduct ?: return
         setState(ProductContract.Event.LoadingStarted)
         viewModelScope.launch {

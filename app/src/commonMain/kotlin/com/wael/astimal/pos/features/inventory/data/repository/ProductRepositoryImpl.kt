@@ -80,8 +80,13 @@ class ProductRepositoryImpl(
 
     override suspend fun deleteProduct(product: Product): Result<Unit> {
         return try {
-            // TODO: delete product from database
-            TODO()
+            supabaseClient.from("products").delete {
+                filter {
+                    eq("id", product.id.server!!)
+                }
+            }
+            productDao.deleteProductByLocalId(product.id.local)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

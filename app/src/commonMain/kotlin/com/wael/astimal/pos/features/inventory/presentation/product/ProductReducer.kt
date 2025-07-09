@@ -80,9 +80,17 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
                 selectedMainUnitId = event.id
             ) to null
 
+            is ProductContract.Event.DeleteClicked -> previousState.copy(
+                showDeleteDialog = true
+            ) to null
+
+            is ProductContract.Event.DeleteCanceled, is ProductContract.Event.DeleteConfirmed -> previousState.copy(
+                showDeleteDialog = false
+            ) to null
+
             is ProductContract.Event.BackClicked,
-            is ProductContract.Event.SaveClicked,
-            is ProductContract.Event.DeleteClicked -> previousState to null
+            is ProductContract.Event.SaveClicked
+                -> previousState to null
         }
     }
 }
