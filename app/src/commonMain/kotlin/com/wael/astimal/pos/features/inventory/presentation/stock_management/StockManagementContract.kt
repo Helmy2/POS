@@ -25,6 +25,7 @@ object StockManagementContract {
         val adjustmentQuantityChange: String = "",
         val adjustmentReason: StockAdjustmentReason = StockAdjustmentReason.RECOUNT,
         val adjustmentNotes: String = "",
+        val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean get() = adjustmentStore != null && adjustmentProduct != null && adjustmentQuantityChange.isNotBlank()
@@ -52,10 +53,15 @@ object StockManagementContract {
 
         data object AdjustmentSucceeded : Event
         data object AdjustmentFailed : Event
+        data object DeleteSucceeded : Event
 
         data object NavigateBack : Event
         data object DeleteClicked : Event
+        data object DeleteCanceled : Event
+        data object DeleteConfirmed : Event
         data object SaveClicked : Event
         data object NewStockAdjustmentClicked : Event
+        data object LoadingStarted : Event
+        data object LoadingFinished : Event
     }
 }

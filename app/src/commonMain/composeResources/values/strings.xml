@@ -220,8 +220,8 @@
     <string name="error_saving_partner">Error: Could not save partner details.</string>
     <string name="partner_deleted_successfully">Partner deleted successfully.</string>
     <string name="error_deleting_partner">Error: Could not delete partner.</string>
-    <string name="confirm_delete_partner_message">Are you sure you want to delete %1$s? This action cannot be undone.</string>
-
+    <string name="confirm_delete_partner_message">Are you sure you want to delete? This action cannot be undone.</string>
+    <string name="stock_saved_successfully">Stock saved successfully.</string>
     <string name="account_statement">Account Statement</string>
     <string name="error_loading_partner_details">Error: Could not load partner details.</string>
     <string name="debit">Debit</string>

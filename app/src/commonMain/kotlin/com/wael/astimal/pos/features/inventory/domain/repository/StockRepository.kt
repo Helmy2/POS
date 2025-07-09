@@ -9,7 +9,9 @@ interface StockRepository {
 
     fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Double>
 
-    suspend fun addStockAdjustment(adjustment: StockAdjustment)
+    suspend fun addStockAdjustment(adjustment: StockAdjustment): Result<Unit>
 
     suspend fun syncWithServer(adjustments: List<StockAdjustmentEntity>): Result<Unit>
+
+    suspend fun deleteStockAdjustment(adjustment: StockAdjustment): Result<Unit>
 }

@@ -3,7 +3,9 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
@@ -53,5 +55,19 @@ fun StockAdjustment.toEntity(): StockAdjustmentEntity {
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt
+    )
+}
+
+fun StockAdjustment.toDto(): StockAdjustmentDto {
+    return StockAdjustmentDto(
+        id = id.server ?: 0,
+        storeId = store.id.server ?: 0,
+        productId = product.id.server ?: 0,
+        userId = user.id.serverStringId!!,
+        reason = reason.name.lowercase(),
+        notes = notes,
+        quantity = quantityChange,
+        createdAt = createdAt.toDateString(),
+        updatedAt = updatedAt.toDateString()
     )
 }

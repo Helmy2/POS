@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
@@ -156,6 +157,14 @@ fun StockManagementScreen(
                 label = stringResource(Res.string.notes),
                 enabled = state.canUserEdit,
                 modifier = Modifier.padding(8.dp)
+            )
+        }
+
+        item {
+            ConfirmDeleteDialog(
+                onConfirm = { onEvent(StockManagementContract.Event.DeleteConfirmed) },
+                onDismiss = { onEvent(StockManagementContract.Event.DeleteCanceled) },
+                show = state.showDeleteDialog
             )
         }
     }

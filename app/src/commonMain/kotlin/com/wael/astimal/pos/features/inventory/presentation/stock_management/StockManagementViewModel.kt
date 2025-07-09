@@ -25,9 +25,11 @@ import pos.app.generated.resources.error_loading_stock
 import pos.app.generated.resources.error_loading_stores
 import pos.app.generated.resources.error_missing_data
 import pos.app.generated.resources.error_updating_stock
+import pos.app.generated.resources.failed_to_delete_store
 import pos.app.generated.resources.insufficient_stock
 import pos.app.generated.resources.invalid_quantity
-import pos.app.generated.resources.stock_updated_successfully
+import pos.app.generated.resources.stock_saved_successfully
+import pos.app.generated.resources.store_deleted_successfully
 
 class StockManagementViewModel(
     private val stockRepository: StockRepository,
@@ -61,7 +63,25 @@ class StockManagementViewModel(
                 }
             }
 
+            is StockManagementContract.Event.DeleteConfirmed -> deleteStockAdjustment()
+
             else -> setState(event)
+        }
+    }
+
+    private fun deleteStockAdjustment() {
+        setState(StockManagementContract.Event.DeleteConfirmed)
+        val adjustmentToRemove = state.value.selectedAdjustment ?: return
+        setState(StockManagementContract.Event.LoadingStarted)
+        viewModelScope.launch {
+            stockRepository.deleteStockAdjustment(adjustmentToRemove).onSuccess {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.store_deleted_successfully)))
+                setState(StockManagementContract.Event.DeleteSucceeded)
+                loadStocks()
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_delete_store)))
+                setState(StockManagementContract.Event.LoadingFinished)
+            }
         }
     }
 
@@ -141,7 +161,7 @@ class StockManagementViewModel(
 
             try {
                 stockRepository.addStockAdjustment(adjustment)
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.stock_updated_successfully)))
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.stock_saved_successfully)))
                 setState(StockManagementContract.Event.AdjustmentSucceeded)
             } catch (e: Exception) {
                 snackbarController.sendEvent(

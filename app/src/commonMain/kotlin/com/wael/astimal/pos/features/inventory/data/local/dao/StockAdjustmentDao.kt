@@ -26,4 +26,7 @@ interface StockAdjustmentDao {
 
     @Query("SELECT * FROM stock_adjustments")
     fun getAll(): Flow<List<StockAdjustmentWithDetails>>
+
+    @Query("DELETE FROM stock_adjustments WHERE localId = :localId")
+    suspend fun deleteByLocalId(localId: Long)
 }
