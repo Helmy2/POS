@@ -35,7 +35,7 @@ class PartnerTransactionRepositoryImpl(
 
     override suspend fun deleteVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return try {
-            transactionDao.deleteTransactionById(voucher.id.local)
+            transactionDao.softDeleteTransactionById(voucher.id.local)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -61,6 +61,18 @@ class PartnerTransactionRepositoryImpl(
     override suspend fun getUnsyncedTransactions(): Result<List<ReceivePayVoucher>> {
         return runCatching {
             transactionDao.getUnsyncedTransactions().map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getAllDeletedTransactions(): Result<List<ReceivePayVoucher>> {
+        return runCatching {
+            transactionDao.getAllDeletedTransactions().map { it.toDomain() }
+        }
+    }
+
+    override suspend fun hardDeleteByServerId(serverId: String): Result<Unit> {
+        return runCatching {
+            transactionDao.hardDeleteTransactionById(serverId)
         }
     }
 }

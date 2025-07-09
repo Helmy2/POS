@@ -38,8 +38,8 @@ interface PartnerTransactionDao {
     fun getTransactionsByPartnerId(id: Long): Flow<List<PartnerTransactionWithDetails>>
 
 
-    @Query("DELETE FROM partner_transactions WHERE localId = :id")
-    suspend fun deleteTransactionById(id: Long)
+    @Query("UPDATE partner_transactions SET isDeletedLocally = 1 WHERE localId = :id")
+    suspend fun softDeleteTransactionById(id: Long)
 
     @Transaction
     @Query("SELECT * FROM partner_transactions WHERE localId = :id")
@@ -52,4 +52,11 @@ interface PartnerTransactionDao {
     @Transaction
     @Query("SELECT * FROM partner_transactions WHERE isSynced = 0")
     suspend fun getUnsyncedTransactions(): List<PartnerTransactionWithDetails>
+
+    @Transaction
+    @Query("SELECT * FROM partner_transactions WHERE isDeletedLocally = 1")
+    suspend fun getAllDeletedTransactions(): List<PartnerTransactionWithDetails>
+
+    @Query("DELETE FROM partner_transactions WHERE serverId = :serverId")
+    suspend fun hardDeleteTransactionById(serverId: String)
 }

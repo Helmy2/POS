@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
@@ -48,11 +48,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_voucher
 import pos.app.generated.resources.amount
-import pos.app.generated.resources.are_you_sure_you_want_to_delete_this_voucher
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.cancel
-import pos.app.generated.resources.confirm_delete
-import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit_voucher
 import pos.app.generated.resources.new_voucher
 import pos.app.generated.resources.notes_optional
@@ -236,26 +233,14 @@ fun VoucherItem(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val language = LocalAppLocale.current
 
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(Res.string.confirm_delete)) },
-            text = { Text(stringResource(Res.string.are_you_sure_you_want_to_delete_this_voucher)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteConfirm = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text(stringResource(Res.string.delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm = false
-                }) { Text(stringResource(Res.string.cancel)) }
-            })
-    }
+    ConfirmDeleteDialog(
+        show = showDeleteConfirm,
+        onConfirm = {
+            showDeleteConfirm = false
+            onDelete()
+        },
+        onDismiss = { showDeleteConfirm = false }
+    )
 
     Card(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(

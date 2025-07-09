@@ -25,6 +25,7 @@ import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
 
 
 class SyncServiceImpl(
@@ -133,6 +134,17 @@ class SyncServiceImpl(
             }.takeIf { it.isNotEmpty() }?.let {
                 supabaseClient.pushAll<PartnerTransactionDto>("partner_transactions") { it }
             }?.getOrThrow()
+
+            partnerTransactionRepository.getAllDeletedTransactions().getOrThrow().map {
+                it.toDto()
+            }.takeIf { it.isNotEmpty() }?.forEach {
+                supabaseClient.postgrest["partner_transactions"].delete {
+                    filter {
+                        eq("id", it.id)
+                    }
+                }
+                partnerTransactionRepository.hardDeleteByServerId(it.id)
+            }
 
             supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions").getOrThrow()
                 .also {
