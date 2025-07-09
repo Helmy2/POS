@@ -52,10 +52,16 @@ class CategoryReducer : Reducer<CategoryContract.State, CategoryContract.Event, 
             is CategoryContract.Event.EnNameChanged ->
                 previousState.copy(inputEnName = event.name) to null
 
+            is CategoryContract.Event.DeleteClicked ->
+                previousState.copy(showDeleteDialog = true) to null
+
+            is CategoryContract.Event.DeleteCanceled ->
+                previousState.copy(showDeleteDialog = false) to null
+
             // Events that trigger sagas in ViewModel but don't change state directly
             is CategoryContract.Event.BackClicked,
             is CategoryContract.Event.SaveClicked,
-            is CategoryContract.Event.DeleteClicked -> previousState to null
+            is CategoryContract.Event.DeleteConfirmed -> previousState to null
         }
     }
 }

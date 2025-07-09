@@ -14,7 +14,8 @@ object CategoryContract {
         val isSearchActive: Boolean = false,
         val currentUser: User? = null,
         val inputArName: String = "",
-        val inputEnName: String = ""
+        val inputEnName: String = "",
+        val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedCategory != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
@@ -30,6 +31,8 @@ object CategoryContract {
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
+        data object DeleteConfirmed : Event
+        data object DeleteCanceled : Event
 
         // Form Input Changes
         data class ArNameChanged(val name: String) : Event

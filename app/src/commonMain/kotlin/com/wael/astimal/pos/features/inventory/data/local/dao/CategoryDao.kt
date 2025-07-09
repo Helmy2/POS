@@ -23,4 +23,8 @@ interface CategoryDao {
 
     @Query("SELECT * FROM categories WHERE serverId = :serverId LIMIT 1")
     suspend fun getCategoryByServerId(serverId: Long): CategoryEntity?
+
+    //deleteCategory
+    @Query("DELETE FROM categories WHERE localId = :localId")
+    suspend fun deleteCategoryByLocalId(localId: Long)
 }

@@ -64,7 +64,7 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         StockAdjustmentEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 11,
+    version = 12,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {

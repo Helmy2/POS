@@ -51,7 +51,7 @@ class CategoryViewModel(
             }
 
             is CategoryContract.Event.SaveClicked -> saveCategory()
-            is CategoryContract.Event.DeleteClicked -> deleteCategory()
+            is CategoryContract.Event.DeleteConfirmed -> deleteCategory()
             is CategoryContract.Event.BackClicked -> navigateBack()
             else -> setState(event)
         }
@@ -112,6 +112,7 @@ class CategoryViewModel(
     }
 
     private fun deleteCategory() {
+        setState(CategoryContract.Event.DeleteConfirmed)
         val categoryToDelete = state.value.selectedCategory ?: return
         setState(CategoryContract.Event.LoadingStarted)
         viewModelScope.launch {

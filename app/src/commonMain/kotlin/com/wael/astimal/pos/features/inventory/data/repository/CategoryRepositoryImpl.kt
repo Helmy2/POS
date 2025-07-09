@@ -58,8 +58,14 @@ class CategoryRepositoryImpl(
 
     override suspend fun deleteCategory(category: Category): Result<Unit> {
         return try {
-            // TODO: delete category from database
-            TODO()
+            supabaseClient.from("categories").delete {
+                filter {
+                    eq("id", category.id.server!!)
+                }
+                select()
+            }
+            categoryDao.deleteCategoryByLocalId(category.id.local)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
