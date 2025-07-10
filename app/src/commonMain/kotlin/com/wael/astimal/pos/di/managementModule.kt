@@ -4,14 +4,14 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.logic.OrderAmountLogic
 import com.wael.astimal.pos.features.management.data.logic.ReturnAmountLogic
 import com.wael.astimal.pos.features.management.data.repository.BusinessPartnerRepositoryImpl
-import com.wael.astimal.pos.features.management.data.repository.EmployeeAccountRepositoryImpl
+import com.wael.astimal.pos.features.management.data.repository.EmployeeTransactionRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PartnerTransactionRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PurchaseRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.PurchaseReturnRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesOrderRepositoryImpl
 import com.wael.astimal.pos.features.management.data.repository.SalesReturnRepositoryImpl
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
-import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
+import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseRepository
 import com.wael.astimal.pos.features.management.domain.repository.PurchaseReturnRepository
@@ -46,7 +46,7 @@ val managementModule = module {
     singleOf(::SalesReturnRepositoryImpl) { bind<SalesReturnRepository>() }
     singleOf(::PurchaseRepositoryImpl) { bind<PurchaseRepository>() }
     singleOf(::PurchaseReturnRepositoryImpl) { bind<PurchaseReturnRepository>() }
-    singleOf(::EmployeeAccountRepositoryImpl) { bind<EmployeeAccountRepository>() }
+    singleOf(::EmployeeTransactionRepositoryImpl) { bind<EmployeeTransactionRepository>() }
     singleOf(::PartnerTransactionRepositoryImpl) { bind<PartnerTransactionRepository>() }
     singleOf(::BusinessPartnerRepositoryImpl) { bind<BusinessPartnerRepository>() }
 

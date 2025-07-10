@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.employee_account
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
-import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -9,7 +9,7 @@ object EmployeeAccountContract {
 
     data class DialogState(
         val show: Boolean = false,
-        val selectedTransaction: EmployeeAccountTransaction? = null,
+        val selectedTransaction: EmployeeTransaction? = null,
         val selectedEmployee: User? = null,
         val amount: String = "",
         val transactionType: EmployeeTransactionType = EmployeeTransactionType.SALARY,
@@ -20,7 +20,7 @@ object EmployeeAccountContract {
         val isLoading: Boolean = true,
         val currentUser: User? = null,
         val employeesForDropdown: List<User> = emptyList(),
-        val transactions: List<EmployeeAccountTransaction> = emptyList(),
+        val transactions: List<EmployeeTransaction> = emptyList(),
         val searchQuery: String = "",
         val dialogState: DialogState = DialogState()
     ) : Reducer.ViewState {
@@ -32,8 +32,8 @@ object EmployeeAccountContract {
         data object LoadInitialData : Event
         data class SearchQueryChanged(val query: String) : Event
         data object AddTransactionClicked : Event
-        data class EditTransactionClicked(val transaction: EmployeeAccountTransaction) : Event
-        data class DeleteTransactionClicked(val transaction: EmployeeAccountTransaction) : Event
+        data class EditTransactionClicked(val transaction: EmployeeTransaction) : Event
+        data class DeleteTransactionClicked(val transaction: EmployeeTransaction) : Event
         data object SaveChangesClicked : Event
         data object DismissDialog : Event
 
@@ -46,7 +46,7 @@ object EmployeeAccountContract {
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val employees: List<User>) : Event
-        data class TransactionsLoaded(val transactions: List<EmployeeAccountTransaction>) : Event
+        data class TransactionsLoaded(val transactions: List<EmployeeTransaction>) : Event
         data object SaveSucceeded : Event
 
         data object NavigateBack : Event

@@ -25,7 +25,7 @@ import com.wael.astimal.pos.features.management.data.local.dao.PurchaseDao
 import com.wael.astimal.pos.features.management.data.local.dao.PurchaseReturnDao
 import com.wael.astimal.pos.features.management.data.local.dao.SalesOrderDao
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
-import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
 import com.wael.astimal.pos.features.management.data.local.entity.OrderEntity
 import com.wael.astimal.pos.features.management.data.local.entity.OrderProductEntity
 import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnEntity
@@ -35,7 +35,6 @@ import com.wael.astimal.pos.features.management.data.local.entity.PurchaseEntity
 import com.wael.astimal.pos.features.management.data.local.entity.PurchaseProductEntity
 import com.wael.astimal.pos.features.management.data.local.entity.PurchaseReturnEntity
 import com.wael.astimal.pos.features.management.data.local.entity.PurchaseReturnProductEntity
-import com.wael.astimal.pos.features.management.data.local.entity.SaleCommissionEntity
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
@@ -59,12 +58,11 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         PurchaseProductEntity::class,
         PurchaseReturnEntity::class,
         PurchaseReturnProductEntity::class,
-        SaleCommissionEntity::class,
-        EmployeeAccountTransactionEntity::class,
+        EmployeeTransactionEntity::class,
         StockAdjustmentEntity::class,
         PartnerTransactionEntity::class
     ],
-    version = 12,
+    version = 17,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {

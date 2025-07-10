@@ -8,9 +8,9 @@ import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
-import com.wael.astimal.pos.features.management.domain.repository.EmployeeAccountRepository
+import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ import pos.app.generated.resources.transaction_deleted_successfully
 import pos.app.generated.resources.transaction_saved_successfully
 
 class EmployeeAccountViewModel(
-    private val employeeAccountRepository: EmployeeAccountRepository,
+    private val employeeTransactionRepository: EmployeeTransactionRepository,
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController
@@ -39,8 +39,8 @@ class EmployeeAccountViewModel(
     }
 
     // A derived state flow for the UI that automatically filters based on the search query
-    val filteredTransactionsState: StateFlow<List<EmployeeAccountTransaction>> = combine(
-        state, employeeAccountRepository.getAllTransaction()
+    val filteredTransactionsState: StateFlow<List<EmployeeTransaction>> = combine(
+        state, employeeTransactionRepository.getAllTransaction()
     ) { state, allTransactions ->
         setState(EmployeeAccountContract.Event.TransactionsLoaded(allTransactions))
         if (state.searchQuery.isBlank()) {
@@ -94,7 +94,7 @@ class EmployeeAccountViewModel(
                 return@launch
             }
 
-            val transactionToSave = EmployeeAccountTransaction(
+            val transactionToSave = EmployeeTransaction(
                 id = dialogState.selectedTransaction?.id ?: Id.new,
                 employee = employee,
                 createdByEmployee = currentUser,
@@ -102,10 +102,9 @@ class EmployeeAccountViewModel(
                 type = dialogState.transactionType,
                 notes = dialogState.notes,
                 createdAt = dialogState.selectedTransaction?.createdAt ?: Clock.now(),
-                relatedCommission = dialogState.selectedTransaction?.relatedCommission
             )
 
-            val result = employeeAccountRepository.saveManualPayment(transactionToSave)
+            val result = employeeTransactionRepository.saveManualPayment(transactionToSave)
 
             result.onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transaction_saved_successfully)))
@@ -116,9 +115,9 @@ class EmployeeAccountViewModel(
         }
     }
 
-    private fun deleteTransaction(transaction: EmployeeAccountTransaction) {
+    private fun deleteTransaction(transaction: EmployeeTransaction) {
         viewModelScope.launch {
-            employeeAccountRepository.deleteManualPayment(transaction.id.local).onSuccess {
+            employeeTransactionRepository.deleteManualPayment(transaction.id.local).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transaction_deleted_successfully)))
             }.onFailure {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_deleting_transaction)))

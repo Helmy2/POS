@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,26 +33,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.domain.entity.EmployeeAccountTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_transaction
 import pos.app.generated.resources.amount
-import pos.app.generated.resources.are_you_sure_you_want_to_delete_this_transaction
 import pos.app.generated.resources.cancel
-import pos.app.generated.resources.confirm_delete
-import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit_transaction
 import pos.app.generated.resources.employee
-import pos.app.generated.resources.for_invoice
 import pos.app.generated.resources.new_transaction
 import pos.app.generated.resources.notes_optional
 import pos.app.generated.resources.save
@@ -77,7 +73,7 @@ fun EmployeeAccountRoute(
 @Composable
 fun EmployeeAccountScreen(
     state: EmployeeAccountContract.State,
-    filteredTransactions: List<EmployeeAccountTransaction>,
+    filteredTransactions: List<EmployeeTransaction>,
     onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
     if (state.dialogState.show) {
@@ -190,7 +186,7 @@ fun EditTransactionDialog(
 
 @Composable
 fun TransactionList(
-    transactions: List<EmployeeAccountTransaction>,
+    transactions: List<EmployeeTransaction>,
     canEdit: Boolean,
     onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
@@ -216,7 +212,7 @@ fun TransactionList(
 
 @Composable
 fun TransactionItem(
-    transaction: EmployeeAccountTransaction,
+    transaction: EmployeeTransaction,
     canEdit: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -225,7 +221,7 @@ fun TransactionItem(
     val language = LocalAppLocale.current
     Card {
         Column(
-            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             Text(
                 text = transaction.employee.localizedName.displayName(language),
@@ -247,7 +243,7 @@ fun TransactionItem(
                     color = if (transaction.amount >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
                 Spacer(Modifier.weight(1f))
-                AnimatedVisibility(canEdit && transaction.relatedCommission == null) {
+                AnimatedVisibility(canEdit) {
                     Row {
                         IconButton(onClick = onEdit) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
@@ -262,15 +258,16 @@ fun TransactionItem(
                     }
                 }
             }
-            transaction.relatedCommission?.let { commission ->
-                Text(
-                    text = stringResource(commission.sourceTransactionType.getStringResId()) + " " + stringResource(
-                        Res.string.for_invoice, commission.sourceInvoiceNumber
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            // TODO add related invoice
+//            transaction.relatedCommission?.let { commission ->
+//                Text(
+//                    text = stringResource(commission.sourceTransactionType.getStringResId()) + " " + stringResource(
+//                        Res.string.for_invoice, commission.sourceInvoiceNumber
+//                    ),
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                )
+//            }
             transaction.notes?.takeIf { it.isNotBlank() }?.let {
                 Text(
                     text = it,
@@ -281,26 +278,12 @@ fun TransactionItem(
         }
     }
 
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(Res.string.confirm_delete)) },
-            text = { Text(stringResource(Res.string.are_you_sure_you_want_to_delete_this_transaction)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteConfirm = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(stringResource(Res.string.delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(Res.string.cancel))
-                }
-            })
-    }
+    ConfirmDeleteDialog(
+        show = showDeleteConfirm,
+        onDismiss = { showDeleteConfirm = false },
+        onConfirm = {
+            onDelete()
+            showDeleteConfirm = false
+        }
+    )
 }

@@ -4,6 +4,7 @@ import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.business_partner
+import pos.app.generated.resources.employee_account
 import pos.app.generated.resources.receive_pay_voucher
 
 class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.Event, Nothing> {
@@ -18,10 +19,10 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                         Destination.BusinessPartners,
                         Res.string.business_partner
                     ),
-//                    ManagementContract.ManagementItem(
-//                        Destination.EmployeeAccounts,
-//                        Res.string.employee_account
-//                    ),
+                    ManagementContract.ManagementItem(
+                        Destination.EmployeeAccounts,
+                        Res.string.employee_account
+                    ),
 //                    ManagementContract.ManagementItem(
 //                        Destination.SalesOrders,
 //                        Res.string.sales

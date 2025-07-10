@@ -16,10 +16,12 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
+import com.wael.astimal.pos.features.management.data.remote.dto.EmployeeTransactionDto
 import com.wael.astimal.pos.features.management.data.remote.dto.PartnerTransactionDto
 import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.management.domain.entity.toDto
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
@@ -39,6 +41,7 @@ class SyncServiceImpl(
     private val stockRepository: StockRepository,
     private val businessPartnerRepository: BusinessPartnerRepository,
     private val partnerTransactionRepository: PartnerTransactionRepository,
+    private val employeeTransactionRepository: EmployeeTransactionRepository,
     private val navigationController: NavigationController
 ) : SyncService {
 
@@ -129,44 +132,84 @@ class SyncServiceImpl(
                 )
             }
 
-            partnerTransactionRepository.getUnsyncedTransactions().getOrThrow().map {
-                it.toDto()
-            }.takeIf { it.isNotEmpty() }?.let {
-                supabaseClient.pushAll<PartnerTransactionDto>("partner_transactions") { it }
-            }?.getOrThrow()
-
-            partnerTransactionRepository.getAllDeletedTransactions().getOrThrow().map {
-                it.toDto()
-            }.takeIf { it.isNotEmpty() }?.forEach {
-                supabaseClient.postgrest["partner_transactions"].delete {
-                    filter {
-                        eq("id", it.id)
-                    }
-                }
-                partnerTransactionRepository.hardDeleteByServerId(it.id)
-            }
-
-            supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions").getOrThrow()
-                .also {
-                    partnerTransactionRepository.syncWithServer(
-                        it.map { partnerTransactionDto ->
-                            partnerTransactionDto.toEntity(
-                                partnerLocalId = businessPartnerRepository.getBusinessPartnerByServerId(
-                                    partnerTransactionDto.partnerId
-                                ).getOrThrow()!!.localId,
-                                userLocalId = userRepository.getUserByServerId(
-                                    partnerTransactionDto.createdByUserId
-                                ).getOrThrow()!!.id.local
-                            )
-                        },
-                    )
-                }
+            syncPartnerTransactions()
+            syncEmployeesTransactions()
 
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
         }
+    }
+
+    private suspend fun syncEmployeesTransactions() {
+        employeeTransactionRepository.getUnsyncedTransactions().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<EmployeeTransactionDto>("employee_transactions") { it }
+        }?.getOrThrow()
+
+        employeeTransactionRepository.getAllDeletedTransactions().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            supabaseClient.postgrest["employee_transactions"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            employeeTransactionRepository.hardDeleteByServerId(it.id)
+        }
+
+        supabaseClient.fetchAll<EmployeeTransactionDto>("employee_transactions").getOrThrow()
+            .also {
+                employeeTransactionRepository.syncWithServer(
+                    it.map { employeeTransactionDto ->
+                        employeeTransactionDto.toEntity(
+                            employeeId = userRepository.getUserByServerId(
+                                employeeTransactionDto.employeeId
+                            ).getOrThrow()!!.id.local,
+                            createdByEmployeeId = userRepository.getUserByServerId(
+                                employeeTransactionDto.creatorId
+                            ).getOrThrow()!!.id.local
+                        )
+                    },
+                )
+            }
+    }
+
+    private suspend fun syncPartnerTransactions() {
+        partnerTransactionRepository.getUnsyncedTransactions().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<PartnerTransactionDto>("partner_transactions") { it }
+        }?.getOrThrow()
+
+        partnerTransactionRepository.getAllDeletedTransactions().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            supabaseClient.postgrest["partner_transactions"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            partnerTransactionRepository.hardDeleteByServerId(it.id)
+        }
+
+        supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions").getOrThrow()
+            .also {
+                partnerTransactionRepository.syncWithServer(
+                    it.map { partnerTransactionDto ->
+                        partnerTransactionDto.toEntity(
+                            partnerLocalId = businessPartnerRepository.getBusinessPartnerByServerId(
+                                partnerTransactionDto.partnerId
+                            ).getOrThrow()!!.localId,
+                            userLocalId = userRepository.getUserByServerId(
+                                partnerTransactionDto.createdByUserId
+                            ).getOrThrow()!!.id.local
+                        )
+                    },
+                )
+            }
     }
 }
 

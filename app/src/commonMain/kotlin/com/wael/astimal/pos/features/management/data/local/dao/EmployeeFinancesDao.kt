@@ -5,10 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionEntity
-import com.wael.astimal.pos.features.management.data.local.entity.EmployeeAccountTransactionWithDetailsEntity
-import com.wael.astimal.pos.features.management.data.local.entity.SaleCommissionEntity
-import com.wael.astimal.pos.features.management.domain.entity.SourceTransactionType
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionWithDetailsEntity
 import kotlinx.coroutines.flow.Flow
 
 
@@ -16,27 +14,26 @@ import kotlinx.coroutines.flow.Flow
 interface EmployeeFinancesDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSaleCommission(commission: SaleCommissionEntity): Long
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdateEmployeeTransaction(transaction: EmployeeAccountTransactionEntity): Long
-
-    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId")
-    fun getTransactionsForEmployee(employeeId: Long): Flow<List<EmployeeAccountTransactionEntity>>
+    suspend fun insertOrUpdate(transaction: EmployeeTransactionEntity): Long
 
     @Transaction
-    @Query("SELECT * FROM employee_account_transactions")
-    fun getAllTransactions(): Flow<List<EmployeeAccountTransactionWithDetailsEntity>>
+    @Query("SELECT * FROM employee_account_transactions WHERE NOT isDeletedLocally")
+    fun getAllTransactions(): Flow<List<EmployeeTransactionWithDetailsEntity>>
 
-    @Query("SELECT SUM(amount) FROM employee_account_transactions WHERE employeeId = :employeeId")
-    fun getEmployeeBalance(employeeId: Long): Flow<Double?>
+    @Query("UPDATE employee_account_transactions SET isDeletedLocally = 1 WHERE localId = :localId")
+    suspend fun softDeleteEmployeeTransaction(localId: Long)
 
-    @Query("SELECT * FROM employee_sale_commissions WHERE sourceTransactionId = :orderId AND sourceTransactionType = :type")
-    suspend fun getAllCommissionsBySource(orderId: Long, type: SourceTransactionType): List<SaleCommissionEntity>
+    @Transaction
+    @Query("SELECT * FROM employee_account_transactions WHERE isSynced = 0")
+    suspend fun getUnsyncedTransactions(): List<EmployeeTransactionWithDetailsEntity>
 
-    @Query("DELETE FROM employee_sale_commissions WHERE sourceTransactionId = :orderId AND sourceTransactionType = :type")
-    suspend fun deleteAllCommissionsBySource(orderId: Long, type: SourceTransactionType)
+    @Transaction
+    @Query("SELECT * FROM employee_account_transactions WHERE isDeletedLocally = 1")
+    suspend fun getAllDeletedTransactions(): List<EmployeeTransactionWithDetailsEntity>
 
-    @Query("DELETE FROM employee_account_transactions WHERE localId = :localId")
-    suspend fun deleteEmployeeTransaction(localId: Long)
+    @Query("DELETE FROM employee_account_transactions WHERE serverId = :serverId")
+    suspend fun hardDeleteTransactionById(serverId: String)
+
+    @Query("SELECT * FROM employee_account_transactions WHERE serverId = :id LIMIT 1")
+    suspend fun getTransactionBySeverId(id: String): EmployeeTransactionEntity?
 }

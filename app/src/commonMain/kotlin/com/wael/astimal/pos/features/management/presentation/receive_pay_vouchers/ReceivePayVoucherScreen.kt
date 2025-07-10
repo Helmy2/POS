@@ -245,10 +245,13 @@ fun VoucherItem(
     Card(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
                     text = voucher.partner.name.displayName(language),
                     style = MaterialTheme.typography.titleMedium
@@ -278,7 +281,11 @@ fun VoucherItem(
                 Text(text = date, style = MaterialTheme.typography.bodySmall)
             }
             if (canEdit) {
-                Row(modifier = Modifier.padding(start = 8.dp)) {
+                Row(
+                    modifier = Modifier.padding(start = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(onClick = onEdit, modifier = Modifier.size(24.dp)) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
