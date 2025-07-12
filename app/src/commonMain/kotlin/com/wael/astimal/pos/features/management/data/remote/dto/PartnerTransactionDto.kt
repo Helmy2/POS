@@ -21,7 +21,7 @@ data class PartnerTransactionDto(
     @SerialName("invoice_id")
     val invoiceId: String?,
     @SerialName("business_partner_id")
-    val partnerId: Long,
+    val partnerId: String,
     @SerialName("created_by_user_id")
     val createdByUserId: String
 )

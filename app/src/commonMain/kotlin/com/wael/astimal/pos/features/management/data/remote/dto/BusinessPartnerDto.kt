@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BusinessPartnerDto(
-    val id: Long,
+    val id: String,
     @SerialName("ar_name") val arName: String,
     @SerialName("en_name") val enName: String,
     val phone: String?,
@@ -32,5 +32,6 @@ fun BusinessPartnerDto.toEntity(
     type = PartnerType.valueOf(partnerType?.uppercase() ?: PartnerType.CLIENT.name),
     createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
     updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
-    responsibleEmployeeLocalId = responsibleId
+    responsibleEmployeeLocalId = responsibleId,
+    isSynced = true
 )

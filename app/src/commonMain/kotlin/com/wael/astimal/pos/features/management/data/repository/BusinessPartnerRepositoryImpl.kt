@@ -5,22 +5,17 @@ import com.wael.astimal.pos.features.management.data.local.dao.BusinessPartnerDa
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
-import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
-import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
-import com.wael.astimal.pos.features.management.domain.entity.toDto
+import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
-import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class BusinessPartnerRepositoryImpl(
     private val partnerDao: BusinessPartnerDao,
-    private val supabaseClient: SupabaseClient,
-    private val userRepository: UserRepository,
     private val partnerTransactionDao: PartnerTransactionDao,
 ) : BusinessPartnerRepository {
 
@@ -46,30 +41,18 @@ class BusinessPartnerRepositoryImpl(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
-            val entity = partner.toDto()
-
-            val result = if (partner.id == Id.new) {
-                supabaseClient.from("business_partners").insert(entity) {
-                    select()
-                }.decodeSingle<BusinessPartnerDto>()
+            val entity = if (partner.id == Id.new) {
+                partner.toEntity().copy(
+                    serverId = Uuid.random().toString()
+                )
             } else {
-                supabaseClient.from("business_partners").update(entity) {
-                    filter {
-                        eq("id", entity.id)
-                    }
-                    select()
-                }.decodeSingle<BusinessPartnerDto>()
+                partner.toEntity()
             }
 
-            partnerDao.insertOrUpdate(
-                result.toEntity(
-                    responsibleId = userRepository.getUserByServerId(
-                        result.responsibleId
-                    ).getOrThrow()!!.id.local
-                ).copy(localId = partner.id.local)
-            )
+            partnerDao.insertOrUpdate(entity)
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -98,14 +81,38 @@ class BusinessPartnerRepositoryImpl(
 
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return runCatching {
-            supabaseClient.from("business_partners").delete {
-                filter {
-                    eq("id", partner.id.server!!)
-                }
-            }
-            partnerDao.deletePartnerByLocalId(partner.id.local)
+            partnerDao.softDeletePartnerByLocalId(partner.id.local)
         }.onFailure {
             it.printStackTrace()
+        }
+    }
+
+
+    override suspend fun hardDeleteByServerId(serverId: String): Result<Unit> {
+        return try {
+            partnerDao.hardDeletePartnerByServerId(serverId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getAllUnSynced(): Result<List<BusinessPartner>> {
+        return try {
+            Result.success(partnerDao.getAllUnSynced().map { it.toDomain() })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getAllDeletedPartners(): Result<List<BusinessPartner>> {
+        return try {
+            Result.success(partnerDao.getAllDeletedPartners().map { it.toDomain() })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 
@@ -119,7 +126,7 @@ class BusinessPartnerRepositoryImpl(
         }
     }
 
-    override suspend fun getBusinessPartnerByServerId(serverId: Long): Result<BusinessPartnerEntity?> {
+    override suspend fun getBusinessPartnerByServerId(serverId: String): Result<BusinessPartnerEntity?> {
         return runCatching {
             partnerDao.getPartnerBySeverId(serverId) ?: throw Exception("Partner not found")
         }

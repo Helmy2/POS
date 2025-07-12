@@ -19,7 +19,10 @@ class BusinessPartnerReducer :
                 previousState.copy(isLoading = true) to null
 
             is BusinessPartnerContract.Event.UserLoaded ->
-                previousState.copy(currentUser = event.user) to null
+                previousState.copy(
+                    currentUser = event.currentUser,
+                    userDropdownData = event.users
+                ) to null
 
             is BusinessPartnerContract.Event.PartnersLoaded ->
                 previousState.copy(isLoading = false, partners = event.partners) to null

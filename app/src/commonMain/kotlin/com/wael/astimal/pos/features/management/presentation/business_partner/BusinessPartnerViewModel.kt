@@ -12,6 +12,7 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
@@ -58,7 +59,9 @@ class BusinessPartnerViewModel(
 
     private fun loadCurrentUser() {
         viewModelScope.launch {
-            setState(BusinessPartnerContract.Event.UserLoaded(userRepository.getCurrentUser()))
+            val currentUser = userRepository.getCurrentUser()!!
+            val users = userRepository.getEmployeesFlow().first()
+            setState(BusinessPartnerContract.Event.UserLoaded(currentUser, users))
         }
     }
 

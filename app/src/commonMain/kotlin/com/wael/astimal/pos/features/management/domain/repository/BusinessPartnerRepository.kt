@@ -13,5 +13,8 @@ interface BusinessPartnerRepository {
     suspend fun getClient(clientId: Long): BusinessPartner?
     suspend fun syncWithServer(list: List<BusinessPartnerEntity>): Result<Unit>
     suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double>
-    suspend fun getBusinessPartnerByServerId(serverId: Long): Result<BusinessPartnerEntity?>
+    suspend fun getBusinessPartnerByServerId(serverId: String): Result<BusinessPartnerEntity?>
+    suspend fun hardDeleteByServerId(serverId: String): Result<Unit>
+    suspend fun getAllUnSynced(): Result<List<BusinessPartner>>
+    suspend fun getAllDeletedPartners(): Result<List<BusinessPartner>>
 }

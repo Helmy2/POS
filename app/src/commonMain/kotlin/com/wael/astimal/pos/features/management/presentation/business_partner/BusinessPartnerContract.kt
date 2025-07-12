@@ -16,10 +16,12 @@ object BusinessPartnerContract {
         val isLoading: Boolean = true,
         val currentUser: User? = null,
         val partners: List<BusinessPartner> = emptyList(),
+        val userDropdownData: List<User> = emptyList(),
         val searchQuery: String = "",
         val dialog: Dialog = Dialog.None
     ) : Reducer.ViewState {
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val canUserEdit: Boolean get() = true
+        val isAdmin: Boolean get() = currentUser?.isAdmin == true
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -36,7 +38,7 @@ object BusinessPartnerContract {
         data object BackClicked : Event
 
         // Data results from ViewModel
-        data class UserLoaded(val user: User?) : Event
+        data class UserLoaded(val currentUser: User, val users: List<User>) : Event
         data class PartnersLoaded(val partners: List<BusinessPartner>) : Event
         data object SaveSucceeded : Event
     }

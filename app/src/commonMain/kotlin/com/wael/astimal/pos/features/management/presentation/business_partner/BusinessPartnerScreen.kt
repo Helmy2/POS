@@ -54,6 +54,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButto
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
+import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
@@ -69,6 +70,7 @@ import pos.app.generated.resources.en_name
 import pos.app.generated.resources.partner_type
 import pos.app.generated.resources.phone
 import pos.app.generated.resources.phone_placeholder
+import pos.app.generated.resources.responsible_employee
 import pos.app.generated.resources.save
 
 
@@ -140,6 +142,7 @@ fun BusinessPartnerScreen(
                 partner = dialog.partner,
                 isSaving = state.isLoading,
                 canEdit = state.canUserEdit,
+                users = state.userDropdownData,
                 onDismiss = { onEvent(BusinessPartnerContract.Event.DismissDialog) },
                 onSave = { partner ->
                     onEvent(
@@ -244,6 +247,7 @@ fun BusinessPartnerList(
 @Composable
 fun BusinessPartnerEditDialog(
     partner: BusinessPartner,
+    users: List<User>,
     isSaving: Boolean,
     canEdit: Boolean,
     onDismiss: () -> Unit,
@@ -253,6 +257,9 @@ fun BusinessPartnerEditDialog(
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
     var address by remember(partner.address) { mutableStateOf(partner.address) }
     var phone by remember(partner.phone) { mutableStateOf(partner.phone) }
+    var user by remember(partner.responsibleEmployee) {
+        mutableStateOf(partner.responsibleEmployee)
+    }
 
     val isNewPartner = partner.id == Id.new
     var type by remember {
@@ -302,6 +309,20 @@ fun BusinessPartnerEditDialog(
             }
 
             CustomExposedDropdownMenu(
+                label = stringResource(Res.string.responsible_employee),
+                items = users,
+                currentSelection = user.localizedName.displayName(
+                    LocalAppLocale.current
+                ),
+                enabled = canEdit,
+                itemToDisplayString = { it.name },
+                onItemSelected = {
+                    user = it
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            )
+
+            CustomExposedDropdownMenu(
                 label = stringResource(Res.string.partner_type),
                 items = PartnerType.entries,
                 currentSelection = type.name,
@@ -328,6 +349,7 @@ fun BusinessPartnerEditDialog(
                             address = address,
                             phone = phone,
                             type = type,
+                            responsibleEmployee = user
                         )
                         onSave(
                             updatedPartner,

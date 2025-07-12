@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
@@ -29,12 +28,12 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 )
 data class BusinessPartnerEntity(
     @PrimaryKey(autoGenerate = true)
-    override val localId: Long = 0L,
-    override val serverId: Long?,
-    override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
-    override var isDeletedLocally: Boolean = false,
+    val localId: Long = 0L,
+    val serverId: String?,
+    var isSynced: Boolean = false,
+    val createdAt: Long = Clock.now(),
+    val updatedAt: Long = Clock.now(),
+    var isDeletedLocally: Boolean = false,
 
     val arName: String,
     val enName: String,
@@ -42,7 +41,7 @@ data class BusinessPartnerEntity(
     val address: String,
     val type: PartnerType,
     val responsibleEmployeeLocalId: Long,
-) : ItemEntity
+)
 
 data class BusinessPartnerWithDetailsEntity(
     @Embedded val businessPartner: BusinessPartnerEntity,
@@ -55,7 +54,7 @@ data class BusinessPartnerWithDetailsEntity(
 
 fun BusinessPartnerWithDetailsEntity.toDomain(): BusinessPartner {
     return BusinessPartner(
-        id = Id(businessPartner.localId, businessPartner.serverId),
+        id = Id(businessPartner.localId, serverStringId = businessPartner.serverId),
         name = LocalizedString(arName = businessPartner.arName, enName = businessPartner.enName),
         address = businessPartner.address,
         phone = businessPartner.phone,

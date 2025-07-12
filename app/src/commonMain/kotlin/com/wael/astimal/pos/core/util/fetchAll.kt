@@ -39,12 +39,11 @@ suspend inline fun <reified T : Any> SupabaseClient.fetchAll(tableName: String):
 suspend inline fun <reified T : Any> SupabaseClient.pushAll(
     tableName: String,
     data: () -> List<T>
-): Result<List<T>> {
+): Result<Unit> {
     return try {
-        val result = this.postgrest[tableName]
+        this.postgrest[tableName]
             .upsert(data())
-            .decodeList<T>()
-        Result.success(result)
+        Result.success(Unit)
     } catch (e: Exception) {
         e.printStackTrace()
         Result.failure(e)

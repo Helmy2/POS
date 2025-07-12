@@ -4,6 +4,7 @@ import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
@@ -40,8 +41,21 @@ data class BusinessPartner(
     override val updatedAt: Long
 ) : Item
 
+fun BusinessPartner.toEntity() = BusinessPartnerEntity(
+    serverId = id.serverStringId,
+    localId = id.local,
+    arName = name.arName ?: "",
+    enName = name.enName ?: "",
+    phone = phone,
+    address = address,
+    type = type,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    responsibleEmployeeLocalId = responsibleEmployee.id.local
+)
+
 fun BusinessPartner.toDto() = BusinessPartnerDto(
-    id = id.server ?: 0,
+    id = id.serverStringId!!,
     arName = name.arName ?: "",
     enName = name.enName ?: "",
     address = address,

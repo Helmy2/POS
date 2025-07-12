@@ -57,6 +57,6 @@ fun ReceivePayVoucher.toDto(): PartnerTransactionDto {
         updatedAt = updatedAt.toDateString(),
         createdByUserId = createdBy.id.serverStringId!!,
         invoiceId = invoiceId.takeIf { it?.isNotBlank() == true },
-        partnerId = partner.id.server!!
+        partnerId = partner.id.serverStringId!!
     )
 }

@@ -183,7 +183,8 @@
     <string name="invalid_amount">The amount entered is invalid.</string>
 
     <string name="employee_account">Employee Account</string>
-    <string name="responsible_employee">Responsible Employee: %1$s</string>
+    <string name="responsible_employee_with_args">Responsible Employee: %1$s</string>
+    <string name="responsible_employee">Responsible Employee</string>
     <string name="commission">Commission</string>
     <string name="salary">Salary</string>
     <string name="deduction">Deduction</string>

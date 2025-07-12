@@ -178,7 +178,7 @@
     <string name="invalid_amount">المبلغ المدخل غير صالح.</string>
 
     <string name="employee_account">حساب الموظف</string>
-    <string name="responsible_employee">الموظف المسؤول: %1$s</string>
+    <string name="responsible_employee_with_args">الموظف المسؤول: %1$s</string>
     <string name="commission">العمولة</string>
     <string name="salary">الراتب</string>
     <string name="deduction">خصم</string>

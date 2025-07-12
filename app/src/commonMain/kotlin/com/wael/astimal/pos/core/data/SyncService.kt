@@ -120,18 +120,7 @@ class SyncServiceImpl(
                 )
             }
 
-            supabaseClient.fetchAll<BusinessPartnerDto>("business_partners").getOrThrow().also {
-                businessPartnerRepository.syncWithServer(
-                    it.map { businessPartnerDto ->
-                        businessPartnerDto.toEntity(
-                            responsibleId = userRepository.getUserByServerId(
-                                businessPartnerDto.responsibleId
-                            ).getOrThrow()!!.id.local
-                        )
-                    },
-                )
-            }
-
+            syncPartner()
             syncPartnerTransactions()
             syncEmployeesTransactions()
 
@@ -139,6 +128,39 @@ class SyncServiceImpl(
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
+        }
+    }
+
+    private suspend fun syncPartner() {
+        businessPartnerRepository.getAllUnSynced().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            println(it)
+            supabaseClient.pushAll<BusinessPartnerDto>("business_partners") { it }
+        }?.getOrThrow()
+
+        businessPartnerRepository.getAllDeletedPartners().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            println(it)
+            supabaseClient.postgrest["business_partners"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            businessPartnerRepository.hardDeleteByServerId(it.id)
+        }
+
+        supabaseClient.fetchAll<BusinessPartnerDto>("business_partners").getOrThrow().also {
+            businessPartnerRepository.syncWithServer(
+                it.map { businessPartnerDto ->
+                    businessPartnerDto.toEntity(
+                        responsibleId = userRepository.getUserByServerId(
+                            businessPartnerDto.responsibleId
+                        ).getOrThrow()!!.id.local
+                    )
+                },
+            )
         }
     }
 
