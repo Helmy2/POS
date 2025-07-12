@@ -6,12 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     fun getEmployeesFlow(): Flow<List<User>>
-    suspend fun getStoreIdForEmployee(employeeId: Long): Result<Long>
     suspend fun login(email: String, password: String): Result<User>
     suspend fun isUserLoggedIn(): Boolean
     suspend fun getCurrentUser(): User?
     suspend fun logout(): Result<Unit>
-    suspend fun assignStoreToEmployee(userId: Long, storeId: Long): Result<Unit>
     suspend fun getUserByServerId(id: String): Result<User?>
     suspend fun getUserById(id: Long): Result<User?>
     suspend fun syncWithServer(users: List<UserEntity>): Result<Unit>

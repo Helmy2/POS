@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class StockAdjustmentDto(
-    val id: Long,
+    val id: String,
     @SerialName("store_id")
     val storeId: Long,
     @SerialName("product_id")
@@ -41,5 +41,6 @@ fun StockAdjustmentDto.toEntity(
         isSynced = true,
         createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
         updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
+        invoiceId = null
     )
 }

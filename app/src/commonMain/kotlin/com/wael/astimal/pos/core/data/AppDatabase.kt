@@ -19,30 +19,19 @@ import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import com.wael.astimal.pos.features.management.data.local.dao.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesDao
-import com.wael.astimal.pos.features.management.data.local.dao.OrderReturnDao
+import com.wael.astimal.pos.features.management.data.local.dao.InvoiceDao
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
-import com.wael.astimal.pos.features.management.data.local.dao.PurchaseDao
-import com.wael.astimal.pos.features.management.data.local.dao.PurchaseReturnDao
-import com.wael.astimal.pos.features.management.data.local.dao.SalesOrderDao
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
-import com.wael.astimal.pos.features.management.data.local.entity.OrderEntity
-import com.wael.astimal.pos.features.management.data.local.entity.OrderProductEntity
-import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnEntity
-import com.wael.astimal.pos.features.management.data.local.entity.OrderReturnProductEntity
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceItemEntity
 import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
-import com.wael.astimal.pos.features.management.data.local.entity.PurchaseEntity
-import com.wael.astimal.pos.features.management.data.local.entity.PurchaseProductEntity
-import com.wael.astimal.pos.features.management.data.local.entity.PurchaseReturnEntity
-import com.wael.astimal.pos.features.management.data.local.entity.PurchaseReturnProductEntity
 import com.wael.astimal.pos.features.user.data.local.UserDao
-import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 
 @Database(
     entities = [
         UserEntity::class,
-        EmployeeStoreEntity::class,
         UnitEntity::class,
         StoreEntity::class,
         CategoryEntity::class,
@@ -50,19 +39,13 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         StockTransferEntity::class,
         StockTransferItemEntity::class,
         BusinessPartnerEntity::class,
-        OrderEntity::class,
-        OrderProductEntity::class,
-        OrderReturnEntity::class,
-        OrderReturnProductEntity::class,
-        PurchaseEntity::class,
-        PurchaseProductEntity::class,
-        PurchaseReturnEntity::class,
-        PurchaseReturnProductEntity::class,
         EmployeeTransactionEntity::class,
         StockAdjustmentEntity::class,
-        PartnerTransactionEntity::class
+        PartnerTransactionEntity::class,
+        InvoiceEntity::class,
+        InvoiceItemEntity::class
     ],
-    version = 20,
+    version = 22,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -73,13 +56,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun stockTransferDao(): StockTransferDao
     abstract fun businessPartnerDao(): BusinessPartnerDao
-    abstract fun salesOrderDao(): SalesOrderDao
-    abstract fun orderReturnDao(): OrderReturnDao
-    abstract fun purchaseOrderDao(): PurchaseDao
-    abstract fun purchaseReturnDao(): PurchaseReturnDao
     abstract fun employeeFinancesDao(): EmployeeFinancesDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
     abstract fun partnerTransactionDao(): PartnerTransactionDao
+    abstract fun invoiceDao(): InvoiceDao
 }
 
 @Suppress("NO_ACTUAL_FOR_EXPECT")

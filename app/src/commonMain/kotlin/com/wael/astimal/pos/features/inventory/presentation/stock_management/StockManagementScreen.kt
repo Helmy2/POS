@@ -1,6 +1,8 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -71,6 +73,7 @@ fun StockManagementScreen(
                     )
                 },
                 isSelected = { it.id == state.selectedAdjustment?.id },
+                modifier = Modifier.verticalScroll(rememberScrollState())
             )
         },
         isNew = state.selectedAdjustment == null,

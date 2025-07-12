@@ -26,21 +26,19 @@ class StoreRepositoryImpl(
         }
     }
 
-    override suspend fun getStoreByLocalId(id: Id): Result<Store> {
+    override suspend fun getStoreByLocalId(id: Long): Result<Store> {
         return runCatching {
-            val entity = storeDao.getStoreByLocalId(id.local)
-            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with localId ${id.local} is marked as deleted locally.")
-            entity?.toDomain()
-                ?: throw NoSuchElementException("No store found with localId ${id.local}.")
+            val entity = storeDao.getStoreByLocalId(id)
+            if (entity?.store?.isDeletedLocally == true) throw IllegalStateException("Store with localId $id is marked as deleted locally.")
+            entity?.toDomain() ?: throw NoSuchElementException("No store found with localId ${id}.")
         }
     }
 
     override suspend fun getStoreBySeverId(id: Long): Result<Store> {
         return runCatching {
             val entity = storeDao.getStoreByServerId(id)
-            if (entity?.isDeletedLocally == true) throw IllegalStateException("Store with server id $id is marked as deleted locally.")
-            entity?.toDomain()
-                ?: throw NoSuchElementException("No store found with server id $id.")
+            if (entity?.store?.isDeletedLocally == true) throw IllegalStateException("Store with server id $id is marked as deleted locally.")
+            entity?.toDomain() ?: throw NoSuchElementException("No store found with server id $id.")
         }
     }
 
@@ -62,7 +60,7 @@ class StoreRepositoryImpl(
             }
 
             val localId = storeDao.insertOrUpdate(
-                result.toEntity().copy(localId = store.id.local)
+                result.toEntity(store.employee.id.local).copy(localId = store.id.local)
             )
 
             Result.success(localId)
@@ -87,8 +85,8 @@ class StoreRepositoryImpl(
         val entitiesToUpsert = stores.map { serverEntity ->
             val existingLocal = serverEntity.serverId?.let { storeDao.getStoreByServerId(it) }
             serverEntity.copy(
-                localId = existingLocal?.localId ?: 0L,
-                createdAt = existingLocal?.createdAt ?: serverEntity.createdAt
+                localId = existingLocal?.store?.localId ?: 0L,
+                createdAt = existingLocal?.store?.createdAt ?: serverEntity.createdAt
             )
         }
         storeDao.upsertAll(entitiesToUpsert)

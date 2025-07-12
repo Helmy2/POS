@@ -157,6 +157,7 @@ class StockManagementViewModel(
                 notes = state.value.adjustmentNotes.takeIf { it.isNotBlank() },
                 quantityChange = quantityChange,
                 createdAt = Clock.now(),
+                invoice = null
             )
 
             try {

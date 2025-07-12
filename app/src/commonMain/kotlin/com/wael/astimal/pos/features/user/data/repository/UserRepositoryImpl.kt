@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.user.data.repository
 
 import com.wael.astimal.pos.features.user.data.local.UserDao
-import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 import com.wael.astimal.pos.features.user.data.remote.ProfileApiService
@@ -27,13 +26,6 @@ class UserRepositoryImpl(
     override fun getEmployeesFlow(): Flow<List<User>> {
         return userDao.getAllEmployeesFlow().map { entities ->
             entities.map { it.toDomain() }
-        }
-    }
-
-    override suspend fun getStoreIdForEmployee(employeeId: Long): Result<Long> {
-        return runCatching {
-            userDao.getStoreIdForEmployee(employeeId)
-                ?: throw NoSuchElementException("No store found for employee with ID $employeeId")
         }
     }
 
@@ -98,12 +90,6 @@ class UserRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-
-    override suspend fun assignStoreToEmployee(userId: Long, storeId: Long): Result<Unit> {
-        return runCatching {
-            userDao.assignStoreToEmployee(EmployeeStoreEntity(userId, storeId))
         }
     }
 

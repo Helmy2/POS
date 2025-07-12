@@ -123,6 +123,7 @@
     <string name="stock_adjustment_reason_damaged_goods">Damaged Goods</string>
     <string name="stock_adjustment_reason_theft">Theft</string>
     <string name="stock_adjustment_reason_other">Other</string>
+    <string name="stock_adjustment_reason_invoice">Invoice</string>
     <string name="filter_by_store">Filter by Store</string>
     <string name="search_products">Search Products</string>
     <string name="in_stock_with_args">In Stock: %1$s</string>

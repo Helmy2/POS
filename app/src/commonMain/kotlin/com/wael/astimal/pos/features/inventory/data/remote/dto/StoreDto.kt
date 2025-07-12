@@ -19,10 +19,14 @@ data class StoreDto(
     @SerialName("en_name")
     val enName: String,
     val address: String?,
-    val type: String
+    val type: String,
+    @SerialName("employee_id")
+    val employeeId: String,
 )
 
-fun StoreDto.toEntity(): StoreEntity {
+fun StoreDto.toEntity(
+    employeeId: Long
+): StoreEntity {
     return StoreEntity(
         serverId = this.id,
         arName = this.arName ?: "",
@@ -30,6 +34,7 @@ fun StoreDto.toEntity(): StoreEntity {
         address = this.address ?: "",
         type = if (this.type.equals("MAIN", true)) StoreType.MAIN else StoreType.SUB,
         createdAt = this.createdAt.parseIsoTimestamp() ?: Clock.now(),
-        updatedAt = this.updatedAt.parseIsoTimestamp() ?: Clock.now()
+        updatedAt = this.updatedAt.parseIsoTimestamp() ?: Clock.now(),
+        employeeId = employeeId
     )
 }

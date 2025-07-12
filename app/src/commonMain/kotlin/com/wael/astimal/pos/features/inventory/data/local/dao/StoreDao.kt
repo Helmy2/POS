@@ -4,7 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StoreWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -12,17 +14,20 @@ interface StoreDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(store: StoreEntity): Long
 
+    @Transaction
     @Query("SELECT * FROM stores WHERE localId = :localId LIMIT 1")
-    suspend fun getStoreByLocalId(localId: Long): StoreEntity?
+    suspend fun getStoreByLocalId(localId: Long): StoreWithDetails?
 
+    @Transaction
     @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY arName ASC, enName ASC")
-    fun searchStoresFlow(query: String): Flow<List<StoreEntity>>
+    fun searchStoresFlow(query: String): Flow<List<StoreWithDetails>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(stores: List<StoreEntity>)
 
+    @Transaction
     @Query("SELECT * FROM stores WHERE serverId = :serverId LIMIT 1")
-    suspend fun getStoreByServerId(serverId: Long): StoreEntity?
+    suspend fun getStoreByServerId(serverId: Long): StoreWithDetails?
 
     @Query("DELETE FROM stores WHERE localId = :localId")
     suspend fun deleteStoreByLocalId(localId: Long)

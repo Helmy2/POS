@@ -72,11 +72,11 @@ data class StockTransferWithItemsAndDetails(
 
     @Relation(
         parentColumn = "fromStoreId", entityColumn = "localId", entity = StoreEntity::class
-    ) val fromStore: StoreEntity?,
+    ) val fromStore: StoreWithDetails?,
 
     @Relation(
         parentColumn = "toStoreId", entityColumn = "localId", entity = StoreEntity::class
-    ) val toStore: StoreEntity?,
+    ) val toStore: StoreWithDetails?,
 
     @Relation(
         parentColumn = "initiatedByUserId", entityColumn = "id", entity = UserEntity::class

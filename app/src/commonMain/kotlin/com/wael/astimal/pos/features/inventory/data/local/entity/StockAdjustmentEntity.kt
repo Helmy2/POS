@@ -6,58 +6,70 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.data.entity.ItemEntity
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceWithItems
+import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 
 @Entity(
-    tableName = "stock_adjustments",
-    foreignKeys = [
-        ForeignKey(
-            entity = StoreEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["storeId"],
-        ),
-        ForeignKey(
-            entity = ProductEntity::class,
-            parentColumns = ["localId"],
-            childColumns = ["productId"],
-        ),
-        ForeignKey(
-            entity = UserEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["userId"],
-        )
-    ]
+    tableName = "stock_adjustments", foreignKeys = [ForeignKey(
+        entity = StoreEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["storeId"],
+    ), ForeignKey(
+        entity = ProductEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["productId"],
+    ), ForeignKey(
+        entity = UserEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["userId"],
+    ), ForeignKey(
+        entity = InvoiceEntity::class,
+        parentColumns = ["localId"],
+        childColumns = ["invoiceId"],
+    )]
 )
 data class StockAdjustmentEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
-    override val serverId: Long?,
-    override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
-    override var isDeletedLocally: Boolean = false,
+    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
+    val serverId: String?,
+    var isSynced: Boolean = false,
+    val createdAt: Long = Clock.now(),
+    val updatedAt: Long = Clock.now(),
+    var isDeletedLocally: Boolean = false,
 
     val storeId: Long,
     val productId: Long,
+    val invoiceId: Long?,
     val userId: Long,
     val reason: StockAdjustmentReason,
     val notes: String?,
     val quantityChange: Double,
-) : ItemEntity
+)
 
 data class StockAdjustmentWithDetails(
-    @Embedded val adjustment: StockAdjustmentEntity, @Relation(
-        parentColumn = "storeId", entityColumn = "localId"
-    ) val store: StoreEntity?, @Relation(
+    @Embedded val adjustment: StockAdjustmentEntity,
+
+    @Relation(
+        parentColumn = "storeId", entityColumn = "localId", entity = StoreEntity::class
+    ) val store: StoreWithDetails?,
+
+    @Relation(
         parentColumn = "productId", entityColumn = "localId", entity = ProductEntity::class
-    ) val productWithDetails: ProductWithDetails?, @Relation(
+    ) val productWithDetails: ProductWithDetails?,
+
+    @Relation(
         parentColumn = "userId", entityColumn = "id"
-    ) val user: UserEntity?
+    ) val user: UserEntity?,
+
+    @Relation(
+        parentColumn = "invoiceId", entityColumn = "localId", entity = InvoiceEntity::class
+    ) val invoice: InvoiceWithItems?
 )
 
 fun StockAdjustmentWithDetails.toDomain(): StockAdjustment {
@@ -68,9 +80,10 @@ fun StockAdjustmentWithDetails.toDomain(): StockAdjustment {
         reason = adjustment.reason,
         notes = adjustment.notes,
         quantityChange = adjustment.quantityChange,
-        id = Id(adjustment.localId, adjustment.serverId),
+        id = Id(adjustment.localId, serverStringId = adjustment.serverId),
         isSynced = adjustment.isSynced,
         updatedAt = adjustment.updatedAt,
-        createdAt = adjustment.createdAt
+        createdAt = adjustment.createdAt,
+        invoice = invoice?.toDomain()
     )
 }

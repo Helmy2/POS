@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.wael.astimal.pos.features.user.data.local.entity.EmployeeStoreEntity
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.domain.entity.UserRole
 import kotlinx.coroutines.flow.Flow
@@ -19,18 +18,6 @@ interface UserDao {
     fun getAllEmployeesFlow(
         role: UserRole = UserRole.EMPLOYEE
     ): Flow<List<UserEntity>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun assignStoreToEmployee(assignment: EmployeeStoreEntity)
-
-    @Query(
-        """
-        SELECT storeLocalId FROM employee_stores
-        WHERE employeeLocalId = :employeeId
-        LIMIT 1
-    """
-    )
-    suspend fun getStoreIdForEmployee(employeeId: Long?): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(users: List<UserEntity>)

@@ -48,7 +48,7 @@ class SyncServiceImpl(
     override suspend fun performFullSync(): Result<Unit> {
         return try {
             // TODO Remove
-            userRepository.login(
+            userRepository.getCurrentUser() ?: userRepository.login(
                 "admin@mail.com", "adminadmin"
             ).onSuccess {
                 navigationController.navigate(
@@ -58,8 +58,6 @@ class SyncServiceImpl(
             }.getOrThrow()
 
 
-            userRepository.getCurrentUser() ?: throw Exception("User not authenticated")
-
             supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
                 userRepository.syncWithServer(
                     it.map { profileDto -> profileDto.toEntity() },
@@ -68,19 +66,25 @@ class SyncServiceImpl(
 
             supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
                 storeRepository.syncWithServer(
-                    it.map { storeDto -> storeDto.toEntity() })
+                    it.map { storeDto ->
+                        storeDto.toEntity(
+                            userRepository.getUserByServerId(storeDto.employeeId)
+                                .getOrThrow()!!.id.local
+                        )
+                    },
+                )
             }
-
+//
             supabaseClient.fetchAll<CategoryDto>("categories").getOrThrow().also {
                 categoryRepository.syncWithServer(
                     it.map { categoryDto -> categoryDto.toEntity() })
             }
-
+//
             supabaseClient.fetchAll<UnitDto>("units").getOrThrow().also {
                 unitRepository.syncWithServer(
                     it.map { unitDto -> unitDto.toEntity() })
             }
-
+//
             supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
                 productRepository.syncWithServer(
                     it.map { unitDto ->
@@ -101,7 +105,7 @@ class SyncServiceImpl(
                     },
                 )
             }
-
+//
             supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
                 stockRepository.syncWithServer(
                     it.map { stockAdjustmentDto ->
@@ -119,7 +123,7 @@ class SyncServiceImpl(
                     },
                 )
             }
-
+//
             syncPartner()
             syncPartnerTransactions()
             syncEmployeesTransactions()

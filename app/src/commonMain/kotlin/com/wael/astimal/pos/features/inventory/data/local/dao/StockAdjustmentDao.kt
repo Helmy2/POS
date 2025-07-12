@@ -19,7 +19,7 @@ interface StockAdjustmentDao {
     suspend fun upsertAll(adjustments: List<StockAdjustmentEntity>)
 
     @Query("SELECT * FROM stock_adjustments WHERE serverId = :serverId")
-    suspend fun getAdjustmentByServerId(serverId: Long): StockAdjustmentEntity?
+    suspend fun getAdjustmentByServerId(serverId: String): StockAdjustmentEntity?
 
     @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE storeId = :storeId AND productId = :productId")
     fun getStockQuantity(storeId: Long, productId: Long): Flow<Double?>

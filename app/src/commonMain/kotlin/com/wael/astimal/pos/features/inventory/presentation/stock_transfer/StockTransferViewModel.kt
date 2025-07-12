@@ -92,7 +92,7 @@ class StockTransferViewModel(
         val currentUser = userRepository.getCurrentUser() ?: return@launch
 
         val fromStore = if (!currentUser.isAdmin) {
-            storeRepository.getStoreByLocalId(currentUser.id).getOrNull()
+            storeRepository.getStoreByLocalId(currentUser.id.local).getOrNull()
         } else null
         setState(StockTransferContract.Event.UserLoaded(currentUser, fromStore))
     }
