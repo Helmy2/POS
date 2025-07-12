@@ -158,7 +158,6 @@ class SalesViewModel(
                 totalAmount = currentState.currentOrderInput.totalAmount,
                 updatedAt = currentState.selectedOrder?.updatedAt ?: Clock.now(),
                 id = currentState.selectedOrder?.id ?: Id.new,
-                invoiceNumber = currentState.selectedOrder?.invoiceNumber ?: "",
                 orderDate = currentState.currentOrderInput.date,
                 invoiceType = InvoiceType.SALES,
                 paymentMethod = PaymentMethod.CARD,

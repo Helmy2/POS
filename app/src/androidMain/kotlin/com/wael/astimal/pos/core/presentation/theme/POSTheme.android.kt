@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
 

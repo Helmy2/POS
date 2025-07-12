@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.user.data.repository
 
+import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
@@ -11,8 +12,6 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.auth.status.SessionStatus
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -20,6 +19,7 @@ import kotlinx.coroutines.flow.map
 class UserRepositoryImpl(
     private val userDao: UserDao,
     private val supabaseClient: SupabaseClient,
+    private val settingsManager: SettingsManager,
     private val profileApiService: ProfileApiService
 ) : UserRepository {
 
@@ -30,15 +30,13 @@ class UserRepositoryImpl(
     }
 
     override suspend fun getCurrentUser(): User? {
-        val id = supabaseClient.auth.currentUserOrNull()?.id ?: return null
+        val id = settingsManager.getUserId() ?: return null
         val user = userDao.getUserBySupabaseId(id).first()
         return user?.toDomain()
     }
 
     override suspend fun isUserLoggedIn(): Boolean {
-        // Wait for the session status to be updated
-        delay(100)
-        return supabaseClient.auth.sessionStatus.first() is SessionStatus.Authenticated
+        return settingsManager.getUserId() != null
     }
 
 
@@ -51,6 +49,8 @@ class UserRepositoryImpl(
 
             val supabaseUser = supabaseClient.auth.currentUserOrNull()
                 ?: return Result.failure(Exception("Could not retrieve user after login."))
+
+            settingsManager.changeUserId(supabaseUser.id)
 
             val profileResult = profileApiService.getProfile(supabaseUser.id)
 
@@ -86,6 +86,7 @@ class UserRepositoryImpl(
 
     override suspend fun logout(): Result<Unit> {
         return try {
+            settingsManager.changeUserId("")
             supabaseClient.auth.signOut()
             Result.success(Unit)
         } catch (e: Exception) {

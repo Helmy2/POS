@@ -118,7 +118,8 @@ android {
 }
 
 dependencies {
-    ksp(libs.androidx.room.compiler)
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspDesktop", libs.androidx.room.compiler)
     debugImplementation(compose.uiTooling)
 }
 
@@ -131,7 +132,7 @@ compose.desktop {
         mainClass = "com.wael.astimal.pos.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
             packageName = "com.wael.astimal.pos"
             packageVersion = "1.0.0"
         }

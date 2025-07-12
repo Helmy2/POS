@@ -6,7 +6,7 @@ import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
 import com.wael.astimal.pos.core.domain.navigation.Destination
-import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest

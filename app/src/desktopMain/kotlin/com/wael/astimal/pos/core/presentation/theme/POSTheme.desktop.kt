@@ -3,7 +3,7 @@ package com.wael.astimal.pos.core.presentation.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import com.wael.astimal.pos.features.user.domain.repository.SettingsManager
+import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
 import java.util.Locale
