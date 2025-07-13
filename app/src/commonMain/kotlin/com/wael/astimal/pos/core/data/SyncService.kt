@@ -10,6 +10,7 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDt
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -28,6 +29,8 @@ import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 class SyncServiceImpl(
@@ -46,92 +49,114 @@ class SyncServiceImpl(
 ) : SyncService {
 
     override suspend fun performFullSync(): Result<Unit> {
-        return try {
-            // TODO Remove
-            userRepository.getCurrentUser() ?: userRepository.login(
-                "admin@mail.com", "adminadmin"
-            ).onSuccess {
-                navigationController.navigate(
-                    Destination.Dashboard,
-                    popUpToRoute = Destination.Auth,
-                )
-            }.getOrThrow()
+        return withContext(Dispatchers.IO) {
+            try {
+                // TODO Remove
+                userRepository.getCurrentUser() ?: userRepository.login(
+                    "admin@mail.com", "adminadmin"
+                ).onSuccess {
+                    navigationController.navigate(
+                        Destination.Dashboard,
+                        popUpToRoute = Destination.Auth,
+                    )
+                }.getOrThrow()
 
 
-            supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
-                userRepository.syncWithServer(
-                    it.map { profileDto -> profileDto.toEntity() },
-                )
-            }
+                supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
+                    userRepository.syncWithServer(
+                        it.map { profileDto -> profileDto.toEntity() },
+                    )
+                }
 
-            supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
-                storeRepository.syncWithServer(
-                    it.map { storeDto ->
-                        storeDto.toEntity(
-                            userRepository.getUserByServerId(storeDto.employeeId)
-                                .getOrThrow()!!.id.local
-                        )
-                    },
-                )
-            }
-//
-            supabaseClient.fetchAll<CategoryDto>("categories").getOrThrow().also {
-                categoryRepository.syncWithServer(
-                    it.map { categoryDto -> categoryDto.toEntity() })
-            }
-//
-            supabaseClient.fetchAll<UnitDto>("units").getOrThrow().also {
-                unitRepository.syncWithServer(
-                    it.map { unitDto -> unitDto.toEntity() })
-            }
-//
-            supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
-                productRepository.syncWithServer(
-                    it.map { unitDto ->
-                        unitDto.toEntity(
-                            categoryId = unitDto.categoryId?.let { id ->
-                                categoryRepository.getCategoryByServerId(
-                                    id
-                                )
-                            }?.getOrThrow()?.id?.local,
-                            mainUnitId = unitRepository.getUnitByServerId(unitDto.mainUnitId)
-                                .getOrThrow().id.local,
-                            subUnitId = unitDto.subUnitId?.let { id ->
-                                unitRepository.getUnitByServerId(
-                                    id
-                                )
-                            }?.getOrThrow()?.id?.local
-                        )
-                    },
-                )
-            }
-//
-            supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
-                stockRepository.syncWithServer(
-                    it.map { stockAdjustmentDto ->
-                        stockAdjustmentDto.toEntity(
-                            storeId = storeRepository.getStoreBySeverId(
-                                stockAdjustmentDto.storeId
-                            ).getOrThrow().id.local,
-                            productId = productRepository.getProductByServerId(
-                                stockAdjustmentDto.productId
-                            ).getOrThrow().id.local,
-                            userId = userRepository.getUserByServerId(
-                                stockAdjustmentDto.userId
-                            ).getOrThrow()!!.id.local
-                        )
-                    },
-                )
-            }
-//
-            syncPartner()
-            syncPartnerTransactions()
-            syncEmployeesTransactions()
+                supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
+                    storeRepository.syncWithServer(
+                        it.map { storeDto ->
+                            storeDto.toEntity(
+                                userRepository.getUserByServerId(storeDto.employeeId)
+                                    .getOrThrow()!!.id.local
+                            )
+                        },
+                    )
+                }
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Result.failure(e)
+                supabaseClient.fetchAll<CategoryDto>("categories").getOrThrow().also {
+                    categoryRepository.syncWithServer(
+                        it.map { categoryDto -> categoryDto.toEntity() })
+                }
+
+                supabaseClient.fetchAll<UnitDto>("units").getOrThrow().also {
+                    unitRepository.syncWithServer(
+                        it.map { unitDto -> unitDto.toEntity() })
+                }
+
+                supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
+                    productRepository.syncWithServer(
+                        it.map { unitDto ->
+                            unitDto.toEntity(
+                                categoryId = unitDto.categoryId?.let { id ->
+                                    categoryRepository.getCategoryByServerId(
+                                        id
+                                    )
+                                }?.getOrThrow()?.id?.local,
+                                mainUnitId = unitRepository.getUnitByServerId(unitDto.mainUnitId)
+                                    .getOrThrow().id.local,
+                                subUnitId = unitDto.subUnitId?.let { id ->
+                                    unitRepository.getUnitByServerId(
+                                        id
+                                    )
+                                }?.getOrThrow()?.id?.local
+                            )
+                        },
+                    )
+                }
+
+                syncStockAdjustment()
+                syncPartner()
+                syncPartnerTransactions()
+                syncEmployeesTransactions()
+
+                Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
+    }
+
+    private suspend fun syncStockAdjustment() {
+        stockRepository.getAllUnSynced().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<StockAdjustmentDto>("stock_adjustments") { it }
+        }?.getOrThrow()
+
+        stockRepository.getAllDeleted().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            supabaseClient.postgrest["stock_adjustments"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            stockRepository.hardDeleteByServerId(it.id)
+        }
+
+        supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
+            stockRepository.syncWithServer(
+                it.map { stockAdjustmentDto ->
+                    stockAdjustmentDto.toEntity(
+                        storeId = storeRepository.getStoreBySeverId(
+                            stockAdjustmentDto.storeId
+                        ).getOrThrow().id.local,
+                        productId = productRepository.getProductByServerId(
+                            stockAdjustmentDto.productId
+                        ).getOrThrow().id.local,
+                        userId = userRepository.getUserByServerId(
+                            stockAdjustmentDto.userId
+                        ).getOrThrow()!!.id.local
+                    )
+                },
+            )
         }
     }
 

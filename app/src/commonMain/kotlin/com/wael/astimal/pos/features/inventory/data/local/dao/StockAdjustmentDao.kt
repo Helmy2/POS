@@ -29,4 +29,13 @@ interface StockAdjustmentDao {
 
     @Query("DELETE FROM stock_adjustments WHERE localId = :localId")
     suspend fun deleteByLocalId(localId: Long)
+
+    @Query("DELETE FROM stock_adjustments WHERE serverId = :id")
+    suspend fun deleteByServerId(id: String)
+
+    @Query("SELECT * FROM stock_adjustments WHERE NOT isSynced")
+    suspend fun getAllUnSynced(): List<StockAdjustmentWithDetails>
+
+    @Query("SELECT * FROM stock_adjustments WHERE isDeletedLocally = 1")
+    suspend fun getAllDeleted(): List<StockAdjustmentWithDetails>
 }

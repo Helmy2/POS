@@ -42,6 +42,7 @@ class InvoiceRepositoryImpl(
 
             createAdjustStock(newInvoice)
             adjustPartnerTransactions(newInvoice)
+            // Todo employee Commission
 
             Result.success(Unit)
         } catch (e: Exception) {

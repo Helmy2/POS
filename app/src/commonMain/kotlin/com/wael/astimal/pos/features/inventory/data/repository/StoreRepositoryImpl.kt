@@ -87,7 +87,6 @@ class StoreRepositoryImpl(
             val existingLocal = serverEntity.serverId?.let { storeDao.getStoreByServerId(it) }
             serverEntity.copy(
                 localId = existingLocal?.store?.localId ?: 0L,
-                createdAt = existingLocal?.store?.createdAt ?: serverEntity.createdAt
             )
         }
         storeDao.upsertAll(entitiesToUpsert)

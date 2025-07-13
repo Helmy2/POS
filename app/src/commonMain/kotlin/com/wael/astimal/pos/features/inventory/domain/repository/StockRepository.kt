@@ -14,4 +14,7 @@ interface StockRepository {
     suspend fun syncWithServer(adjustments: List<StockAdjustmentEntity>): Result<Unit>
 
     suspend fun deleteStockAdjustment(adjustment: StockAdjustment): Result<Unit>
+    suspend fun getAllUnSynced(): Result<List<StockAdjustment>>
+    suspend fun getAllDeleted(): Result<List<StockAdjustment>>
+    suspend fun hardDeleteByServerId(id: String): Result<Unit>
 }

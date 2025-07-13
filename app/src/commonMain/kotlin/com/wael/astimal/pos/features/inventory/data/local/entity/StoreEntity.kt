@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.local.entity
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.core.data.entity.ItemEntity
@@ -17,7 +18,16 @@ import pos.app.generated.resources.store_type_main
 import pos.app.generated.resources.store_type_sub
 import pos.app.generated.resources.store_type_unspecified
 
-@Entity(tableName = "stores")
+@Entity(
+    tableName = "stores",
+    foreignKeys = [
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["employeeId"],
+        ),
+    ]
+)
 data class StoreEntity(
     @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
     override val serverId: Long?,

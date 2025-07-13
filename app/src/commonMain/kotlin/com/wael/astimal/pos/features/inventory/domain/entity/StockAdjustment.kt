@@ -73,6 +73,7 @@ fun StockAdjustment.toDto(): StockAdjustmentDto {
         notes = notes,
         quantity = quantityChange,
         createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString()
+        updatedAt = updatedAt.toDateString(),
+        invoiceId = invoice?.id
     )
 }

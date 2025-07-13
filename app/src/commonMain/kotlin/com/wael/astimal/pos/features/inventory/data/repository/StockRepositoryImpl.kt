@@ -97,4 +97,32 @@ class StockRepositoryImpl(
             }
         }
     }
+
+    override suspend fun getAllUnSynced(): Result<List<StockAdjustment>> {
+        return try {
+            Result.success(stockAdjustmentDao.getAllUnSynced().map { it.toDomain() })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getAllDeleted(): Result<List<StockAdjustment>> {
+        return try {
+            Result.success(stockAdjustmentDao.getAllDeleted().map { it.toDomain() })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun hardDeleteByServerId(id: String): Result<Unit> {
+        return try {
+            stockAdjustmentDao.deleteByServerId(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
 }

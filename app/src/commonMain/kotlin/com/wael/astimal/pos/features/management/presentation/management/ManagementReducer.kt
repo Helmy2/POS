@@ -17,12 +17,16 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
             is ManagementContract.Event.LoadManagementItems -> {
                 val managementItems = listOf(
                     ManagementContract.ManagementItem(
+                        Destination.EmployeeAccounts,
+                        Res.string.employee_account
+                    ),
+                    ManagementContract.ManagementItem(
                         Destination.BusinessPartners,
                         Res.string.business_partner
                     ),
                     ManagementContract.ManagementItem(
-                        Destination.EmployeeAccounts,
-                        Res.string.employee_account
+                        Destination.Vouchers,
+                        Res.string.receive_pay_voucher
                     ),
                     ManagementContract.ManagementItem(
                         Destination.SalesOrders,
@@ -40,10 +44,7 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
 //                        Destination.PurchaseReturns,
 //                        Res.string.purchase_return
 //                    ),
-                    ManagementContract.ManagementItem(
-                        Destination.Vouchers,
-                        Res.string.receive_pay_voucher
-                    )
+
                 )
                 previousState.copy(items = managementItems) to null
             }

@@ -29,19 +29,16 @@ import pos.app.generated.resources.payment_type_transfer
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["employeeId"],
-            onDelete = ForeignKey.RESTRICT
         ),
         ForeignKey(
             entity = StoreEntity::class,
             parentColumns = ["localId"],
             childColumns = ["storeId"],
-            onDelete = ForeignKey.RESTRICT
         ),
         ForeignKey(
             entity = BusinessPartnerEntity::class,
             parentColumns = ["localId"],
             childColumns = ["businessPartnerId"],
-            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
@@ -75,13 +72,11 @@ data class InvoiceEntity(
             entity = InvoiceEntity::class,
             parentColumns = ["supabaseId"],
             childColumns = ["invoiceId"],
-            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = ProductEntity::class,
             parentColumns = ["localId"],
             childColumns = ["productId"],
-            onDelete = ForeignKey.RESTRICT
         )
     ],
     indices = [
