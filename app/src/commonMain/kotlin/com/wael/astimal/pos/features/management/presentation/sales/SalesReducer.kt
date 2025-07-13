@@ -32,9 +32,6 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
             is SalesContract.Event.UserLoaded ->
                 previousState.copy(
                     currentUser = event.user,
-                    currentOrderInput = previousState.currentOrderInput.copy(
-                        selectedEmployee = event.user
-                    )
                 ) to null
 
             is SalesContract.Event.DropdownDataLoaded ->
@@ -49,23 +46,23 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                 val editableItems = event.order.items.map {
                     val conversionFactor = it.product.subUnitsPerMainUnit
                     EditableItem(
-                        tempEditorId = it.id.local.toString(),
+                        tempEditorId = it.id,
                         product = it.product,
                         maxUnitQuantity = it.quantity.toString(),
                         minUnitQuantity = (it.quantity * conversionFactor).toString(),
-                        maxUnitPrice = it.unitSellingPrice.toString(),
-                        minUnitPrice = (it.unitSellingPrice / conversionFactor).toString()
+                        maxUnitPrice = "",
+                        minUnitPrice = ""
                     )
                 }
                 previousState.copy(
                     selectedOrder = event.order,
-                    selectedClient = event.order.client,
                     currentOrderInput = SalesContract.EditableOrder(
-                        selectedEmployee = event.order.employee,
-                        paymentType = event.order.paymentType,
+                        selectedPartner = event.order.partner,
+                        selectedStore = event.order.store,
+                        paymentType = event.order.paymentMethod,
                         date = event.order.createdAt,
                         items = editableItems,
-                        amountPaid = event.order.amountPaid.toString()
+                        amountPaid = event.order.paidAmount.toString()
                     ),
                     isSearchActive = false
                 ) to null
@@ -79,19 +76,23 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                     selectedOrder = null,
                     currentOrderInput = SalesContract.EditableOrder(
                         date = Clock.now(),
-                        selectedEmployee = previousState.currentUser,
+                        selectedStore = previousState.currentOrderInput.selectedStore,
+                        selectedPartner = previousState.currentOrderInput.selectedPartner
                     ),
-                    selectedClient = null
                 ) to null
 
             // Form input updates
-            is SalesContract.Event.ClientSelected ->
-                previousState.copy(selectedClient = event.client) to null
-
-            is SalesContract.Event.EmployeeChanged ->
+            is SalesContract.Event.PartnerSelected ->
                 previousState.copy(
                     currentOrderInput = previousState.currentOrderInput.copy(
-                        selectedEmployee = event.employee
+                        selectedPartner = event.partner
+                    )
+                ) to null
+
+            is SalesContract.Event.StoreChanged ->
+                previousState.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        selectedStore = event.store
                     )
                 ) to null
 
@@ -102,7 +103,7 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                     )
                 ) to null
 
-            is SalesContract.Event.PaymentTypeChanged ->
+            is SalesContract.Event.PaymentMethodChanged ->
                 previousState.copy(
                     currentOrderInput = previousState.currentOrderInput.copy(
                         paymentType = event.type

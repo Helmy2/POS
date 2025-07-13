@@ -9,6 +9,7 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
+import com.wael.astimal.pos.features.user.domain.entity.User
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
@@ -90,5 +91,15 @@ class StoreRepositoryImpl(
             )
         }
         storeDao.upsertAll(entitiesToUpsert)
+    }
+
+    override fun getStoresForUser(user: User): Flow<List<Store>> {
+        return if (user.isAdmin) {
+            getStores()
+        } else {
+            storeDao.getStoreByUserId(user.id.local).map {
+                listOf(it.toDomain())
+            }
+        }
     }
 }

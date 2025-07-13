@@ -13,13 +13,13 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
+import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.client
-import pos.app.generated.resources.employee
 import pos.app.generated.resources.order_to_with_args
+import pos.app.generated.resources.stores
 
 @Composable
 fun SalesRoute(
@@ -38,7 +38,7 @@ fun SalesRoute(
 @Composable
 fun SalesScreen(
     state: SalesContract.State,
-    filteredOrders: List<SalesOrder>,
+    filteredOrders: List<Invoice>,
     onEvent: (SalesContract.Event) -> Unit,
 ) {
     val language = LocalAppLocale.current
@@ -66,12 +66,12 @@ fun SalesScreen(
                     Label(
                         stringResource(
                             Res.string.order_to_with_args,
-                            it.client.name.displayName(language),
-                            it.invoiceNumber
+                            it.partner.name.displayName(language),
+                            it.id
                         )
                     )
                 },
-                isSelected = { order -> order.id.local == state.selectedOrder?.id?.local },
+                isSelected = { order -> order.id == state.selectedOrder?.id },
             )
         },
         mainContent = {
@@ -85,23 +85,24 @@ fun SalesScreen(
             item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.client),
-                    items = state.dropdownData.clients,
-                    currentSelection = state.selectedClient?.name?.displayName(language) ?: "",
-                    onItemSelected = { onEvent(SalesContract.Event.ClientSelected(it)) },
+                    items = state.dropdownData.partners,
+                    currentSelection = state.currentOrderInput.selectedPartner?.name?.displayName(
+                        language
+                    ) ?: "",
+                    onItemSelected = { onEvent(SalesContract.Event.PartnerSelected(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     modifier = Modifier.padding(8.dp),
                 )
             }
             item {
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.employee),
-                    items = state.dropdownData.employees,
-                    currentSelection = orderInput.selectedEmployee?.localizedName?.displayName(
+                    label = stringResource(Res.string.stores),
+                    items = state.dropdownData.stores,
+                    currentSelection = orderInput.selectedStore?.name?.displayName(
                         language
-                    )
-                        ?: "",
-                    onItemSelected = { onEvent(SalesContract.Event.EmployeeChanged(it)) },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    ) ?: "",
+                    onItemSelected = { onEvent(SalesContract.Event.StoreChanged(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
                     modifier = Modifier.padding(8.dp),
                 )
@@ -139,7 +140,7 @@ fun SalesScreen(
                     onEvent(SalesContract.Event.AmountPaidChanged(it))
                 },
                 selectedPaymentType = orderInput.paymentType,
-                onSelectPaymentType = { onEvent(SalesContract.Event.PaymentTypeChanged(it)) },
+                onSelectPaymentType = { onEvent(SalesContract.Event.PaymentMethodChanged(it)) },
                 onItemProductChanged = { editorId, product ->
                     onEvent(SalesContract.Event.ItemProductChanged(editorId, product))
                 },

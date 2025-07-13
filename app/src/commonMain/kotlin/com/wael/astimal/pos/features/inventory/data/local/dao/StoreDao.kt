@@ -31,4 +31,8 @@ interface StoreDao {
 
     @Query("DELETE FROM stores WHERE localId = :localId")
     suspend fun deleteStoreByLocalId(localId: Long)
+
+    @Transaction
+    @Query("SELECT * FROM stores WHERE employeeId = :local LIMIT 1")
+    fun getStoreByUserId(local: Long): Flow<StoreWithDetails>
 }

@@ -18,7 +18,7 @@ interface InvoiceDao {
      * Inserts an invoice header and returns its newly generated localId.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertInvoice(invoice: InvoiceEntity): Long
+    suspend fun insertInvoice(invoice: InvoiceEntity)
 
     /**
      * Inserts a list of invoice items.
@@ -34,11 +34,10 @@ interface InvoiceDao {
     suspend fun insertInvoiceWithItems(
         invoice: InvoiceEntity,
         items: List<InvoiceItemEntity>
-    ): Long {
-        val invoiceLocalId = insertInvoice(invoice)
-        val itemsWithInvoiceId = items.map { it.copy(invoiceId = invoiceLocalId) }
+    ) {
+        insertInvoice(invoice)
+        val itemsWithInvoiceId = items.map { it.copy(supabaseId = invoice.supabaseId) }
         insertInvoiceItems(itemsWithInvoiceId)
-        return invoiceLocalId
     }
 
     @Transaction

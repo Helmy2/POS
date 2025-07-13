@@ -5,17 +5,15 @@ import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
-import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.local.dao.InvoiceDao
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
-import com.wael.astimal.pos.features.management.data.local.entity.InvoiceWithItems
+import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
-import com.wael.astimal.pos.features.user.domain.entity.User
-import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -24,11 +22,8 @@ import kotlin.uuid.Uuid
 class InvoiceRepositoryImpl(
     private val invoiceDao: InvoiceDao,
     private val partnerTransactionDao: PartnerTransactionDao,
-    private val stockRepository: StockRepository,
-    private val userRepository: UserRepository,
     private val stockAdjustmentDao: StockAdjustmentDao,
-
-    ) : InvoiceRepository {
+) : InvoiceRepository {
 
     override fun getInvoices(): Flow<List<Invoice>> {
         return invoiceDao.getAllInvoicesWithItems().map { items -> items.map { it.toDomain() } }
@@ -37,26 +32,17 @@ class InvoiceRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun addSalesOrder(invoice: Invoice): Result<Unit> {
         return try {
-            val invoiceWithItems = invoice.toEntity()
+            val newInvoice = invoice.copy(id = Uuid.random().toString())
+            val invoiceWithItems = newInvoice.toEntity()
 
-            val supabaseId = Uuid.random().toString()
-            val invoiceLocalId = invoiceDao.insertInvoiceWithItems(
-                invoiceWithItems.first.copy(
-                    supabaseId = supabaseId,
-                ),
+            invoiceDao.insertInvoiceWithItems(
+                invoiceWithItems.first,
                 invoiceWithItems.second.map { it },
             )
 
-            val currentUser = userRepository.getCurrentUser() ?: throw Exception("User not found")
+            createAdjustStock(newInvoice)
+            adjustPartnerTransactions(newInvoice)
 
-            createAdjustStock(
-                currentUser, invoice.copy(
-                    id = invoice.id.copy(
-                        local = invoiceLocalId, serverStringId = supabaseId
-                    )
-                )
-            )
-//            adjustPartnerTransactions(invoiceLocalId, invoiceWithItems)
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -64,28 +50,39 @@ class InvoiceRepositoryImpl(
         }
     }
 
-    private fun adjustPartnerTransactions(
-        invoiceLocalId: Long, invoiceWithItems: InvoiceWithItems
-    ) {
-//        // 3. Create financial ledger entries
-//        // Debit the client's account for the total amount of the sale
-//        val debitTransaction = PartnerTransactionEntity(
-//            businessPartnerId = invoice.client.id.local,
-//            invoiceId = newInvoiceId.toString(), // Link to the new invoice
-//            transactionType = PartnerTransactionType.INVOICE,
-//            debit = invoice.totalAmount,
-//            credit = 0.0,
-//            notes = "Sale Invoice #${invoice.invoiceNumber}",
-//            createdAt = clock.now(),
-//            updatedAt = clock.now(),
-//            serverId = null
-//        )
-//        partnerTransactionDao.insert(debitTransaction)
+    override suspend fun updateOrder(invoice: Invoice): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteSalesOrder(orderId: String): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private suspend fun adjustPartnerTransactions(invoice: Invoice) {
+        val price =
+            if (invoice.invoiceType == InvoiceType.SALES || invoice.invoiceType == InvoiceType.PURCHASE_RETURN)
+                (invoice.totalAmount - invoice.paidAmount)
+            else -(invoice.totalAmount - invoice.paidAmount)
+
+        val transaction = PartnerTransactionEntity(
+            serverId = Uuid.random().toString(),
+            partnerLocalId = invoice.partner.id.local,
+            employeeLocalId = invoice.employee.id.local,
+            invoiceId = invoice.id,
+            transactionType = TransactionType.INVOICE,
+            createdAt = Clock.now(),
+            updatedAt = Clock.now(),
+            balance = price,
+            notes = null
+        )
+
+        partnerTransactionDao.insertOrUpdate(transaction)
     }
 
     @OptIn(ExperimentalUuidApi::class)
     private suspend fun createAdjustStock(
-        currentUser: User, invoice: Invoice
+        invoice: Invoice
     ) {
         for (item in invoice.items) {
             val quantity =
@@ -99,10 +96,10 @@ class InvoiceRepositoryImpl(
                     quantityChange = quantity,
                     createdAt = Clock.now(),
                     updatedAt = Clock.now(),
-                    userId = currentUser.id.local,
+                    userId = invoice.employee.id.local,
                     reason = StockAdjustmentReason.INVOICE,
                     storeId = invoice.store.id.local,
-                    invoiceId = invoice.id.local,
+                    invoiceId = invoice.id,
                     isSynced = false,
                     notes = null,
                 )

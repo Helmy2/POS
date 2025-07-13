@@ -31,7 +31,7 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
         childColumns = ["userId"],
     ), ForeignKey(
         entity = InvoiceEntity::class,
-        parentColumns = ["localId"],
+        parentColumns = ["supabaseId"],
         childColumns = ["invoiceId"],
     )]
 )
@@ -45,7 +45,7 @@ data class StockAdjustmentEntity(
 
     val storeId: Long,
     val productId: Long,
-    val invoiceId: Long?,
+    val invoiceId: String?,
     val userId: Long,
     val reason: StockAdjustmentReason,
     val notes: String?,
@@ -68,7 +68,7 @@ data class StockAdjustmentWithDetails(
     ) val user: UserEntity?,
 
     @Relation(
-        parentColumn = "invoiceId", entityColumn = "localId", entity = InvoiceEntity::class
+        parentColumn = "invoiceId", entityColumn = "supabaseId", entity = InvoiceEntity::class
     ) val invoice: InvoiceWithItems?
 )
 

@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -22,14 +20,14 @@ data class Invoice(
     val invoiceType: InvoiceType,
     val items: List<InvoiceItem>,
     val orderDate: Long,
-    override val id: Id,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now(),
-    override val isSynced: Boolean = false,
-) : Item
+    val id: String,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now(),
+    val isSynced: Boolean = false,
+)
 
 data class InvoiceItem(
-    val id: Id,
+    val id: String,
     val product: Product,
     val quantity: Double,
     val isSynced: Boolean,
@@ -38,8 +36,7 @@ data class InvoiceItem(
 
 fun Invoice.toEntity(): Pair<InvoiceEntity, List<InvoiceItemEntity>> {
     return InvoiceEntity(
-        localId = id.local,
-        supabaseId = id.serverStringId,
+        supabaseId = id,
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt,
@@ -52,19 +49,29 @@ fun Invoice.toEntity(): Pair<InvoiceEntity, List<InvoiceItemEntity>> {
         storeId = store.id.local,
         orderDate = orderDate,
     ) to items.map {
-        it.toEntity(id.local)
+        it.toEntity(id)
     }
 }
 
 fun InvoiceItem.toEntity(
-    invoiceId: Long
+    invoiceId: String
 ): InvoiceItemEntity {
     return InvoiceItemEntity(
-        localId = id.local,
-        supabaseId = id.serverStringId,
+        supabaseId = id,
         invoiceId = invoiceId,
         productId = product.id.local,
         quantity = quantity,
         unitPrice = unitPrice,
     )
+}
+
+
+fun Invoice.matchesQuery(query: String): Boolean {
+    val lowerQuery = query.lowercase()
+    return id.contains(lowerQuery) ||
+            partner.name.contains(lowerQuery) ||
+            employee.name.contains(lowerQuery) ||
+            store.name.contains(lowerQuery) ||
+            items.any { it.product.name.contains(lowerQuery) }
+
 }

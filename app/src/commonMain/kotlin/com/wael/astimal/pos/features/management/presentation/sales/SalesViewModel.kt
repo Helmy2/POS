@@ -6,28 +6,33 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
-import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.InvoiceItem
-import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
+import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.error_deleting_order
+import pos.app.generated.resources.error_fetching_stock
+import pos.app.generated.resources.error_no_order_selected
 import pos.app.generated.resources.error_some_field_are_required
 import pos.app.generated.resources.one_or_more_order_items_are_invalid
+import pos.app.generated.resources.order_deleted
 import pos.app.generated.resources.order_saved
 import pos.app.generated.resources.something_went_wrong
 
@@ -41,15 +46,25 @@ class SalesViewModel(
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController,
 ) : BaseViewModel<SalesContract.State, SalesContract.Event, Nothing>(
-    reducer = SalesReducer(),
-    initialState = SalesContract.State(
+    reducer = SalesReducer(), initialState = SalesContract.State(
         currentOrderInput = SalesContract.EditableOrder(date = Clock.now())
     )
 ) {
     private val stockObservationJobs = mutableMapOf<String, Job>()
 
-    val filteredOrdersState: StateFlow<List<SalesOrder>> =
-        MutableStateFlow(emptyList())
+    val filteredOrdersState: StateFlow<List<Invoice>> = combine(
+        state, invoiceRepository.getInvoices()
+    ) { state, allOrders ->
+        if (state.orders != allOrders) {
+            setState(SalesContract.Event.OrdersLoaded(allOrders))
+        }
+        if (state.searchQuery.isBlank()) {
+            allOrders
+        } else {
+            allOrders.filter { it.matchesQuery(state.searchQuery) }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
 
     override fun handleEvent(event: SalesContract.Event) {
         when (event) {
@@ -77,9 +92,9 @@ class SalesViewModel(
                 setState(event)
             }
 
-            is SalesContract.Event.ClientSelected -> {
+            is SalesContract.Event.PartnerSelected -> {
                 viewModelScope.launch {
-                    event.client?.let {
+                    event.partner?.let {
                         val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
                         setState(SalesContract.Event.PartnerBalanceChanged(balance))
                     }
@@ -88,8 +103,17 @@ class SalesViewModel(
             }
 
             is SalesContract.Event.ItemProductChanged -> {
-                event.product?.let {
-                    observeStockForItem(event.editorId, it.id.local)
+                event.product?.let { observeStockForItem(event.editorId, it.id.local) }
+                setState(event)
+            }
+
+            is SalesContract.Event.StoreChanged -> {
+                event.store?.let {
+                    state.value.currentOrderInput.items.forEach { item ->
+                        item.product?.let { product ->
+                            observeStockForItem(item.tempEditorId, product.id.local)
+                        }
+                    }
                 }
                 setState(event)
             }
@@ -104,17 +128,18 @@ class SalesViewModel(
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            setState(SalesContract.Event.UserLoaded(userRepository.getCurrentUser()))
-        }
-        viewModelScope.launch {
+            val user = userRepository.getCurrentUser() ?: throw Exception()
+            setState(SalesContract.Event.UserLoaded(user))
             combine(
                 partnerRepository.getClients(""),
                 productRepository.getProducts(""),
-                userRepository.getEmployeesFlow()
-            ) { clients, products, employees ->
-                SalesContract.DropdownData(clients, products, employees)
+                storeRepository.getStoresForUser(user)
+            ) { clients, products, stores ->
+                SalesContract.DropdownData(clients, products, stores)
             }.collect {
-                setState(SalesContract.Event.DropdownDataLoaded(it))
+                handleEvent(SalesContract.Event.DropdownDataLoaded(it))
+                handleEvent(SalesContract.Event.PartnerSelected(it.partners.firstOrNull()))
+                handleEvent(SalesContract.Event.StoreChanged(it.stores.firstOrNull()))
             }
         }
     }
@@ -122,7 +147,7 @@ class SalesViewModel(
     private fun saveOrder() {
         viewModelScope.launch {
             val currentState = state.value
-            if (!currentState.canSave || currentState.selectedClient == null || currentState.currentOrderInput.selectedEmployee == null) {
+            if (!currentState.canSave || currentState.currentOrderInput.selectedPartner == null || currentState.currentOrderInput.selectedStore == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
                 return@launch
             }
@@ -133,7 +158,7 @@ class SalesViewModel(
                 val price = it.maxUnitPrice.toDoubleOrNull()
                 if (it.product != null && quantity != null && quantity > 0 && price != null) {
                     InvoiceItem(
-                        id = Id.new,
+                        id = "",
                         product = it.product,
                         quantity = quantity,
                         unitPrice = price,
@@ -149,31 +174,27 @@ class SalesViewModel(
             }
 
             val orderToSave = Invoice(
-                partner = currentState.selectedClient,
-                employee = currentState.currentOrderInput.selectedEmployee,
+                partner = currentState.currentOrderInput.selectedPartner,
+                employee = currentState.currentUser!!,
                 paidAmount = currentState.currentOrderInput.amountPaid.toDoubleOrNull() ?: 0.0,
                 createdAt = currentState.selectedOrder?.createdAt ?: Clock.now(),
                 items = orderItems,
                 isSynced = false,
                 totalAmount = currentState.currentOrderInput.totalAmount,
                 updatedAt = currentState.selectedOrder?.updatedAt ?: Clock.now(),
-                id = currentState.selectedOrder?.id ?: Id.new,
+                id = currentState.selectedOrder?.id ?: "",
                 orderDate = currentState.currentOrderInput.date,
                 invoiceType = InvoiceType.SALES,
-                paymentMethod = PaymentMethod.CARD,
-                store = storeRepository.getStores().first().first()
+                paymentMethod = currentState.currentOrderInput.paymentType,
+                store = currentState.currentOrderInput.selectedStore
             )
 
-            val result = invoiceRepository.addSalesOrder(
-                orderToSave
-            )
+            val result = if (currentState.isEditing) {
+                invoiceRepository.updateOrder(orderToSave)
+            } else {
+                invoiceRepository.addSalesOrder(orderToSave)
+            }
 
-//            val result = if (currentState.isEditing) {
-//                salesOrderRepository.updateOrder(orderToSave)
-//            } else {
-//                salesOrderRepository.addOrder(orderToSave)
-//            }
-//
             result.onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.order_saved)))
                 setState(SalesContract.Event.SaveSucceeded)
@@ -186,26 +207,35 @@ class SalesViewModel(
     }
 
     private fun deleteOrder() {
-
+        setState(SalesContract.Event.LoadingStarted)
+        viewModelScope.launch {
+            state.value.selectedOrder?.id?.let {
+                invoiceRepository.deleteSalesOrder(it).onSuccess {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.order_deleted)))
+                    setState(SalesContract.Event.DeleteSucceeded)
+                }.onFailure {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_deleting_order)))
+                    setState(SalesContract.Event.LoadingFinished)
+                }
+            } ?: snackbarController.sendEvent(
+                SnackbarEvent(StringResource.FromResource(Res.string.error_no_order_selected))
+            )
+        }
     }
 
     private fun observeStockForItem(tempId: String, productId: Long) {
-//        stockObservationJobs[tempId]?.cancel()
-//        viewModelScope.launch {
-//            val employeeId = state.value.currentOrderInput.selectedEmployee?.id ?: return@launch
-//            val storeId =
-//                userRepository.getStoreIdForEmployee(employeeId.local).getOrNull() ?: return@launch
-//            stockObservationJobs[tempId] =
-//                stockRepository.getStockQuantityFlow(storeId, productId)
-//                    .catch {
-//                        snackbarController.sendEvent(
-//                            SnackbarEvent(StringResource.FromResource(Res.string.error_fetching_stock))
-//                        )
-//                    }
-//                    .onEach { stock ->
-//                        setState(SalesContract.Event.ItemStockChanged(tempId, stock))
-//                    }.launchIn(viewModelScope)
-//        }
+        stockObservationJobs[tempId]?.cancel()
+        viewModelScope.launch {
+            val storeId = state.value.currentOrderInput.selectedStore?.id?.local ?: return@launch
+            stockObservationJobs[tempId] =
+                stockRepository.getStockQuantityFlow(storeId, productId).catch {
+                    snackbarController.sendEvent(
+                        SnackbarEvent(StringResource.FromResource(Res.string.error_fetching_stock))
+                    )
+                }.onEach { stock ->
+                    setState(SalesContract.Event.ItemStockChanged(tempId, stock))
+                }.launchIn(viewModelScope)
+        }
     }
 
     private fun navigateBack() {

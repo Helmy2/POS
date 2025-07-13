@@ -166,7 +166,9 @@
 
     <string name="payment_type">Payment Type</string>
     <string name="payment_type_cash">Cash</string>
+    <string name="payment_type_card">Card</string>
     <string name="payment_type_transfer">Transfer</string>
+    <string name="payment_type_other">Other</string>
     <string name="payment_type_wallet">Wallet</string>
     <string name="payment_type_deferred">Deferred</string>
     <string name="receive_pay_vouchers">Receipt &amp; Payment Vouchers</string>

@@ -13,6 +13,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.PurchaseOrder
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -112,7 +113,7 @@ fun PurchaseScreen(
                 totalAmount = purchaseInput.totalAmount,
                 amountRemaining = purchaseInput.amountRemaining,
                 itemList = purchaseInput.items,
-                selectedPaymentType = purchaseInput.paymentType,
+                selectedPaymentType = PaymentMethod.CARD,
                 amountPaid = purchaseInput.amountPaid,
                 onUpdateAmountPaid = {
                     onEvent(PurchaseContract.Event.AmountPaidChanged(it))
@@ -121,7 +122,7 @@ fun PurchaseScreen(
                     onEvent(PurchaseContract.Event.AddItem)
                 },
                 availableProducts = state.dropdownData.products,
-                onSelectPaymentType = { onEvent(PurchaseContract.Event.PaymentTypeChanged(it)) },
+                onSelectPaymentType = { },
                 onItemProductChanged = { editorId, product ->
                     onEvent(PurchaseContract.Event.ItemProductChanged(editorId, product))
                 },

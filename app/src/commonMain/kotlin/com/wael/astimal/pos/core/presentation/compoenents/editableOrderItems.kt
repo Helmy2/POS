@@ -22,8 +22,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
 import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_item
@@ -37,11 +37,11 @@ fun LazyStaggeredGridScope.editableOrderItems(
     partnerBalanceAfterThisOrder: Double,
     amountPaid: String,
     itemList: List<EditableItem>,
-    selectedPaymentType: PaymentType,
+    selectedPaymentType: PaymentMethod,
     onUpdateAmountPaid: (String) -> Unit,
     onAddNewItemToOrder: () -> Unit,
     availableProducts: List<Product>,
-    onSelectPaymentType: (PaymentType) -> Unit,
+    onSelectPaymentType: (PaymentMethod) -> Unit,
     onItemProductChanged: (tempEditorId: String, product: Product?) -> Unit,
     onRemoveItemFromOrder: (tempEditorId: String) -> Unit,
     onUpdateItemMaxUnitQuantity: (tempEditorId: String, quantity: String) -> Unit,
@@ -85,7 +85,7 @@ fun LazyStaggeredGridScope.editableOrderItems(
 
             CustomExposedDropdownMenu(
                 label = stringResource(Res.string.payment_type),
-                items = PaymentType.entries,
+                items = PaymentMethod.entries,
                 currentSelection = stringResource(selectedPaymentType.stringResource()),
                 onItemSelected = onSelectPaymentType,
                 itemToDisplayString = { stringResource(it.stringResource()) },

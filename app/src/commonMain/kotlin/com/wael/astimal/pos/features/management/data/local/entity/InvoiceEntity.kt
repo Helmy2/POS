@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductWithDetails
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
@@ -16,6 +15,12 @@ import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.InvoiceItem
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
+import org.jetbrains.compose.resources.StringResource
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.payment_type_card
+import pos.app.generated.resources.payment_type_cash
+import pos.app.generated.resources.payment_type_other
+import pos.app.generated.resources.payment_type_transfer
 
 @Entity(
     tableName = "invoices",
@@ -47,9 +52,8 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
     ]
 )
 data class InvoiceEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val supabaseId: String?,
+    @PrimaryKey
+    val supabaseId: String,
     var isSynced: Boolean = false,
     val createdAt: Long,
     var updatedAt: Long,
@@ -69,7 +73,7 @@ data class InvoiceEntity(
     foreignKeys = [
         ForeignKey(
             entity = InvoiceEntity::class,
-            parentColumns = ["localId"],
+            parentColumns = ["supabaseId"],
             childColumns = ["invoiceId"],
             onDelete = ForeignKey.CASCADE
         ),
@@ -87,13 +91,12 @@ data class InvoiceEntity(
     ]
 )
 data class InvoiceItemEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val supabaseId: String?,
+    @PrimaryKey
+    val supabaseId: String,
     var isSynced: Boolean = false,
     var isDeletedLocally: Boolean = false,
 
-    val invoiceId: Long,
+    val invoiceId: String,
     val productId: Long,
     val quantity: Double,
     val unitPrice: Double
@@ -110,7 +113,7 @@ data class InvoiceItemEntityWithDetails(
 data class InvoiceWithItems(
     @Embedded val invoice: InvoiceEntity,
     @Relation(
-        parentColumn = "localId",
+        parentColumn = "supabaseId",
         entityColumn = "invoiceId",
         entity = InvoiceItemEntity::class
     )
@@ -139,10 +142,7 @@ data class InvoiceWithItems(
 
 fun InvoiceWithItems.toDomain(): Invoice {
     return Invoice(
-        id = Id(
-            local = invoice.localId,
-            serverStringId = invoice.supabaseId
-        ),
+        id = invoice.supabaseId,
         isSynced = invoice.isSynced,
         createdAt = invoice.createdAt,
         updatedAt = invoice.updatedAt,
@@ -156,10 +156,7 @@ fun InvoiceWithItems.toDomain(): Invoice {
         orderDate = invoice.orderDate,
         items = items.map {
             InvoiceItem(
-                id = Id(
-                    local = it.item.localId,
-                    serverStringId = it.item.supabaseId
-                ),
+                id = it.item.supabaseId!!,
                 isSynced = it.item.isSynced,
                 product = it.product.toDomain(),
                 quantity = it.item.quantity,
@@ -181,7 +178,16 @@ enum class PaymentMethod {
     CASH,
     CARD,
     BANK_TRANSFER,
-    OTHER
+    OTHER;
+
+    fun stringResource(): StringResource {
+        return when (this) {
+            CASH -> Res.string.payment_type_cash
+            CARD -> Res.string.payment_type_card
+            BANK_TRANSFER -> Res.string.payment_type_transfer
+            OTHER -> Res.string.payment_type_other
+        }
+    }
 }
 
 

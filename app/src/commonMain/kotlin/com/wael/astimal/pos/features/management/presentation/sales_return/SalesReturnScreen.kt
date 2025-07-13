@@ -13,6 +13,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.SalesReturn
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -113,7 +114,7 @@ fun SalesReturnScreen(
                 totalAmount = returnInput.totalAmount,
                 amountRemaining = returnInput.amountRemaining,
                 itemList = returnInput.items,
-                selectedPaymentType = returnInput.paymentType,
+                selectedPaymentType = PaymentMethod.CARD,
                 onUpdateAmountPaid = {
                     onEvent(SalesReturnContract.Event.AmountPaidChanged(it))
                 },
@@ -121,7 +122,7 @@ fun SalesReturnScreen(
                     onEvent(SalesReturnContract.Event.AddItem)
                 },
                 availableProducts = state.dropdownData.products,
-                onSelectPaymentType = { onEvent(SalesReturnContract.Event.PaymentTypeChanged(it)) },
+                onSelectPaymentType = { },
                 onItemProductChanged = { editorId, product ->
                     onEvent(SalesReturnContract.Event.ItemProductChanged(editorId, product))
                 },

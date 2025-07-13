@@ -2,23 +2,25 @@ package com.wael.astimal.pos.features.management.presentation.sales
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.features.management.domain.entity.SalesOrder
+import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object SalesContract {
 
     data class DropdownData(
-        val clients: List<BusinessPartner> = emptyList(),
+        val partners: List<BusinessPartner> = emptyList(),
         val products: List<Product> = emptyList(),
-        val employees: List<User> = emptyList()
+        val stores: List<Store> = emptyList()
     )
 
     data class EditableOrder(
-        val selectedEmployee: User? = null,
-        val paymentType: PaymentType = PaymentType.CASH,
+        val paymentType: PaymentMethod = PaymentMethod.CASH,
+        val selectedPartner: BusinessPartner? = null,
+        val selectedStore: Store? = null,
         val date: Long,
         val items: List<EditableItem> = emptyList(),
         val amountPaid: String = "0.0",
@@ -31,9 +33,8 @@ object SalesContract {
 
     data class State(
         val isLoading: Boolean = false,
-        val orders: List<SalesOrder> = emptyList(),
-        val selectedOrder: SalesOrder? = null,
-        val selectedClient: BusinessPartner? = null,
+        val orders: List<Invoice> = emptyList(),
+        val selectedOrder: Invoice? = null,
         val searchQuery: String = "",
         val isSearchActive: Boolean = false,
         val currentUser: User? = null,
@@ -42,7 +43,8 @@ object SalesContract {
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
         val canSave: Boolean
-            get() = selectedClient != null &&
+            get() = currentOrderInput.selectedPartner != null &&
+                    currentOrderInput.selectedStore != null &&
                     currentOrderInput.items.isNotEmpty() &&
                     currentOrderInput.items.all { it.product != null }
     }
@@ -51,17 +53,17 @@ object SalesContract {
         // UI Actions
         data class SearchQueryChanged(val query: String) : Event
         data class SearchActiveChanged(val isActive: Boolean) : Event
-        data class OrderSelected(val order: SalesOrder) : Event
+        data class OrderSelected(val order: Invoice) : Event
         data object NewOrderClicked : Event
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
 
         // Form Input Changes
-        data class ClientSelected(val client: BusinessPartner?) : Event
-        data class EmployeeChanged(val employee: User?) : Event
+        data class PartnerSelected(val partner: BusinessPartner?) : Event
+        data class StoreChanged(val store: Store?) : Event
         data class DateChanged(val date: Long) : Event
-        data class PaymentTypeChanged(val type: PaymentType) : Event
+        data class PaymentMethodChanged(val type: PaymentMethod) : Event
         data class AmountPaidChanged(val amount: String) : Event
         data object AddItem : Event
         data class RemoveItem(val editorId: String) : Event
@@ -78,7 +80,7 @@ object SalesContract {
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val data: DropdownData) : Event
-        data class OrdersLoaded(val orders: List<SalesOrder>) : Event
+        data class OrdersLoaded(val orders: List<Invoice>) : Event
         data object SaveSucceeded : Event
         data object DeleteSucceeded : Event
         data object LoadingStarted : Event
