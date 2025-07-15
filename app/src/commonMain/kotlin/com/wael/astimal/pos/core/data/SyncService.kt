@@ -16,13 +16,17 @@ import com.wael.astimal.pos.features.inventory.domain.repository.ProductReposito
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
+import com.wael.astimal.pos.features.management.data.local.entity.toDto
 import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
 import com.wael.astimal.pos.features.management.data.remote.dto.EmployeeTransactionDto
+import com.wael.astimal.pos.features.management.data.remote.dto.InvoiceDto
+import com.wael.astimal.pos.features.management.data.remote.dto.ItemDto
 import com.wael.astimal.pos.features.management.data.remote.dto.PartnerTransactionDto
 import com.wael.astimal.pos.features.management.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.management.domain.entity.toDto
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
+import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
@@ -45,6 +49,7 @@ class SyncServiceImpl(
     private val businessPartnerRepository: BusinessPartnerRepository,
     private val partnerTransactionRepository: PartnerTransactionRepository,
     private val employeeTransactionRepository: EmployeeTransactionRepository,
+    private val invoiceRepository: InvoiceRepository,
     private val navigationController: NavigationController
 ) : SyncService {
 
@@ -110,8 +115,10 @@ class SyncServiceImpl(
                     )
                 }
 
-                syncStockAdjustment()
                 syncPartner()
+                syncInvoice()
+                syncInvoiceItems()
+                syncStockAdjustment()
                 syncPartnerTransactions()
                 syncEmployeesTransactions()
 
@@ -120,6 +127,80 @@ class SyncServiceImpl(
                 e.printStackTrace()
                 Result.failure(e)
             }
+        }
+    }
+
+    private suspend fun syncInvoiceItems() {
+        invoiceRepository.getUnsyncedInvoicesItems().getOrThrow().map {
+            it.toDto(
+                productId = productRepository.getProductByLocalId(
+                    it.productId
+                ).getOrThrow().id.server!!
+            )
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<ItemDto>("invoice_items") { it }
+        }?.getOrThrow()
+
+        invoiceRepository.getAllDeletedInvoiceItems().getOrThrow().map {
+            it.toDto(
+                productId = productRepository.getProductByLocalId(
+                    it.productId
+                ).getOrThrow().id.server!!
+            )
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            supabaseClient.postgrest["invoice_items"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            invoiceRepository.hardDeleteInvoiceItems(it.id)
+        }
+
+        supabaseClient.fetchAll<ItemDto>("invoice_items").getOrThrow().also {
+            invoiceRepository.syncInvoicesItems(
+                it.map { invoiceItemDto ->
+                    invoiceItemDto.toEntity(
+                        productId = productRepository.getProductByServerId(
+                            invoiceItemDto.productId
+                        ).getOrThrow().id.local,
+                    )
+                },
+            )
+        }
+    }
+
+    private suspend fun syncInvoice() {
+        invoiceRepository.getUnsyncedInvoices().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<InvoiceDto>("invoices") { it }
+        }?.getOrThrow()
+
+        invoiceRepository.getAllDeletedInvoice().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            supabaseClient.postgrest["invoices"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            invoiceRepository.hardDeleteInvoice(it.id)
+        }
+
+        supabaseClient.fetchAll<InvoiceDto>("invoices").getOrThrow().also {
+            invoiceRepository.syncInvoices(
+                it.map { invoiceDto ->
+                    invoiceDto.toEntity(
+                        partnerId = businessPartnerRepository.getBusinessPartnerByServerId(
+                            invoiceDto.partnerId
+                        ).getOrThrow()!!.localId,
+                        employeeId = userRepository.getUserByServerId(invoiceDto.employeeId)
+                            .getOrThrow()!!.id.local,
+                        storeId = storeRepository.getStoreBySeverId(invoiceDto.storeId)
+                            .getOrThrow().id.local
+                    )
+                },
+            )
         }
     }
 

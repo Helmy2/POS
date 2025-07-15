@@ -69,6 +69,7 @@ fun EmployeeTransactionWithDetailsEntity.toDomain(): EmployeeTransaction {
         notes = transactionEntity.notes,
         createdAt = transactionEntity.createdAt,
         isSynced = transactionEntity.isSynced,
-        updatedAt = transactionEntity.updatedAt
+        updatedAt = transactionEntity.updatedAt,
+        invoiceId = transactionEntity.invoiceId
     )
 }

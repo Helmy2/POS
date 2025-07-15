@@ -42,6 +42,7 @@ data class EmployeeTransaction(
     val type: EmployeeTransactionType,
     val amount: Double,
     val notes: String?,
+    val invoiceId: String?,
     override val id: Id,
     override val createdAt: Long,
     override val updatedAt: Long = Clock.now(),
@@ -60,7 +61,7 @@ fun EmployeeTransaction.toEntity(): EmployeeTransactionEntity {
         createdAt = createdAt,
         updatedAt = updatedAt,
         isSynced = isSynced,
-        invoiceId = "" // TODO
+        invoiceId = invoiceId
     )
 }
 
@@ -84,6 +85,6 @@ fun EmployeeTransaction.toDto(): EmployeeTransactionDto {
         updatedAt = updatedAt.toDateString(),
         creatorId = createdByEmployee.id.serverStringId!!,
         employeeId = employee.id.serverStringId!!,
-        invoiceId = null // TODO
+        invoiceId = invoiceId
     )
 }

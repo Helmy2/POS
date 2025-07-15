@@ -1,12 +1,15 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceItemEntity
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
 import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
+import com.wael.astimal.pos.features.management.data.remote.dto.InvoiceDto
+import com.wael.astimal.pos.features.management.data.remote.dto.ItemDto
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 
@@ -74,4 +77,32 @@ fun Invoice.matchesQuery(query: String): Boolean {
             store.name.contains(lowerQuery) ||
             items.any { it.product.name.contains(lowerQuery) }
 
+}
+
+fun InvoiceItem.toDto(
+    invoiceId: String
+): ItemDto {
+    return ItemDto(
+        id = id,
+        productId = product.id.server!!,
+        quantity = quantity,
+        unitPrice = unitPrice,
+        invoiceId = invoiceId
+    )
+}
+
+fun Invoice.toDto(): InvoiceDto {
+    return InvoiceDto(
+        id = id,
+        createdAt = createdAt.toDateString(),
+        updatedAt = updatedAt.toDateString(),
+        partnerId = partner.id.serverStringId!!,
+        employeeId = employee.id.serverStringId!!,
+        paidAmount = paidAmount,
+        totalAmount = totalAmount,
+        paymentMethod = paymentMethod.name.lowercase(),
+        invoiceType = invoiceType.name.lowercase(),
+        storeId = store.id.server!!,
+        invoiceDate = orderDate.toDateString(),
+    )
 }

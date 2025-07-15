@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.inventory.data.local.entity.ProductWithDeta
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreWithDetails
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
+import com.wael.astimal.pos.features.management.data.remote.dto.ItemDto
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.InvoiceItem
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
@@ -151,13 +152,25 @@ fun InvoiceWithItems.toDomain(): Invoice {
         orderDate = invoice.orderDate,
         items = items.map {
             InvoiceItem(
-                id = it.item.supabaseId!!,
+                id = it.item.supabaseId,
                 isSynced = it.item.isSynced,
                 product = it.product.toDomain(),
                 quantity = it.item.quantity,
                 unitPrice = it.item.unitPrice,
             )
         }
+    )
+}
+
+fun InvoiceItemEntity.toDto(
+    productId: Long
+): ItemDto {
+    return ItemDto(
+        id = supabaseId,
+        productId = productId,
+        quantity = quantity,
+        unitPrice = unitPrice,
+        invoiceId = invoiceId
     )
 }
 

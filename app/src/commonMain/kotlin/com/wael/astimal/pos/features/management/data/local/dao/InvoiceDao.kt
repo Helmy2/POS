@@ -14,26 +14,17 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface InvoiceDao {
 
-    /**
-     * Inserts an invoice header and returns its newly generated localId.
-     */
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInvoice(invoice: InvoiceEntity)
 
-    /**
-     * Inserts a list of invoice items.
-     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInvoiceItems(items: List<InvoiceItemEntity>)
 
-    /**
-     * A transactional function that inserts an invoice and its items together,
-     * ensuring data integrity.
-     */
+
     @Transaction
     suspend fun insertInvoiceWithItems(
-        invoice: InvoiceEntity,
-        items: List<InvoiceItemEntity>
+        invoice: InvoiceEntity, items: List<InvoiceItemEntity>
     ) {
         insertInvoice(invoice)
         val itemsWithInvoiceId = items.map { it.copy(supabaseId = invoice.supabaseId) }
@@ -45,6 +36,26 @@ interface InvoiceDao {
     fun getAllInvoicesWithItems(): Flow<List<InvoiceWithItems>>
 
     @Transaction
-    @Query("SELECT * FROM invoices WHERE isSynced = 0 AND isDeletedLocally = 0")
+    @Query("SELECT * FROM invoices WHERE  isDeletedLocally = 0")
     suspend fun getUnsyncedInvoices(): List<InvoiceWithItems>
+
+    @Transaction
+    @Query("SELECT * FROM invoices WHERE isDeletedLocally = 1")
+    suspend fun getDeletedInvoice(): List<InvoiceWithItems>
+
+    @Query("DELETE FROM invoices WHERE supabaseId = :id")
+    suspend fun hardDeleteInvoiceById(id: String)
+
+
+    @Query("SELECT * FROM invoice_items WHERE isDeletedLocally = 0")
+    suspend fun getUnsyncedInvoicesItems(): List<InvoiceItemEntity>
+
+    @Query("SELECT * FROM invoice_items WHERE isDeletedLocally = 1")
+    suspend fun getDeletedInvoiceItems(): List<InvoiceItemEntity>
+
+    @Query("DELETE FROM invoice_items WHERE supabaseId = :id")
+    suspend fun hardDeleteInvoiceItemsById(id: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertInvoiceInvoice(item: InvoiceItemEntity)
 }

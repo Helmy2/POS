@@ -102,6 +102,7 @@ class EmployeeAccountViewModel(
                 type = dialogState.transactionType,
                 notes = dialogState.notes,
                 createdAt = dialogState.selectedTransaction?.createdAt ?: Clock.now(),
+                invoiceId = null
             )
 
             val result = employeeTransactionRepository.saveManualPayment(transactionToSave)
