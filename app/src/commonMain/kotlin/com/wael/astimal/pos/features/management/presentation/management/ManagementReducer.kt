@@ -5,6 +5,7 @@ import com.wael.astimal.pos.core.domain.navigation.Destination
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.employee_account
+import pos.app.generated.resources.purchase
 import pos.app.generated.resources.receive_pay_voucher
 import pos.app.generated.resources.sales
 
@@ -32,14 +33,15 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                         Destination.SalesOrders,
                         Res.string.sales
                     ),
+                    ManagementContract.ManagementItem(
+                        Destination.PurchaseOrders,
+                        Res.string.purchase
+                    ),
 //                    ManagementContract.ManagementItem(
 //                        Destination.SalesReturns,
 //                        Res.string.sales_return
 //                    ),
-//                    ManagementContract.ManagementItem(
-//                        Destination.PurchaseOrders,
-//                        Res.string.purchase
-//                    ),
+
 //                    ManagementContract.ManagementItem(
 //                        Destination.PurchaseReturns,
 //                        Res.string.purchase_return

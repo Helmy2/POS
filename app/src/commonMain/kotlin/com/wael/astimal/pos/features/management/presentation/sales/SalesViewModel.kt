@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -54,7 +55,9 @@ class SalesViewModel(
     private val stockObservationJobs = mutableMapOf<String, Job>()
 
     val filteredOrdersState: StateFlow<List<Invoice>> = combine(
-        state, invoiceRepository.getInvoices()
+        state, invoiceRepository.getInvoices().map { list ->
+            list.filter { it.invoiceType == InvoiceType.SALES }
+        }
     ) { state, allOrders ->
         if (state.orders != allOrders) {
             setState(SalesContract.Event.OrdersLoaded(allOrders))
@@ -213,7 +216,7 @@ class SalesViewModel(
                 updatedAt = currentState.selectedOrder?.updatedAt ?: Clock.now(),
                 id = currentState.selectedOrder?.id ?: "",
                 orderDate = currentState.currentOrderInput.date,
-                invoiceType = InvoiceType.SALES,
+                invoiceType = InvoiceType.PURCHASE,
                 paymentMethod = currentState.currentOrderInput.paymentType,
                 store = currentState.currentOrderInput.selectedStore
             )
