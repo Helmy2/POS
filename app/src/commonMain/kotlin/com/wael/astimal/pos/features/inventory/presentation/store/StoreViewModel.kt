@@ -16,6 +16,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -39,7 +40,7 @@ class StoreViewModel(
     private var searchJob: Job? = null
 
     init {
-        loadCurrentUser()
+        loadUsers()
         searchStores("")
     }
 
@@ -64,9 +65,11 @@ class StoreViewModel(
         }
     }
 
-    private fun loadCurrentUser() {
+    private fun loadUsers() {
         viewModelScope.launch {
-            setState(StoreContract.Event.UserLoaded(userRepository.getCurrentUser()))
+            val currentUser = userRepository.getCurrentUser()
+            val employee = userRepository.getEmployeesFlow().first()
+            setState(StoreContract.Event.UserLoaded(currentUser, employee))
         }
     }
 
@@ -104,7 +107,7 @@ class StoreViewModel(
                     type = currentState.inputType,
                     createdAt = currentState.selectedStore?.createdAt ?: Clock.now(),
                     address = currentState.inputAddress,
-                    employee = currentState.currentUser!!
+                    employee = currentState.selectedEmployee!!
                 )
 
                 val result = storeRepository.saveStore(storeToSave)

@@ -16,7 +16,17 @@ class StoreReducer : Reducer<StoreContract.State, StoreContract.Event, Nothing> 
 
             is StoreContract.Event.SearchActiveChanged -> previousState.copy(isSearchActive = event.isActive) to null
 
-            is StoreContract.Event.UserLoaded -> previousState.copy(currentUser = event.user) to null
+            is StoreContract.Event.UserLoaded ->
+                previousState.copy(
+                    currentUser = event.currentUser,
+                    employees = event.employees,
+                    selectedEmployee = event.employees.firstOrNull()
+                ) to null
+
+            is StoreContract.Event.EmployeeSelected ->
+                previousState.copy(
+                    selectedEmployee = event.employee,
+                ) to null
 
             is StoreContract.Event.StoresLoaded -> previousState.copy(
                 isLoading = false, stores = event.stores

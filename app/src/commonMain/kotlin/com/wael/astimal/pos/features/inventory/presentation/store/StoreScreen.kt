@@ -24,6 +24,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.address
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.en_name
+import pos.app.generated.resources.responsible_employee
 import pos.app.generated.resources.store_type
 
 @Composable
@@ -112,6 +113,18 @@ fun StoreScreen(
                     onItemSelected = { onEvent(StoreContract.Event.TypeChanged(it)) },
                     enabled = state.canUserEdit,
                     itemToDisplayString = { stringResource(it.getStringResourceId()) },
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            item {
+                CustomExposedDropdownMenu(
+                    label = stringResource(Res.string.responsible_employee),
+                    currentSelection = state.selectedEmployee?.name ?: "",
+                    items = state.employees,
+                    onItemSelected = { onEvent(StoreContract.Event.EmployeeSelected(it)) },
+                    enabled = state.canUserEdit,
+                    itemToDisplayString = { it.name },
                     modifier = Modifier.padding(8.dp)
                 )
             }

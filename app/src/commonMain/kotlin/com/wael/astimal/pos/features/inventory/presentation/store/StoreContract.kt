@@ -18,12 +18,14 @@ object StoreContract {
         val inputEnName: String = "",
         val inputAddress: String = "",
         val inputType: StoreType = StoreType.SUB,
-        val showDeleteDialog: Boolean = false
+        val showDeleteDialog: Boolean = false,
+        val selectedEmployee: User? = null,
+        val employees: List<User> = emptyList(),
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedStore != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean
-            get() = inputArName.isNotBlank() && inputEnName.isNotBlank()
+            get() = inputArName.isNotBlank() && inputEnName.isNotBlank() && selectedEmployee != null
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -41,8 +43,9 @@ object StoreContract {
         data class EnNameChanged(val name: String) : Event
         data class AddressChanged(val address: String) : Event
         data class TypeChanged(val type: StoreType) : Event
+        data class EmployeeSelected(val employee: User) : Event
 
-        data class UserLoaded(val user: User?) : Event
+        data class UserLoaded(val currentUser: User?, val employees: List<User>) : Event
         data class StoresLoaded(val stores: List<Store>) : Event
         data object SaveSucceeded : Event
         data object DeleteSucceeded : Event
