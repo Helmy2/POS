@@ -13,25 +13,24 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
-import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
+import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
-import pos.app.generated.resources.employee
-import pos.app.generated.resources.return_from_with_args
-import pos.app.generated.resources.supplier
+import pos.app.generated.resources.client
+import pos.app.generated.resources.order_to_with_args
+import pos.app.generated.resources.stores
 
 @Composable
 fun PurchaseReturnRoute(
     viewModel: PurchaseReturnViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val filteredReturns by viewModel.filteredReturnsState.collectAsStateWithLifecycle()
+    val filteredReturns by viewModel.filteredOrdersState.collectAsStateWithLifecycle()
 
     PurchaseReturnScreen(
         state = state,
-        filteredReturns = filteredReturns,
+        filteredOrders = filteredReturns,
         onEvent = viewModel::processEvent,
     )
 }
@@ -39,11 +38,11 @@ fun PurchaseReturnRoute(
 @Composable
 fun PurchaseReturnScreen(
     state: PurchaseReturnContract.State,
-    filteredReturns: List<PurchaseReturn>,
+    filteredOrders: List<Invoice>,
     onEvent: (PurchaseReturnContract.Event) -> Unit,
 ) {
     val language = LocalAppLocale.current
-    val returnInput = state.currentReturnInput
+    val orderInput = state.currentOrderInput
 
     SearchScreen(
         query = state.searchQuery,
@@ -54,94 +53,65 @@ fun PurchaseReturnScreen(
         onSearch = { onEvent(PurchaseReturnContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(PurchaseReturnContract.Event.SearchActiveChanged(it)) },
         onBack = { onEvent(PurchaseReturnContract.Event.BackClicked) },
-        lastModifiedDate = state.selectedReturn?.updatedAt,
+        lastModifiedDate = state.selectedOrder?.updatedAt,
         onDelete = { onEvent(PurchaseReturnContract.Event.DeleteClicked) },
         onCreate = { onEvent(PurchaseReturnContract.Event.SaveClicked) },
         onUpdate = { onEvent(PurchaseReturnContract.Event.SaveClicked) },
-        onNew = { onEvent(PurchaseReturnContract.Event.NewReturnClicked) },
+        onNew = { onEvent(PurchaseReturnContract.Event.NewOrderClicked) },
         searchResults = {
             ItemGrid(
-                list = filteredReturns,
-                onItemClick = { onEvent(PurchaseReturnContract.Event.ReturnSelected(it)) },
+                list = filteredOrders,
+                onItemClick = { onEvent(PurchaseReturnContract.Event.OrderSelected(it)) },
                 label = {
                     Label(
                         stringResource(
-                            Res.string.return_from_with_args,
-                            it.supplier.name.displayName(language),
-                            it.invoiceNumber
+                            Res.string.order_to_with_args,
+                            it.partner.name.displayName(language),
+                            it.id
                         )
                     )
                 },
-                isSelected = { purchaseReturn -> purchaseReturn.id.local == state.selectedReturn?.id?.local },
+                isSelected = { order -> order.id == state.selectedOrder?.id },
             )
         },
         mainContent = {
             item {
                 DataPicker(
-                    selectedDateMillis = returnInput.date,
+                    selectedDateMillis = orderInput.date,
                     onDateSelected = { onEvent(PurchaseReturnContract.Event.DateChanged(it)) },
                     modifier = Modifier.padding(8.dp),
                 )
             }
             item {
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.supplier),
-                    items = state.dropdownData.suppliers,
-                    currentSelection = state.selectedSupplier?.name?.displayName(language) ?: "",
-                    onItemSelected = { onEvent(PurchaseReturnContract.Event.SupplierSelected(it)) },
+                    label = stringResource(Res.string.client),
+                    items = state.dropdownData.partners,
+                    currentSelection = state.currentOrderInput.selectedPartner?.name?.displayName(
+                        language
+                    ) ?: "",
+                    onItemSelected = { onEvent(PurchaseReturnContract.Event.PartnerSelected(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     modifier = Modifier.padding(8.dp),
                 )
             }
             item {
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.employee),
-                    items = state.dropdownData.employees,
-                    currentSelection = returnInput.selectedEmployee?.localizedName?.displayName(
+                    label = stringResource(Res.string.stores),
+                    items = state.dropdownData.stores,
+                    currentSelection = orderInput.selectedStore?.name?.displayName(
                         language
-                    )
-                        ?: "",
-                    onItemSelected = { onEvent(PurchaseReturnContract.Event.EmployeeChanged(it)) },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
+                    ) ?: "",
+                    onItemSelected = { onEvent(PurchaseReturnContract.Event.StoreChanged(it)) },
+                    itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
                     modifier = Modifier.padding(8.dp),
                 )
             }
             editableOrderItems(
-                partnerBalance = returnInput.partnerBalance,
-                partnerBalanceAfterThisOrder = returnInput.partnerBalanceAfterThisOrder,
-                totalAmount = returnInput.totalAmount,
-                amountRemaining = returnInput.amountRemaining,
-                itemList = returnInput.items,
-                selectedPaymentType = PaymentMethod.CARD,
-                amountPaid = returnInput.amountPaid,
-                onUpdateAmountPaid = {
-                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
-                },
-                onAddNewItemToOrder = {
-                    onEvent(PurchaseReturnContract.Event.AddItem)
-                },
+                itemList = orderInput.items,
                 availableProducts = state.dropdownData.products,
-                onSelectPaymentType = {},
-                onItemProductChanged = { editorId, product ->
-                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
-                },
                 onRemoveItemFromOrder = { editorId ->
                     onEvent(PurchaseReturnContract.Event.RemoveItem(editorId))
-                },
-                onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemMaxQuantityChanged(
-                            editorId, maxUnitQuantity
-                        )
-                    )
-                },
-                onUpdateItemMinUnitQuantity = { editorId, minUnitQuantity ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemMinQuantityChanged(
-                            editorId, minUnitQuantity
-                        )
-                    )
                 },
                 onUpdateItemUnit = { editorId, isMaxUnitSelected ->
                     onEvent(
@@ -166,6 +136,36 @@ fun PurchaseReturnScreen(
                             minUnitPrice
                         )
                     )
+                },
+                onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMaxQuantityChanged(
+                            editorId, maxUnitQuantity
+                        )
+                    )
+                },
+                onUpdateItemMinUnitQuantity = { editorId, minUnitQuantity ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMinQuantityChanged(
+                            editorId, minUnitQuantity
+                        )
+                    )
+                },
+                onUpdateAmountPaid = {
+                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
+                },
+                selectedPaymentType = orderInput.paymentType,
+                onSelectPaymentType = { onEvent(PurchaseReturnContract.Event.PaymentMethodChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
+                },
+                totalAmount = orderInput.totalAmount,
+                amountRemaining = orderInput.amountRemaining,
+                amountPaid = orderInput.amountPaid,
+                partnerBalance = orderInput.partnerBalance,
+                partnerBalanceAfterThisOrder = orderInput.partnerBalanceAfterThisOrder,
+                onAddNewItemToOrder = {
+                    onEvent(PurchaseReturnContract.Event.AddItem)
                 },
             )
         },

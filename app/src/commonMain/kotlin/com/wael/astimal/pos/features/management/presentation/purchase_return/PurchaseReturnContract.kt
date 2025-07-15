@@ -2,27 +2,29 @@ package com.wael.astimal.pos.features.management.presentation.purchase_return
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
-import com.wael.astimal.pos.features.management.domain.entity.PaymentType
-import com.wael.astimal.pos.features.management.domain.entity.PurchaseReturn
+import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object PurchaseReturnContract {
 
     data class DropdownData(
-        val suppliers: List<BusinessPartner> = emptyList(),
+        val partners: List<BusinessPartner> = emptyList(),
         val products: List<Product> = emptyList(),
-        val employees: List<User> = emptyList()
+        val stores: List<Store> = emptyList()
     )
 
-    data class EditableReturn(
-        val selectedEmployee: User? = null,
-        val paymentType: PaymentType = PaymentType.CASH,
+    data class EditableOrder(
+        val paymentType: PaymentMethod = PaymentMethod.CASH,
+        val selectedPartner: BusinessPartner? = null,
+        val selectedStore: Store? = null,
         val date: Long,
         val items: List<EditableItem> = emptyList(),
         val amountPaid: String = "0.0",
-        val partnerBalance: Double = 0.0,
+        val partnerBalance: Double = 0.0
     ) {
         val totalAmount: Double get() = items.sumOf { it.lineTotal }
         val amountRemaining: Double get() = totalAmount - (amountPaid.toDoubleOrNull() ?: 0.0)
@@ -31,37 +33,37 @@ object PurchaseReturnContract {
 
     data class State(
         val isLoading: Boolean = false,
-        val returns: List<PurchaseReturn> = emptyList(),
-        val selectedReturn: PurchaseReturn? = null,
-        val selectedSupplier: BusinessPartner? = null,
+        val orders: List<Invoice> = emptyList(),
+        val selectedOrder: Invoice? = null,
         val searchQuery: String = "",
         val isSearchActive: Boolean = false,
         val currentUser: User? = null,
         val dropdownData: DropdownData = DropdownData(),
-        val currentReturnInput: EditableReturn
+        val currentOrderInput: EditableOrder
     ) : Reducer.ViewState {
-        val isEditing: Boolean get() = selectedReturn != null
+        val isEditing: Boolean get() = selectedOrder != null
         val canSave: Boolean
-            get() = selectedSupplier != null &&
-                    currentReturnInput.items.isNotEmpty() &&
-                    currentReturnInput.items.all { it.product != null }
+            get() = currentOrderInput.selectedPartner != null &&
+                    currentOrderInput.selectedStore != null &&
+                    currentOrderInput.items.isNotEmpty() &&
+                    currentOrderInput.items.all { it.product != null }
     }
 
     sealed interface Event : Reducer.ViewEvent {
         // UI Actions
         data class SearchQueryChanged(val query: String) : Event
         data class SearchActiveChanged(val isActive: Boolean) : Event
-        data class ReturnSelected(val purchaseReturn: PurchaseReturn) : Event
-        data object NewReturnClicked : Event
+        data class OrderSelected(val order: Invoice) : Event
+        data object NewOrderClicked : Event
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
 
         // Form Input Changes
-        data class SupplierSelected(val supplier: BusinessPartner?) : Event
-        data class EmployeeChanged(val employee: User?) : Event
+        data class PartnerSelected(val partner: BusinessPartner?) : Event
+        data class StoreChanged(val store: Store?) : Event
         data class DateChanged(val date: Long) : Event
-        data class PaymentTypeChanged(val type: PaymentType) : Event
+        data class PaymentMethodChanged(val type: PaymentMethod) : Event
         data class AmountPaidChanged(val amount: String) : Event
         data object AddItem : Event
         data class RemoveItem(val editorId: String) : Event
@@ -74,10 +76,11 @@ object PurchaseReturnContract {
         data class ItemStockChanged(val editorId: String, val stock: Double) : Event
         data class PartnerBalanceChanged(val balance: Double) : Event
 
+
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val data: DropdownData) : Event
-        data class ReturnsLoaded(val returns: List<PurchaseReturn>) : Event
+        data class OrdersLoaded(val orders: List<Invoice>) : Event
         data object SaveSucceeded : Event
         data object DeleteSucceeded : Event
         data object LoadingStarted : Event

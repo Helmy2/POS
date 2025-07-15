@@ -6,6 +6,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.employee_account
 import pos.app.generated.resources.purchase
+import pos.app.generated.resources.purchase_return
 import pos.app.generated.resources.receive_pay_voucher
 import pos.app.generated.resources.sales
 import pos.app.generated.resources.sales_return
@@ -42,12 +43,10 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                         Destination.SalesReturns,
                         Res.string.sales_return
                     ),
-
-//                    ManagementContract.ManagementItem(
-//                        Destination.PurchaseReturns,
-//                        Res.string.purchase_return
-//                    ),
-
+                    ManagementContract.ManagementItem(
+                        Destination.PurchaseReturns,
+                        Res.string.purchase_return
+                    ),
                 )
                 previousState.copy(items = managementItems) to null
             }
