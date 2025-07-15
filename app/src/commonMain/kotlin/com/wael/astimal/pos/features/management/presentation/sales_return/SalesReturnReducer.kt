@@ -20,117 +20,130 @@ class SalesReturnReducer() :
             is SalesReturnContract.Event.SearchQueryChanged ->
                 previousState.copy(searchQuery = event.query) to null
 
-            is SalesReturnContract.Event.SearchActiveChanged ->
-                previousState.copy(isSearchActive = event.isActive) to null
-
             is SalesReturnContract.Event.PartnerBalanceChanged ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         partnerBalance = event.balance
                     )
                 ) to null
 
+            is SalesReturnContract.Event.SearchActiveChanged ->
+                previousState.copy(isSearchActive = event.isActive) to null
+
             is SalesReturnContract.Event.UserLoaded ->
                 previousState.copy(
                     currentUser = event.user,
-                    currentReturnInput = previousState.currentReturnInput.copy(
-                        selectedEmployee = event.user
-                    )
                 ) to null
 
             is SalesReturnContract.Event.DropdownDataLoaded ->
-                previousState.copy(dropdownData = event.data) to null
-
-            is SalesReturnContract.Event.ReturnsLoaded ->
-                previousState.copy(isLoading = false, returns = event.returns) to null
-
-            is SalesReturnContract.Event.ReturnSelected -> {
-                val editableItems = event.salesReturn.items.map {
-                    val conversionFactor = it.product.subUnitsPerMainUnit
-                    EditableItem(
-                        tempEditorId = it.id.local.toString(),
-                        product = it.product,
-                        mainUnitQuantity = it.quantity.toString(),
-                        subUnitQuantity = (it.quantity * conversionFactor).toString(),
-                        mainUnitPrice = it.priceAtReturn.toString(),
-                        subUnitPrice = (it.priceAtReturn / conversionFactor).toString()
-                    )
-                }
                 previousState.copy(
-                    selectedReturn = event.salesReturn,
-                    selectedClient = event.salesReturn.client,
-                    currentReturnInput = SalesReturnContract.EditableReturn(
-                        selectedEmployee = event.salesReturn.employee,
-                        paymentType = event.salesReturn.paymentType,
-                        createdAt = event.salesReturn.createdAt,
-                        items = editableItems,
-                        amountPaid = event.salesReturn.amountPaid.toString()
+                    dropdownData = event.data,
+                ) to null
+
+            is SalesReturnContract.Event.OrdersLoaded ->
+                previousState.copy(isLoading = false, orders = event.orders) to null
+
+            is SalesReturnContract.Event.OrderSelected -> {
+                previousState.copy(
+                    selectedOrder = event.order,
+                    currentOrderInput = SalesReturnContract.EditableOrder(
+                        selectedPartner = event.order.partner,
+                        selectedStore = event.order.store,
+                        paymentType = event.order.paymentMethod,
+                        date = event.order.createdAt,
+                        items = event.order.items.map {
+                            EditableItem(
+                                product = it.product,
+                                mainUnitQuantity = it.quantity.toString(),
+                                subUnitQuantity = (it.quantity * it.product.subUnitsPerMainUnit).toString(),
+                                mainUnitPrice = it.unitPrice.toString(),
+                                subUnitPrice = (it.unitPrice * it.product.subUnitsPerMainUnit).toString(),
+                            )
+                        },
+                        amountPaid = event.order.paidAmount.toString()
                     ),
                     isSearchActive = false
                 ) to null
             }
 
-            is SalesReturnContract.Event.NewReturnClicked,
+            is SalesReturnContract.Event.NewOrderClicked,
             is SalesReturnContract.Event.SaveSucceeded,
             is SalesReturnContract.Event.DeleteSucceeded ->
                 previousState.copy(
                     isLoading = false,
-                    selectedReturn = null,
-                    currentReturnInput = SalesReturnContract.EditableReturn(
-                        createdAt = Clock.now(),
-                        selectedEmployee = previousState.currentUser,
+                    selectedOrder = null,
+                    currentOrderInput = SalesReturnContract.EditableOrder(
+                        date = Clock.now(),
+                        selectedStore = previousState.currentOrderInput.selectedStore,
+                        selectedPartner = previousState.currentOrderInput.selectedPartner
                     ),
-                    selectedClient = null
                 ) to null
 
             // Form input updates
-            is SalesReturnContract.Event.ClientSelected ->
-                previousState.copy(selectedClient = event.client) to null
-
-            is SalesReturnContract.Event.EmployeeChanged ->
+            is SalesReturnContract.Event.PartnerSelected ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
-                        selectedEmployee = event.employee
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        selectedPartner = event.partner
+                    )
+                ) to null
+
+            is SalesReturnContract.Event.StoreChanged ->
+                previousState.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        selectedStore = event.store
                     )
                 ) to null
 
             is SalesReturnContract.Event.DateChanged ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
-                        createdAt = event.date
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        date = event.date
                     )
                 ) to null
 
-            is SalesReturnContract.Event.PaymentTypeChanged ->
+            is SalesReturnContract.Event.PaymentMethodChanged ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         paymentType = event.type
                     )
                 ) to null
 
             is SalesReturnContract.Event.AmountPaidChanged ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         amountPaid = event.amount
                     )
                 ) to null
 
             is SalesReturnContract.Event.AddItem ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
-                        items = previousState.currentReturnInput.items + EditableItem()
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        items = previousState.currentOrderInput.items + EditableItem()
                     )
                 ) to null
 
             is SalesReturnContract.Event.RemoveItem ->
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
-                        items = previousState.currentReturnInput.items.filterNot { it.tempEditorId == event.editorId }
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        items = previousState.currentOrderInput.items.filterNot { it.tempEditorId == event.editorId }
                     )
                 ) to null
 
+            is SalesReturnContract.Event.ItemStockChanged -> {
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
+                    if (item.tempEditorId == event.editorId) {
+                        item.copy(currentStock = event.stock)
+                    } else item
+                }
+                previousState.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
+                        items = updatedItems
+                    )
+                ) to null
+            }
+
             is SalesReturnContract.Event.ItemProductChanged -> {
-                val updatedItems = previousState.currentReturnInput.items.map { item ->
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
@@ -143,14 +156,14 @@ class SalesReturnReducer() :
                     } else item
                 }
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         items = updatedItems
                     )
                 ) to null
             }
 
             is SalesReturnContract.Event.ItemMaxPriceChanged -> {
-                val updatedItems = previousState.currentReturnInput.items.map { item ->
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
@@ -161,14 +174,14 @@ class SalesReturnReducer() :
                     } else item
                 }
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         items = updatedItems
                     )
                 ) to null
             }
 
             is SalesReturnContract.Event.ItemMinPriceChanged -> {
-                val updatedItems = previousState.currentReturnInput.items.map { item ->
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
@@ -179,25 +192,25 @@ class SalesReturnReducer() :
                     } else item
                 }
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         items = updatedItems
                     )
                 ) to null
             }
 
             is SalesReturnContract.Event.ItemUnitChanged -> {
-                val updatedItems = previousState.currentReturnInput.items.map { item ->
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
                     if (item.tempEditorId == event.editorId) item.copy(isSelectedUnitIsMax = event.isMaxUnit) else item
                 }
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         items = updatedItems
                     )
                 ) to null
             }
 
             is SalesReturnContract.Event.ItemMaxQuantityChanged -> {
-                val updatedItems = previousState.currentReturnInput.items.map { item ->
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         val maxQty = event.quantity.toDoubleOrNull() ?: 0.0
@@ -208,14 +221,14 @@ class SalesReturnReducer() :
                     } else item
                 }
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         items = updatedItems
                     )
                 ) to null
             }
 
             is SalesReturnContract.Event.ItemMinQuantityChanged -> {
-                val updatedItems = previousState.currentReturnInput.items.map { item ->
+                val updatedItems = previousState.currentOrderInput.items.map { item ->
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         val minQty = event.quantity.toDoubleOrNull() ?: 0.0
@@ -226,11 +239,12 @@ class SalesReturnReducer() :
                     } else item
                 }
                 previousState.copy(
-                    currentReturnInput = previousState.currentReturnInput.copy(
+                    currentOrderInput = previousState.currentOrderInput.copy(
                         items = updatedItems
                     )
                 ) to null
             }
+
 
             is SalesReturnContract.Event.BackClicked,
             is SalesReturnContract.Event.SaveClicked,

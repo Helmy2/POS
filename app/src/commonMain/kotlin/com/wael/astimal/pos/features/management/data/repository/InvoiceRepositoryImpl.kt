@@ -60,16 +60,18 @@ class InvoiceRepositoryImpl(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private suspend fun makeCommission(invoice: Invoice) {
         val invoiceCommission = when (invoice.invoiceType) {
             InvoiceType.SALES -> invoice.totalAmount * 25 / 100
-            InvoiceType.PURCHASE_RETURN -> invoice.totalAmount * -25 / 100
-            InvoiceType.PURCHASE -> return
-            InvoiceType.SALES_RETURN -> return
+            InvoiceType.SALES_RETURN -> invoice.totalAmount * -25 / 100
+            else -> return
         }
 
         val transaction1 = EmployeeTransaction(
-            id = Id.new,
+            id = Id.new.copy(
+                serverStringId = Uuid.random().toString()
+            ),
             employee = invoice.employee,
             amount = invoiceCommission,
             createdAt = Clock.now(),
@@ -80,7 +82,9 @@ class InvoiceRepositoryImpl(
             createdByEmployee = invoice.employee
         )
         val transaction2 = EmployeeTransaction(
-            id = Id.new,
+            id = Id.new.copy(
+                serverStringId = Uuid.random().toString()
+            ),
             employee = invoice.partner.responsibleEmployee,
             amount = invoiceCommission,
             createdAt = Clock.now(),

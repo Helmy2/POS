@@ -8,6 +8,7 @@ import pos.app.generated.resources.employee_account
 import pos.app.generated.resources.purchase
 import pos.app.generated.resources.receive_pay_voucher
 import pos.app.generated.resources.sales
+import pos.app.generated.resources.sales_return
 
 class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.Event, Nothing> {
     override fun reduce(
@@ -37,10 +38,10 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                         Destination.PurchaseOrders,
                         Res.string.purchase
                     ),
-//                    ManagementContract.ManagementItem(
-//                        Destination.SalesReturns,
-//                        Res.string.sales_return
-//                    ),
+                    ManagementContract.ManagementItem(
+                        Destination.SalesReturns,
+                        Res.string.sales_return
+                    ),
 
 //                    ManagementContract.ManagementItem(
 //                        Destination.PurchaseReturns,
