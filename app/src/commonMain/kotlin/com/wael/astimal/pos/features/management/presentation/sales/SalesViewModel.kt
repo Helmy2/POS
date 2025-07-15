@@ -31,6 +31,7 @@ import pos.app.generated.resources.error_deleting_order
 import pos.app.generated.resources.error_fetching_stock
 import pos.app.generated.resources.error_no_order_selected
 import pos.app.generated.resources.error_some_field_are_required
+import pos.app.generated.resources.invalid_item_with_args
 import pos.app.generated.resources.one_or_more_order_items_are_invalid
 import pos.app.generated.resources.order_deleted
 import pos.app.generated.resources.order_saved
@@ -118,6 +119,15 @@ class SalesViewModel(
                 setState(event)
             }
 
+            is SalesContract.Event.OrderSelected -> {
+                setState(event)
+                state.value.currentOrderInput.items.forEach { item ->
+                    item.product?.let { product ->
+                        observeStockForItem(item.tempEditorId, product.id.local)
+                    }
+                }
+            }
+
             else -> setState(event)
         }
     }
@@ -154,8 +164,8 @@ class SalesViewModel(
             setState(SalesContract.Event.LoadingStarted)
 
             val orderItems = currentState.currentOrderInput.items.mapNotNull {
-                val quantity = it.maxUnitQuantity.toDoubleOrNull()
-                val price = it.maxUnitPrice.toDoubleOrNull()
+                val quantity = it.mainUnitQuantity.toDoubleOrNull()
+                val price = it.mainUnitPrice.toDoubleOrNull()
                 if (it.product != null && quantity != null && quantity > 0 && price != null) {
                     InvoiceItem(
                         id = "",
@@ -171,6 +181,25 @@ class SalesViewModel(
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.one_or_more_order_items_are_invalid)))
                 setState(SalesContract.Event.LoadingFinished)
                 return@launch
+            }
+
+            currentState.currentOrderInput.items.forEach { item ->
+                val validStock =
+                    if (item.isSelectedUnitIsMax)
+                        item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) > 0
+                    else item.currentStock - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
+
+                if (!validStock) {
+                    snackbarController.sendEvent(
+                        SnackbarEvent(
+                            StringResource.FromResource(
+                                Res.string.invalid_item_with_args,
+                                item.product?.name?.enName ?: ""
+                            )
+                        )
+                    )
+                    return@launch
+                }
             }
 
             val orderToSave = Invoice(

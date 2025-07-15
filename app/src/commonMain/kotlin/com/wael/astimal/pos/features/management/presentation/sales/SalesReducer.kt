@@ -43,17 +43,6 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                 previousState.copy(isLoading = false, orders = event.orders) to null
 
             is SalesContract.Event.OrderSelected -> {
-                val editableItems = event.order.items.map {
-                    val conversionFactor = it.product.subUnitsPerMainUnit
-                    EditableItem(
-                        tempEditorId = it.id,
-                        product = it.product,
-                        maxUnitQuantity = it.quantity.toString(),
-                        minUnitQuantity = (it.quantity * conversionFactor).toString(),
-                        maxUnitPrice = "",
-                        minUnitPrice = ""
-                    )
-                }
                 previousState.copy(
                     selectedOrder = event.order,
                     currentOrderInput = SalesContract.EditableOrder(
@@ -61,7 +50,15 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                         selectedStore = event.order.store,
                         paymentType = event.order.paymentMethod,
                         date = event.order.createdAt,
-                        items = editableItems,
+                        items = event.order.items.map {
+                            EditableItem(
+                                product = it.product,
+                                mainUnitQuantity = it.quantity.toString(),
+                                subUnitQuantity = (it.quantity * it.product.subUnitsPerMainUnit).toString(),
+                                mainUnitPrice = it.unitPrice.toString(),
+                                subUnitPrice = (it.unitPrice * it.product.subUnitsPerMainUnit).toString(),
+                            )
+                        },
                         amountPaid = event.order.paidAmount.toString()
                     ),
                     isSearchActive = false
@@ -150,10 +147,10 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                         val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
                             product = event.product,
-                            maxUnitPrice = event.product?.sellingPrice.toString(),
-                            minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
-                            minUnitQuantity = conversionFactor.toString(),
-                            maxUnitQuantity = "1.0",
+                            mainUnitPrice = event.product?.sellingPrice.toString(),
+                            subUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
+                            subUnitQuantity = conversionFactor.toString(),
+                            mainUnitQuantity = "1.0",
                         )
                     } else item
                 }
@@ -169,8 +166,8 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
-                            maxUnitPrice = event.price,
-                            minUnitPrice = (event.price.toDoubleOrNull()
+                            mainUnitPrice = event.price,
+                            subUnitPrice = (event.price.toDoubleOrNull()
                                 ?.div(conversionFactor))?.toString() ?: "0.0"
                         )
                     } else item
@@ -187,8 +184,8 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
-                            minUnitPrice = event.price,
-                            maxUnitPrice = (event.price.toDoubleOrNull()
+                            subUnitPrice = event.price,
+                            mainUnitPrice = (event.price.toDoubleOrNull()
                                 ?.times(conversionFactor))?.toString() ?: "0.0"
                         )
                     } else item
@@ -217,8 +214,8 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         val maxQty = event.quantity.toDoubleOrNull() ?: 0.0
                         item.copy(
-                            maxUnitQuantity = event.quantity,
-                            minUnitQuantity = (maxQty * conversionFactor).toString()
+                            mainUnitQuantity = event.quantity,
+                            subUnitQuantity = (maxQty * conversionFactor).toString()
                         )
                     } else item
                 }
@@ -235,8 +232,8 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         val minQty = event.quantity.toDoubleOrNull() ?: 0.0
                         item.copy(
-                            minUnitQuantity = event.quantity,
-                            maxUnitQuantity = if (conversionFactor > 0) (minQty / conversionFactor).toString() else "0.0"
+                            subUnitQuantity = event.quantity,
+                            mainUnitQuantity = if (conversionFactor > 0) (minQty / conversionFactor).toString() else "0.0"
                         )
                     } else item
                 }

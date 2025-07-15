@@ -366,4 +366,6 @@
     <string name="partner_current_balance">Current balance</string>
     <string name="store_type_unspecified">Unspecified</string>
     <string name="payment_type_undefined">Undefined</string>
+
+    <string name="invalid_item_with_args">Invalid item: %1$s</string>
 </resources>

@@ -160,20 +160,16 @@ class StockManagementViewModel(
                 invoice = null
             )
 
-            try {
-                stockRepository.addStockAdjustment(adjustment)
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.stock_saved_successfully)))
-                setState(StockManagementContract.Event.AdjustmentSucceeded)
-            } catch (e: Exception) {
-                snackbarController.sendEvent(
-                    SnackbarEvent(
-                        StringResource.FromResource(
-                            Res.string.error_updating_stock, e.message ?: ""
-                        )
-                    )
-                )
-                setState(StockManagementContract.Event.AdjustmentFailed)
-            }
+            stockRepository.addStockAdjustment(adjustment).fold(
+                onSuccess = {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.stock_saved_successfully)))
+                    setState(StockManagementContract.Event.AdjustmentSucceeded)
+                },
+                onFailure = {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_updating_stock)))
+                    setState(StockManagementContract.Event.AdjustmentFailed)
+                }
+            )
         }
     }
 }

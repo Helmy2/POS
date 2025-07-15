@@ -50,10 +50,10 @@ class SalesReturnReducer() :
                     EditableItem(
                         tempEditorId = it.id.local.toString(),
                         product = it.product,
-                        maxUnitQuantity = it.quantity.toString(),
-                        minUnitQuantity = (it.quantity * conversionFactor).toString(),
-                        maxUnitPrice = it.priceAtReturn.toString(),
-                        minUnitPrice = (it.priceAtReturn / conversionFactor).toString()
+                        mainUnitQuantity = it.quantity.toString(),
+                        subUnitQuantity = (it.quantity * conversionFactor).toString(),
+                        mainUnitPrice = it.priceAtReturn.toString(),
+                        subUnitPrice = (it.priceAtReturn / conversionFactor).toString()
                     )
                 }
                 previousState.copy(
@@ -135,10 +135,10 @@ class SalesReturnReducer() :
                         val conversionFactor = event.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
                             product = event.product,
-                            maxUnitPrice = event.product?.sellingPrice.toString(),
-                            minUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
-                            minUnitQuantity = conversionFactor.toString(),
-                            maxUnitQuantity = "1.0",
+                            mainUnitPrice = event.product?.sellingPrice.toString(),
+                            subUnitPrice = (event.product?.sellingPrice?.div(conversionFactor)).toString(),
+                            subUnitQuantity = conversionFactor.toString(),
+                            mainUnitQuantity = "1.0",
                         )
                     } else item
                 }
@@ -154,8 +154,8 @@ class SalesReturnReducer() :
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
-                            maxUnitPrice = event.price,
-                            minUnitPrice = (event.price.toDoubleOrNull()
+                            mainUnitPrice = event.price,
+                            subUnitPrice = (event.price.toDoubleOrNull()
                                 ?.div(conversionFactor))?.toString() ?: "0.0"
                         )
                     } else item
@@ -172,8 +172,8 @@ class SalesReturnReducer() :
                     if (item.tempEditorId == event.editorId) {
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         item.copy(
-                            minUnitPrice = event.price,
-                            maxUnitPrice = (event.price.toDoubleOrNull()
+                            subUnitPrice = event.price,
+                            mainUnitPrice = (event.price.toDoubleOrNull()
                                 ?.times(conversionFactor))?.toString() ?: "0.0"
                         )
                     } else item
@@ -202,8 +202,8 @@ class SalesReturnReducer() :
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         val maxQty = event.quantity.toDoubleOrNull() ?: 0.0
                         item.copy(
-                            maxUnitQuantity = event.quantity,
-                            minUnitQuantity = (maxQty * conversionFactor).toString()
+                            mainUnitQuantity = event.quantity,
+                            subUnitQuantity = (maxQty * conversionFactor).toString()
                         )
                     } else item
                 }
@@ -220,8 +220,8 @@ class SalesReturnReducer() :
                         val conversionFactor = item.product?.subUnitsPerMainUnit ?: 1.0
                         val minQty = event.quantity.toDoubleOrNull() ?: 0.0
                         item.copy(
-                            minUnitQuantity = event.quantity,
-                            maxUnitQuantity = if (conversionFactor > 0) (minQty / conversionFactor).toString() else "0.0"
+                            subUnitQuantity = event.quantity,
+                            mainUnitQuantity = if (conversionFactor > 0) (minQty / conversionFactor).toString() else "0.0"
                         )
                     } else item
                 }

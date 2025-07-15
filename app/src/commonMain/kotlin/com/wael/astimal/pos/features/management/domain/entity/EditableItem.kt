@@ -7,16 +7,16 @@ data class EditableItem(
     val tempEditorId: String = UUID.randomUUID().toString(),
     val product: Product? = null,
     val isSelectedUnitIsMax: Boolean = true,
-    val minUnitQuantity: String = "1",
-    val maxUnitQuantity: String = "1",
-    val minUnitPrice: String = "0",
-    val maxUnitPrice: String = "0",
+    val subUnitQuantity: String = "1",
+    val mainUnitQuantity: String = "1",
+    val subUnitPrice: String = "0",
+    val mainUnitPrice: String = "0",
     val currentStock: Double = 0.0
 ) {
     val lineTotal: Double
         get() {
-            val quantity = maxUnitQuantity.toDoubleOrNull() ?: 0.0
-            val price = maxUnitPrice.toDoubleOrNull() ?: 0.0
+            val quantity = mainUnitQuantity.toDoubleOrNull() ?: 0.0
+            val price = mainUnitPrice.toDoubleOrNull() ?: 0.0
             return quantity * price
         }
 }

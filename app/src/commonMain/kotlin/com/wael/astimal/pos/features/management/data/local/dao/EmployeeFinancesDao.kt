@@ -36,4 +36,7 @@ interface EmployeeFinancesDao {
 
     @Query("SELECT * FROM employee_account_transactions WHERE serverId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): EmployeeTransactionEntity?
+
+    @Query("DELETE FROM employee_account_transactions WHERE invoiceId = :orderId")
+    fun deleteTransactionsByInvoiceId(orderId: String)
 }

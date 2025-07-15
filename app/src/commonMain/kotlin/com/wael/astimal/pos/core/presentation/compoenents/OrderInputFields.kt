@@ -121,7 +121,7 @@ fun OrderItemRow(
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     TextInputField(
-                        value = item.minUnitQuantity,
+                        value = item.subUnitQuantity,
                         onValueChange = { onUpdateItemMinUnitQuantity(item.tempEditorId, it) },
                         label = stringResource(Res.string.qty),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -130,7 +130,7 @@ fun OrderItemRow(
                             .weight(1f),
                     )
                     TextInputField(
-                        value = item.minUnitPrice,
+                        value = item.subUnitPrice,
                         onValueChange = { onUpdateItemMinUnitPrice(item.tempEditorId, it) },
                         label = stringResource(Res.string.price),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -153,7 +153,7 @@ fun OrderItemRow(
                         item.product?.mainProductUnit?.name?.displayName(language) ?: ""
                     )
                     TextInputField(
-                        value = item.maxUnitQuantity,
+                        value = item.mainUnitQuantity,
                         onValueChange = { onUpdateItemMaxUnitQuantity(item.tempEditorId, it) },
                         label = stringResource(Res.string.qty),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -162,7 +162,7 @@ fun OrderItemRow(
                             .weight(1f),
                     )
                     TextInputField(
-                        value = item.maxUnitPrice,
+                        value = item.mainUnitPrice,
                         onValueChange = { onUpdateItemMaxUnitPrice(item.tempEditorId, it) },
                         label = stringResource(Res.string.price),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

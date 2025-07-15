@@ -59,4 +59,7 @@ interface PartnerTransactionDao {
 
     @Query("DELETE FROM partner_transactions WHERE serverId = :serverId")
     suspend fun hardDeleteTransactionById(serverId: String)
+
+    @Query("DELETE FROM partner_transactions WHERE invoiceId = :orderId")
+    fun deleteTransactionsByInvoiceId(orderId: String)
 }

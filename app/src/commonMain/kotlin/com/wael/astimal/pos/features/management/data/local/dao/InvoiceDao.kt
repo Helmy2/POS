@@ -21,7 +21,6 @@ interface InvoiceDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInvoiceItems(items: List<InvoiceItemEntity>)
 
-
     @Transaction
     suspend fun insertInvoiceWithItems(
         invoice: InvoiceEntity, items: List<InvoiceItemEntity>
@@ -30,6 +29,18 @@ interface InvoiceDao {
         val itemsWithInvoiceId = items.map { it.copy(supabaseId = invoice.supabaseId) }
         insertInvoiceItems(itemsWithInvoiceId)
     }
+
+    @Transaction
+    suspend fun deleteInvoiceWithItemsById(id: String) {
+        deleteInvoiceItemsByInvoiceId(id)
+        deleteInvoiceById(id)
+    }
+
+    @Query("DELETE FROM invoices WHERE supabaseId = :id")
+    suspend fun deleteInvoiceById(id: String)
+
+    @Query("DELETE FROM invoice_items WHERE invoiceId = :id")
+    suspend fun deleteInvoiceItemsByInvoiceId(id: String)
 
     @Transaction
     @Query("SELECT * FROM invoices WHERE isDeletedLocally = 0")

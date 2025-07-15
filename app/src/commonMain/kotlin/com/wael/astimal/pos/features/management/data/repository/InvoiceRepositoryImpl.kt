@@ -20,8 +20,10 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactio
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -94,11 +96,25 @@ class InvoiceRepositoryImpl(
     }
 
     override suspend fun updateOrder(invoice: Invoice): Result<Unit> {
-        TODO("Not yet implemented")
+        return runCatching {
+            deleteSalesOrder(invoice.id)
+            addSalesOrder(invoice)
+        }
     }
 
     override suspend fun deleteSalesOrder(orderId: String): Result<Unit> {
-        TODO("Not yet implemented")
+        return withContext(Dispatchers.IO) {
+            try {
+                stockAdjustmentDao.deleteAdjustmentsByInvoiceId(orderId)
+                partnerTransactionDao.deleteTransactionsByInvoiceId(orderId)
+                employeeFinancesDao.deleteTransactionsByInvoiceId(orderId)
+                invoiceDao.deleteInvoiceWithItemsById(orderId)
+                Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
