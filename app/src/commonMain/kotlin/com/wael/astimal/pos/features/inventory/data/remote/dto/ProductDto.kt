@@ -50,6 +50,7 @@ fun ProductDto.toEntity(
         subUnitId = subUnitId,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
-        updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now()
+        updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
+        isSynced = true
     )
 }

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.wael.astimal.pos.features.management.data.local.entity.DailySaleData
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceItemEntity
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceWithItems
@@ -69,4 +70,19 @@ interface InvoiceDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInvoiceInvoice(item: InvoiceItemEntity)
+
+
+    @Query(
+        """
+        SELECT 
+            date(createdAt / 1000, 'unixepoch') as saleDate,
+            SUM(totalAmount) as totalRevenue,
+            COUNT(supabaseId) as numberOfSales
+        FROM invoices 
+        WHERE NOT isDeletedLocally AND createdAt BETWEEN :startDate AND :endDate
+        GROUP BY saleDate
+    """
+    )
+    fun getDailySales(startDate: Long, endDate: Long): Flow<List<DailySaleData>>
+
 }

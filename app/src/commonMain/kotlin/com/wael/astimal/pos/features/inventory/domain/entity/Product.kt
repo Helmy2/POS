@@ -53,7 +53,7 @@ fun Product.toDto(): ProductDto {
         categoryId = category?.id?.server,
         averagePurchasePrice = averagePrice,
         sellingPrice = sellingPrice,
-        subUnitId = subProductUnit?.id?.server!!,
+        subUnitId = subProductUnit?.id?.server,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),

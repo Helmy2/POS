@@ -23,12 +23,14 @@ interface ProductDao {
     suspend fun getProductByLocalId(localId: Long): ProductEntity?
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE NOT isDeletedLocally 
         AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%')
         ORDER BY enName ASC, arName ASC
-    """)
+    """
+    )
     fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetails>>
 
     @Query("SELECT * FROM products WHERE serverId = :serverId LIMIT 1")
@@ -37,4 +39,10 @@ interface ProductDao {
     @Query("DELETE FROM products WHERE localId = :localId")
     suspend fun deleteProductByLocalId(localId: Long)
 
+    @Query("UPDATE products SET  isSynced = 0, averagePurchasePrice = :newCost WHERE localId = :id")
+    fun updateAverageCost(id: Long, newCost: Double)
+
+    @Transaction
+    @Query("SELECT * FROM products WHERE isSynced = 0")
+    suspend fun getUnsyncedProducts(): List<ProductWithDetails>
 }

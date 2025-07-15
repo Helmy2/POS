@@ -3,9 +3,12 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
+import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.data.local.dao.InvoiceDao
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
@@ -22,8 +25,11 @@ import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -31,6 +37,8 @@ class InvoiceRepositoryImpl(
     private val invoiceDao: InvoiceDao,
     private val partnerTransactionDao: PartnerTransactionDao,
     private val stockAdjustmentDao: StockAdjustmentDao,
+    private val productDao: ProductDao,
+    private val stockRepository: StockRepository,
     private val employeeFinancesDao: EmployeeFinancesDao
 ) : InvoiceRepository {
 
@@ -40,23 +48,45 @@ class InvoiceRepositoryImpl(
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun addSalesOrder(invoice: Invoice): Result<Unit> {
-        return try {
-            val newInvoice = invoice.copy(id = Uuid.random().toString())
-            val invoiceWithItems = newInvoice.toEntity()
+        return withContext(Dispatchers.IO) {
+            try {
+                val newInvoice = invoice.copy(id = Uuid.random().toString())
+                val invoiceWithItems = newInvoice.toEntity()
 
-            invoiceDao.insertInvoiceWithItems(
-                invoiceWithItems.first,
-                invoiceWithItems.second.map { it },
-            )
+                invoiceDao.insertInvoiceWithItems(
+                    invoiceWithItems.first,
+                    invoiceWithItems.second.map { it },
+                )
 
-            createAdjustStock(newInvoice)
-            adjustPartnerTransactions(newInvoice)
-            makeCommission(newInvoice)
+                if (invoice.invoiceType == InvoiceType.PURCHASE) {
+                    updateProductsAveragePrice(invoice)
+                }
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Result.failure(e)
+                createAdjustStock(newInvoice)
+                adjustPartnerTransactions(newInvoice)
+                makeCommission(newInvoice)
+
+                Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
+    }
+
+    private suspend fun updateProductsAveragePrice(invoice: Invoice) {
+        invoice.items.forEach { item ->
+            val currentCost =
+                productDao.getProductByLocalId(item.product.id.local)!!.averagePurchasePrice
+            val currentQuantity = stockRepository.getStockQuantityFlow(
+                storeId = invoice.store.id.local,
+                productId = item.product.id.local
+            ).first()
+
+            val newCost =
+                (currentCost * currentQuantity + item.unitPrice + item.quantity) / (currentQuantity + item.quantity)
+
+            productDao.updateAverageCost(item.product.id.local, newCost)
         }
     }
 
@@ -220,4 +250,18 @@ class InvoiceRepositoryImpl(
             }
         }
     }
+
+    override fun getDailySales(startMillis: Long, endMillis: Long): Flow<List<DailySale>> {
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+        return invoiceDao.getDailySales(startMillis, endMillis).map { dailyDataList ->
+            dailyDataList.map { dailyData ->
+                DailySale(
+                    date = LocalDate.parse(dailyData.saleDate, formatter),
+                    totalRevenue = dailyData.totalRevenue,
+                    numberOfSales = dailyData.numberOfSales
+                )
+            }
+        }
+    }
+
 }

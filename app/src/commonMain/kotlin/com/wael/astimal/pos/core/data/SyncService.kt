@@ -94,26 +94,7 @@ class SyncServiceImpl(
                         it.map { unitDto -> unitDto.toEntity() })
                 }
 
-                supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
-                    productRepository.syncWithServer(
-                        it.map { unitDto ->
-                            unitDto.toEntity(
-                                categoryId = unitDto.categoryId?.let { id ->
-                                    categoryRepository.getCategoryByServerId(
-                                        id
-                                    )
-                                }?.getOrThrow()?.id?.local,
-                                mainUnitId = unitRepository.getUnitByServerId(unitDto.mainUnitId)
-                                    .getOrThrow().id.local,
-                                subUnitId = unitDto.subUnitId?.let { id ->
-                                    unitRepository.getUnitByServerId(
-                                        id
-                                    )
-                                }?.getOrThrow()?.id?.local
-                            )
-                        },
-                    )
-                }
+                syncProducts()
 
                 syncPartner()
                 syncInvoice()
@@ -127,6 +108,35 @@ class SyncServiceImpl(
                 e.printStackTrace()
                 Result.failure(e)
             }
+        }
+    }
+
+    private suspend fun syncProducts() {
+        productRepository.getUnsyncedProducts().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<ProductDto>("products") { it }
+        }
+
+        supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
+            productRepository.syncWithServer(
+                it.map { unitDto ->
+                    unitDto.toEntity(
+                        categoryId = unitDto.categoryId?.let { id ->
+                            categoryRepository.getCategoryByServerId(
+                                id
+                            )
+                        }?.getOrThrow()?.id?.local,
+                        mainUnitId = unitRepository.getUnitByServerId(unitDto.mainUnitId)
+                            .getOrThrow().id.local,
+                        subUnitId = unitDto.subUnitId?.let { id ->
+                            unitRepository.getUnitByServerId(
+                                id
+                            )
+                        }?.getOrThrow()?.id?.local
+                    )
+                },
+            )
         }
     }
 

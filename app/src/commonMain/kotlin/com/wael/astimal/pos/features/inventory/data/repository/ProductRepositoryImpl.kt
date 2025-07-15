@@ -113,4 +113,12 @@ class ProductRepositoryImpl(
                 ?: throw Exception("Product not found")
         }
     }
+
+    override suspend fun getUnsyncedProducts(): Result<List<Product>> {
+        return try {
+            Result.success(productDao.getUnsyncedProducts().map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

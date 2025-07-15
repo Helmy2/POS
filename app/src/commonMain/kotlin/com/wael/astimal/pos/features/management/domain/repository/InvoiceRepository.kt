@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.domain.repository
 
+import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceItemEntity
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
@@ -20,4 +21,5 @@ interface InvoiceRepository {
     suspend fun getAllDeletedInvoiceItems(): Result<List<InvoiceItemEntity>>
     suspend fun hardDeleteInvoiceItems(id: String): Result<Unit>
     suspend fun syncInvoicesItems(entities: List<InvoiceItemEntity>): Result<Unit>
+    fun getDailySales(startMillis: Long, endMillis: Long): Flow<List<DailySale>>
 }
