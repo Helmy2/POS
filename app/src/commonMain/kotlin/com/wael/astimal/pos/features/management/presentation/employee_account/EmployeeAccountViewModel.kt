@@ -38,7 +38,6 @@ class EmployeeAccountViewModel(
         processEvent(EmployeeAccountContract.Event.LoadInitialData)
     }
 
-    // A derived state flow for the UI that automatically filters based on the search query
     val filteredTransactionsState: StateFlow<List<EmployeeTransaction>> = combine(
         state, employeeTransactionRepository.getAllTransaction()
     ) { state, allTransactions ->

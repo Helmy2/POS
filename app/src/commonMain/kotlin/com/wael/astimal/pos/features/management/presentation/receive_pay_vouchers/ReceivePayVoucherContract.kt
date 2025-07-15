@@ -15,6 +15,7 @@ object ReceivePayVoucherContract {
         val transactionType: TransactionType = TransactionType.PAYMENT,
         val amount: String = "",
         val notes: String = "",
+        val isReceiveMoney: Boolean = true,
         val date: Long = Clock.now(),
     )
 
@@ -26,7 +27,7 @@ object ReceivePayVoucherContract {
         val dialogState: DialogState = DialogState(),
         val searchQuery: String = "",
     ) : Reducer.ViewState {
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val canUserEdit: Boolean get() = true
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -46,6 +47,7 @@ object ReceivePayVoucherContract {
         data class DialogNotesChanged(val notes: String) : Event
         data class DialogDateChanged(val date: Long) : Event
         data class DialogTransactionTypeSelected(val type: TransactionType) : Event
+        data class DialogIsReceiveMoneyChanged(val isReceiveMoney: Boolean) : Event
 
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event

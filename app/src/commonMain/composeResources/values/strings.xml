@@ -368,4 +368,7 @@
     <string name="payment_type_undefined">Undefined</string>
 
     <string name="invalid_item_with_args">Invalid item: %1$s</string>
+    <string name="is_receive_money">Is receive money</string>
+    <string name="receive_money">Receive money</string>
+    <string name="pay_money">Pay money</string>
 </resources>

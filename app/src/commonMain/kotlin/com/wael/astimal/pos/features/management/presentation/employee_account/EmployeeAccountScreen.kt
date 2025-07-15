@@ -197,7 +197,7 @@ fun TransactionList(
         items(transactions, key = { it.id.local }) { transaction ->
             TransactionItem(
                 transaction = transaction,
-                canEdit = canEdit,
+                canEdit = canEdit && transaction.type != EmployeeTransactionType.COMMISSION,
                 onEdit = { onEvent(EmployeeAccountContract.Event.EditTransactionClicked(transaction)) },
                 onDelete = {
                     onEvent(

@@ -63,6 +63,11 @@ class ReceivePayVoucherReducer() :
             is ReceivePayVoucherContract.Event.DialogTransactionTypeSelected ->
                 previousState.copy(dialogState = previousState.dialogState.copy(transactionType = event.type)) to null
 
+
+            is ReceivePayVoucherContract.Event.DialogIsReceiveMoneyChanged ->
+                previousState.copy(dialogState = previousState.dialogState.copy(isReceiveMoney = event.isReceiveMoney)) to null
+
+
             is ReceivePayVoucherContract.Event.SearchQueryChanged ->
                 previousState.copy(searchQuery = event.query) to null
 

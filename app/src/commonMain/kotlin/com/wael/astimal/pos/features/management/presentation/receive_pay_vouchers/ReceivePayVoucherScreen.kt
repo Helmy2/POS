@@ -51,8 +51,11 @@ import pos.app.generated.resources.amount
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.cancel
 import pos.app.generated.resources.edit_voucher
+import pos.app.generated.resources.is_receive_money
 import pos.app.generated.resources.new_voucher
 import pos.app.generated.resources.notes_optional
+import pos.app.generated.resources.pay_money
+import pos.app.generated.resources.receive_money
 import pos.app.generated.resources.save
 import pos.app.generated.resources.transaction_type
 import java.text.SimpleDateFormat
@@ -116,7 +119,7 @@ fun ReceivePayVoucherScreen(
             items(filteredVouchers, key = { it.id.local }) { voucher ->
                 VoucherItem(
                     voucher = voucher,
-                    canEdit = state.canUserEdit || voucher.createdBy.id == state.currentUser?.id,
+                    canEdit = state.canUserEdit && voucher.transactionType != TransactionType.INVOICE,
                     onEdit = { onEvent(ReceivePayVoucherContract.Event.EditVoucherClicked(voucher)) },
                     onDelete = {
                         onEvent(
@@ -189,22 +192,60 @@ fun VoucherEditDialog(
                     enabled = state.canUserEdit && dialogState.voucherToEdit == null
                 )
 
+                CustomExposedDropdownMenu(
+                    label = stringResource(Res.string.is_receive_money),
+                    items = listOf(true, false),
+                    selectedItemId = if (dialogState.isReceiveMoney) 0L else 1L,
+                    onItemSelected = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogIsReceiveMoneyChanged(
+                                it
+                            )
+                        )
+                    },
+                    itemToDisplayString = {
+                        if (it) stringResource(Res.string.receive_money) else stringResource(
+                            Res.string.pay_money
+                        )
+                    },
+                    itemToId = { if (it) 0L else 1L },
+                    enabled = state.canUserEdit
+                )
+
                 LabeledTextField(
                     value = dialogState.amount,
-                    onValueChange = { onEvent(ReceivePayVoucherContract.Event.DialogAmountChanged(it)) },
+                    onValueChange = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogAmountChanged(
+                                it
+                            )
+                        )
+                    },
                     label = stringResource(Res.string.amount),
                     enabled = state.canUserEdit
                 )
 
                 DataPicker(
                     selectedDateMillis = dialogState.date,
-                    onDateSelected = { onEvent(ReceivePayVoucherContract.Event.DialogDateChanged(it)) },
+                    onDateSelected = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogDateChanged(
+                                it
+                            )
+                        )
+                    },
                     enabled = state.canUserEdit
                 )
 
                 LabeledTextField(
                     value = dialogState.notes,
-                    onValueChange = { onEvent(ReceivePayVoucherContract.Event.DialogNotesChanged(it)) },
+                    onValueChange = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.DialogNotesChanged(
+                                it
+                            )
+                        )
+                    },
                     label = stringResource(Res.string.notes_optional),
                     enabled = state.canUserEdit
                 )
@@ -262,12 +303,22 @@ fun VoucherItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Text(
-                    text = stringResource(voucher.transactionType.getStringRes()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                )
-
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(voucher.transactionType.getStringRes()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                    if (voucher.invoiceId.takeIf { it?.isNotBlank() == true } != null) {
+                        Text(
+                            text = "#${voucher.invoiceId}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    }
+                }
                 if (voucher.notes.isNotBlank()) {
                     Text(text = voucher.notes, style = MaterialTheme.typography.bodySmall)
                 }
@@ -290,7 +341,8 @@ fun VoucherItem(
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
                     IconButton(
-                        onClick = { showDeleteConfirm = true }, modifier = Modifier.size(24.dp)
+                        onClick = { showDeleteConfirm = true },
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,
