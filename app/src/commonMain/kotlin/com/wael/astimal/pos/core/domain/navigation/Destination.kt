@@ -76,4 +76,7 @@ sealed class Destination {
 
     @Serializable
     data object AccountStatement : Destination()
+
+    @Serializable
+    data object CreateEmployee : Destination()
 }

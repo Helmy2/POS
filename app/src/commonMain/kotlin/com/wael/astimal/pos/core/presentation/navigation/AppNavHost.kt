@@ -27,6 +27,7 @@ import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
+import com.wael.astimal.pos.features.user.presentation.create.CreateEmployeeRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 
 @Composable
@@ -60,6 +61,13 @@ fun AppNavHost(
 
 
             // --- Inventory Sub-Screens ---
+            composable<Destination.CreateEmployee> {
+                CreateEmployeeRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
             composable<Destination.Categories> { CategoryRoute() }
             composable<Destination.Products> { ProductRoute() }
             composable<Destination.Stores> { StoreRoute() }

@@ -34,5 +34,5 @@ interface StoreDao {
 
     @Transaction
     @Query("SELECT * FROM stores WHERE employeeId = :local LIMIT 1")
-    fun getStoreByUserId(local: Long): Flow<StoreWithDetails>
+    fun getStoreByUserId(local: Long): Flow<StoreWithDetails?>
 }

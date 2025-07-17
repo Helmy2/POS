@@ -4,6 +4,7 @@ import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.categories
+import pos.app.generated.resources.create_employee
 import pos.app.generated.resources.products
 import pos.app.generated.resources.stock_management
 import pos.app.generated.resources.stores
@@ -17,6 +18,10 @@ class InventoryReducer : Reducer<InventoryContract.State, InventoryContract.Even
         return when (event) {
             is InventoryContract.Event.LoadInventoryItems -> {
                 val inventoryItems = listOf(
+                    InventoryContract.InventoryItem(
+                        Destination.CreateEmployee,
+                        Res.string.create_employee
+                    ),
                     InventoryContract.InventoryItem(Destination.Stores, Res.string.stores),
                     InventoryContract.InventoryItem(Destination.Units, Res.string.units),
                     InventoryContract.InventoryItem(Destination.Categories, Res.string.categories),

@@ -150,11 +150,14 @@ buildkonfig {
         )
         val supabaseKey = localProperties.getProperty("supabaseKey")
         val supabaseUrl = localProperties.getProperty("supabaseUrl")
+        val serviceRole = localProperties.getProperty("serviceRole")
 
         require(supabaseKey.isNotEmpty())
         require(supabaseUrl.isNotEmpty())
+        require(serviceRole.isNotEmpty())
 
         buildConfigField(STRING, "supabaseKey", supabaseKey)
         buildConfigField(STRING, "supabaseUrl", supabaseUrl)
+        buildConfigField(STRING, "serviceRole", serviceRole)
     }
 }

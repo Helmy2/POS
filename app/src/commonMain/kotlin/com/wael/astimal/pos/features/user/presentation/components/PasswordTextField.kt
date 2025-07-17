@@ -35,8 +35,10 @@ fun PasswordTextField(
     onVisibilityToggle: () -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
+        enabled = enabled,
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(stringResource(Res.string.password)) },

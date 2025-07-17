@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -50,6 +51,6 @@ fun Long.toLocalDateTime(): LocalDateTime {
 
 fun Long.toDateString(): String {
     val instant = Instant.ofEpochMilli(this)
-    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSSXXX", Locale.getDefault())
-    return formatter.format(Date.from(instant))
+    val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+    return formatter.format(instant.atZone(ZoneId.systemDefault()))
 }

@@ -40,7 +40,7 @@ interface ProductDao {
     suspend fun deleteProductByLocalId(localId: Long)
 
     @Query("UPDATE products SET  isSynced = 0, averagePurchasePrice = :newCost WHERE localId = :id")
-    fun updateAverageCost(id: Long, newCost: Double)
+    suspend fun updateAverageCost(id: Long, newCost: Double)
 
     @Transaction
     @Query("SELECT * FROM products WHERE isSynced = 0")

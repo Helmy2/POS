@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -116,27 +115,28 @@ fun OrderItemRow(
                     modifier = Modifier.padding(top = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Label(
+                    LabeledTextField(
                         item.product?.subProductUnit?.name?.displayName(language) ?: "",
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        onValueChange = {},
+                        label = stringResource(Res.string.unit),
+                        enabled = false,
+                        modifier = Modifier.weight(1f),
                     )
-                    TextInputField(
+                    LabeledTextField(
                         value = item.subUnitQuantity,
                         onValueChange = { onUpdateItemMinUnitQuantity(item.tempEditorId, it) },
                         label = stringResource(Res.string.qty),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         enabled = item.isSelectedUnitIsMax.not(),
-                        modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight + 6.dp)
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
-                    TextInputField(
+                    LabeledTextField(
                         value = item.subUnitPrice,
                         onValueChange = { onUpdateItemMinUnitPrice(item.tempEditorId, it) },
                         label = stringResource(Res.string.price),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         enabled = item.isSelectedUnitIsMax.not(),
-                        modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight + 6.dp)
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
@@ -149,26 +149,28 @@ fun OrderItemRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Label(
-                        item.product?.mainProductUnit?.name?.displayName(language) ?: ""
+                    LabeledTextField(
+                        value = item.product?.mainProductUnit?.name?.displayName(language) ?: "",
+                        onValueChange = {},
+                        label = stringResource(Res.string.unit),
+                        enabled = false,
+                        modifier = Modifier.weight(1f),
                     )
-                    TextInputField(
+                    LabeledTextField(
                         value = item.mainUnitQuantity,
                         onValueChange = { onUpdateItemMaxUnitQuantity(item.tempEditorId, it) },
                         label = stringResource(Res.string.qty),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         enabled = item.isSelectedUnitIsMax,
-                        modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight + 6.dp)
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
-                    TextInputField(
+                    LabeledTextField(
                         value = item.mainUnitPrice,
                         onValueChange = { onUpdateItemMaxUnitPrice(item.tempEditorId, it) },
                         label = stringResource(Res.string.price),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         enabled = item.isSelectedUnitIsMax,
-                        modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight + 6.dp)
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                     )
                 }
 

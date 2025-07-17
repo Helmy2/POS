@@ -97,7 +97,7 @@ class StoreRepositoryImpl(
             getStores()
         } else {
             storeDao.getStoreByUserId(user.id.local).map {
-                listOf(it.toDomain())
+                listOfNotNull(it?.toDomain())
             }
         }
     }

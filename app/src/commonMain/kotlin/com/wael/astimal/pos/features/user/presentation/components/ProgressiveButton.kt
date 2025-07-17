@@ -18,18 +18,19 @@ fun ProgressiveButton(
     isLoading: Boolean,
     text: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(50.dp),
-        enabled = !isLoading,
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
-            disabledContainerColor = MaterialTheme.colorScheme.primary,
+            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
             disabledContentColor = MaterialTheme.colorScheme.onPrimary,
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
-        )
+        ),
     ) {
         AnimatedContent(
             targetState = isLoading,
@@ -41,7 +42,8 @@ fun ProgressiveButton(
                 )
             } else {
                 Text(
-                    text = text, modifier = Modifier.padding(4.dp)
+                    text = text,
+                    modifier = Modifier.padding(4.dp),
                 )
             }
         }

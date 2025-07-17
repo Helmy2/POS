@@ -1,5 +1,7 @@
 package com.wael.astimal.pos.features.user.data.repository
 
+import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
@@ -12,6 +14,7 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -20,7 +23,8 @@ class UserRepositoryImpl(
     private val userDao: UserDao,
     private val supabaseClient: SupabaseClient,
     private val settingsManager: SettingsManager,
-    private val profileApiService: ProfileApiService
+    private val profileApiService: ProfileApiService,
+    private val adminClient: suspend () -> SupabaseClient,
 ) : UserRepository {
 
     override fun getEmployeesFlow(): Flow<List<User>> {
@@ -70,10 +74,7 @@ class UserRepositoryImpl(
         }
     }
 
-    /**
-     * Inserts or updates a user profile in the local database based on data from the server.
-     * Preserves the local primary key if the user already exists.
-     */
+
     private suspend fun syncProfile(profileDto: ProfileDto): UserEntity {
         val existingUser = userDao.getUserBySupabaseId(profileDto.id).first()
         val userEntity = profileDto.toEntity().copy(
@@ -88,6 +89,50 @@ class UserRepositoryImpl(
         return try {
             settingsManager.changeUserId("")
             supabaseClient.auth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun createUser(
+        email: String,
+        arName: String,
+        enName: String,
+        password: String,
+    ): Result<Unit> {
+        return try {
+            val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
+
+            if (!currentUser.isAdmin) {
+                return Result.failure(Exception("You are not an admin."))
+            }
+
+            if (password.length < 6) {
+                return Result.failure(Exception("Password must be at least 6 characters long."))
+            }
+
+            val userWithEmail = adminClient().auth.admin.createUserWithEmail {
+                this.email = email
+                this.password = password
+                autoConfirm = true
+            }
+
+            val profileDto = ProfileDto(
+                id = userWithEmail.id,
+                username = enName,
+                arName = arName,
+                enName = enName,
+                isAdmin = false,
+                updatedAt = Clock.now().toDateString(),
+                avatarUrl = "",
+            )
+
+            supabaseClient.postgrest["profiles"].upsert(profileDto)
+
+            val userEntity = profileDto.toEntity()
+            userDao.upsert(userEntity)
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

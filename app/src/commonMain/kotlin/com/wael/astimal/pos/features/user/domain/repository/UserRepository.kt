@@ -13,4 +13,10 @@ interface UserRepository {
     suspend fun getUserByServerId(id: String): Result<User?>
     suspend fun getUserById(id: Long): Result<User?>
     suspend fun syncWithServer(users: List<UserEntity>): Result<Unit>
+    suspend fun createUser(
+        email: String,
+        arName: String,
+        enName: String,
+        password: String
+    ): Result<Unit>
 }

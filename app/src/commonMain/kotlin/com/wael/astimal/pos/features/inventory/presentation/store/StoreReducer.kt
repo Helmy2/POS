@@ -38,6 +38,7 @@ class StoreReducer : Reducer<StoreContract.State, StoreContract.Event, Nothing> 
                 inputEnName = event.store.name.enName ?: "",
                 inputType = event.store.type,
                 inputAddress = event.store.address,
+                selectedEmployee = event.store.employee,
                 isSearchActive = false
             ) to null
 
