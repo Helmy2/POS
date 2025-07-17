@@ -11,6 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mmk.kmpnotifier.extensions.composeDesktopResourcesPath
+import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
@@ -23,9 +26,18 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.something_went_wrong
+import java.io.File
 
 fun main() {
     initKoin()
+
+    NotifierManager.initialize(
+        NotificationPlatformConfiguration.Desktop(
+            showPushNotification = true,
+            notificationIconPath = composeDesktopResourcesPath() + File.separator + "ic_notification.png"
+        )
+    )
+
     application {
         Window(
             onCloseRequest = ::exitApplication,

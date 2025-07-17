@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.googleServices)
 }
 kotlin {
     androidTarget {
@@ -80,6 +81,7 @@ kotlin {
             implementation(libs.sqlite.bundled)
 
             implementation(libs.vico.multiplatform)
+            api(libs.mirzemehdi.kmpnotifier)
         }
 
         desktopMain.dependencies {

@@ -3,6 +3,7 @@ agp = "8.11.0"
 android-compileSdk = "36"
 android-minSdk = "28"
 android-targetSdk = "36"
+kmpnotifierVersion = "1.5.1"
 kotlin = "2.2.0"
 ksp = "2.2.0-2.0.2"
 koin = "4.1.0"
@@ -62,6 +63,7 @@ material3-window-size = { module = "org.jetbrains.compose.material3:material3-wi
 supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
 supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase" }
+mirzemehdi-kmpnotifier = { module = "io.github.mirzemehdi:kmpnotifier", version.ref = "kmpnotifierVersion" }
 
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCompose" }
 
@@ -82,4 +84,6 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 room = { id = "androidx.room", version.ref = "androidx-room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+googleServices = { id = "com.google.gms.google-services", version = "4.4.3" }
+
 
