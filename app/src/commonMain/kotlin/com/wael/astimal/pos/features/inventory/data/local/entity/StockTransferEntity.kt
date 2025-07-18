@@ -1,17 +1,19 @@
 package com.wael.astimal.pos.features.inventory.data.local.entity
 
+import StockTransfer
+import StockTransferItem
+import StockTransferStatus
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.data.entity.ItemEntity
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
+import com.wael.astimal.pos.features.user.data.local.entity.toDomain
+
 
 @Entity(
     tableName = "stock_transfers",
@@ -30,21 +32,28 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
             entity = UserEntity::class,
             parentColumns = ["id"],
             childColumns = ["initiatedByUserId"],
-        )
+        ),
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["receivingUserId"],
+        ),
     ]
 )
 data class StockTransferEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
-    override val serverId: Long?,
-    override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
-    override var isDeletedLocally: Boolean = false,
+    @PrimaryKey val localId: String,
+    var isSynced: Boolean = false,
+    val createdAt: Long = Clock.now(),
+    val updatedAt: Long = Clock.now(),
+    var isDeletedLocally: Boolean = false,
 
     @ColumnInfo(index = true) val fromStoreId: Long?,
     @ColumnInfo(index = true) val toStoreId: Long?,
     @ColumnInfo(index = true) val initiatedByUserId: Long?,
-) : ItemEntity
+    @ColumnInfo(index = true) val receivingUserId: Long?,
+    val notes: String?,
+    val status: StockTransferStatus,
+)
 
 @Entity(
     tableName = "stock_transfer_items", foreignKeys = [ForeignKey(
@@ -60,11 +69,12 @@ data class StockTransferEntity(
     )]
 )
 data class StockTransferItemEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: Long?,
-    @ColumnInfo(index = true) val stockTransferLocalId: Long,
+    @PrimaryKey val localId: String,
+    @ColumnInfo(index = true) val stockTransferLocalId: String,
     @ColumnInfo(index = true) val productLocalId: Long,
     val quantity: Double,
+    val isDeletedLocally: Boolean = false,
+    val isSynced: Boolean = false
 )
 
 data class StockTransferWithItemsAndDetails(
@@ -81,6 +91,10 @@ data class StockTransferWithItemsAndDetails(
     @Relation(
         parentColumn = "initiatedByUserId", entityColumn = "id", entity = UserEntity::class
     ) val initiatedByUser: UserEntity?,
+
+    @Relation(
+        parentColumn = "receivingUserId", entityColumn = "id", entity = UserEntity::class
+    ) val receivingUser: UserEntity?,
 
     @Relation(
         parentColumn = "localId",
@@ -100,21 +114,35 @@ data class StockTransferItemWithProductDetails(
 
 fun StockTransferWithItemsAndDetails.toDomain(): StockTransfer {
     return StockTransfer(
-        id = Id(transfer.localId, transfer.serverId),
+        id = transfer.localId,
         fromStore = fromStore?.toDomain() ?: throw NullPointerException(),
         toStore = toStore?.toDomain() ?: throw NullPointerException(),
-        initiatedByUser = initiatedByUser ?: throw NullPointerException(),
+        initiatingUser = initiatedByUser?.toDomain() ?: throw NullPointerException(),
         items = itemsWithProducts.map { it.toDomain() },
         isSynced = transfer.isSynced,
         updatedAt = transfer.updatedAt,
-        createdAt = transfer.createdAt
+        createdAt = transfer.createdAt,
+        notes = transfer.notes,
+        status = transfer.status,
+        receivingUser = receivingUser?.toDomain() ?: throw NullPointerException(),
     )
 }
 
 fun StockTransferItemWithProductDetails.toDomain(): StockTransferItem {
     return StockTransferItem(
-        id = Id(item.localId, item.serverId),
+        id = item.localId,
         quantity = item.quantity,
         product = product?.toDomain() ?: throw NullPointerException(),
+    )
+}
+
+fun StockTransferItemEntity.toDto(
+    productId: Long
+): StockTransferItemDto {
+    return StockTransferItemDto(
+        id = localId,
+        quantity = quantity,
+        transferId = stockTransferLocalId,
+        productId = productId,
     )
 }

@@ -1,6 +1,9 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import StockTransferStatus
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,12 +46,16 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_item
+import pos.app.generated.resources.approved
 import pos.app.generated.resources.from_store
 import pos.app.generated.resources.in_stock_with_args
+import pos.app.generated.resources.pending
 import pos.app.generated.resources.product
+import pos.app.generated.resources.rejected
 import pos.app.generated.resources.remove_item
 import pos.app.generated.resources.to_store
 import pos.app.generated.resources.unit
+import pos.app.generated.resources.you_have_pending_transfer
 
 @Composable
 fun StockTransferRoute(
@@ -61,7 +69,7 @@ fun StockTransferRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun StockTransferScreen(
     state: StockTransferContract.State,
@@ -99,12 +107,84 @@ fun StockTransferScreen(
                 label = {
                     val fromStoreName = it.fromStore.name.displayName(language)
                     val toStoreName = it.toStore.name.displayName(language)
-                    Label("$fromStoreName -> $toStoreName")
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (it.status == StockTransferStatus.PENDING && it.receivingUser == state.currentUser) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Pending,
+                                    contentDescription = stringResource(Res.string.pending),
+                                )
+                                Text(
+                                    text = stringResource(Res.string.pending),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                        Label("$fromStoreName -> $toStoreName")
+                    }
                 },
-                isSelected = { transfer -> transfer.id.local == state.selectedTransfer?.id?.local },
+                isSelected = { transfer -> transfer.id == state.selectedTransfer?.id },
             )
         },
         mainContent = {
+            item {
+                if (state.havePendingTransfer) {
+                    Text(
+                        text = stringResource(Res.string.you_have_pending_transfer),
+                        modifier = Modifier.padding(8.dp).clickable {
+                            onEvent(StockTransferContract.Event.SearchActiveChanged(true))
+                        },
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+            item {
+                state.selectedTransfer?.status?.getStringResourceId()?.let {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            stringResource(
+                                it,
+                            ),
+                            modifier = Modifier.padding(8.dp)
+                        )
+
+                        if (state.canUpdateStatus) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                            ) {
+                                Button(
+                                    onClick = { onEvent(StockTransferContract.Event.ApprovedClicked) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp),
+                                ) {
+                                    Text(stringResource(Res.string.approved))
+                                }
+                                Button(
+                                    onClick = { onEvent(StockTransferContract.Event.RejectedClicked) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp),
+                                ) {
+                                    Text(stringResource(Res.string.rejected))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             item {
                 DataPicker(
                     selectedDateMillis = state.currentTransferInput.transferDate,
@@ -151,7 +231,6 @@ fun StockTransferScreen(
                     itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
-
                 )
             }
 

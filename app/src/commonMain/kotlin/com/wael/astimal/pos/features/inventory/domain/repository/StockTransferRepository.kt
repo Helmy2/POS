@@ -1,28 +1,53 @@
 package com.wael.astimal.pos.features.inventory.domain.repository
 
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import StockTransfer
+import StockTransferItem
+import StockTransferStatus
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.Flow
 
 interface StockTransferRepository {
+
+    suspend fun getPendingTransfersForApproval(): Flow<List<StockTransfer>>
+
+    suspend fun setTransferApprovalStatus(transferId: String, approved: Boolean): Result<Unit>
+
     fun getStockTransfersWithDetails(): Flow<List<StockTransfer>>
-    suspend fun getStockTransferWithDetails(localId: Long): Result<StockTransfer?>
-    suspend fun addStockTransfer(
-        fromStoreId: Long,
-        toStoreId: Long,
-        transferDate: Long?,
-        initiatedByUserId: Long,
-        items: List<StockTransferItem>
-    ): Result<StockTransfer>
+
+    suspend fun deleteStockTransfer(transferToDelete: StockTransfer): Result<Unit>
 
     suspend fun updateStockTransfer(
-        transferLocalId: Long,
-        fromStoreId: Long,
-        toStoreId: Long,
-        transferDate: Long?,
-        initiatedByUserId: Long,
-        items: List<StockTransferItem>
+        transferLocalId: String,
+        fromStore: Store,
+        toStore: Store,
+        initiatedByUser: User,
+        items: List<StockTransferItem>,
+        transferDate: Long,
+        receivingUser: User,
+        notes: String,
+        status: StockTransferStatus,
+        createdat: Long
     ): Result<Unit>
 
-    suspend fun deleteStockTransfer(transfer: StockTransfer): Result<Unit>
+    suspend fun addStockTransfer(
+        fromStore: Store,
+        toStore: Store,
+        initiatedByUser: User,
+        items: List<StockTransferItem>,
+        transferDate: Long,
+        receivingUser: User,
+        notes: String
+    ): Result<Unit>
+
+    suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit>
+    suspend fun hardDeleteInvoiceItems(id: String): Result<Unit>
+    suspend fun getAllDeletedInvoiceItems(): Result<List<StockTransferItemEntity>>
+    suspend fun getUnsyncedTransfersItems(): Result<List<StockTransferItemEntity>>
+    suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit>
+    suspend fun getAllDeletedInvoice(): Result<List<StockTransfer>>
+    suspend fun getUnsyncedTransfers(): Result<List<StockTransfer>>
+    suspend fun hardDeleteInvoice(id: String): Result<Unit>
 }

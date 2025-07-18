@@ -7,6 +7,7 @@ import pos.app.generated.resources.categories
 import pos.app.generated.resources.create_employee
 import pos.app.generated.resources.products
 import pos.app.generated.resources.stock_management
+import pos.app.generated.resources.stock_transfer
 import pos.app.generated.resources.stores
 import pos.app.generated.resources.units
 
@@ -30,11 +31,10 @@ class InventoryReducer : Reducer<InventoryContract.State, InventoryContract.Even
                         Destination.StockManagement,
                         Res.string.stock_management
                     ),
-                    // TODO
-//                    InventoryContract.InventoryItem(
-//                        Destination.StockTransfer,
-//                        Res.string.stock_transfer
-//                    ),
+                    InventoryContract.InventoryItem(
+                        Destination.StockTransfer,
+                        Res.string.stock_transfer
+                    ),
                 )
                 previousState.copy(items = inventoryItems) to null
             }

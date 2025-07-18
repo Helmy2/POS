@@ -130,7 +130,7 @@
     <string name="not_enough_stock">Not enough stock available.</string>
     <string name="insufficient_stock">Insufficient stock for the requested quantity.</string>
     <string name="product_not_found_in_store">Product not found in the selected store.</string>
-    <string name="not_enough_stock_for">Not enough stock for: %1$s</string>
+    <string name="not_enough_stock_for">Not enough stock for:</string>
     <string name="sales">Sales</string>
     <string name="items">Items</string>
     <string name="add_item">Add Item</string>
@@ -377,4 +377,9 @@
     <string name="error_creating_employee">Error creating employee</string>
     <string name="error_password_too_short">Password is too short</string>
     <string name="employee_created_successfully">Employee created successfully</string>
+
+    <string name="pending">Pending</string>
+    <string name="approved">Approved</string>
+    <string name="rejected">Rejected</string>
+    <string name="you_have_pending_transfer">You have pending transfers</string>
 </resources>

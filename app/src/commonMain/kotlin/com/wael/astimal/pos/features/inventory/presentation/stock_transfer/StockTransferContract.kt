@@ -1,9 +1,10 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import StockTransfer
+import StockTransferStatus
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 import java.util.UUID
@@ -30,8 +31,9 @@ object StockTransferContract {
     data class EditableStockTransfer(
         val fromStore: Store? = null,
         val toStore: Store? = null,
-        val selectedEmployeeId: Long? = null,
+        val selectedEmployee: User? = null,
         val transferDate: Long = Clock.now(),
+        val notes: String = "",
         val items: List<EditableStockTransferItem> = emptyList()
     )
 
@@ -46,12 +48,26 @@ object StockTransferContract {
         val currentTransferInput: EditableStockTransfer
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedTransfer != null
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val canUserEdit: Boolean
+            get() = currentUser?.isAdmin == true &&
+                    selectedTransfer?.status != StockTransferStatus.APPROVED &&
+                    selectedTransfer?.status != StockTransferStatus.REJECTED
         val canSave: Boolean
-            get() = currentTransferInput.fromStore != null &&
+            get() = canUserEdit &&
+                    currentTransferInput.fromStore != null &&
                     currentTransferInput.toStore != null &&
                     currentTransferInput.items.isNotEmpty() &&
                     currentTransferInput.items.all { it.product != null }
+
+        val canUpdateStatus: Boolean
+            get() = selectedTransfer?.status ==
+                    StockTransferStatus.PENDING && selectedTransfer.receivingUser == currentUser
+
+        val havePendingTransfer: Boolean
+            get() = transfers.any {
+                it.status == StockTransferStatus.PENDING &&
+                        it.receivingUser == currentUser
+            }
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -63,11 +79,13 @@ object StockTransferContract {
         data object SaveClicked : Event
         data object DeleteClicked : Event
         data object BackClicked : Event
+        data object ApprovedClicked : Event
+        data object RejectedClicked : Event
 
         // Form Input Changes
         data class FromStoreChanged(val store: Store?) : Event
         data class ToStoreChanged(val store: Store?) : Event
-        data class EmployeeChanged(val employeeId: Long?) : Event
+        data class EmployeeChanged(val employee: User?) : Event
         data class DateChanged(val date: Long) : Event
         data object AddItem : Event
         data class RemoveItem(val editorId: String) : Event

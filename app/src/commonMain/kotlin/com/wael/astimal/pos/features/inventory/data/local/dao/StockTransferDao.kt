@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.local.dao
 
+import StockTransferStatus
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -19,12 +20,24 @@ interface StockTransferDao {
     suspend fun insertStockTransferItems(items: List<StockTransferItemEntity>)
 
     @Query("DELETE FROM stock_transfer_items WHERE stockTransferLocalId = :transferLocalId")
-    suspend fun deleteItemsForTransfer(transferLocalId: Long)
+    suspend fun hardDeleteItemsForTransfer(transferLocalId: String)
+
+    @Query("UPDATE stock_transfer_items SET isDeletedLocally = 1 WHERE stockTransferLocalId = :transferLocalId")
+    suspend fun softDeleteItemsForTransfer(transferLocalId: String)
+
+    @Query("DELETE FROM stock_transfers WHERE localId = :transferLocalId")
+    suspend fun hardDeleteTransfer(transferLocalId: String)
+
+    @Query("UPDATE stock_transfers SET isDeletedLocally = 1 WHERE localId = :transferLocalId")
+    suspend fun softDeleteTransfer(transferLocalId: String)
 
     @Transaction
-    suspend fun updateTransferWithItems(transfer: StockTransferEntity, items: List<StockTransferItemEntity>) {
+    suspend fun updateTransferWithItems(
+        transfer: StockTransferEntity,
+        items: List<StockTransferItemEntity>
+    ) {
         insertStockOrUpdateTransfer(transfer)
-        deleteItemsForTransfer(transfer.localId)
+        softDeleteItemsForTransfer(transfer.localId)
         val itemsWithCorrectId = items.map { it.copy(stockTransferLocalId = transfer.localId) }
         if (itemsWithCorrectId.isNotEmpty()) {
             insertStockTransferItems(itemsWithCorrectId)
@@ -32,20 +45,52 @@ interface StockTransferDao {
     }
 
     @Transaction
-    suspend fun insertTransferWithItems(transfer: StockTransferEntity, items: List<StockTransferItemEntity>): Long {
-        val transferId = insertStockOrUpdateTransfer(transfer)
-        val itemsWithCorrectId = items.map { it.copy(stockTransferLocalId = transferId) }
+    suspend fun insertTransferWithItems(
+        transfer: StockTransferEntity,
+        items: List<StockTransferItemEntity>
+    ) {
+        insertStockOrUpdateTransfer(transfer)
+        val itemsWithCorrectId = items.map { it.copy(stockTransferLocalId = transfer.localId) }
         if (itemsWithCorrectId.isNotEmpty()) {
             insertStockTransferItems(itemsWithCorrectId)
         }
-        return transferId
     }
 
     @Transaction
-    @Query("SELECT * FROM stock_transfers WHERE localId = :localId")
+    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally AND localId = :localId")
     suspend fun getStockTransferWithDetails(localId: Long): StockTransferWithItemsAndDetails?
 
     @Transaction
     @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally")
     fun getAllStockTransfersWithDetailsFlow(): Flow<List<StockTransferWithItemsAndDetails>>
+
+    @Transaction
+    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally AND receivingUserId = :currentUserId")
+    fun getPendingTransfersForApproval(currentUserId: Long): Flow<List<StockTransferWithItemsAndDetails>>
+
+    @Transaction
+    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally AND isSynced = 0")
+    suspend fun getUnsyncedInvoices(): List<StockTransferWithItemsAndDetails>
+
+    @Transaction
+    @Query("SELECT * FROM stock_transfers WHERE isDeletedLocally = 1")
+    suspend fun getDeletedInvoice(): List<StockTransferWithItemsAndDetails>
+
+    @Transaction
+    @Query("SELECT * FROM stock_transfer_items WHERE isDeletedLocally = 0 AND isSynced = 0")
+    suspend fun getUnsyncedInvoicesItems(): List<StockTransferItemEntity>
+
+    @Transaction
+    @Query("SELECT * FROM stock_transfer_items WHERE isDeletedLocally = 1")
+    suspend fun getDeletedInvoiceItems(): List<StockTransferItemEntity>
+
+    @Query("UPDATE stock_transfer_items SET isDeletedLocally = 1 WHERE localId = :id")
+    suspend fun hardDeleteInvoiceItems(id: String)
+
+    @Query("UPDATE stock_transfers SET status = :status WHERE localId = :transferId")
+    fun setTransferApprovalStatus(transferId: String, status: StockTransferStatus)
+
+    @Transaction
+    @Query("SELECT * FROM stock_transfers WHERE localId = :transferId")
+    fun getStockTransfer(transferId: String): StockTransferWithItemsAndDetails
 }

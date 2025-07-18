@@ -94,7 +94,7 @@ class StockTransferReducer() :
                 previousState.copy(
                     currentUser = event.user,
                     currentTransferInput = previousState.currentTransferInput.copy(
-                        selectedEmployeeId = event.user?.id?.local,
+                        selectedEmployee = event.user,
                         fromStore = if (previousState.currentUser?.isAdmin == false) event.fromStore else previousState.currentTransferInput.fromStore
                     )
                 ) to null
@@ -108,7 +108,7 @@ class StockTransferReducer() :
             is StockTransferContract.Event.TransferSelected -> {
                 val editableItems = event.transfer.items.map {
                     StockTransferContract.EditableStockTransferItem(
-                        editorId = it.id.local.toString(), // Use existing ID for mapping
+                        editorId = it.id,
                         product = it.product,
                         maxUnitQuantity = it.quantity.toString(),
                         minUnitQuantity = (it.quantity * it.product.subUnitsPerMainUnit).toString()
@@ -119,7 +119,7 @@ class StockTransferReducer() :
                     currentTransferInput = StockTransferContract.EditableStockTransfer(
                         fromStore = event.transfer.fromStore,
                         toStore = event.transfer.toStore,
-                        selectedEmployeeId = event.transfer.initiatedByUser.id,
+                        selectedEmployee = event.transfer.initiatingUser,
                         transferDate = event.transfer.createdAt,
                         items = editableItems
                     ),
@@ -135,7 +135,7 @@ class StockTransferReducer() :
                     selectedTransfer = null,
                     currentTransferInput = StockTransferContract.EditableStockTransfer(
                         transferDate = Clock.now(),
-                        selectedEmployeeId = previousState.currentUser?.id?.local,
+                        selectedEmployee = previousState.currentUser,
                         fromStore = if (previousState.currentUser?.isAdmin == false) previousState.currentTransferInput.fromStore else null
                     )
                 ) to null
@@ -158,7 +158,7 @@ class StockTransferReducer() :
             is StockTransferContract.Event.EmployeeChanged ->
                 previousState.copy(
                     currentTransferInput = previousState.currentTransferInput.copy(
-                        selectedEmployeeId = event.employeeId
+                        selectedEmployee = event.employee
                     )
                 ) to null
 
@@ -202,7 +202,9 @@ class StockTransferReducer() :
 
             is StockTransferContract.Event.BackClicked,
             is StockTransferContract.Event.SaveClicked,
-            is StockTransferContract.Event.DeleteClicked -> previousState to null
+            is StockTransferContract.Event.DeleteClicked,
+            is StockTransferContract.Event.ApprovedClicked,
+            is StockTransferContract.Event.RejectedClicked -> previousState to null
         }
     }
 }

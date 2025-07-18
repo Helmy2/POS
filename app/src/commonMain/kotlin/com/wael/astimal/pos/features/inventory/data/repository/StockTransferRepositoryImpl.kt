@@ -1,189 +1,346 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import StockTransfer
+import StockTransferItem
+import StockTransferStatus
+import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
+import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
-import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import com.wael.astimal.pos.features.inventory.data.remote.dto.NotificationDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
+import com.wael.astimal.pos.features.user.domain.entity.User
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.annotations.SupabaseExperimental
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class StockTransferRepositoryImpl(
-    private val stockTransferDao: StockTransferDao,
-    private val stockRepository: StockRepository
+    val supabaseClient: SupabaseClient,
+    val stockTransferDao: StockTransferDao,
+    val productRepository: ProductRepository,
+    val userRepository: UserRepository,
+    val stockAdjustmentDao: StockAdjustmentDao,
 ) : StockTransferRepository {
 
-    override fun getStockTransfersWithDetails(): Flow<List<StockTransfer>> {
-        return stockTransferDao.getAllStockTransfersWithDetailsFlow().map { list ->
-            list.map { it.toDomain() }
-        }
+    @OptIn(SupabaseExperimental::class)
+    override suspend fun getPendingTransfersForApproval(): Flow<List<StockTransfer>> {
+        val currentUserId =
+            userRepository.getCurrentUser()?.id?.local ?: throw Exception("No user logged in")
+
+        return stockTransferDao.getPendingTransfersForApproval(
+            currentUserId = currentUserId
+        ).map { it -> it.map { it.toDomain() } }
     }
 
-    override suspend fun getStockTransferWithDetails(localId: Long): Result<StockTransfer> {
-        return runCatching {
-            val entityWithDetails = stockTransferDao.getStockTransferWithDetails(localId)
-            entityWithDetails?.takeUnless { it.transfer.isDeletedLocally }?.toDomain()
-                ?: throw NoSuchElementException("Stock transfer with localId $localId not found or marked as deleted.")
-        }
-    }
-
-    override suspend fun addStockTransfer(
-        fromStoreId: Long,
-        toStoreId: Long,
-        transferDate: Long?,
-        initiatedByUserId: Long,
-        items: List<StockTransferItem>
-    ): Result<StockTransfer> {
-        return runCatching {
-            TODO()
-//            if (items.isEmpty()) {
-//                throw IllegalArgumentException("Stock transfer must have at least one item.")
-//            }
-//
-//            val newTransferEntity = StockTransferEntity(
-//                serverId = null,
-//                fromStoreId = fromStoreId,
-//                toStoreId = toStoreId,
-//                initiatedByUserId = initiatedByUserId,
-//                createdAt = transferDate ?: Clock.now(),
-//                isSynced = false,
-//                updatedAt = Clock.now(),
-//                isDeletedLocally = false
-//            )
-//            val insertedId: Long = stockTransferDao.insertTransferWithItems(
-//                newTransferEntity,
-//                items.map { it.toEntity(0L) })
-//
-//            // Adjust stock for all items
-//            items.forEach { item ->
-//                // Decrease stock from source store
-//                stockRepository.adjustStock(
-//                    storeId = fromStoreId,
-//                    productId = item.product.id.local,
-//                    transactionQuantity = -item.quantity,
-//                )
-//                // Increase stock in destination store
-//                stockRepository.adjustStock(
-//                    storeId = toStoreId,
-//                    productId = item.product.id.local,
-//                    transactionQuantity = item.quantity
-//                )
-//            }
-//
-//
-//            val createdTransfer = getStockTransferWithDetails(insertedId)
-//
-//            createdTransfer.getOrThrow()
-        }
-    }
-
-    override suspend fun updateStockTransfer(
-        transferLocalId: Long,
-        fromStoreId: Long,
-        toStoreId: Long,
-        transferDate: Long?,
-        initiatedByUserId: Long,
-        items: List<StockTransferItem>
+    override suspend fun setTransferApprovalStatus(
+        transferId: String, approved: Boolean
     ): Result<Unit> {
         return try {
-            TODO()
-//            val existingTransferWithDetails =
-//                stockTransferDao.getStockTransferWithDetails(transferLocalId)
-//                    ?: throw NoSuchElementException("Stock transfer with localId $transferLocalId not found.")
-//
-//            val oldTransfer = existingTransferWithDetails.transfer
-//            val oldFromStoreId =
-//                oldTransfer.fromStoreId ?: throw Exception("Old 'from' store ID is missing.")
-//            val oldToStoreId =
-//                oldTransfer.toStoreId ?: throw Exception("Old 'to' store ID is missing.")
-//
-//            // Revert stock changes from the old items
-//            existingTransferWithDetails.itemsWithProducts.forEach { oldItem ->
-//                stockRepository.adjustStock(
-//                    oldItem.item.productLocalId,
-//                    oldFromStoreId,
-//                    oldItem.item.quantity
-//                ) // Add back
-//                stockRepository.adjustStock(
-//                    oldItem.item.productLocalId,
-//                    oldToStoreId,
-//                    -oldItem.item.quantity
-//                ) // Remove
-//            }
-//
-//            // Apply stock changes for the new items
-//            items.forEach { newItem ->
-//                stockRepository.adjustStock(
-//                    newItem.product.id.local,
-//                    fromStoreId,
-//                    -newItem.quantity
-//                ) // Remove
-//                stockRepository.adjustStock(
-//                    newItem.product.id.local,
-//                    toStoreId,
-//                    newItem.quantity
-//                ) // Add
-//            }
-//
-//            // Update the transfer record itself
-//            val updatedTransferEntity = oldTransfer.copy(
-//                fromStoreId = fromStoreId,
-//                toStoreId = toStoreId,
-//                initiatedByUserId = initiatedByUserId,
-//                isSynced = false,
-//                createdAt = transferDate ?: Clock.now(),
-//                updatedAt = Clock.now()
-//            )
-//            stockTransferDao.updateTransferWithItems(
-//                updatedTransferEntity,
-//                items.map { it.toEntity(transferLocalId) })
-//            Result.success(Unit)
+            val status = if (approved) "approved" else "rejected"
+            supabaseClient.postgrest["stock_transfers"].update(
+                buildJsonObject {
+                    put("status", status)
+                }
+            ) {
+                filter {
+                    eq("id", transferId)
+                }
+            }
+
+            stockTransferDao.setTransferApprovalStatus(
+                transferId,
+                if (approved) StockTransferStatus.APPROVED else StockTransferStatus.REJECTED
+            )
+
+            if (approved) {
+                val transfer = stockTransferDao.getStockTransfer(transferId).toDomain()
+                createAdjustStock(transfer)
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private suspend fun createAdjustStock(
+        transfer: StockTransfer
+    ) {
+        for (item in transfer.items) {
+            stockAdjustmentDao.insert(
+                StockAdjustmentEntity(
+                    serverId = Uuid.random().toString(),
+                    productId = item.product.id.local,
+                    quantityChange = -item.quantity,
+                    createdAt = Clock.now(),
+                    updatedAt = Clock.now(),
+                    userId = transfer.initiatingUser.id.local,
+                    reason = StockAdjustmentReason.INVOICE,
+                    storeId = transfer.fromStore.id.local,
+                    invoiceId = transfer.id,
+                    isSynced = false,
+                    notes = null,
+                )
+            )
+            stockAdjustmentDao.insert(
+                StockAdjustmentEntity(
+                    serverId = Uuid.random().toString(),
+                    productId = item.product.id.local,
+                    quantityChange = item.quantity,
+                    createdAt = Clock.now(),
+                    updatedAt = Clock.now(),
+                    userId = transfer.initiatingUser.id.local,
+                    reason = StockAdjustmentReason.INVOICE,
+                    storeId = transfer.toStore.id.local,
+                    invoiceId = transfer.id,
+                    isSynced = false,
+                    notes = null,
+                )
+            )
+        }
+    }
+
+    override fun getStockTransfersWithDetails(): Flow<List<StockTransfer>> {
+        return stockTransferDao.getAllStockTransfersWithDetailsFlow()
+            .map { it -> it.map { it.toDomain() } }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun updateStockTransfer(
+        transferLocalId: String,
+        fromStore: Store,
+        toStore: Store,
+        initiatedByUser: User,
+        items: List<StockTransferItem>,
+        transferDate: Long,
+        receivingUser: User,
+        notes: String,
+        status: StockTransferStatus,
+        createdat: Long
+    ): Result<Unit> {
+        return try {
+            if (status == StockTransferStatus.APPROVED) {
+                return Result.failure(Exception("Cannot delete an approved transfer"))
+            }
+            if (status == StockTransferStatus.REJECTED) {
+                return Result.failure(Exception("Cannot delete a rejected transfer"))
+            }
+            val transferDto = StockTransferDto(
+                id = transferLocalId,
+                fromStoreId = fromStore.id.server!!,
+                toStoreId = toStore.id.server!!,
+                initiatingUserId = initiatedByUser.id.serverStringId!!,
+                receivingUserId = receivingUser.id.serverStringId!!,
+                notes = notes,
+                status = "pending",
+                createdAt = createdat.toDateString(),
+                updatedAt = Clock.now().toDateString()
+            )
+
+            supabaseClient.postgrest["stock_transfers"]
+                .update(transferDto) {
+                    filter {
+                        eq("id", transferLocalId)
+                    }
+                }
+
+            supabaseClient.from("stock_transfer_items").delete {
+                filter {
+                    eq("transfer_id", transferLocalId)
+                }
+            }
+
+            val itemDtos = items.map {
+                StockTransferItemDto(
+                    id = Uuid.random().toString(),
+                    transferId = transferLocalId,
+                    productId = it.product.id.server!!,
+                    quantity = it.quantity,
+                )
+            }
+
+            supabaseClient.postgrest["stock_transfer_items"].insert(itemDtos)
+
+            stockTransferDao.updateTransferWithItems(
+                transfer = transferDto.toEntity(
+                    fromStoreId = fromStore.id.local,
+                    toStoreId = toStore.id.local,
+                    initiatingUserId = initiatedByUser.id.local,
+                    receivingUserId = receivingUser.id.local,
+                ),
+                items = itemDtos.map {
+                    it.toEntity(
+                        productRepository.getProductByServerId(it.productId).getOrThrow().id.local,
+                    )
+                }
+            )
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun addStockTransfer(
+        fromStore: Store,
+        toStore: Store,
+        initiatedByUser: User,
+        items: List<StockTransferItem>,
+        transferDate: Long,
+        receivingUser: User,
+        notes: String
+    ): Result<Unit> {
+        return try {
+            val transferDto = StockTransferDto(
+                id = Uuid.random().toString(),
+                fromStoreId = fromStore.id.server!!,
+                toStoreId = toStore.id.server!!,
+                initiatingUserId = initiatedByUser.id.serverStringId!!,
+                receivingUserId = receivingUser.id.serverStringId!!,
+                notes = notes,
+                status = "pending",
+                createdAt = Clock.now().toDateString(),
+                updatedAt = Clock.now().toDateString()
+            )
+            supabaseClient.postgrest["stock_transfers"]
+                .insert(transferDto)
+
+
+            val itemDtos = items.map {
+                StockTransferItemDto(
+                    id = Uuid.random().toString(),
+                    transferId = transferDto.id,
+                    productId = it.product.id.server!!,
+                    quantity = it.quantity,
+                )
+            }
+
+            supabaseClient.postgrest["stock_transfer_items"].insert(itemDtos)
+
+            stockTransferDao.insertTransferWithItems(
+                transferDto.toEntity(
+                    fromStoreId = fromStore.id.local,
+                    toStoreId = toStore.id.local,
+                    initiatingUserId = initiatedByUser.id.local,
+                    receivingUserId = receivingUser.id.local,
+                ),
+                itemDtos.map {
+                    it.toEntity(
+                        productRepository.getProductByServerId(it.productId).getOrThrow().id.local,
+                    )
+                },
+            )
+
+            val notificationDto = NotificationDto(
+                userId = receivingUser.id.serverStringId,
+                message = "New transfer from ${fromStore.name.enName} needs your approval.",
+                relatedTransferId = transferDto.id
+            )
+            supabaseClient.postgrest["notifications"].insert(notificationDto)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteStockTransfer(transferToDelete: StockTransfer): Result<Unit> {
+        if (transferToDelete.status == StockTransferStatus.APPROVED) {
+            return Result.failure(Exception("Cannot delete an approved transfer"))
+        }
+        if (transferToDelete.status == StockTransferStatus.REJECTED) {
+            return Result.failure(Exception("Cannot delete a rejected transfer"))
+        }
+        return try {
+            supabaseClient.from("stock_transfer_items").delete {
+                filter {
+                    eq("transfer_id", transferToDelete.id)
+                }
+            }
+            supabaseClient.from("stock_transfers").delete {
+                filter {
+                    eq("id", transferToDelete.id)
+                }
+            }
+            stockTransferDao.hardDeleteItemsForTransfer(transferToDelete.id)
+            stockTransferDao.hardDeleteTransfer(transferToDelete.id)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun deleteStockTransfer(transfer: StockTransfer): Result<Unit> {
-        return try {
-            TODO()
 
-//            val transferToDelete =
-//                stockTransferDao.getStockTransferWithDetails(transfer.id.local)
-//                    ?: throw NoSuchElementException("Stock transfer not found for deletion.")
-//
-//            if (!transferToDelete.transfer.isDeletedLocally) {
-//                val fromStoreId = transferToDelete.transfer.fromStoreId
-//                    ?: throw Exception("From store ID is missing.")
-//                val toStoreId = transferToDelete.transfer.toStoreId
-//                    ?: throw Exception("To store ID is missing.")
+    override suspend fun getUnsyncedTransfers(): Result<List<StockTransfer>> {
+        return runCatching {
+            stockTransferDao.getUnsyncedInvoices().map { it.toDomain() }
+        }
+    }
 
-                // Revert stock changes
+    override suspend fun getAllDeletedInvoice(): Result<List<StockTransfer>> {
+        return runCatching {
+            stockTransferDao.getDeletedInvoice().map { it.toDomain() }
+        }
+    }
 
-//                transferToDelete.itemsWithProducts.forEach { item ->
-//                    stockRepository.adjustStock(
-//                        item.item.productLocalId,
-//                        fromStoreId,
-//                        item.item.quantity
-//                    ) // Add back
-//                    stockRepository.adjustStock(
-//                        item.item.productLocalId,
-//                        toStoreId,
-//                        -item.item.quantity
-//                    ) // Remove
-//                }
+    override suspend fun hardDeleteInvoice(id: String): Result<Unit> {
+        return runCatching {
+            stockTransferDao.hardDeleteTransfer(id)
+        }
+    }
 
-                // Mark as deleted
-//                val transferToMarkAsDeleted = transferToDelete.transfer.copy(
-//                    isDeletedLocally = true,
-//                    isSynced = false,
-//                    updatedAt = Clock.now()
-//                )
-//                stockTransferDao.insertStockOrUpdateTransfer(transferToMarkAsDeleted)
-//            }
-//            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+    override suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit> {
+        return runCatching {
+            entities.forEach {
+                stockTransferDao.insertStockOrUpdateTransfer(it)
+            }
+        }
+    }
+
+    override suspend fun getUnsyncedTransfersItems(): Result<List<StockTransferItemEntity>> {
+        return runCatching {
+            stockTransferDao.getUnsyncedInvoicesItems()
+        }
+    }
+
+    override suspend fun getAllDeletedInvoiceItems(): Result<List<StockTransferItemEntity>> {
+        return runCatching {
+            stockTransferDao.getDeletedInvoiceItems()
+        }
+    }
+
+    override suspend fun hardDeleteInvoiceItems(id: String): Result<Unit> {
+        return runCatching {
+            stockTransferDao.hardDeleteInvoiceItems(id)
+        }
+    }
+
+    override suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit> {
+        return runCatching {
+            stockTransferDao.insertStockTransferItems(entities)
         }
     }
 }

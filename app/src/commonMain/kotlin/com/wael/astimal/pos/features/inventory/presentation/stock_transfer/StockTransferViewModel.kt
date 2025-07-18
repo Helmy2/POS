@@ -1,14 +1,13 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
+import StockTransferItem
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
@@ -35,6 +34,8 @@ import pos.app.generated.resources.transfer_deleted_successfully
 import pos.app.generated.resources.transfer_must_have_at_least_one_valid_item
 import pos.app.generated.resources.transfer_saved_successfully
 import pos.app.generated.resources.user_not_identified_cannot_save_transfer
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class StockTransferViewModel(
     private val stockTransferRepository: StockTransferRepository,
@@ -65,6 +66,11 @@ class StockTransferViewModel(
                 searchTransfers(event.query)
             }
 
+            is StockTransferContract.Event.TransferSelected -> {
+                setState(event)
+                resubscribeAllStockObservers()
+            }
+
             is StockTransferContract.Event.SaveClicked -> saveTransfer()
             is StockTransferContract.Event.DeleteClicked -> deleteTransfer()
             is StockTransferContract.Event.BackClicked -> navigateBack()
@@ -82,6 +88,36 @@ class StockTransferViewModel(
                 stockObservationJobs[event.editorId]?.cancel()
                 stockObservationJobs.remove(event.editorId)
                 setState(event)
+            }
+
+            is StockTransferContract.Event.ApprovedClicked -> {
+                viewModelScope.launch {
+                    stockTransferRepository.setTransferApprovalStatus(
+                        state.value.selectedTransfer!!.id,
+                        true
+                    ).onSuccess {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
+                        setState(StockTransferContract.Event.SaveSucceeded)
+                    }.onFailure {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
+                        setState(StockTransferContract.Event.LoadingFinished)
+                    }
+                }
+            }
+
+            is StockTransferContract.Event.RejectedClicked -> {
+                viewModelScope.launch {
+                    stockTransferRepository.setTransferApprovalStatus(
+                        state.value.selectedTransfer!!.id,
+                        false
+                    ).onSuccess {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
+                        setState(StockTransferContract.Event.SaveSucceeded)
+                    }.onFailure {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
+                        setState(StockTransferContract.Event.LoadingFinished)
+                    }
+                }
             }
 
             else -> setState(event)
@@ -141,12 +177,12 @@ class StockTransferViewModel(
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stock)))
                 }
                 .onEach { stock ->
-                setState(
-                    StockTransferContract.Event.StockForItemSelected(
-                        editorId, stock
+                    setState(
+                        StockTransferContract.Event.StockForItemSelected(
+                            editorId, stock
+                        )
                     )
-                )
-            }.launchIn(viewModelScope)
+                }.launchIn(viewModelScope)
     }
 
     private fun resubscribeAllStockObservers() {
@@ -159,6 +195,7 @@ class StockTransferViewModel(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun saveTransfer() = viewModelScope.launch {
         val currentInput = state.value.currentTransferInput
         val currentUser = state.value.currentUser
@@ -198,26 +235,36 @@ class StockTransferViewModel(
         val transferItems = currentInput.items.mapNotNull {
             val quantity = it.maxUnitQuantity.toDoubleOrNull()
             if (it.product != null && quantity != null && quantity > 0) {
-                StockTransferItem(product = it.product, quantity = quantity, id = Id.new)
+                StockTransferItem(
+                    product = it.product,
+                    quantity = quantity,
+                    id = Uuid.random().toString()
+                )
             } else null
         }
 
         val result = if (state.value.isEditing) {
             stockTransferRepository.updateStockTransfer(
-                transferLocalId = state.value.selectedTransfer!!.id.local,
-                fromStoreId = currentInput.fromStore.id.local,
-                toStoreId = currentInput.toStore.id.local,
-                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id.local,
+                transferLocalId = state.value.selectedTransfer!!.id,
+                fromStore = currentInput.fromStore,
+                toStore = currentInput.toStore,
+                initiatedByUser = currentInput.selectedEmployee!!,
+                receivingUser = currentInput.toStore.employee,
                 items = transferItems,
-                transferDate = Clock.now()
+                transferDate = Clock.now(),
+                notes = currentInput.notes,
+                status = state.value.selectedTransfer!!.status,
+                createdat = state.value.selectedTransfer!!.createdAt
             )
         } else {
             stockTransferRepository.addStockTransfer(
-                fromStoreId = currentInput.fromStore.id.local,
-                toStoreId = currentInput.toStore.id.local,
-                initiatedByUserId = currentInput.selectedEmployeeId ?: currentUser.id.local,
+                fromStore = currentInput.fromStore,
+                toStore = currentInput.toStore,
+                initiatedByUser = currentInput.selectedEmployee!!,
+                receivingUser = currentInput.toStore.employee,
                 items = transferItems,
-                transferDate = Clock.now()
+                transferDate = Clock.now(),
+                notes = currentInput.notes
             )
         }
 

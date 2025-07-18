@@ -4,9 +4,12 @@ import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.fetchAll
 import com.wael.astimal.pos.core.util.pushAll
+import com.wael.astimal.pos.features.inventory.data.local.entity.toDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
@@ -14,6 +17,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.management.data.local.entity.toDto
@@ -35,6 +39,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import toDto
 
 
 class SyncServiceImpl(
@@ -50,6 +55,7 @@ class SyncServiceImpl(
     private val partnerTransactionRepository: PartnerTransactionRepository,
     private val employeeTransactionRepository: EmployeeTransactionRepository,
     private val invoiceRepository: InvoiceRepository,
+    private val stockTransferRepository: StockTransferRepository,
     private val navigationController: NavigationController
 ) : SyncService {
 
@@ -97,6 +103,8 @@ class SyncServiceImpl(
                 syncProducts()
 
                 syncPartner()
+                syncTransfer()
+                syncTransferItems()
                 syncInvoice()
                 syncInvoiceItems()
                 syncStockAdjustment()
@@ -108,6 +116,77 @@ class SyncServiceImpl(
                 e.printStackTrace()
                 Result.failure(e)
             }
+        }
+    }
+
+    private suspend fun syncTransferItems() {
+        stockTransferRepository.getUnsyncedTransfersItems().getOrThrow().map {
+            it.toDto(
+                productId = productRepository.getProductByLocalId(it.productLocalId)
+                    .getOrThrow().id.server!!
+            )
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<StockTransferItemDto>("stock_transfer_items") { it }
+        }
+
+        // delete
+        stockTransferRepository.getAllDeletedInvoiceItems().getOrThrow().map {
+            it.toDto(
+                productId = productRepository.getProductByLocalId(it.productLocalId)
+                    .getOrThrow().id.server!!
+            )
+        }.takeIf { it.isNotEmpty() }?.forEach {
+            supabaseClient.postgrest["stock_transfer_items"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            stockTransferRepository.hardDeleteInvoiceItems(it.id)
+        }
+
+        supabaseClient.fetchAll<StockTransferItemDto>("stock_transfer_items").getOrThrow().also {
+            stockTransferRepository.syncTransfersItems(
+                it.map { item ->
+                    item.toEntity(
+                        productLocalId = productRepository.getProductByServerId(item.productId)
+                            .getOrThrow().id.local
+                    )
+                }
+            )
+        }
+    }
+
+    private suspend fun syncTransfer() {
+        stockTransferRepository.getUnsyncedTransfers().getOrThrow().map {
+            it.toDto()
+        }.takeIf { it.isNotEmpty() }?.let {
+            supabaseClient.pushAll<StockTransferDto>("stock_transfers") { it }
+        }
+
+        stockTransferRepository.getAllDeletedInvoice().getOrThrow().forEach {
+            supabaseClient.postgrest["stock_transfers"].delete {
+                filter {
+                    eq("id", it.id)
+                }
+            }
+            stockTransferRepository.hardDeleteInvoice(it.id)
+        }
+
+        supabaseClient.fetchAll<StockTransferDto>("stock_transfers").getOrThrow().also {
+            stockTransferRepository.syncTransfers(
+                it.map { transfer ->
+                    transfer.toEntity(
+                        fromStoreId = storeRepository.getStoreBySeverId(transfer.fromStoreId)
+                            .getOrThrow().id.local,
+                        toStoreId = storeRepository.getStoreBySeverId(transfer.toStoreId)
+                            .getOrThrow().id.local,
+                        initiatingUserId = userRepository.getUserByServerId(transfer.initiatingUserId)
+                            .getOrThrow()!!.id.local,
+                        receivingUserId = userRepository.getUserByServerId(transfer.receivingUserId)
+                            .getOrThrow()!!.id.local
+                    )
+                },
+            )
         }
     }
 
