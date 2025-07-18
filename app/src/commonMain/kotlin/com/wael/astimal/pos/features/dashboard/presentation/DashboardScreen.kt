@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,12 +10,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +27,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +63,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.dashboard
 import pos.app.generated.resources.sales_analytics
 import pos.app.generated.resources.settings
+import pos.app.generated.resources.sync
 import pos.app.generated.resources.total_revenue
 import pos.app.generated.resources.total_sales
 import pos.app.generated.resources.you_have_pending_transfer
@@ -98,6 +104,36 @@ fun DashboardScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         topBar = {
             TopAppBar(title = { Text(stringResource(Res.string.dashboard)) }, actions = {
+                TextButton(
+                    onClick = {
+                        onEvent(DashboardContract.Event.PreformSync)
+                    },
+                    enabled = !state.isLoadingSync,
+                ) {
+                    AnimatedContent(state.isLoadingSync) {
+                        if (it) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Sync,
+                                    contentDescription = stringResource(Res.string.sync)
+                                )
+                                Text(
+                                    text = stringResource(Res.string.sync),
+                                    modifier = Modifier.padding(4.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
                 IconButton(onClick = { showSetting = true }) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -107,7 +143,8 @@ fun DashboardScreen(
             })
         }
     ) {
-        AnimatedVisibility(state.havePendingTransfer) {
+
+    AnimatedVisibility(state.havePendingTransfer) {
             Text(
                 text = stringResource(Res.string.you_have_pending_transfer),
                 modifier = Modifier

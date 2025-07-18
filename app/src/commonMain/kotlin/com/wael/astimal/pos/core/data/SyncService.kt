@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.core.data
 
 import com.wael.astimal.pos.core.base.NavigationController
-import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.fetchAll
 import com.wael.astimal.pos.core.util.pushAll
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDto
@@ -62,17 +61,6 @@ class SyncServiceImpl(
     override suspend fun performFullSync(): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                // TODO Remove
-                userRepository.getCurrentUser() ?: userRepository.login(
-                    "admin@mail.com", "adminadmin"
-                ).onSuccess {
-                    navigationController.navigate(
-                        Destination.Dashboard,
-                        popUpToRoute = Destination.Auth,
-                    )
-                }.getOrThrow()
-
-
                 supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
                     userRepository.syncWithServer(
                         it.map { profileDto -> profileDto.toEntity() },

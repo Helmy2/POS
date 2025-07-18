@@ -25,7 +25,10 @@ class DashboardReducer : Reducer<DashboardContract.State, DashboardContract.Even
             is DashboardContract.Event.HavePendingTransferChanged ->
                 previousState.copy(havePendingTransfer = event.havePendingTransfer) to null
 
-            is DashboardContract.Event.RefreshDataClicked -> previousState to null
+            is DashboardContract.Event.LoadingSyncChange ->
+                previousState.copy(isLoadingSync = event.isLoading) to null
+
+            is DashboardContract.Event.RefreshDataClicked, is DashboardContract.Event.PreformSync -> previousState to null
         }
     }
 
