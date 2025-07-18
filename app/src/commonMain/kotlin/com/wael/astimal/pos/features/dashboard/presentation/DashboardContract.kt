@@ -31,6 +31,7 @@ object DashboardContract {
         val kpiData: KpiData = KpiData(),
         val salesAnalytics: List<DailySale> = emptyList(),
         val selectedTimePeriod: TimePeriod = TimePeriod.TODAY,
+        val havePendingTransfer: Boolean = false
     ) : Reducer.ViewState
 
     sealed interface Event : Reducer.ViewEvent {
@@ -38,5 +39,6 @@ object DashboardContract {
         data object RefreshDataClicked : Event
         data object LoadingData : Event
         data class DataLoaded(val sales: List<DailySale>) : Event
+        data class HavePendingTransferChanged(val havePendingTransfer: Boolean) : Event
     }
 }

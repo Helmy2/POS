@@ -126,6 +126,7 @@ class UserRepositoryImpl(
                 isAdmin = false,
                 updatedAt = Clock.now().toDateString(),
                 avatarUrl = "",
+                fcmToken = null
             )
 
             supabaseClient.postgrest["profiles"].upsert(profileDto)

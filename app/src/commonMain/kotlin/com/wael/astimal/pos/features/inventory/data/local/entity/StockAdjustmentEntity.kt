@@ -17,23 +17,34 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 
 @Entity(
-    tableName = "stock_adjustments", foreignKeys = [ForeignKey(
-        entity = StoreEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["storeId"],
-    ), ForeignKey(
-        entity = ProductEntity::class,
-        parentColumns = ["localId"],
-        childColumns = ["productId"],
-    ), ForeignKey(
-        entity = UserEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["userId"],
-    ), ForeignKey(
-        entity = InvoiceEntity::class,
-        parentColumns = ["supabaseId"],
-        childColumns = ["invoiceId"],
-    )]
+    tableName = "stock_adjustments",
+    foreignKeys = [
+        ForeignKey(
+            entity = StoreEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["storeId"],
+        ),
+        ForeignKey(
+            entity = ProductEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["productId"],
+        ),
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["userId"],
+        ),
+        ForeignKey(
+            entity = InvoiceEntity::class,
+            parentColumns = ["supabaseId"],
+            childColumns = ["invoiceId"],
+        ),
+        ForeignKey(
+            entity = StockTransferEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["transactionId"],
+        ),
+    ]
 )
 data class StockAdjustmentEntity(
     @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
@@ -45,7 +56,8 @@ data class StockAdjustmentEntity(
 
     val storeId: Long,
     val productId: Long,
-    val invoiceId: String?,
+    val invoiceId: String? = null,
+    val transactionId: String? = null,
     val userId: Long,
     val reason: StockAdjustmentReason,
     val notes: String?,

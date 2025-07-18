@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import androidx.navigation.toRoute
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.dashboard.presentation.DashboardRoute
 import com.wael.astimal.pos.features.inventory.presentation.category.CategoryRoute
@@ -48,7 +49,13 @@ fun AppNavHost(
             startDestination = Destination.Dashboard
         ) {
             // Top-level destinations
-            composable<Destination.Dashboard> { DashboardRoute() }
+            composable<Destination.Dashboard> {
+                DashboardRoute(
+                    onNavigateToStockTransfer = {
+                        navController.navigate(Destination.StockTransfer(true))
+                    },
+                )
+            }
 
             // Inventory Hub
             composable<Destination.Inventory> { InventoryRoute() }
@@ -73,7 +80,12 @@ fun AppNavHost(
             composable<Destination.Stores> { StoreRoute() }
             composable<Destination.Units> { UnitRoute() }
             composable<Destination.StockManagement> { StockManagementRoute() }
-            composable<Destination.StockTransfer> { StockTransferRoute() }
+            composable<Destination.StockTransfer> {
+
+                StockTransferRoute(
+                    openSearch = it.toRoute<Destination.StockTransfer>().openSearch
+                )
+            }
 
 
             // --- Management Sub-Screens ---

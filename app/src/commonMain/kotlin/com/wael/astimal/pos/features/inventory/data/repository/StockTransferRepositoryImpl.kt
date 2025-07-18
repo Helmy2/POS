@@ -11,7 +11,6 @@ import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
-import com.wael.astimal.pos.features.inventory.data.remote.dto.NotificationDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
@@ -23,10 +22,13 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
+import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
@@ -46,39 +48,42 @@ class StockTransferRepositoryImpl(
             userRepository.getCurrentUser()?.id?.local ?: throw Exception("No user logged in")
 
         return stockTransferDao.getPendingTransfersForApproval(
-            currentUserId = currentUserId
+            currentUserId = currentUserId,
+            status = StockTransferStatus.PENDING
         ).map { it -> it.map { it.toDomain() } }
     }
 
     override suspend fun setTransferApprovalStatus(
         transferId: String, approved: Boolean
     ): Result<Unit> {
-        return try {
-            val status = if (approved) "approved" else "rejected"
-            supabaseClient.postgrest["stock_transfers"].update(
-                buildJsonObject {
-                    put("status", status)
+        return withContext(Dispatchers.IO) {
+            try {
+                val status = if (approved) "approved" else "rejected"
+                supabaseClient.postgrest["stock_transfers"].update(
+                    buildJsonObject {
+                        put("status", status)
+                    }
+                ) {
+                    filter {
+                        eq("id", transferId)
+                    }
                 }
-            ) {
-                filter {
-                    eq("id", transferId)
+
+                stockTransferDao.setTransferApprovalStatus(
+                    transferId,
+                    if (approved) StockTransferStatus.APPROVED else StockTransferStatus.REJECTED
+                )
+
+                if (approved) {
+                    val transfer = stockTransferDao.getStockTransfer(transferId).toDomain()
+                    createAdjustStock(transfer)
                 }
+
+                Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
             }
-
-            stockTransferDao.setTransferApprovalStatus(
-                transferId,
-                if (approved) StockTransferStatus.APPROVED else StockTransferStatus.REJECTED
-            )
-
-            if (approved) {
-                val transfer = stockTransferDao.getStockTransfer(transferId).toDomain()
-                createAdjustStock(transfer)
-            }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Result.failure(e)
         }
     }
 
@@ -97,7 +102,8 @@ class StockTransferRepositoryImpl(
                     userId = transfer.initiatingUser.id.local,
                     reason = StockAdjustmentReason.INVOICE,
                     storeId = transfer.fromStore.id.local,
-                    invoiceId = transfer.id,
+                    invoiceId = null,
+                    transactionId = transfer.id,
                     isSynced = false,
                     notes = null,
                 )
@@ -112,7 +118,8 @@ class StockTransferRepositoryImpl(
                     userId = transfer.initiatingUser.id.local,
                     reason = StockAdjustmentReason.INVOICE,
                     storeId = transfer.toStore.id.local,
-                    invoiceId = transfer.id,
+                    invoiceId = null,
+                    transactionId = transfer.id,
                     isSynced = false,
                     notes = null,
                 )
@@ -253,12 +260,20 @@ class StockTransferRepositoryImpl(
                 },
             )
 
-            val notificationDto = NotificationDto(
-                userId = receivingUser.id.serverStringId,
-                message = "New transfer from ${fromStore.name.enName} needs your approval.",
-                relatedTransferId = transferDto.id
-            )
-            supabaseClient.postgrest["notifications"].insert(notificationDto)
+//            val notificationDto = NotificationDto(
+//                userId = receivingUser.id.serverStringId,
+//                message = "New transfer from ${fromStore.name.enName} needs your approval.",
+//                relatedTransferId = transferDto.id
+//            )
+//            supabaseClient.postgrest["notifications"].insert(notificationDto)
+
+            receivingUser.fcmToken?.let {
+                sendPushNotification(
+                    notificationTitle = "New transfer from ${fromStore.name.enName} needs your approval.",
+                    notificationBody = "Tap to open the app.",
+                    recipientFcmToken = it
+                )
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -341,6 +356,37 @@ class StockTransferRepositoryImpl(
     override suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit> {
         return runCatching {
             stockTransferDao.insertStockTransferItems(entities)
+        }
+    }
+
+
+    private suspend fun sendPushNotification(
+        recipientFcmToken: String,
+        notificationTitle: String,
+        notificationBody: String
+    ) {
+        try {
+            // 1. Create the JSON payload to send to the function
+            // The keys ("token", "title", "body") MUST match what your Edge Function expects
+            val payload = buildJsonObject {
+                put("token", recipientFcmToken)
+                put("title", notificationTitle)
+                put("body", notificationBody)
+            }
+
+            // 2. Invoke the function by its name
+            println("Invoking function 'send-transfer-notification'...")
+            supabaseClient.functions.invoke(
+                function = "send-transfer-notification", body = payload
+            )
+
+            // 3. Handle the success case
+            println("Function invoked successfully! FCM should be sending the notification.")
+
+        } catch (e: Exception) {
+            // 4. Handle any errors
+            e.printStackTrace()
+            println("Error invoking function: ${e.message}")
         }
     }
 }

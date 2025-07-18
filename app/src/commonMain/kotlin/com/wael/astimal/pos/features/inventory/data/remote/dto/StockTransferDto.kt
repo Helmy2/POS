@@ -29,13 +29,6 @@ data class StockTransferItemDto(
     val quantity: Double,
 )
 
-@Serializable
-data class NotificationDto(
-    @SerialName("user_id") val userId: String,
-    val message: String,
-    @SerialName("related_transfer_id") val relatedTransferId: String
-)
-
 fun StockTransferDto.toEntity(
     fromStoreId: Long,
     toStoreId: Long,

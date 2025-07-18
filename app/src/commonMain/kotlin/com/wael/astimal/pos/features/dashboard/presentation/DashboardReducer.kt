@@ -22,6 +22,9 @@ class DashboardReducer : Reducer<DashboardContract.State, DashboardContract.Even
                     kpiData = calculateKpi(event.sales)
                 ) to null
 
+            is DashboardContract.Event.HavePendingTransferChanged ->
+                previousState.copy(havePendingTransfer = event.havePendingTransfer) to null
+
             is DashboardContract.Event.RefreshDataClicked -> previousState to null
         }
     }

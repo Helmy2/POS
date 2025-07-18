@@ -42,7 +42,7 @@ sealed class Destination {
     data object StockManagement : Destination()
 
     @Serializable
-    data object StockTransfer : Destination()
+    data class StockTransfer(val openSearch: Boolean = false) : Destination()
 
 
     // Management Feature Graph

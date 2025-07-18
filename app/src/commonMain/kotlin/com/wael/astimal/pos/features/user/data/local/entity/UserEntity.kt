@@ -36,6 +36,7 @@ data class UserEntity(
     val avatarUrl: String?,
     val role: UserRole,
     val isActive: Boolean,
+    val fcmToken: String?,
 )
 
 /**
@@ -54,7 +55,8 @@ fun UserEntity.toDomain(): User {
         avatarUrl = avatarUrl,
         isSynced = isSynced,
         updatedAt = updatedAt,
-        createdAt = createdAt
+        createdAt = createdAt,
+        fcmToken = fcmToken
     )
 }
 
@@ -65,6 +67,9 @@ fun User.toEntity(): UserEntity {
     return UserEntity(
         id = id.local,
         supabaseId = id.serverStringId,
+        isSynced = isSynced,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
         username = name,
         arName = localizedName.arName,
         enName = localizedName.enName,
@@ -73,8 +78,6 @@ fun User.toEntity(): UserEntity {
         avatarUrl = avatarUrl,
         role = if (isAdmin) UserRole.ADMIN else UserRole.EMPLOYEE,
         isActive = true,
-        isSynced = isSynced,
-        createdAt = createdAt,
-        updatedAt = updatedAt
+        fcmToken = fcmToken
     )
 }

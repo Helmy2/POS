@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,8 +62,16 @@ import pos.app.generated.resources.you_have_pending_transfer
 fun StockTransferRoute(
     modifier: Modifier = Modifier,
     viewModel: StockTransferViewModel = koinViewModel(),
+    openSearch: Boolean,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+
+    LaunchedEffect(key1 = openSearch) {
+        if (openSearch) {
+            viewModel.processEvent(StockTransferContract.Event.SearchActiveChanged(true))
+        }
+    }
 
     StockTransferScreen(
         state = state, onEvent = viewModel::processEvent, modifier = modifier

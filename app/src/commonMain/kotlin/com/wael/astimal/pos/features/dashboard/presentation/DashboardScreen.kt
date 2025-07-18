@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +60,7 @@ import pos.app.generated.resources.sales_analytics
 import pos.app.generated.resources.settings
 import pos.app.generated.resources.total_revenue
 import pos.app.generated.resources.total_sales
+import pos.app.generated.resources.you_have_pending_transfer
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -65,16 +68,24 @@ import kotlin.math.abs
 
 @Composable
 fun DashboardRoute(
-    viewModel: DashboardViewModel = koinViewModel()
+    viewModel: DashboardViewModel = koinViewModel(),
+    onNavigateToStockTransfer: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    DashboardScreen(state = state, onEvent = viewModel::processEvent)
+
+    DashboardScreen(
+        state = state,
+        onEvent = viewModel::processEvent,
+        onNavigateToStockTransfer = onNavigateToStockTransfer
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    state: DashboardContract.State, onEvent: (DashboardContract.Event) -> Unit
+    state: DashboardContract.State,
+    onEvent: (DashboardContract.Event) -> Unit,
+    onNavigateToStockTransfer: () -> Unit,
 ) {
     var showSetting by rememberSaveable {
         mutableStateOf(false)
@@ -96,6 +107,17 @@ fun DashboardScreen(
             })
         }
     ) {
+        AnimatedVisibility(state.havePendingTransfer) {
+            Text(
+                text = stringResource(Res.string.you_have_pending_transfer),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable {
+                        onNavigateToStockTransfer()
+                    }.padding(8.dp),
+                color = MaterialTheme.colorScheme.error
+            )
+        }
         TimePeriodSelector(
             selectedPeriod = state.selectedTimePeriod,
             onPeriodSelected = { onEvent(DashboardContract.Event.TimePeriodSelected(it)) },

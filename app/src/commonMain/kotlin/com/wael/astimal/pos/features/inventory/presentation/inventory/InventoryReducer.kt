@@ -32,7 +32,7 @@ class InventoryReducer : Reducer<InventoryContract.State, InventoryContract.Even
                         Res.string.stock_management
                     ),
                     InventoryContract.InventoryItem(
-                        Destination.StockTransfer,
+                        Destination.StockTransfer(),
                         Res.string.stock_transfer
                     ),
                 )

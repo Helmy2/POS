@@ -17,6 +17,7 @@ data class User(
     val isAdmin: Boolean,
     val isEmployee: Boolean,
     val avatarUrl: String?,
+    val fcmToken: String?,
     override val isSynced: Boolean,
     override val createdAt: Long,
     override val updatedAt: Long,

@@ -23,6 +23,8 @@ data class ProfileDto(
     val avatarUrl: String?,
     @SerialName("is_admin")
     val isAdmin: Boolean,
+    @SerialName("fcm_token")
+    val fcmToken: String?,
 )
 
 /**
@@ -30,22 +32,22 @@ data class ProfileDto(
  */
 fun ProfileDto.toEntity(): UserEntity {
     val role = when {
-        this.isAdmin -> UserRole.ADMIN
+        isAdmin -> UserRole.ADMIN
         else -> UserRole.EMPLOYEE
     }
     return UserEntity(
-        id = 0L,
-        supabaseId = this.id,
-        username = this.username,
-        enName = this.enName,
-        arName = this.arName,
-        email = null,
-        phone = null,
-        avatarUrl = this.avatarUrl,
-        role = role,
-        isActive = true,
+        supabaseId = id,
         isSynced = true,
         createdAt = 0,
-        updatedAt = this.updatedAt.parseIsoTimestamp() ?: System.currentTimeMillis()
+        updatedAt = updatedAt.parseIsoTimestamp() ?: System.currentTimeMillis(),
+        username = username,
+        arName = arName,
+        enName = enName,
+        email = null,
+        phone = null,
+        avatarUrl = avatarUrl,
+        role = role,
+        isActive = true,
+        fcmToken = fcmToken
     )
 }

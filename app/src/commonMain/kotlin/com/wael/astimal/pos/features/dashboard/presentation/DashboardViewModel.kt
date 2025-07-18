@@ -5,10 +5,12 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.error_loading_dashboard_data
 import java.time.LocalDate
@@ -16,7 +18,8 @@ import java.time.ZoneOffset
 
 class DashboardViewModel(
     private val invoiceRepository: InvoiceRepository,
-    private val snackbarController: SnackbarController
+    private val snackbarController: SnackbarController,
+    private val stockTransferRepository: StockTransferRepository
 ) : BaseViewModel<DashboardContract.State, DashboardContract.Event, Nothing>(
     reducer = DashboardReducer(),
     initialState = DashboardContract.State()
@@ -43,6 +46,16 @@ class DashboardViewModel(
 
     private fun loadDashboardData() {
         setState(DashboardContract.Event.LoadingData)
+
+        viewModelScope.launch {
+            stockTransferRepository.getPendingTransfersForApproval().collect { pendingTransfers ->
+                setState(
+                    DashboardContract.Event.HavePendingTransferChanged(
+                        pendingTransfers.isNotEmpty()
+                    )
+                )
+            }
+        }
 
         val now = LocalDate.now()
         val (startDate, endDate) = when (state.value.selectedTimePeriod) {
