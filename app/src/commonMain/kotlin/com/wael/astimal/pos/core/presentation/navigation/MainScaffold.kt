@@ -25,15 +25,25 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.notification.NotifierManager.Listener
+import com.mmk.kmpnotifier.notification.PayloadData
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.NavigationEvent
 import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.getString
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.isTopLevelRoute
+import com.wael.astimal.pos.features.user.domain.repository.NotificationRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 
 @Composable
@@ -71,6 +81,10 @@ fun MainScaffold(
                 event.action?.action?.invoke()
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        initializeNotifications()
     }
 
     val navigationController: NavigationController = koinInject()
@@ -133,4 +147,53 @@ fun MainScaffold(
             )
         }
     }
+}
+
+object AppKoinComponent : KoinComponent {
+    val notificationRepository: NotificationRepository by inject()
+    val snackbarController: SnackbarController by inject()
+}
+
+/**
+ * Initializes KMPNotifier and sets up listeners for tokens and messages.
+ */
+fun initializeNotifications() {
+    // Initialize Napier for logging if you haven't already
+//    Napier.base(DebugAntilog())
+
+
+    // Create a coroutine scope for background tasks
+    val scope = CoroutineScope(Dispatchers.Default)
+
+    // Listen for new push notification tokens and save them to Supabase
+    NotifierManager.addListener(
+        object : Listener {
+            override fun onNewToken(token: String) {
+                super.onNewToken(token)
+                println("New FCM token received: $token")
+                scope.launch {
+                    AppKoinComponent.notificationRepository.saveFcmToken(token)
+                        .onFailure {
+                            println("Failed to save FCM token")
+                        }
+                }
+            }
+
+            override fun onPushNotificationWithPayloadData(
+                title: String?,
+                body: String?,
+                data: PayloadData
+            ) {
+                super.onPushNotificationWithPayloadData(title, body, data)
+                println("Received push notification with payload data: $data")
+                scope.launch {
+                    // Process the payload data as needed
+                    val message = body ?: "You have a new notification"
+                    AppKoinComponent.snackbarController.sendEvent(
+                        SnackbarEvent(StringResource.Dynamic(message))
+                    )
+                }
+            }
+        }
+    )
 }

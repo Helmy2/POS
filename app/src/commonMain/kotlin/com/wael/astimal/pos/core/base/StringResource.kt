@@ -22,6 +22,8 @@ sealed interface StringResource {
         val name: LocalizedString?,
         val formate: (resource: String, name: String) -> String
     ) : StringResource
+
+    class Dynamic(val value: String) : StringResource
 }
 
 
@@ -34,6 +36,8 @@ fun stringResource(resource: StringResource): String {
             stringResource(resource.resource),
             resource.name?.displayName(language) ?: stringResource(Res.string.unknown_name)
         )
+
+        is StringResource.Dynamic -> resource.value
     }
 }
 
@@ -45,5 +49,6 @@ suspend fun getString(resource: StringResource): String {
             getString(resource.resource),
             resource.name?.displayName(language) ?: getString(Res.string.unknown_name)
         )
+        is StringResource.Dynamic -> resource.value
     }
 }

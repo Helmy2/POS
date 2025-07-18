@@ -6,7 +6,9 @@ import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.data.local.SettingsManagerImpl
 import com.wael.astimal.pos.features.user.data.remote.ProfileApiService
 import com.wael.astimal.pos.features.user.data.remote.ProfileApiServiceImpl
+import com.wael.astimal.pos.features.user.data.repository.NotificationRepositoryImpl
 import com.wael.astimal.pos.features.user.data.repository.UserRepositoryImpl
+import com.wael.astimal.pos.features.user.domain.repository.NotificationRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import com.wael.astimal.pos.features.user.presentation.create.CreateEmployeeViewModel
 import com.wael.astimal.pos.features.user.presentation.login.LoginViewModel
@@ -25,6 +27,7 @@ val userModule = module {
 
     singleOf(::ProfileApiServiceImpl) { bind<ProfileApiService>() }
     singleOf(::SettingsManagerImpl) { bind<SettingsManager>() }
+    singleOf(::NotificationRepositoryImpl) { bind<NotificationRepository>() }
 
     single<UserRepository> {
         UserRepositoryImpl(
