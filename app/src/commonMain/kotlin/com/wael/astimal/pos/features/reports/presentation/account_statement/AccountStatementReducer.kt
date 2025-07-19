@@ -32,10 +32,19 @@ class AccountStatementReducer :
                 isStatementLoading = false, transactions = event.transactions
             ) to null
 
-            is AccountStatementContract.Event.GenerateStatementPdfSuccessfully -> {
+            is AccountStatementContract.Event.PdfGenerationFinished -> {
                 previousState.copy(
-                    selectedPartner = null, transactions = emptyList(), isStatementLoading = false
-                ) to AccountStatementContract.Effect.SharePdf(event.fileUri)
+                    selectedPartner = null, transactions = emptyList(), isStatementLoading = false,
+                    pdfHtmlToGenerate = null, isPdfGenerating = false
+                ) to null
+            }
+
+            is AccountStatementContract.Event.PdfGenerationSuccessFul -> {
+                previousState.copy(pdfHtmlToGenerate = event.html, isPdfGenerating = false) to null
+            }
+
+            is AccountStatementContract.Event.IsPdfGeneratingChanged -> {
+                previousState.copy(isPdfGenerating = event.isGenerating) to null
             }
 
             is AccountStatementContract.Event.ExportToPdfClicked, is AccountStatementContract.Event.NavigateBack -> previousState to null

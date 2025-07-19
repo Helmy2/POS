@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.BackHandler
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
@@ -48,6 +48,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButto
 import com.wael.astimal.pos.core.presentation.theme.CreditColor
 import com.wael.astimal.pos.core.presentation.theme.DebitColor
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
@@ -77,25 +78,6 @@ fun AccountStatementRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    ObserveEffect(viewModel.effect) { effect ->
-        when (effect) {
-            is AccountStatementContract.Effect.SharePdf -> {
-                //todo share pdf
-//                val shareIntent: Intent = Intent().apply {
-//                    action = Intent.ACTION_SEND
-//                    putExtra(Intent.EXTRA_STREAM, effect.fileUri)
-//                    type = "application/pdf"
-//                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//                }
-//                context.startActivity(
-//                    Intent.createChooser(
-//                        shareIntent, context.getString(Res.string.share_statement_pdf)
-//                    )
-//                )
-            }
-        }
-    }
-
     AccountStatementScreen(
         state = state,
         onEvent = viewModel::processEvent,
@@ -108,6 +90,13 @@ fun AccountStatementScreen(
     state: AccountStatementContract.State,
     onEvent: (AccountStatementContract.Event) -> Unit,
 ) {
+
+
+    PdfGeneratorEffect(
+        htmlContent = state.pdfHtmlToGenerate,
+        baseFileName = "statement_${state.selectedPartner?.name?.enName ?: "report"}",
+        onFinish = { onEvent(AccountStatementContract.Event.PdfGenerationFinished(it)) },
+    )
 
     BackHandler {
         if (state.selectedPartner != null) {
@@ -146,23 +135,31 @@ fun AccountStatementScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             BackButton({ onEvent(AccountStatementContract.Event.ClearPartnerSelection) })
                             Text(title, style = MaterialTheme.typography.titleLarge)
                             Spacer(modifier = Modifier.weight(1f))
-                            IconButton(onClick = { onEvent(AccountStatementContract.Event.ExportToPdfClicked) }) {
-                                Icon(
-                                    Icons.Default.Share,
-                                    contentDescription = stringResource(Res.string.export_as_pdf)
-                                )
+
+                            AnimatedContent(
+                                state.isPdfGenerating
+                            ) {
+                                if (it) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.padding(8.dp).size(24.dp)
+                                    )
+                                } else {
+                                    IconButton(onClick = { onEvent(AccountStatementContract.Event.ExportToPdfClicked) }) {
+                                        Icon(
+                                            Icons.Default.Share,
+                                            contentDescription = stringResource(Res.string.export_as_pdf)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-
                 }
             }
         }) {
@@ -227,9 +224,7 @@ fun StatementDetailView(
     isLoading: Boolean, transactions: List<AccountTransaction>, partner: BusinessPartner?
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(16.dp))
+        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
     ) {
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -263,9 +258,7 @@ fun StatementDetailView(
 @Composable
 fun TransactionListHeader() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -303,8 +296,7 @@ fun TransactionListHeader() {
 
 @Composable
 fun TransactionRow(transaction: AccountTransaction) {
-    val dateFormatter =
-        remember { DateTimeFormatter.ofPattern("dd MMM yy", Locale.getDefault()) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yy", Locale.getDefault()) }
     val isOpeningBalance = transaction.transactionType == TransactionType.OPENING_BALANCE
 
     val description = if (isOpeningBalance) {
@@ -314,14 +306,11 @@ fun TransactionRow(transaction: AccountTransaction) {
     }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (isOpeningBalance) MaterialTheme.colorScheme.secondaryContainer.copy(
-                    alpha = 0.2f
-                ) else Color.Transparent
-            )
-            .padding(horizontal = 8.dp, vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().background(
+            if (isOpeningBalance) MaterialTheme.colorScheme.secondaryContainer.copy(
+                alpha = 0.2f
+            ) else Color.Transparent
+        ).padding(horizontal = 8.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -392,9 +381,7 @@ fun StatementFooter(finalBalance: Double, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = "Info",
-                tint = summaryColor
+                imageVector = Icons.Default.Info, contentDescription = "Info", tint = summaryColor
             )
             Text(
                 text = summaryText,

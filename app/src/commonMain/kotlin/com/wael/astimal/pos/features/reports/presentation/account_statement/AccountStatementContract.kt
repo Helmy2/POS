@@ -12,27 +12,27 @@ object AccountStatementContract {
         val isPartnerListLoading: Boolean = true,
         val partners: List<BusinessPartner> = emptyList(),
         val isStatementLoading: Boolean = false,
-        val transactions: List<AccountTransaction> = emptyList()
+        val transactions: List<AccountTransaction> = emptyList(),
+        val pdfHtmlToGenerate: String? = null,
+        val isPdfGenerating: Boolean = false
     ) : Reducer.ViewState
 
     sealed interface Event : Reducer.ViewEvent {
         data class SearchQueryChanged(val query: String) : Event
         data class PartnerSelected(val partner: BusinessPartner) : Event
         data object ClearPartnerSelection : Event
-        data object ExportToPdfClicked : Event
         data class PartnersLoaded(val partners: List<BusinessPartner>) : Event
         data class StatementLoaded(val transactions: List<AccountTransaction>) : Event
         data object StatementLoading : Event
         data object PartnerListLoading : Event
 
-        // todo create pdf
-        data class GenerateStatementPdfSuccessfully(val fileUri: Any) : Event
-
+        data class PdfGenerationSuccessFul(val html: String) : Event
+        data object ExportToPdfClicked : Event
+        data class PdfGenerationFinished(val message: String) : Event
+        data class IsPdfGeneratingChanged(val isGenerating: Boolean) : Event
         data object NavigateBack : Event
     }
 
     sealed interface Effect : Reducer.ViewEffect {
-        // todo create pdf
-        data class SharePdf(val fileUri: Any) : Effect
     }
 }

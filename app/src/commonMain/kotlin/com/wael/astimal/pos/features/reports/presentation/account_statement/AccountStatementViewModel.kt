@@ -3,22 +3,27 @@ package com.wael.astimal.pos.features.reports.presentation.account_statement
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.util.PdfGenerator
+import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.reports.domain.repository.AccountStatementRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.error_generating_pdf
 
 class AccountStatementViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
     private val accountStatementRepository: AccountStatementRepository,
-    private val pdfGenerator: PdfGenerator,
+    private val htmlReportGenerator: HtmlReportGenerator,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController
 ) : BaseViewModel<AccountStatementContract.State, AccountStatementContract.Event, AccountStatementContract.Effect>(
@@ -35,12 +40,12 @@ class AccountStatementViewModel(
     override fun handleEvent(event: AccountStatementContract.Event) {
         when (event) {
             is AccountStatementContract.Event.SearchQueryChanged -> {
-                setState(event) // Update the query in the state immediately
+                setState(event)
                 searchPartners(event.query)
             }
 
             is AccountStatementContract.Event.PartnerSelected -> {
-                setState(event) // Set the selected partner immediately
+                setState(event)
                 loadAccountStatement(event.partner)
             }
 
@@ -59,6 +64,13 @@ class AccountStatementViewModel(
                 }
             }
 
+            is AccountStatementContract.Event.PdfGenerationFinished -> {
+                viewModelScope.launch {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.Dynamic(event.message)))
+                }
+                setState(event)
+            }
+
             else -> setState(event)
         }
     }
@@ -69,7 +81,7 @@ class AccountStatementViewModel(
         searchJob = viewModelScope.launch {
             setState(AccountStatementContract.Event.PartnerListLoading)
             businessPartnerRepository.getBusinessPartners(query)
-                .debounce(300) // Debounce to avoid excessive queries while typing
+                .debounce(300)
                 .collect { partners ->
                     setState(AccountStatementContract.Event.PartnersLoaded(partners))
                 }
@@ -86,22 +98,32 @@ class AccountStatementViewModel(
     }
 
     private fun exportStatementToPdf() {
-        val partner = state.value.selectedPartner
-        val transactions = state.value.transactions
-        if (partner == null || transactions.isEmpty()) {
-            return
-        }
-
         viewModelScope.launch {
-            // todo create pdf
-            val fileUri = pdfGenerator.generateStatementPdf(partner, transactions)
-//            if (fileUri != null) {
-//                setState(AccountStatementContract.Event.GenerateStatementPdfSuccessfully(fileUri))
-//            } else {
-//                snackbarController.sendEvent(
-//                    SnackbarEvent(StringResource.FromResource(Res.string.error_creating_pdf))
-//                )
-//            }
+            val partner = state.value.selectedPartner
+            val transactions = state.value.transactions
+            if (partner == null || transactions.isEmpty()) {
+                snackbarController.sendEvent(
+                    SnackbarEvent(StringResource.FromResource(Res.string.error_generating_pdf))
+                )
+                return@launch
+            }
+            try {
+                setState(AccountStatementContract.Event.IsPdfGeneratingChanged(true))
+                delay(500)
+                val html = htmlReportGenerator.createStatementHtml(
+                    partner = partner,
+                    transactions = state.value.transactions
+                )
+                setState(AccountStatementContract.Event.PdfGenerationSuccessFul(html))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                snackbarController.sendEvent(
+                    SnackbarEvent(StringResource.FromResource(Res.string.error_generating_pdf))
+                )
+                setState(
+                    AccountStatementContract.Event.IsPdfGeneratingChanged(false)
+                )
+            }
         }
     }
 }

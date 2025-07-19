@@ -8,8 +8,6 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.core.util.ConnectivityImp
 import com.wael.astimal.pos.core.util.PREFERENCES_NAME
-import com.wael.astimal.pos.core.util.PdfGenerator
-import com.wael.astimal.pos.core.util.PdfGeneratorImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -21,8 +19,6 @@ import kotlinx.serialization.json.Json
 import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidApplication
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.bind
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 actual val platformModule: Module = module {
@@ -56,6 +52,4 @@ actual val platformModule: Module = module {
             }
         }
     }
-
-    singleOf(::PdfGeneratorImpl) { bind<PdfGenerator>() }
 }

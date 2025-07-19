@@ -373,4 +373,5 @@
     <string name="sync_success">Sync success</string>
     <string name="sync_error">Sync error</string>
     <string name="sync">Sync</string>
+    <string name="error_generating_pdf">Error generating PDF</string>
 </resources>

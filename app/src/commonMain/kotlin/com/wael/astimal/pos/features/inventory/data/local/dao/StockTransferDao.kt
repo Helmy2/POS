@@ -91,9 +91,9 @@ interface StockTransferDao {
     suspend fun hardDeleteInvoiceItems(id: String)
 
     @Query("UPDATE stock_transfers SET status = :status WHERE localId = :transferId")
-    fun setTransferApprovalStatus(transferId: String, status: StockTransferStatus)
+    suspend fun setTransferApprovalStatus(transferId: String, status: StockTransferStatus)
 
     @Transaction
     @Query("SELECT * FROM stock_transfers WHERE localId = :transferId")
-    fun getStockTransfer(transferId: String): StockTransferWithItemsAndDetails
+    suspend fun getStockTransfer(transferId: String): StockTransferWithItemsAndDetails
 }

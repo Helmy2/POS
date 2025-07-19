@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.di
 
+import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.reports.data.repository.AccountStatementRepositoryImpl
 import com.wael.astimal.pos.features.reports.domain.repository.AccountStatementRepository
 import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementViewModel
@@ -11,6 +12,7 @@ import org.koin.dsl.module
 
 val reportsModule = module {
     singleOf(::AccountStatementRepositoryImpl) { bind<AccountStatementRepository>() }
+    singleOf(::HtmlReportGenerator)
 
     viewModelOf(::AccountStatementViewModel)
     viewModelOf(::ReportsViewModel)
