@@ -36,7 +36,7 @@ fun ProfileDto.toEntity(): UserEntity {
         else -> UserRole.EMPLOYEE
     }
     return UserEntity(
-        supabaseId = id,
+        id = id,
         isSynced = true,
         createdAt = 0,
         updatedAt = updatedAt.parseIsoTimestamp() ?: System.currentTimeMillis(),

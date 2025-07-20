@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
@@ -124,15 +123,15 @@ class ProductViewModel(
             setState(ProductContract.Event.LoadingStarted)
             viewModelScope.launch {
                 val productToSave = Product(
-                    id = currentState.selectedProduct?.id ?: Id.new,
+                    id = currentState.selectedProduct?.id ?: "",
                     name = LocalizedString(currentState.inputArName, currentState.inputEnName),
                     averagePrice = currentState.inputPurchasePrice.toDouble(),
                     sellingPrice = currentState.inputSellingPrice.toDouble(),
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
-                    category = currentState.dropdownData.categories.find { it.id.local == currentState.selectedCategoryId }!!,
-                    mainProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedMainUnitId }!!,
-                    subProductUnit = currentState.dropdownData.units.find { it.id.local == currentState.selectedSubUnitId },
+                    category = currentState.dropdownData.categories.find { it.id == currentState.selectedCategoryId }!!,
+                    mainProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedMainUnitId }!!,
+                    subProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedSubUnitId },
                     createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
                     purchasePrice = currentState.inputPurchasePrice.toDouble(),
                     // todo handle barcode

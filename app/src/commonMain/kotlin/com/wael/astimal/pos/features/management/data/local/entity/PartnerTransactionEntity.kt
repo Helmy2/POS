@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
@@ -30,15 +29,14 @@ import pos.app.generated.resources.payment
     )], indices = [Index("partnerLocalId"), Index("employeeLocalId")]
 )
 data class PartnerTransactionEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: String?,
+    @PrimaryKey
+    val localId: String,
     var isSynced: Boolean = false,
     val createdAt: Long = Clock.now(),
     val updatedAt: Long = Clock.now(),
     var isDeletedLocally: Boolean = false,
-    val partnerLocalId: Long,
-    val employeeLocalId: Long,
+    val partnerLocalId: String,
+    val employeeLocalId: String,
     val invoiceId: String?,
     val transactionType: TransactionType,
     val notes: String?,
@@ -87,7 +85,7 @@ fun PartnerTransactionWithDetails.toDomain(): ReceivePayVoucher {
         ?: throw IllegalStateException("Voucher #${voucher.localId} must have a creator employee.")
 
     return ReceivePayVoucher(
-        id = Id(voucher.localId, serverStringId = voucher.serverId),
+        id = voucher.localId,
         amount = voucher.balance,
         partner = partner?.toDomain() ?: throw IllegalStateException(
             "Voucher #${voucher.localId} must have a partner."

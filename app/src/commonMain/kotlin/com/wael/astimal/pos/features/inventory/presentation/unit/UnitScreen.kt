@@ -67,7 +67,7 @@ fun UnitScreen(
                 list = state.units,
                 onItemClick = { unit -> onEvent(UnitContract.Event.UnitSelected(unit)) },
                 label = { Label(it.name.displayName(language)) },
-                isSelected = { unit -> unit.id.local == state.selectedUnit?.id?.local },
+                isSelected = { unit -> unit.id == state.selectedUnit?.id },
             )
         },
         mainContent = {

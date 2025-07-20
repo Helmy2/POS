@@ -28,18 +28,14 @@ data class InvoiceDto(
     @SerialName("payment_method")
     val paymentMethod: String,
     @SerialName("store_id")
-    val storeId: Long,
+    val storeId: String,
     @SerialName("employee_id")
     val employeeId: String,
     @SerialName("business_partner_id")
     val partnerId: String,
 )
 
-fun InvoiceDto.toEntity(
-    partnerId: Long,
-    employeeId: Long,
-    storeId: Long
-): InvoiceEntity {
+fun InvoiceDto.toEntity(): InvoiceEntity {
     return InvoiceEntity(
         supabaseId = id,
         isSynced = true,

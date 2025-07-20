@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
@@ -28,7 +26,7 @@ enum class PartnerType {
 }
 
 data class BusinessPartner(
-    override val id: Id,
+    val id: String,
 
     val name: LocalizedString,
     val address: String,
@@ -36,14 +34,13 @@ data class BusinessPartner(
     val responsibleEmployee: User,
     var type: PartnerType,
 
-    override val isSynced: Boolean,
-    override val createdAt: Long,
-    override val updatedAt: Long
-) : Item
+    val isSynced: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long
+)
 
 fun BusinessPartner.toEntity() = BusinessPartnerEntity(
-    serverId = id.serverStringId,
-    localId = id.local,
+    localId = id,
     arName = name.arName ?: "",
     enName = name.enName ?: "",
     phone = phone,
@@ -51,11 +48,11 @@ fun BusinessPartner.toEntity() = BusinessPartnerEntity(
     type = type,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    responsibleEmployeeLocalId = responsibleEmployee.id.local
+    responsibleEmployeeLocalId = responsibleEmployee.id
 )
 
 fun BusinessPartner.toDto() = BusinessPartnerDto(
-    id = id.serverStringId!!,
+    id = id,
     arName = name.arName ?: "",
     enName = name.enName ?: "",
     address = address,
@@ -63,5 +60,5 @@ fun BusinessPartner.toDto() = BusinessPartnerDto(
     partnerType = type.name.lowercase(),
     createdAt = createdAt.toDateString(),
     updatedAt = updatedAt.toDateString(),
-    responsibleId = responsibleEmployee.id.serverStringId!!
+    responsibleId = responsibleEmployee.id
 )

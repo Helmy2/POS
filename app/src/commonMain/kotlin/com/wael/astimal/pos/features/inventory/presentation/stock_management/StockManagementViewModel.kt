@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
@@ -139,8 +138,8 @@ class StockManagementViewModel(
             }
 
             val currentQuantity = stockRepository.getStockQuantityFlow(
-                adjustmentStore.id.local,
-                adjustmentProduct.id.local
+                adjustmentStore.id,
+                adjustmentProduct.id
             ).first()
 
             if (currentQuantity + quantityChange < 0) {
@@ -149,7 +148,7 @@ class StockManagementViewModel(
             }
 
             val adjustment = StockAdjustment(
-                id = state.value.selectedAdjustment?.id ?: Id.new,
+                id = state.value.selectedAdjustment?.id ?: "",
                 store = adjustmentStore,
                 product = adjustmentProduct,
                 user = currentUser,

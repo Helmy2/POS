@@ -11,8 +11,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class StockTransferDto(
     val id: String,
-    @SerialName("from_store_id") val fromStoreId: Long,
-    @SerialName("to_store_id") val toStoreId: Long,
+    @SerialName("from_store_id") val fromStoreId: String,
+    @SerialName("to_store_id") val toStoreId: String,
     @SerialName("initiating_user_id") val initiatingUserId: String,
     @SerialName("receiving_user_id") val receivingUserId: String,
     val notes: String?,
@@ -25,16 +25,11 @@ data class StockTransferDto(
 data class StockTransferItemDto(
     val id: String,
     @SerialName("transfer_id") val transferId: String,
-    @SerialName("product_id") val productId: Long,
+    @SerialName("product_id") val productId: String,
     val quantity: Double,
 )
 
-fun StockTransferDto.toEntity(
-    fromStoreId: Long,
-    toStoreId: Long,
-    initiatingUserId: Long,
-    receivingUserId: Long
-): StockTransferEntity {
+fun StockTransferDto.toEntity(): StockTransferEntity {
     return StockTransferEntity(
         localId = id,
         fromStoreId = fromStoreId,
@@ -49,13 +44,11 @@ fun StockTransferDto.toEntity(
     )
 }
 
-fun StockTransferItemDto.toEntity(
-    productLocalId: Long,
-): StockTransferItemEntity {
+fun StockTransferItemDto.toEntity(): StockTransferItemEntity {
     return StockTransferItemEntity(
         localId = id,
         stockTransferLocalId = transferId,
-        productLocalId = productLocalId,
+        productLocalId = productId,
         quantity = quantity,
     )
 }

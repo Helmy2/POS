@@ -9,5 +9,5 @@ interface UnitRepository {
     suspend fun saveUnit(unit: ProductUnit): Result<Long>
     suspend fun deleteUnit(unit: ProductUnit): Result<Unit>
     suspend fun syncWithServer(units: List<UnitEntity>): Result<Unit>
-    suspend fun getUnitByServerId(id: Long): Result<ProductUnit>
+    suspend fun getUnitByServerId(id: String): Result<ProductUnit>
 }

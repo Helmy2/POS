@@ -22,8 +22,8 @@ class EmployeeTransactionRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveManualPayment(transaction: EmployeeTransaction): Result<Unit> {
         return runCatching {
-            val toInsert = if (transaction.id.serverStringId == null) {
-                transaction.toEntity().copy(serverId = Uuid.random().toString())
+            val toInsert = if (transaction.id == "") {
+                transaction.toEntity().copy(localId = Uuid.random().toString())
             } else {
                 transaction.toEntity()
             }
@@ -31,7 +31,7 @@ class EmployeeTransactionRepositoryImpl(
         }
     }
 
-    override suspend fun deleteManualPayment(transactionId: Long): Result<Unit> {
+    override suspend fun deleteManualPayment(transactionId: String): Result<Unit> {
         return try {
             employeeFinancesDao.softDeleteEmployeeTransaction(transactionId)
             Result.success(Unit)
@@ -60,15 +60,8 @@ class EmployeeTransactionRepositoryImpl(
 
     override suspend fun syncWithServer(entities: List<EmployeeTransactionEntity>): Result<Unit> {
         return runCatching {
-            entities.map { serverEntity ->
-                val existingLocal = employeeFinancesDao.getTransactionBySeverId(
-                    serverEntity.serverId ?: throw Exception("serverId is null")
-                )
-
-                serverEntity.copy(
-                    localId = existingLocal?.localId ?: 0L,
-                )
-            }.forEach {
+            employeeFinancesDao.deleteAllTransactions()
+            entities.forEach {
                 employeeFinancesDao.insertOrUpdate(it)
             }
         }

@@ -78,8 +78,8 @@ class UserRepositoryImpl(
     private suspend fun syncProfile(profileDto: ProfileDto): UserEntity {
         val existingUser = userDao.getUserBySupabaseId(profileDto.id).first()
         val userEntity = profileDto.toEntity().copy(
-            id = existingUser?.id ?: 0L,
-            createdAt = existingUser?.createdAt ?: profileDto.toEntity().createdAt
+            id = existingUser?.id!!,
+            createdAt = existingUser.createdAt
         )
         userDao.upsert(userEntity)
         return userEntity
@@ -154,14 +154,7 @@ class UserRepositoryImpl(
 
     override suspend fun syncWithServer(users: List<UserEntity>): Result<Unit> {
         return runCatching {
-            users.map {
-                val existingEntity = userDao.getUserBySupabaseId(
-                    it.supabaseId ?: throw Exception("Supabase ID not found")
-                ).first()
-                it.copy(id = existingEntity?.id ?: 0L)
-            }.also {
-                userDao.upsertAll(it)
-            }
+            userDao.upsertAll(users)
         }
     }
 }

@@ -116,7 +116,7 @@ fun ReceivePayVoucherScreen(
             contentPadding = PaddingValues(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(filteredVouchers, key = { it.id.local }) { voucher ->
+            items(filteredVouchers, key = { it.id }) { voucher ->
                 VoucherItem(
                     voucher = voucher,
                     canEdit = state.canUserEdit && voucher.transactionType != TransactionType.INVOICE,
@@ -155,7 +155,7 @@ fun VoucherEditDialog(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.transaction_type),
                     items = TransactionType.getTypesForDropdown(),
-                    selectedItemId = dialogState.transactionType.ordinal.toLong(),
+                    selectedItemId = dialogState.transactionType.ordinal.toString(),
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogTransactionTypeSelected(
@@ -164,7 +164,7 @@ fun VoucherEditDialog(
                         )
                     },
                     itemToDisplayString = { stringResource(it.getStringRes()) },
-                    itemToId = { it.ordinal.toLong() },
+                    itemToId = { it.ordinal.toString() },
                     enabled = state.canUserEdit
                 )
 
@@ -176,12 +176,12 @@ fun VoucherEditDialog(
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                it.id.local
+                                it.id
                             )
                         )
                     },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.id },
                     onClearItem = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogPartnerSelected(
@@ -195,7 +195,7 @@ fun VoucherEditDialog(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.is_receive_money),
                     items = listOf(true, false),
-                    selectedItemId = if (dialogState.isReceiveMoney) 0L else 1L,
+                    selectedItemId = dialogState.isReceiveMoney.toString(),
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogIsReceiveMoneyChanged(
@@ -208,7 +208,7 @@ fun VoucherEditDialog(
                             Res.string.pay_money
                         )
                     },
-                    itemToId = { if (it) 0L else 1L },
+                    itemToId = { it.toString() },
                     enabled = state.canUserEdit
                 )
 

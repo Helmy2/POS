@@ -101,6 +101,8 @@ fun AccountStatementScreen(
     BackHandler {
         if (state.selectedPartner != null) {
             onEvent(AccountStatementContract.Event.ClearPartnerSelection)
+        } else {
+            onEvent(AccountStatementContract.Event.NavigateBack)
         }
     }
 
@@ -201,7 +203,7 @@ fun PartnerSelectionList(
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(partners, key = { it.id.local }) { partner ->
+                items(partners, key = { it.id }) { partner ->
                     ListItem(
                         headlineContent = {
                             Text(

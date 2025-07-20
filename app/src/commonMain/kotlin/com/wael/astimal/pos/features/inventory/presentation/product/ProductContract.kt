@@ -29,9 +29,9 @@ object ProductContract {
         val inputPurchasePrice: String = "",
         val inputSellingPrice: String = "",
         val inputSubUnitsPerMainUnit: String = "1",
-        val selectedCategoryId: Long? = null,
-        val selectedMainUnitId: Long? = null,
-        val selectedSubUnitId: Long? = null,
+        val selectedCategoryId: String? = null,
+        val selectedMainUnitId: String? = null,
+        val selectedSubUnitId: String? = null,
         val showDeleteDialog: Boolean = false
 
     ) : Reducer.ViewState {
@@ -63,9 +63,9 @@ object ProductContract {
         data class PurchasePriceChanged(val price: String) : Event
         data class SellingPriceChanged(val price: String) : Event
         data class SubUnitsPerMainUnitChanged(val value: String) : Event
-        data class CategoryIdChanged(val id: Long?) : Event
-        data class MainUnitIdChanged(val id: Long?) : Event
-        data class SubUnitIdChanged(val id: Long?) : Event
+        data class CategoryIdChanged(val id: String?) : Event
+        data class MainUnitIdChanged(val id: String?) : Event
+        data class SubUnitIdChanged(val id: String?) : Event
 
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event

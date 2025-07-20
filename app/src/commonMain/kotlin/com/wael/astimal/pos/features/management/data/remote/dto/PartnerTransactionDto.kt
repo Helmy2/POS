@@ -26,12 +26,10 @@ data class PartnerTransactionDto(
     val createdByUserId: String
 )
 
-fun PartnerTransactionDto.toEntity(
-    partnerLocalId: Long, userLocalId: Long
-): PartnerTransactionEntity {
+fun PartnerTransactionDto.toEntity(): PartnerTransactionEntity {
     return PartnerTransactionEntity(
-        serverId = id,
-        partnerLocalId = partnerLocalId,
+        localId = id,
+        partnerLocalId = partnerId,
         invoiceId = invoiceId,
         transactionType = TransactionType.valueOf(this.transactionType.uppercase()),
         balance = balance,
@@ -39,6 +37,6 @@ fun PartnerTransactionDto.toEntity(
         createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
         updatedAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
         isSynced = true,
-        employeeLocalId = userLocalId,
+        employeeLocalId = createdByUserId,
     )
 }

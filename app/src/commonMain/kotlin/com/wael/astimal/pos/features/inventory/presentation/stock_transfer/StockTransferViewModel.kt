@@ -81,7 +81,7 @@ class StockTransferViewModel(
 
             is StockTransferContract.Event.ItemProductChanged -> {
                 setState(event)
-                event.product?.let { observeStockForItem(event.editorId, it.id.local) }
+                event.product?.let { observeStockForItem(event.editorId, it.id) }
             }
 
             is StockTransferContract.Event.RemoveItem -> {
@@ -128,7 +128,7 @@ class StockTransferViewModel(
         val currentUser = userRepository.getCurrentUser() ?: return@launch
 
         val fromStore = if (!currentUser.isAdmin) {
-            storeRepository.getStoreByLocalId(currentUser.id.local).getOrNull()
+            storeRepository.getStoreByLocalId(currentUser.id).getOrNull()
         } else null
         setState(StockTransferContract.Event.UserLoaded(currentUser, fromStore))
     }
@@ -168,9 +168,9 @@ class StockTransferViewModel(
             }.launchIn(viewModelScope)
     }
 
-    private fun observeStockForItem(editorId: String, productId: Long) {
+    private fun observeStockForItem(editorId: String, productId: String) {
         stockObservationJobs[editorId]?.cancel()
-        val fromStoreId = state.value.currentTransferInput.fromStore?.id?.local ?: return
+        val fromStoreId = state.value.currentTransferInput.fromStore?.id ?: return
         stockObservationJobs[editorId] =
             stockRepository.getStockQuantityFlow(fromStoreId, productId)
                 .catch {
@@ -189,7 +189,7 @@ class StockTransferViewModel(
         stockObservationJobs.values.forEach { it.cancel() }
         stockObservationJobs.clear()
         state.value.currentTransferInput.items.forEach { item ->
-            item.product?.id?.local?.let { productId ->
+            item.product?.id?.let { productId ->
                 observeStockForItem(item.editorId, productId)
             }
         }
@@ -204,7 +204,7 @@ class StockTransferViewModel(
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.from_and_to_stores_must_be_selected)))
             return@launch
         }
-        if (currentInput.fromStore.id.local == currentInput.toStore.id.local) {
+        if (currentInput.fromStore.id == currentInput.toStore.id) {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.from_and_to_stores_cannot_be_the_same)))
             return@launch
         }

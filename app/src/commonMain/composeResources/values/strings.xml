@@ -374,4 +374,6 @@
     <string name="sync_error">Sync error</string>
     <string name="sync">Sync</string>
     <string name="error_generating_pdf">Error generating PDF</string>
+    <string name="commission_for_order">Commission for create order</string>
+    <string name="commission_for_responsibility">Commission for responsibility</string>
 </resources>

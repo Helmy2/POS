@@ -24,8 +24,8 @@ class PartnerTransactionRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return runCatching {
-            val toInsert = if (voucher.id.serverStringId == null) {
-                voucher.toEntity().copy(serverId = Uuid.random().toString())
+            val toInsert = if (voucher.id == "") {
+                voucher.toEntity().copy(localId = Uuid.random().toString())
             } else {
                 voucher.toEntity()
             }
@@ -35,7 +35,7 @@ class PartnerTransactionRepositoryImpl(
 
     override suspend fun deleteVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return try {
-            transactionDao.softDeleteTransactionById(voucher.id.local)
+            transactionDao.softDeleteTransactionById(voucher.id)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -44,15 +44,8 @@ class PartnerTransactionRepositoryImpl(
 
     override suspend fun syncWithServer(entities: List<PartnerTransactionEntity>): Result<Unit> {
         return runCatching {
-            entities.map { serverEntity ->
-                val existingLocal = transactionDao.getTransactionBySeverId(
-                    serverEntity.serverId ?: throw Exception("serverId is null")
-                )
-
-                serverEntity.copy(
-                    localId = existingLocal?.localId ?: 0L,
-                )
-            }.forEach {
+            transactionDao.deleteAll()
+            entities.forEach {
                 transactionDao.insertOrUpdate(it)
             }
         }

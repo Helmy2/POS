@@ -127,7 +127,7 @@ fun EditTransactionDialog(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.employee),
                     items = state.employeesForDropdown,
-                    selectedItemId = state.dialogState.selectedEmployee?.id?.local,
+                    selectedItemId = state.dialogState.selectedEmployee?.id,
                     onItemSelected = {
                         onEvent(
                             EmployeeAccountContract.Event.DialogEmployeeSelected(
@@ -136,14 +136,14 @@ fun EditTransactionDialog(
                         )
                     },
                     itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.id },
                     enabled = state.canUserEdit
                 )
 
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.transaction_type),
                     items = EmployeeTransactionType.entries,
-                    selectedItemId = state.dialogState.transactionType.ordinal.toLong(),
+                    selectedItemId = state.dialogState.transactionType.ordinal.toString(),
                     onItemSelected = {
                         onEvent(
                             EmployeeAccountContract.Event.DialogTransactionTypeSelected(
@@ -152,7 +152,7 @@ fun EditTransactionDialog(
                         )
                     },
                     itemToDisplayString = { stringResource(it.getStringResId()) },
-                    itemToId = { it.ordinal.toLong() },
+                    itemToId = { it.ordinal.toString() },
                     enabled = state.canUserEdit
                 )
                 LabeledTextField(
@@ -194,10 +194,10 @@ fun TransactionList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(top = 16.dp)
     ) {
-        items(transactions, key = { it.id.local }) { transaction ->
+        items(transactions, key = { it.id }) { transaction ->
             TransactionItem(
                 transaction = transaction,
-                canEdit = canEdit && transaction.type != EmployeeTransactionType.COMMISSION,
+                canEdit = canEdit && transaction.type != EmployeeTransactionType.COMMISSION_FOR_ORDER && transaction.type != EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY,
                 onEdit = { onEvent(EmployeeAccountContract.Event.EditTransactionClicked(transaction)) },
                 onDelete = {
                     onEvent(
@@ -232,11 +232,6 @@ fun TransactionItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = stringResource(transaction.type.getStringResId()),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
                     text = "%.2f".format(transaction.amount),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
@@ -258,6 +253,11 @@ fun TransactionItem(
                     }
                 }
             }
+            Text(
+                text = stringResource(transaction.type.getStringResId()),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
             // TODO add related invoice
 //            transaction.relatedCommission?.let { commission ->
 //                Text(

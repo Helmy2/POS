@@ -67,7 +67,7 @@ interface StockTransferDao {
     @Transaction
     @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally AND receivingUserId = :currentUserId AND status = :status")
     fun getPendingTransfersForApproval(
-        currentUserId: Long,
+        currentUserId: String,
         status: StockTransferStatus
     ): Flow<List<StockTransferWithItemsAndDetails>>
 
@@ -96,4 +96,10 @@ interface StockTransferDao {
     @Transaction
     @Query("SELECT * FROM stock_transfers WHERE localId = :transferId")
     suspend fun getStockTransfer(transferId: String): StockTransferWithItemsAndDetails
+
+    @Query("DELETE FROM stock_transfers")
+    suspend fun deleteAllStockTransfers()
+
+    @Query("DELETE FROM stock_transfer_items")
+    suspend fun deleteAllStockTransferItems()
 }

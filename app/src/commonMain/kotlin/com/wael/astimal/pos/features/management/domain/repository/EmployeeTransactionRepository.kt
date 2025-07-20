@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface EmployeeTransactionRepository {
     fun getAllTransaction(): Flow<List<EmployeeTransaction>>
     suspend fun saveManualPayment(transaction: EmployeeTransaction): Result<Unit>
-    suspend fun deleteManualPayment(transactionId: Long): Result<Unit>
+    suspend fun deleteManualPayment(transactionId: String): Result<Unit>
     suspend fun getUnsyncedTransactions(): Result<List<EmployeeTransaction>>
     suspend fun getAllDeletedTransactions(): Result<List<EmployeeTransaction>>
     suspend fun hardDeleteByServerId(serverId: String): Result<Unit>

@@ -105,7 +105,7 @@ fun OrderItemRow(
                     onItemSelected = { unit ->
                         onUpdateItemUnit(
                             item.tempEditorId,
-                            unit.id.local == item.product?.mainProductUnit?.id?.local
+                            unit.id == item.product?.mainProductUnit?.id
                         )
                     },
                     itemToDisplayString = { it.name.displayName(language) },

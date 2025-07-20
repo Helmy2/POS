@@ -58,9 +58,9 @@ data class InvoiceEntity(
     var orderDate: Long,
     var isDeletedLocally: Boolean = false,
     val invoiceType: InvoiceType,
-    val employeeId: Long,
-    val storeId: Long,
-    val businessPartnerId: Long?,
+    val employeeId: String,
+    val storeId: String,
+    val businessPartnerId: String?,
     val totalAmount: Double,
     val paidAmount: Double,
     val paymentMethod: PaymentMethod
@@ -93,7 +93,7 @@ data class InvoiceItemEntity(
     var isDeletedLocally: Boolean = false,
 
     val invoiceId: String,
-    val productId: Long,
+    val productId: String,
     val quantity: Double,
     val unitPrice: Double
 )
@@ -162,9 +162,7 @@ fun InvoiceWithItems.toDomain(): Invoice {
     )
 }
 
-fun InvoiceItemEntity.toDto(
-    productId: Long
-): ItemDto {
+fun InvoiceItemEntity.toDto(): ItemDto {
     return ItemDto(
         id = supabaseId,
         productId = productId,

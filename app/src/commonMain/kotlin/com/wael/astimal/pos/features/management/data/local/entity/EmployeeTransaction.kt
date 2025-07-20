@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
@@ -31,11 +30,10 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
     indices = [Index(value = ["employeeId"]), Index(value = ["createdByEmployeeId"])]
 )
 data class EmployeeTransactionEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long,
-    val serverId: String?,
+    @PrimaryKey val localId: String,
     val invoiceId: String?,
-    val employeeId: Long,
-    val createdByEmployeeId: Long,
+    val employeeId: String,
+    val createdByEmployeeId: String,
     val type: EmployeeTransactionType,
     val amount: Double,
     val notes: String?,
@@ -61,7 +59,7 @@ data class EmployeeTransactionWithDetailsEntity(
 
 fun EmployeeTransactionWithDetailsEntity.toDomain(): EmployeeTransaction {
     return EmployeeTransaction(
-        id = Id(transactionEntity.localId, serverStringId = transactionEntity.serverId),
+        id = transactionEntity.localId,
         employee = employee?.toDomain() ?: throw NullPointerException(),
         createdByEmployee = createdByEmployee?.toDomain() ?: throw NullPointerException(),
         type = transactionEntity.type,

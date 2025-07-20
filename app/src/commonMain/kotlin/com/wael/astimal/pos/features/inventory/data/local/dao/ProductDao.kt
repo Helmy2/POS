@@ -17,10 +17,10 @@ interface ProductDao {
 
     @Transaction
     @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
-    suspend fun getProductWithDetailsByLocalId(localId: Long): ProductWithDetails?
+    suspend fun getProductWithDetailsByLocalId(localId: String): ProductWithDetails?
 
     @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
-    suspend fun getProductByLocalId(localId: Long): ProductEntity?
+    suspend fun getProductByLocalId(localId: String): ProductEntity?
 
     @Transaction
     @Query(
@@ -33,16 +33,19 @@ interface ProductDao {
     )
     fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetails>>
 
-    @Query("SELECT * FROM products WHERE serverId = :serverId LIMIT 1")
-    suspend fun getProductByServerId(serverId: Long): ProductWithDetails?
+    @Query("SELECT * FROM products WHERE localId = :id LIMIT 1")
+    suspend fun getProductById(id: String): ProductWithDetails?
 
     @Query("DELETE FROM products WHERE localId = :localId")
-    suspend fun deleteProductByLocalId(localId: Long)
+    suspend fun deleteProductById(localId: String)
 
     @Query("UPDATE products SET  isSynced = 0, averagePurchasePrice = :newCost WHERE localId = :id")
-    suspend fun updateAverageCost(id: Long, newCost: Double)
+    suspend fun updateAverageCost(id: String, newCost: Double)
 
     @Transaction
     @Query("SELECT * FROM products WHERE isSynced = 0")
     suspend fun getUnsyncedProducts(): List<ProductWithDetails>
+
+    @Query("DELETE FROM products")
+    suspend fun deleteAll()
 }

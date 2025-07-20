@@ -226,7 +226,7 @@ fun StockTransferScreen(
             item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.to_store),
-                    items = state.dropdownData.stores.filter { it.id.local != state.currentTransferInput.fromStore?.id?.local },
+                    items = state.dropdownData.stores.filter { it.id != state.currentTransferInput.fromStore?.id },
                     currentSelection = state.currentTransferInput.toStore?.name?.displayName(
                         language
                     ) ?: "",
@@ -336,16 +336,16 @@ fun StockTransferItemRow(
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.unit),
                     items = listOfNotNull(product.mainProductUnit, product.subProductUnit),
-                    selectedItemId = if (item.isSelectedUnitMax) product.mainProductUnit.id.local else product.subProductUnit?.id?.local,
+                    selectedItemId = if (item.isSelectedUnitMax) product.mainProductUnit.id else product.subProductUnit?.id,
                     onItemSelected = { unit ->
                         onEvent(
                             StockTransferContract.Event.ItemUnitChanged(
-                                item.editorId, unit.id.local == product.mainProductUnit.id.local
+                                item.editorId, unit.id == product.mainProductUnit.id
                             )
                         )
                     },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.id },
                     enabled = enabled,
                 )
             }

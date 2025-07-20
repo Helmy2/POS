@@ -13,7 +13,7 @@ interface CategoryDao {
     suspend fun insertOrUpdate(category: CategoryEntity): Long
 
     @Query("SELECT * FROM categories WHERE localId = :localId LIMIT 1")
-    suspend fun getCategoryByLocalId(localId: Long): CategoryEntity?
+    suspend fun getCategoryById(localId: String): CategoryEntity?
 
     @Query("SELECT * FROM categories WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY enName ASC, arName ASC")
     fun searchCategoriesFlow(query: String): Flow<List<CategoryEntity>>
@@ -21,10 +21,9 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(categories: List<CategoryEntity>)
 
-    @Query("SELECT * FROM categories WHERE serverId = :serverId LIMIT 1")
-    suspend fun getCategoryByServerId(serverId: Long): CategoryEntity?
-
-    //deleteCategory
     @Query("DELETE FROM categories WHERE localId = :localId")
-    suspend fun deleteCategoryByLocalId(localId: Long)
+    suspend fun deleteCategoryById(localId: String)
+
+    @Query("DELETE FROM categories")
+    suspend fun deleteAll()
 }

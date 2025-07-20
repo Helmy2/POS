@@ -6,7 +6,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
@@ -47,18 +46,17 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
     ]
 )
 data class StockAdjustmentEntity(
-    @PrimaryKey(autoGenerate = true) val localId: Long = 0L,
-    val serverId: String?,
+    @PrimaryKey val localId: String,
     var isSynced: Boolean = false,
     val createdAt: Long = Clock.now(),
     val updatedAt: Long = Clock.now(),
     var isDeletedLocally: Boolean = false,
 
-    val storeId: Long,
-    val productId: Long,
+    val storeId: String,
+    val productId: String,
     val invoiceId: String? = null,
     val transactionId: String? = null,
-    val userId: Long,
+    val userId: String,
     val reason: StockAdjustmentReason,
     val notes: String?,
     val quantityChange: Double,
@@ -92,7 +90,7 @@ fun StockAdjustmentWithDetails.toDomain(): StockAdjustment {
         reason = adjustment.reason,
         notes = adjustment.notes,
         quantityChange = adjustment.quantityChange,
-        id = Id(adjustment.localId, serverStringId = adjustment.serverId),
+        id = adjustment.localId,
         isSynced = adjustment.isSynced,
         updatedAt = adjustment.updatedAt,
         createdAt = adjustment.createdAt,

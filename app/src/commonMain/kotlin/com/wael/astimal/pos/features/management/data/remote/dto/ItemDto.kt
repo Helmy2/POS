@@ -11,16 +11,14 @@ data class ItemDto(
     @SerialName("invoice_id")
     val invoiceId: String,
     @SerialName("product_id")
-    val productId: Long,
+    val productId: String,
     @SerialName("quantity")
     val quantity: Double,
     @SerialName("unit_price")
     val unitPrice: Double
 )
 
-fun ItemDto.toEntity(
-    productId: Long
-) = InvoiceItemEntity(
+fun ItemDto.toEntity() = InvoiceItemEntity(
     supabaseId = id,
     isSynced = true,
     invoiceId = invoiceId,

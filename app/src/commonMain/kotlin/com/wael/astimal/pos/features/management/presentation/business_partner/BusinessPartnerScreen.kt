@@ -44,7 +44,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
@@ -223,7 +222,7 @@ fun BusinessPartnerList(
     LazyVerticalGrid(
         modifier = modifier.padding(top = 16.dp), columns = GridCells.Adaptive(250.dp)
     ) {
-        items(partners, key = { it.id.local }) { partner ->
+        items(partners, key = { it.id }) { partner ->
             Box(
                 modifier = Modifier.padding(8.dp)
             ) {
@@ -261,7 +260,7 @@ fun BusinessPartnerEditDialog(
         mutableStateOf(partner.responsibleEmployee)
     }
 
-    val isNewPartner = partner.id == Id.new
+    val isNewPartner = partner.id == ""
     var type by remember {
         mutableStateOf(partner.type)
     }

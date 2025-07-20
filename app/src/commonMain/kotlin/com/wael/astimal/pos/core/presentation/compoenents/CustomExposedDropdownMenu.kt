@@ -24,10 +24,10 @@ import pos.app.generated.resources.clear_selection
 fun <T> CustomExposedDropdownMenu(
     label: String,
     items: List<T>,
-    selectedItemId: Long?,
+    selectedItemId: String?,
     onItemSelected: (T) -> Unit,
     itemToDisplayString: @Composable (T) -> String,
-    itemToId: (T) -> Long?,
+    itemToId: (T) -> String?,
     modifier: Modifier = Modifier,
     onClearItem: () -> Unit = {},
     canClearSelection: Boolean = false,

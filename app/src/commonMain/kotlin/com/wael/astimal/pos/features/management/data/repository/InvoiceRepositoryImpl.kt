@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.management.data.repository
 
 
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
@@ -77,16 +76,16 @@ class InvoiceRepositoryImpl(
     private suspend fun updateProductsAveragePrice(invoice: Invoice) {
         invoice.items.forEach { item ->
             val currentCost =
-                productDao.getProductByLocalId(item.product.id.local)!!.averagePurchasePrice
+                productDao.getProductByLocalId(item.product.id)!!.averagePurchasePrice
             val currentQuantity = stockRepository.getStockQuantityFlow(
-                storeId = invoice.store.id.local,
-                productId = item.product.id.local
+                storeId = invoice.store.id,
+                productId = item.product.id
             ).first()
 
             val newCost =
                 (currentCost * currentQuantity + item.unitPrice + item.quantity) / (currentQuantity + item.quantity)
 
-            productDao.updateAverageCost(item.product.id.local, newCost)
+            productDao.updateAverageCost(item.product.id, newCost)
         }
     }
 
@@ -99,27 +98,23 @@ class InvoiceRepositoryImpl(
         }
 
         val transaction1 = EmployeeTransaction(
-            id = Id.new.copy(
-                serverStringId = Uuid.random().toString()
-            ),
+            id = Uuid.random().toString(),
             employee = invoice.employee,
             amount = invoiceCommission,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
-            type = EmployeeTransactionType.COMMISSION,
+            type = EmployeeTransactionType.COMMISSION_FOR_ORDER,
             invoiceId = invoice.id,
             notes = null,
             createdByEmployee = invoice.employee
         )
         val transaction2 = EmployeeTransaction(
-            id = Id.new.copy(
-                serverStringId = Uuid.random().toString()
-            ),
+            id = Uuid.random().toString(),
             employee = invoice.partner.responsibleEmployee,
             amount = invoiceCommission,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
-            type = EmployeeTransactionType.COMMISSION,
+            type = EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY,
             invoiceId = invoice.id,
             notes = null,
             createdByEmployee = invoice.employee
@@ -154,13 +149,15 @@ class InvoiceRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     private suspend fun adjustPartnerTransactions(invoice: Invoice) {
         val price =
-            if (invoice.invoiceType == InvoiceType.SALES || invoice.invoiceType == InvoiceType.PURCHASE_RETURN) (invoice.totalAmount - invoice.paidAmount)
-            else -(invoice.totalAmount - invoice.paidAmount)
+            when (invoice.invoiceType) {
+                InvoiceType.SALES, InvoiceType.PURCHASE_RETURN -> (invoice.totalAmount - invoice.paidAmount)
+                else -> -(invoice.totalAmount - invoice.paidAmount)
+            }
 
         val transaction = PartnerTransactionEntity(
-            serverId = Uuid.random().toString(),
-            partnerLocalId = invoice.partner.id.local,
-            employeeLocalId = invoice.employee.id.local,
+            localId = Uuid.random().toString(),
+            partnerLocalId = invoice.partner.id,
+            employeeLocalId = invoice.employee.id,
             invoiceId = invoice.id,
             transactionType = TransactionType.INVOICE,
             createdAt = Clock.now(),
@@ -183,14 +180,14 @@ class InvoiceRepositoryImpl(
 
             stockAdjustmentDao.insert(
                 StockAdjustmentEntity(
-                    serverId = Uuid.random().toString(),
-                    productId = item.product.id.local,
+                    localId = Uuid.random().toString(),
+                    productId = item.product.id,
                     quantityChange = quantity,
                     createdAt = Clock.now(),
                     updatedAt = Clock.now(),
-                    userId = invoice.employee.id.local,
+                    userId = invoice.employee.id,
                     reason = StockAdjustmentReason.INVOICE,
-                    storeId = invoice.store.id.local,
+                    storeId = invoice.store.id,
                     invoiceId = invoice.id,
                     isSynced = false,
                     notes = null,
@@ -219,6 +216,7 @@ class InvoiceRepositoryImpl(
 
     override suspend fun syncInvoices(entities: List<InvoiceEntity>): Result<Unit> {
         return runCatching {
+            invoiceDao.deleteAllInvoices()
             entities.forEach {
                 invoiceDao.insertInvoice(it)
             }
@@ -245,6 +243,7 @@ class InvoiceRepositoryImpl(
 
     override suspend fun syncInvoicesItems(entities: List<InvoiceItemEntity>): Result<Unit> {
         return runCatching {
+            invoiceDao.deleteAllInvoiceItems()
             entities.forEach {
                 invoiceDao.insertInvoiceInvoice(it)
             }

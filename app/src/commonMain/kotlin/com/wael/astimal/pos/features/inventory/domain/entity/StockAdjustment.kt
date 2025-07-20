@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
@@ -25,11 +23,11 @@ data class StockAdjustment(
     val notes: String?,
     val quantityChange: Double,
     val invoice: Invoice?,
-    override val id: Id,
-    override val isSynced: Boolean = false,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now(),
-) : Item
+    val id: String,
+    val isSynced: Boolean = false,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now(),
+)
 
 enum class StockAdjustmentReason {
     OPENING_BALANCE, RECOUNT, DAMAGE, THEFT, OTHER, INVOICE;
@@ -48,11 +46,10 @@ enum class StockAdjustmentReason {
 
 fun StockAdjustment.toEntity(): StockAdjustmentEntity {
     return StockAdjustmentEntity(
-        localId = id.local,
-        serverId = id.serverStringId,
-        storeId = store.id.local,
-        productId = product.id.local,
-        userId = user.id.local,
+        localId = id,
+        storeId = store.id,
+        productId = product.id,
+        userId = user.id,
         invoiceId = invoice?.id,
         reason = reason,
         notes = notes,
@@ -65,10 +62,10 @@ fun StockAdjustment.toEntity(): StockAdjustmentEntity {
 
 fun StockAdjustment.toDto(): StockAdjustmentDto {
     return StockAdjustmentDto(
-        id = id.serverStringId!!,
-        storeId = store.id.server ?: 0,
-        productId = product.id.server ?: 0,
-        userId = user.id.serverStringId!!,
+        id = id,
+        storeId = store.id,
+        productId = product.id,
+        userId = user.id,
         reason = reason.name.lowercase(),
         notes = notes,
         quantity = quantityChange,

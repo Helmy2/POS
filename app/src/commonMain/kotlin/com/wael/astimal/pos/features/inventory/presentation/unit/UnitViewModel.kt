@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
@@ -90,7 +89,7 @@ class UnitViewModel(
             viewModelScope.launch {
                 val unitToSave =
                     ProductUnit(
-                        id = currentState.selectedUnit?.id ?: Id.new,
+                        id = currentState.selectedUnit?.id ?: "",
                         name = LocalizedString(
                             arName = currentState.inputArName,
                             enName = currentState.inputEnName

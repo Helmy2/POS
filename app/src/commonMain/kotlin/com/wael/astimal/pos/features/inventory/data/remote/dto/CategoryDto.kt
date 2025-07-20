@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CategoryDto(
-    val id: Long,
+    val id: String,
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("updated_at")
@@ -21,7 +21,7 @@ data class CategoryDto(
 
 fun CategoryDto.toEntity(): CategoryEntity {
     return CategoryEntity(
-        serverId = this.id,
+        localId = this.id,
         arName = this.arName,
         enName = this.enName,
         createdAt = this.createdAt.parseIsoTimestamp() ?: Clock.now(),

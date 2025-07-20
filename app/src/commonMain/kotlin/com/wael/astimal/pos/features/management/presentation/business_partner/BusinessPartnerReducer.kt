@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.management.presentation.business_partner
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
@@ -69,7 +68,7 @@ class BusinessPartnerReducer :
 
     private fun createBlankBusinessPartner(currentUser: User): BusinessPartner {
         return BusinessPartner(
-            id = Id.new,
+            id = "",
             name = LocalizedString(),
             address = "",
             phone = "",

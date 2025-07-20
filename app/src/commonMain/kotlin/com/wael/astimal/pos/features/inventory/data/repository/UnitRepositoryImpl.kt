@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -13,6 +12,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 class UnitRepositoryImpl(
@@ -26,12 +27,15 @@ class UnitRepositoryImpl(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveUnit(unit: ProductUnit): Result<Long> {
         return try {
             val entity = unit.toDto()
 
-            val result = if (unit.id == Id.new) {
-                supabaseClient.from("units").insert(entity) {
+            val result = if (unit.id == "") {
+                supabaseClient.from("units").insert(
+                    entity.copy(id = Uuid.random().toString())
+                ) {
                     select()
                 }.decodeSingle<UnitDto>()
             } else {
@@ -43,9 +47,7 @@ class UnitRepositoryImpl(
                 }.decodeSingle<UnitDto>()
             }
 
-            val localId = unitDao.insertOrUpdate(
-                result.toEntity().copy(localId = unit.id.local)
-            )
+            val localId = unitDao.insertOrUpdate(result.toEntity())
 
             Result.success(localId)
         } catch (e: Exception) {
@@ -58,10 +60,10 @@ class UnitRepositoryImpl(
         return try {
             supabaseClient.from("units").delete {
                 filter {
-                    eq("id", unit.id.server!!)
+                    eq("id", unit.id)
                 }
             }
-            unitDao.deleteUnitByLocalId(unit.id.local)
+            unitDao.deleteUnitByLocalId(unit.id)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -70,20 +72,13 @@ class UnitRepositoryImpl(
 
     override suspend fun syncWithServer(units: List<UnitEntity>): Result<Unit> {
         return runCatching {
-            val entities = units.map { entity ->
-                val existingEntity = unitDao.getUnitByServerId(
-                    entity.serverId ?: throw Exception("Server id is null")
-                )
-                entity.copy(
-                    localId = existingEntity?.localId ?: 0L
-                )
-            }
-            unitDao.upsertAll(entities)
+            unitDao.deleteAll()
+            unitDao.upsertAll(units)
         }
     }
 
     override suspend fun getUnitByServerId(
-        id: Long
+        id: String
     ): Result<ProductUnit> {
         return runCatching {
             unitDao.getUnitByServerId(id)?.toDomain() ?: throw Exception("Unit not found")

@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
@@ -97,7 +96,7 @@ class ReceivePayVoucherViewModel(
             }
 
             val partner =
-                state.value.partyDropdownData.find { it.id.local == dialogState.selectedPartnerId }
+                state.value.partyDropdownData.find { it.id == dialogState.selectedPartnerId }
 
             if (partner == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_party_not_found)))
@@ -105,7 +104,7 @@ class ReceivePayVoucherViewModel(
             }
 
             val voucherToSave = ReceivePayVoucher(
-                id = dialogState.voucherToEdit?.id ?: Id.new,
+                id = dialogState.voucherToEdit?.id ?: "",
                 partner = partner,
                 createdBy = currentUser,
                 amount = if (dialogState.isReceiveMoney) amount else -amount,

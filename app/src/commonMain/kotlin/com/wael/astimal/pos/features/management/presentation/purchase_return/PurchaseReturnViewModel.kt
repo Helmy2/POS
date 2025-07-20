@@ -109,7 +109,7 @@ class PurchaseReturnViewModel(
             }
 
             is PurchaseReturnContract.Event.ItemProductChanged -> {
-                event.product?.let { observeStockForItem(event.editorId, it.id.local) }
+                event.product?.let { observeStockForItem(event.editorId, it.id) }
                 setState(event)
             }
 
@@ -117,7 +117,7 @@ class PurchaseReturnViewModel(
                 event.store?.let {
                     state.value.currentOrderInput.items.forEach { item ->
                         item.product?.let { product ->
-                            observeStockForItem(item.tempEditorId, product.id.local)
+                            observeStockForItem(item.tempEditorId, product.id)
                         }
                     }
                 }
@@ -128,7 +128,7 @@ class PurchaseReturnViewModel(
                 setState(event)
                 state.value.currentOrderInput.items.forEach { item ->
                     item.product?.let { product ->
-                        observeStockForItem(item.tempEditorId, product.id.local)
+                        observeStockForItem(item.tempEditorId, product.id)
                     }
                 }
             }
@@ -257,10 +257,10 @@ class PurchaseReturnViewModel(
         }
     }
 
-    private fun observeStockForItem(tempId: String, productId: Long) {
+    private fun observeStockForItem(tempId: String, productId: String) {
         stockObservationJobs[tempId]?.cancel()
         viewModelScope.launch {
-            val storeId = state.value.currentOrderInput.selectedStore?.id?.local ?: return@launch
+            val storeId = state.value.currentOrderInput.selectedStore?.id ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).catch {
                     snackbarController.sendEvent(

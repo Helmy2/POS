@@ -38,10 +38,10 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
                     inputSellingPrice = event.product.sellingPrice.toString(),
 
                     inputSubUnitsPerMainUnit = event.product.subUnitsPerMainUnit.toString(),
-                    selectedCategoryId = event.product.category?.id?.local,
+                    selectedCategoryId = event.product.category?.id,
                     // remove the selected store id
-                    selectedSubUnitId = event.product.subProductUnit?.id?.local,
-                    selectedMainUnitId = event.product.mainProductUnit.id.local,
+                    selectedSubUnitId = event.product.subProductUnit?.id,
+                    selectedMainUnitId = event.product.mainProductUnit.id,
                     isSearchActive = false
                 ) to null
 

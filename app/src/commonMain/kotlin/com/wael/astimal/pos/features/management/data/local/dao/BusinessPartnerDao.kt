@@ -20,16 +20,16 @@ interface BusinessPartnerDao {
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE localId = :localId LIMIT 1")
-    suspend fun getPartnerByLocalId(localId: Long): BusinessPartnerWithDetailsEntity?
+    suspend fun getPartnerByLocalId(localId: String): BusinessPartnerWithDetailsEntity?
 
-    @Query("SELECT * FROM business_partners WHERE serverId = :id LIMIT 1")
+    @Query("SELECT * FROM business_partners WHERE localId = :id LIMIT 1")
     suspend fun getPartnerBySeverId(id: String): BusinessPartnerEntity?
 
     @Query("UPDATE business_partners SET isDeletedLocally = 1 WHERE localId = :localId")
-    suspend fun softDeletePartnerByLocalId(localId: Long)
+    suspend fun softDeletePartnerByLocalId(localId: String)
 
-    @Query("DELETE FROM business_partners WHERE serverId = :serverId")
-    suspend fun hardDeletePartnerByServerId(serverId: String)
+    @Query("DELETE FROM business_partners WHERE localId = :id")
+    suspend fun hardDeletePartnerByServerId(id: String)
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE NOT isSynced")
@@ -37,4 +37,7 @@ interface BusinessPartnerDao {
 
     @Query("SELECT * FROM business_partners WHERE isDeletedLocally = 1")
     suspend fun getAllDeletedPartners(): List<BusinessPartnerWithDetailsEntity>
+
+    @Query("DELETE FROM business_partners")
+    suspend fun deleteAll()
 }

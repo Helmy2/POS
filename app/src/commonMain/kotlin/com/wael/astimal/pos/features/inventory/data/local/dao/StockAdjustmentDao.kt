@@ -18,19 +18,19 @@ interface StockAdjustmentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(adjustments: List<StockAdjustmentEntity>)
 
-    @Query("SELECT * FROM stock_adjustments WHERE serverId = :serverId")
-    suspend fun getAdjustmentByServerId(serverId: String): StockAdjustmentEntity?
+    @Query("SELECT * FROM stock_adjustments WHERE localId = :id")
+    suspend fun getAdjustmentByServerId(id: String): StockAdjustmentEntity?
 
     @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE storeId = :storeId AND productId = :productId")
-    fun getStockQuantity(storeId: Long, productId: Long): Flow<Double?>
+    fun getStockQuantity(storeId: String, productId: String): Flow<Double?>
 
     @Query("SELECT * FROM stock_adjustments")
     fun getAll(): Flow<List<StockAdjustmentWithDetails>>
 
     @Query("UPDATE stock_adjustments SET isDeletedLocally = 1 WHERE localId = :id")
-    suspend fun softDeleteByLocalId(id: Long)
+    suspend fun softDeleteByLocalId(id: String)
 
-    @Query("DELETE FROM stock_adjustments WHERE serverId = :id")
+    @Query("DELETE FROM stock_adjustments WHERE localId = :id")
     suspend fun deleteByServerId(id: String)
 
     @Query("SELECT * FROM stock_adjustments WHERE NOT isSynced")
@@ -41,4 +41,7 @@ interface StockAdjustmentDao {
 
     @Query("DELETE FROM stock_adjustments WHERE invoiceId = :id")
     suspend fun deleteAdjustmentsByInvoiceId(id: String)
+
+    @Query("DELETE FROM stock_adjustments")
+    suspend fun deleteAll()
 }

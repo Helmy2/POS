@@ -65,7 +65,7 @@ fun CategoryScreen(
                 list = state.categories,
                 onItemClick = { category -> onEvent(CategoryContract.Event.CategorySelected(category)) },
                 label = { Label(it.name.displayName(language)) },
-                isSelected = { category -> category.id.local == state.selectedCategory?.id?.local },
+                isSelected = { category -> category.id == state.selectedCategory?.id },
             )
         },
         mainContent = {

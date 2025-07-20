@@ -17,23 +17,25 @@ class StockRepositoryImpl(
 ) : StockRepository {
 
     override fun getStoreStocks(
-        query: String, selectedStoreId: Long?
+        query: String, selectedStoreId: String?
     ): Flow<List<StockAdjustment>> {
         return stockAdjustmentDao.getAll().map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    override fun getStockQuantityFlow(storeId: Long, productId: Long): Flow<Double> {
+    override fun getStockQuantityFlow(storeId: String, productId: String): Flow<Double> {
         return stockAdjustmentDao.getStockQuantity(storeId, productId).map { it ?: 0.0 }
     }
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun addStockAdjustment(adjustment: StockAdjustment): Result<Unit> {
         return try {
-            val adjustmentToInsert = if (adjustment.id.server == null) adjustment.toEntity()
-                .copy(serverId = Uuid.random().toString())
-            else adjustment.toEntity()
+            val adjustmentToInsert =
+                if (adjustment.id == "")
+                    adjustment.toEntity().copy(localId = Uuid.random().toString())
+                else
+                    adjustment.toEntity()
 
             stockAdjustmentDao.insert(adjustmentToInsert)
             Result.success(Unit)
@@ -45,20 +47,14 @@ class StockRepositoryImpl(
 
     override suspend fun deleteStockAdjustment(adjustment: StockAdjustment): Result<Unit> {
         return runCatching {
-            stockAdjustmentDao.softDeleteByLocalId(adjustment.id.local)
+            stockAdjustmentDao.softDeleteByLocalId(adjustment.id)
         }
     }
 
     override suspend fun syncWithServer(adjustments: List<StockAdjustmentEntity>): Result<Unit> {
         return runCatching {
-            adjustments.map {
-                val existingEntity = stockAdjustmentDao.getAdjustmentByServerId(
-                    it.serverId ?: throw Exception("Server ID not found")
-                )
-                it.copy(localId = existingEntity?.localId ?: 0L)
-            }.also {
-                stockAdjustmentDao.upsertAll(it)
-            }
+            stockAdjustmentDao.deleteAll()
+            stockAdjustmentDao.upsertAll(adjustments)
         }
     }
 

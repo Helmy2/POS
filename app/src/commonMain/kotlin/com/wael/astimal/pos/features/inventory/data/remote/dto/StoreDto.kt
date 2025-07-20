@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class StoreDto(
-    val id: Long,
+    val id: String,
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("updated_at")
@@ -24,11 +24,9 @@ data class StoreDto(
     val employeeId: String,
 )
 
-fun StoreDto.toEntity(
-    employeeId: Long
-): StoreEntity {
+fun StoreDto.toEntity(): StoreEntity {
     return StoreEntity(
-        serverId = this.id,
+        localId = this.id,
         arName = this.arName ?: "",
         enName = this.enName,
         address = this.address ?: "",

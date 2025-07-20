@@ -44,10 +44,10 @@ data class StockTransferItem(
 fun StockTransfer.toDto(): StockTransferDto {
     return StockTransferDto(
         id = id,
-        fromStoreId = fromStore.id.server!!,
-        toStoreId = toStore.id.server!!,
-        initiatingUserId = initiatingUser.id.serverStringId!!,
-        receivingUserId = receivingUser.id.serverStringId!!,
+        fromStoreId = fromStore.id,
+        toStoreId = toStore.id,
+        initiatingUserId = initiatingUser.id,
+        receivingUserId = receivingUser.id,
         status = status.name,
         notes = notes,
         createdAt = createdAt.toDateString(),

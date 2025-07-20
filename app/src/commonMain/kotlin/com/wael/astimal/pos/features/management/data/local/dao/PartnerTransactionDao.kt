@@ -18,10 +18,10 @@ interface PartnerTransactionDao {
     suspend fun insertOrUpdate(transaction: PartnerTransactionEntity)
 
     @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :partnerLocalId")
-    fun getTransactionsForPartner(partnerLocalId: Long): Flow<List<PartnerTransactionEntity>>
+    fun getTransactionsForPartner(partnerLocalId: String): Flow<List<PartnerTransactionEntity>>
 
     @Query("SELECT SUM(balance) FROM partner_transactions WHERE partnerLocalId = :clientId")
-    suspend fun getPartnerBalance(clientId: Long): Double?
+    suspend fun getPartnerBalance(clientId: String): Double?
 
     @Query("DELETE FROM partner_transactions WHERE partnerLocalId = :partnerId AND transactionType = :type")
     suspend fun deleteTransactionsByPartner(
@@ -35,18 +35,18 @@ interface PartnerTransactionDao {
 
     @Transaction
     @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :id AND NOT isDeletedLocally")
-    fun getTransactionsByPartnerId(id: Long): Flow<List<PartnerTransactionWithDetails>>
+    fun getTransactionsByPartnerId(id: String): Flow<List<PartnerTransactionWithDetails>>
 
 
     @Query("UPDATE partner_transactions SET isDeletedLocally = 1 WHERE localId = :id")
-    suspend fun softDeleteTransactionById(id: Long)
+    suspend fun softDeleteTransactionById(id: String)
 
     @Transaction
     @Query("SELECT * FROM partner_transactions WHERE localId = :id")
-    suspend fun getTransactionById(id: Long): PartnerTransactionWithDetails?
+    suspend fun getTransactionById(id: String): PartnerTransactionWithDetails?
 
 
-    @Query("SELECT * FROM partner_transactions WHERE serverId = :id LIMIT 1")
+    @Query("SELECT * FROM partner_transactions WHERE localId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): PartnerTransactionEntity?
 
     @Transaction
@@ -57,9 +57,12 @@ interface PartnerTransactionDao {
     @Query("SELECT * FROM partner_transactions WHERE isDeletedLocally = 1")
     suspend fun getAllDeletedTransactions(): List<PartnerTransactionWithDetails>
 
-    @Query("DELETE FROM partner_transactions WHERE serverId = :serverId")
-    suspend fun hardDeleteTransactionById(serverId: String)
+    @Query("DELETE FROM partner_transactions WHERE localId = :id")
+    suspend fun hardDeleteTransactionById(id: String)
 
     @Query("DELETE FROM partner_transactions WHERE invoiceId = :id")
     suspend fun deleteTransactionsByInvoiceId(id: String)
+
+    @Query("DELETE FROM partner_transactions")
+    suspend fun deleteAll()
 }

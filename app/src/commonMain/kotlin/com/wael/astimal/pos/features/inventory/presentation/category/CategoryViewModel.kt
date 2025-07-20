@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
@@ -89,7 +88,7 @@ class CategoryViewModel(
             setState(CategoryContract.Event.LoadingStarted)
             viewModelScope.launch {
                 val categoryToSave = Category(
-                    id = currentState.selectedCategory?.id ?: Id.new,
+                    id = currentState.selectedCategory?.id ?: "",
                     name = LocalizedString(
                         arName = currentState.inputArName,
                         enName = currentState.inputEnName

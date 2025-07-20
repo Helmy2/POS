@@ -18,9 +18,12 @@ interface UnitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(units: List<UnitEntity>)
 
-    @Query("SELECT * FROM units WHERE serverId = :serverId LIMIT 1")
-    suspend fun getUnitByServerId(serverId: Long): UnitEntity?
+    @Query("SELECT * FROM units WHERE localId = :serverId LIMIT 1")
+    suspend fun getUnitByServerId(serverId: String): UnitEntity?
 
     @Query("DELETE FROM units WHERE localId = :localId")
-    suspend fun deleteUnitByLocalId(localId: Long)
+    suspend fun deleteUnitByLocalId(localId: String)
+
+    @Query("DELETE FROM units")
+    suspend fun deleteAll()
 }

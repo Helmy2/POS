@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProductDto(
-    val id: Long,
+    val id: String,
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("updated_at")
@@ -25,20 +25,18 @@ data class ProductDto(
     @SerialName("average_purchase_price")
     val averagePurchasePrice: Double,
     @SerialName("category_id")
-    val categoryId: Long?,
+    val categoryId: String?,
     @SerialName("main_unit_id")
-    val mainUnitId: Long,
+    val mainUnitId: String,
     @SerialName("sub_unit_id")
-    val subUnitId: Long?,
+    val subUnitId: String?,
     @SerialName("sub_units_per_main_unit")
     val subUnitsPerMainUnit: Double,
 )
 
-fun ProductDto.toEntity(
-    categoryId: Long?, mainUnitId: Long, subUnitId: Long?
-): ProductEntity {
+fun ProductDto.toEntity(): ProductEntity {
     return ProductEntity(
-        serverId = id,
+        localId = id,
         arName = arName,
         enName = enName,
         barcode = barcode,

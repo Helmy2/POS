@@ -43,13 +43,13 @@ fun Invoice.toEntity(): Pair<InvoiceEntity, List<InvoiceItemEntity>> {
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        businessPartnerId = partner.id.local,
-        employeeId = employee.id.local,
+        businessPartnerId = partner.id,
+        employeeId = employee.id,
         paidAmount = paidAmount,
         totalAmount = totalAmount,
         paymentMethod = paymentMethod,
         invoiceType = invoiceType,
-        storeId = store.id.local,
+        storeId = store.id,
         orderDate = orderDate,
     ) to items.map {
         it.toEntity(id)
@@ -62,7 +62,7 @@ fun InvoiceItem.toEntity(
     return InvoiceItemEntity(
         supabaseId = id,
         invoiceId = invoiceId,
-        productId = product.id.local,
+        productId = product.id,
         quantity = quantity,
         unitPrice = unitPrice,
     )
@@ -84,7 +84,7 @@ fun InvoiceItem.toDto(
 ): ItemDto {
     return ItemDto(
         id = id,
-        productId = product.id.server!!,
+        productId = product.id,
         quantity = quantity,
         unitPrice = unitPrice,
         invoiceId = invoiceId
@@ -96,13 +96,13 @@ fun Invoice.toDto(): InvoiceDto {
         id = id,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),
-        partnerId = partner.id.serverStringId!!,
-        employeeId = employee.id.serverStringId!!,
+        partnerId = partner.id,
+        employeeId = employee.id,
         paidAmount = paidAmount,
         totalAmount = totalAmount,
         paymentMethod = paymentMethod.name.lowercase(),
         invoiceType = invoiceType.name.lowercase(),
-        storeId = store.id.server!!,
+        storeId = store.id,
         invoiceDate = orderDate.toDateString(),
     )
 }

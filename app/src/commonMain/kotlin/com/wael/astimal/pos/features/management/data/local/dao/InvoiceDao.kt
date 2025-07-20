@@ -85,4 +85,11 @@ interface InvoiceDao {
     )
     fun getDailySales(startDate: Long, endDate: Long): Flow<List<DailySaleData>>
 
+    @Query("DELETE FROM invoice_items")
+    suspend fun deleteAllInvoiceItems()
+
+    @Query("DELETE FROM invoices")
+    suspend fun deleteAllInvoices()
+
+
 }

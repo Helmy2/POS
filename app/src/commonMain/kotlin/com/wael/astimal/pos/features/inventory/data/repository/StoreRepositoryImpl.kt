@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -14,6 +13,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 class StoreRepositoryImpl(
@@ -27,7 +28,7 @@ class StoreRepositoryImpl(
         }
     }
 
-    override suspend fun getStoreByLocalId(id: Long): Result<Store> {
+    override suspend fun getStoreByLocalId(id: String): Result<Store> {
         return runCatching {
             val entity = storeDao.getStoreByLocalId(id)
             if (entity?.store?.isDeletedLocally == true) throw IllegalStateException("Store with localId $id is marked as deleted locally.")
@@ -35,7 +36,7 @@ class StoreRepositoryImpl(
         }
     }
 
-    override suspend fun getStoreBySeverId(id: Long): Result<Store> {
+    override suspend fun getStoreBySeverId(id: String): Result<Store> {
         return runCatching {
             val entity = storeDao.getStoreByServerId(id)
             if (entity?.store?.isDeletedLocally == true) throw IllegalStateException("Store with server id $id is marked as deleted locally.")
@@ -43,12 +44,15 @@ class StoreRepositoryImpl(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveStore(store: Store): Result<Long> {
         return try {
             val entity = store.toDto()
 
-            val result = if (store.id == Id.new) {
-                supabaseClient.from("stores").insert(entity) {
+            val result = if (store.id == "") {
+                supabaseClient.from("stores").insert(
+                    entity.copy(id = Uuid.random().toString())
+                ) {
                     select()
                 }.decodeSingle<StoreDto>()
             } else {
@@ -60,9 +64,7 @@ class StoreRepositoryImpl(
                 }.decodeSingle<StoreDto>()
             }
 
-            val localId = storeDao.insertOrUpdate(
-                result.toEntity(store.employee.id.local).copy(localId = store.id.local)
-            )
+            val localId = storeDao.insertOrUpdate(result.toEntity())
 
             Result.success(localId)
         } catch (e: Exception) {
@@ -75,28 +77,25 @@ class StoreRepositoryImpl(
         return runCatching {
             supabaseClient.from("stores").delete {
                 filter {
-                    eq("id", store.id.server!!)
+                    eq("id", store.id)
                 }
             }
-            storeDao.deleteStoreByLocalId(store.id.local)
+            storeDao.deleteStoreByLocalId(store.id)
         }
     }
 
-    override suspend fun syncWithServer(stores: List<StoreEntity>) {
-        val entitiesToUpsert = stores.map { serverEntity ->
-            val existingLocal = serverEntity.serverId?.let { storeDao.getStoreByServerId(it) }
-            serverEntity.copy(
-                localId = existingLocal?.store?.localId ?: 0L,
-            )
+    override suspend fun syncWithServer(stores: List<StoreEntity>): Result<Unit> {
+        return runCatching {
+            storeDao.deleteAll()
+            storeDao.upsertAll(stores)
         }
-        storeDao.upsertAll(entitiesToUpsert)
     }
 
     override fun getStoresForUser(user: User): Flow<List<Store>> {
         return if (user.isAdmin) {
             getStores()
         } else {
-            storeDao.getStoreByUserId(user.id.local).map {
+            storeDao.getStoreByUserId(user.id).map {
                 listOfNotNull(it?.toDomain())
             }
         }

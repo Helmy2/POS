@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
@@ -17,11 +15,11 @@ data class ReceivePayVoucher(
     val createdBy: User,
     val invoiceId: String?,
     val transactionType: TransactionType,
-    override val id: Id,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now(),
-    override val isSynced: Boolean = false,
-) : Item
+    val id: String,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now(),
+    val isSynced: Boolean = false,
+)
 
 fun ReceivePayVoucher.matchesQuery(query: String): Boolean {
     if (query.isBlank()) return true
@@ -33,15 +31,14 @@ fun ReceivePayVoucher.matchesQuery(query: String): Boolean {
 }
 
 fun ReceivePayVoucher.toEntity() = PartnerTransactionEntity(
-    localId = id.local,
-    serverId = id.serverStringId,
+    localId = id,
     balance = amount,
     notes = notes,
     createdAt = createdAt,
     updatedAt = updatedAt,
     isSynced = isSynced,
-    partnerLocalId = partner.id.local,
-    employeeLocalId = createdBy.id.local,
+    partnerLocalId = partner.id,
+    employeeLocalId = createdBy.id,
     invoiceId = invoiceId,
     transactionType = transactionType
 )
@@ -49,14 +46,14 @@ fun ReceivePayVoucher.toEntity() = PartnerTransactionEntity(
 
 fun ReceivePayVoucher.toDto(): PartnerTransactionDto {
     return PartnerTransactionDto(
-        id = id.serverStringId ?: "",
+        id = id,
         transactionType = transactionType.name.lowercase(),
         balance = amount,
         notes = notes,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),
-        createdByUserId = createdBy.id.serverStringId!!,
+        createdByUserId = createdBy.id,
         invoiceId = invoiceId.takeIf { it?.isNotBlank() == true },
-        partnerId = partner.id.serverStringId!!
+        partnerId = partner.id
     )
 }

@@ -16,7 +16,6 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItem
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
-import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -37,7 +36,6 @@ import kotlin.uuid.Uuid
 class StockTransferRepositoryImpl(
     val supabaseClient: SupabaseClient,
     val stockTransferDao: StockTransferDao,
-    val productRepository: ProductRepository,
     val userRepository: UserRepository,
     val stockAdjustmentDao: StockAdjustmentDao,
 ) : StockTransferRepository {
@@ -45,7 +43,7 @@ class StockTransferRepositoryImpl(
     @OptIn(SupabaseExperimental::class)
     override suspend fun getPendingTransfersForApproval(): Flow<List<StockTransfer>> {
         val currentUserId =
-            userRepository.getCurrentUser()?.id?.local ?: throw Exception("No user logged in")
+            userRepository.getCurrentUser()?.id ?: throw Exception("No user logged in")
 
         return stockTransferDao.getPendingTransfersForApproval(
             currentUserId = currentUserId,
@@ -94,14 +92,14 @@ class StockTransferRepositoryImpl(
         for (item in transfer.items) {
             stockAdjustmentDao.insert(
                 StockAdjustmentEntity(
-                    serverId = Uuid.random().toString(),
-                    productId = item.product.id.local,
+                    localId = Uuid.random().toString(),
+                    productId = item.product.id,
                     quantityChange = -item.quantity,
                     createdAt = Clock.now(),
                     updatedAt = Clock.now(),
-                    userId = transfer.initiatingUser.id.local,
+                    userId = transfer.initiatingUser.id,
                     reason = StockAdjustmentReason.INVOICE,
-                    storeId = transfer.fromStore.id.local,
+                    storeId = transfer.fromStore.id,
                     invoiceId = null,
                     transactionId = transfer.id,
                     isSynced = false,
@@ -110,14 +108,14 @@ class StockTransferRepositoryImpl(
             )
             stockAdjustmentDao.insert(
                 StockAdjustmentEntity(
-                    serverId = Uuid.random().toString(),
-                    productId = item.product.id.local,
+                    localId = Uuid.random().toString(),
+                    productId = item.product.id,
                     quantityChange = item.quantity,
                     createdAt = Clock.now(),
                     updatedAt = Clock.now(),
-                    userId = transfer.initiatingUser.id.local,
+                    userId = transfer.initiatingUser.id,
                     reason = StockAdjustmentReason.INVOICE,
-                    storeId = transfer.toStore.id.local,
+                    storeId = transfer.toStore.id,
                     invoiceId = null,
                     transactionId = transfer.id,
                     isSynced = false,
@@ -154,10 +152,10 @@ class StockTransferRepositoryImpl(
             }
             val transferDto = StockTransferDto(
                 id = transferLocalId,
-                fromStoreId = fromStore.id.server!!,
-                toStoreId = toStore.id.server!!,
-                initiatingUserId = initiatedByUser.id.serverStringId!!,
-                receivingUserId = receivingUser.id.serverStringId!!,
+                fromStoreId = fromStore.id,
+                toStoreId = toStore.id,
+                initiatingUserId = initiatedByUser.id,
+                receivingUserId = receivingUser.id,
                 notes = notes,
                 status = "pending",
                 createdAt = createdat.toDateString(),
@@ -181,7 +179,7 @@ class StockTransferRepositoryImpl(
                 StockTransferItemDto(
                     id = Uuid.random().toString(),
                     transferId = transferLocalId,
-                    productId = it.product.id.server!!,
+                    productId = it.product.id,
                     quantity = it.quantity,
                 )
             }
@@ -189,16 +187,9 @@ class StockTransferRepositoryImpl(
             supabaseClient.postgrest["stock_transfer_items"].insert(itemDtos)
 
             stockTransferDao.updateTransferWithItems(
-                transfer = transferDto.toEntity(
-                    fromStoreId = fromStore.id.local,
-                    toStoreId = toStore.id.local,
-                    initiatingUserId = initiatedByUser.id.local,
-                    receivingUserId = receivingUser.id.local,
-                ),
+                transfer = transferDto.toEntity(),
                 items = itemDtos.map {
-                    it.toEntity(
-                        productRepository.getProductByServerId(it.productId).getOrThrow().id.local,
-                    )
+                    it.toEntity()
                 }
             )
 
@@ -222,10 +213,10 @@ class StockTransferRepositoryImpl(
         return try {
             val transferDto = StockTransferDto(
                 id = Uuid.random().toString(),
-                fromStoreId = fromStore.id.server!!,
-                toStoreId = toStore.id.server!!,
-                initiatingUserId = initiatedByUser.id.serverStringId!!,
-                receivingUserId = receivingUser.id.serverStringId!!,
+                fromStoreId = fromStore.id,
+                toStoreId = toStore.id,
+                initiatingUserId = initiatedByUser.id,
+                receivingUserId = receivingUser.id,
                 notes = notes,
                 status = "pending",
                 createdAt = Clock.now().toDateString(),
@@ -239,7 +230,7 @@ class StockTransferRepositoryImpl(
                 StockTransferItemDto(
                     id = Uuid.random().toString(),
                     transferId = transferDto.id,
-                    productId = it.product.id.server!!,
+                    productId = it.product.id,
                     quantity = it.quantity,
                 )
             }
@@ -247,25 +238,11 @@ class StockTransferRepositoryImpl(
             supabaseClient.postgrest["stock_transfer_items"].insert(itemDtos)
 
             stockTransferDao.insertTransferWithItems(
-                transferDto.toEntity(
-                    fromStoreId = fromStore.id.local,
-                    toStoreId = toStore.id.local,
-                    initiatingUserId = initiatedByUser.id.local,
-                    receivingUserId = receivingUser.id.local,
-                ),
+                transferDto.toEntity(),
                 itemDtos.map {
-                    it.toEntity(
-                        productRepository.getProductByServerId(it.productId).getOrThrow().id.local,
-                    )
+                    it.toEntity()
                 },
             )
-
-//            val notificationDto = NotificationDto(
-//                userId = receivingUser.id.serverStringId,
-//                message = "New transfer from ${fromStore.name.enName} needs your approval.",
-//                relatedTransferId = transferDto.id
-//            )
-//            supabaseClient.postgrest["notifications"].insert(notificationDto)
 
             receivingUser.fcmToken?.let {
                 sendPushNotification(
@@ -329,6 +306,7 @@ class StockTransferRepositoryImpl(
 
     override suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit> {
         return runCatching {
+            stockTransferDao.deleteAllStockTransfers()
             entities.forEach {
                 stockTransferDao.insertStockOrUpdateTransfer(it)
             }
@@ -355,6 +333,7 @@ class StockTransferRepositoryImpl(
 
     override suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit> {
         return runCatching {
+            stockTransferDao.deleteAllStockTransferItems()
             stockTransferDao.insertStockTransferItems(entities)
         }
     }

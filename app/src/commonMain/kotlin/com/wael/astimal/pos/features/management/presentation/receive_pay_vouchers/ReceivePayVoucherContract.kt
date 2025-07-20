@@ -11,7 +11,7 @@ object ReceivePayVoucherContract {
     data class DialogState(
         val show: Boolean = false,
         val voucherToEdit: ReceivePayVoucher? = null,
-        val selectedPartnerId: Long? = null,
+        val selectedPartnerId: String? = null,
         val transactionType: TransactionType = TransactionType.PAYMENT,
         val amount: String = "",
         val notes: String = "",
@@ -42,7 +42,7 @@ object ReceivePayVoucherContract {
         data object BackClicked : Event
 
         // Dialog Input Changes
-        data class DialogPartnerSelected(val partnerId: Long?) : Event
+        data class DialogPartnerSelected(val partnerId: String?) : Event
         data class DialogAmountChanged(val amount: String) : Event
         data class DialogNotesChanged(val notes: String) : Event
         data class DialogDateChanged(val date: Long) : Event

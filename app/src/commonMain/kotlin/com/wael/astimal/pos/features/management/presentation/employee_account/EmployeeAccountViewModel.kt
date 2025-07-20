@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
@@ -94,7 +93,7 @@ class EmployeeAccountViewModel(
             }
 
             val transactionToSave = EmployeeTransaction(
-                id = dialogState.selectedTransaction?.id ?: Id.new,
+                id = dialogState.selectedTransaction?.id ?: "",
                 employee = employee,
                 createdByEmployee = currentUser,
                 amount = amount,
@@ -117,7 +116,7 @@ class EmployeeAccountViewModel(
 
     private fun deleteTransaction(transaction: EmployeeTransaction) {
         viewModelScope.launch {
-            employeeTransactionRepository.deleteManualPayment(transaction.id.local).onSuccess {
+            employeeTransactionRepository.deleteManualPayment(transaction.id).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transaction_deleted_successfully)))
             }.onFailure {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_deleting_transaction)))

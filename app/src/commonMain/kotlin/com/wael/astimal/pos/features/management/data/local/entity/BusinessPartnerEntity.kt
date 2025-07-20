@@ -6,7 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
@@ -27,9 +26,8 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
     indices = [Index(value = ["responsibleEmployeeLocalId"])]
 )
 data class BusinessPartnerEntity(
-    @PrimaryKey(autoGenerate = true)
-    val localId: Long = 0L,
-    val serverId: String?,
+    @PrimaryKey
+    val localId: String,
     var isSynced: Boolean = false,
     val createdAt: Long = Clock.now(),
     val updatedAt: Long = Clock.now(),
@@ -40,7 +38,7 @@ data class BusinessPartnerEntity(
     val phone: String,
     val address: String,
     val type: PartnerType,
-    val responsibleEmployeeLocalId: Long,
+    val responsibleEmployeeLocalId: String,
 )
 
 data class BusinessPartnerWithDetailsEntity(
@@ -54,7 +52,7 @@ data class BusinessPartnerWithDetailsEntity(
 
 fun BusinessPartnerWithDetailsEntity.toDomain(): BusinessPartner {
     return BusinessPartner(
-        id = Id(businessPartner.localId, serverStringId = businessPartner.serverId),
+        id = businessPartner.localId,
         name = LocalizedString(arName = businessPartner.arName, enName = businessPartner.enName),
         address = businessPartner.address,
         phone = businessPartner.phone,

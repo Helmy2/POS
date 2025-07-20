@@ -20,11 +20,8 @@ data class BusinessPartnerDto(
     @SerialName("updated_at") val updatedAt: String
 )
 
-fun BusinessPartnerDto.toEntity(
-    responsibleId: Long
-) = BusinessPartnerEntity(
-    serverId = id,
-    localId = 0L,
+fun BusinessPartnerDto.toEntity() = BusinessPartnerEntity(
+    localId = id,
     arName = arName,
     enName = enName,
     phone = phone ?: "",

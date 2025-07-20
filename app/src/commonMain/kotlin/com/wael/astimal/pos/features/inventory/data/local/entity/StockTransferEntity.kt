@@ -47,10 +47,10 @@ data class StockTransferEntity(
     val updatedAt: Long = Clock.now(),
     var isDeletedLocally: Boolean = false,
 
-    @ColumnInfo(index = true) val fromStoreId: Long?,
-    @ColumnInfo(index = true) val toStoreId: Long?,
-    @ColumnInfo(index = true) val initiatedByUserId: Long?,
-    @ColumnInfo(index = true) val receivingUserId: Long?,
+    @ColumnInfo(index = true) val fromStoreId: String?,
+    @ColumnInfo(index = true) val toStoreId: String?,
+    @ColumnInfo(index = true) val initiatedByUserId: String?,
+    @ColumnInfo(index = true) val receivingUserId: String?,
     val notes: String?,
     val status: StockTransferStatus,
 )
@@ -71,7 +71,7 @@ data class StockTransferEntity(
 data class StockTransferItemEntity(
     @PrimaryKey val localId: String,
     @ColumnInfo(index = true) val stockTransferLocalId: String,
-    @ColumnInfo(index = true) val productLocalId: Long,
+    @ColumnInfo(index = true) val productLocalId: String,
     val quantity: Double,
     val isDeletedLocally: Boolean = false,
     val isSynced: Boolean = false
@@ -136,13 +136,11 @@ fun StockTransferItemWithProductDetails.toDomain(): StockTransferItem {
     )
 }
 
-fun StockTransferItemEntity.toDto(
-    productId: Long
-): StockTransferItemDto {
+fun StockTransferItemEntity.toDto(): StockTransferItemDto {
     return StockTransferItemDto(
         id = localId,
         quantity = quantity,
         transferId = stockTransferLocalId,
-        productId = productId,
+        productId = productLocalId,
     )
 }

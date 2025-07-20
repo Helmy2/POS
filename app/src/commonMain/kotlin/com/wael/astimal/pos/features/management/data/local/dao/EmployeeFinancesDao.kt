@@ -21,7 +21,7 @@ interface EmployeeFinancesDao {
     fun getAllTransactions(): Flow<List<EmployeeTransactionWithDetailsEntity>>
 
     @Query("UPDATE employee_account_transactions SET isDeletedLocally = 1 WHERE localId = :localId")
-    suspend fun softDeleteEmployeeTransaction(localId: Long)
+    suspend fun softDeleteEmployeeTransaction(localId: String)
 
     @Transaction
     @Query("SELECT * FROM employee_account_transactions WHERE isSynced = 0")
@@ -31,12 +31,15 @@ interface EmployeeFinancesDao {
     @Query("SELECT * FROM employee_account_transactions WHERE isDeletedLocally = 1")
     suspend fun getAllDeletedTransactions(): List<EmployeeTransactionWithDetailsEntity>
 
-    @Query("DELETE FROM employee_account_transactions WHERE serverId = :serverId")
-    suspend fun hardDeleteTransactionById(serverId: String)
+    @Query("DELETE FROM employee_account_transactions WHERE localId = :id")
+    suspend fun hardDeleteTransactionById(id: String)
 
-    @Query("SELECT * FROM employee_account_transactions WHERE serverId = :id LIMIT 1")
+    @Query("SELECT * FROM employee_account_transactions WHERE localId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): EmployeeTransactionEntity?
 
     @Query("DELETE FROM employee_account_transactions WHERE invoiceId = :id")
     suspend fun deleteTransactionsByInvoiceId(id: String)
+
+    @Query("DELETE FROM employee_account_transactions")
+    suspend fun deleteAllTransactions()
 }

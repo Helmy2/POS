@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class UnitDto(
-    val id: Long,
+    val id: String,
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("updated_at")
@@ -31,8 +31,7 @@ data class UnitDto(
  */
 fun UnitDto.toEntity(): UnitEntity {
     return UnitEntity(
-        serverId = id,
-        localId = 0L,
+        localId = id,
         arName = arName ?: "",
         enName = enName,
         arAbbreviation = arAbbreviation,

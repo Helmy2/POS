@@ -70,10 +70,7 @@ class SyncServiceImpl(
                 supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
                     storeRepository.syncWithServer(
                         it.map { storeDto ->
-                            storeDto.toEntity(
-                                userRepository.getUserByServerId(storeDto.employeeId)
-                                    .getOrThrow()!!.id.local
-                            )
+                            storeDto.toEntity()
                         },
                     )
                 }
@@ -109,20 +106,14 @@ class SyncServiceImpl(
 
     private suspend fun syncTransferItems() {
         stockTransferRepository.getUnsyncedTransfersItems().getOrThrow().map {
-            it.toDto(
-                productId = productRepository.getProductByLocalId(it.productLocalId)
-                    .getOrThrow().id.server!!
-            )
+            it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<StockTransferItemDto>("stock_transfer_items") { it }
         }
 
         // delete
         stockTransferRepository.getAllDeletedInvoiceItems().getOrThrow().map {
-            it.toDto(
-                productId = productRepository.getProductByLocalId(it.productLocalId)
-                    .getOrThrow().id.server!!
-            )
+            it.toDto()
         }.takeIf { it.isNotEmpty() }?.forEach {
             supabaseClient.postgrest["stock_transfer_items"].delete {
                 filter {
@@ -135,10 +126,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<StockTransferItemDto>("stock_transfer_items").getOrThrow().also {
             stockTransferRepository.syncTransfersItems(
                 it.map { item ->
-                    item.toEntity(
-                        productLocalId = productRepository.getProductByServerId(item.productId)
-                            .getOrThrow().id.local
-                    )
+                    item.toEntity()
                 }
             )
         }
@@ -163,16 +151,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<StockTransferDto>("stock_transfers").getOrThrow().also {
             stockTransferRepository.syncTransfers(
                 it.map { transfer ->
-                    transfer.toEntity(
-                        fromStoreId = storeRepository.getStoreBySeverId(transfer.fromStoreId)
-                            .getOrThrow().id.local,
-                        toStoreId = storeRepository.getStoreBySeverId(transfer.toStoreId)
-                            .getOrThrow().id.local,
-                        initiatingUserId = userRepository.getUserByServerId(transfer.initiatingUserId)
-                            .getOrThrow()!!.id.local,
-                        receivingUserId = userRepository.getUserByServerId(transfer.receivingUserId)
-                            .getOrThrow()!!.id.local
-                    )
+                    transfer.toEntity()
                 },
             )
         }
@@ -188,20 +167,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
             productRepository.syncWithServer(
                 it.map { unitDto ->
-                    unitDto.toEntity(
-                        categoryId = unitDto.categoryId?.let { id ->
-                            categoryRepository.getCategoryByServerId(
-                                id
-                            )
-                        }?.getOrThrow()?.id?.local,
-                        mainUnitId = unitRepository.getUnitByServerId(unitDto.mainUnitId)
-                            .getOrThrow().id.local,
-                        subUnitId = unitDto.subUnitId?.let { id ->
-                            unitRepository.getUnitByServerId(
-                                id
-                            )
-                        }?.getOrThrow()?.id?.local
-                    )
+                    unitDto.toEntity()
                 },
             )
         }
@@ -209,21 +175,13 @@ class SyncServiceImpl(
 
     private suspend fun syncInvoiceItems() {
         invoiceRepository.getUnsyncedInvoicesItems().getOrThrow().map {
-            it.toDto(
-                productId = productRepository.getProductByLocalId(
-                    it.productId
-                ).getOrThrow().id.server!!
-            )
+            it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<ItemDto>("invoice_items") { it }
         }?.getOrThrow()
 
         invoiceRepository.getAllDeletedInvoiceItems().getOrThrow().map {
-            it.toDto(
-                productId = productRepository.getProductByLocalId(
-                    it.productId
-                ).getOrThrow().id.server!!
-            )
+            it.toDto()
         }.takeIf { it.isNotEmpty() }?.forEach {
             supabaseClient.postgrest["invoice_items"].delete {
                 filter {
@@ -236,11 +194,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<ItemDto>("invoice_items").getOrThrow().also {
             invoiceRepository.syncInvoicesItems(
                 it.map { invoiceItemDto ->
-                    invoiceItemDto.toEntity(
-                        productId = productRepository.getProductByServerId(
-                            invoiceItemDto.productId
-                        ).getOrThrow().id.local,
-                    )
+                    invoiceItemDto.toEntity()
                 },
             )
         }
@@ -267,15 +221,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<InvoiceDto>("invoices").getOrThrow().also {
             invoiceRepository.syncInvoices(
                 it.map { invoiceDto ->
-                    invoiceDto.toEntity(
-                        partnerId = businessPartnerRepository.getBusinessPartnerByServerId(
-                            invoiceDto.partnerId
-                        ).getOrThrow()!!.localId,
-                        employeeId = userRepository.getUserByServerId(invoiceDto.employeeId)
-                            .getOrThrow()!!.id.local,
-                        storeId = storeRepository.getStoreBySeverId(invoiceDto.storeId)
-                            .getOrThrow().id.local
-                    )
+                    invoiceDto.toEntity()
                 },
             )
         }
@@ -302,17 +248,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
             stockRepository.syncWithServer(
                 it.map { stockAdjustmentDto ->
-                    stockAdjustmentDto.toEntity(
-                        storeId = storeRepository.getStoreBySeverId(
-                            stockAdjustmentDto.storeId
-                        ).getOrThrow().id.local,
-                        productId = productRepository.getProductByServerId(
-                            stockAdjustmentDto.productId
-                        ).getOrThrow().id.local,
-                        userId = userRepository.getUserByServerId(
-                            stockAdjustmentDto.userId
-                        ).getOrThrow()!!.id.local
-                    )
+                    stockAdjustmentDto.toEntity()
                 },
             )
         }
@@ -341,11 +277,7 @@ class SyncServiceImpl(
         supabaseClient.fetchAll<BusinessPartnerDto>("business_partners").getOrThrow().also {
             businessPartnerRepository.syncWithServer(
                 it.map { businessPartnerDto ->
-                    businessPartnerDto.toEntity(
-                        responsibleId = userRepository.getUserByServerId(
-                            businessPartnerDto.responsibleId
-                        ).getOrThrow()!!.id.local
-                    )
+                    businessPartnerDto.toEntity()
                 },
             )
         }
@@ -373,14 +305,7 @@ class SyncServiceImpl(
             .also {
                 employeeTransactionRepository.syncWithServer(
                     it.map { employeeTransactionDto ->
-                        employeeTransactionDto.toEntity(
-                            employeeId = userRepository.getUserByServerId(
-                                employeeTransactionDto.employeeId
-                            ).getOrThrow()!!.id.local,
-                            createdByEmployeeId = userRepository.getUserByServerId(
-                                employeeTransactionDto.creatorId
-                            ).getOrThrow()!!.id.local
-                        )
+                        employeeTransactionDto.toEntity()
                     },
                 )
             }
@@ -408,14 +333,7 @@ class SyncServiceImpl(
             .also {
                 partnerTransactionRepository.syncWithServer(
                     it.map { partnerTransactionDto ->
-                        partnerTransactionDto.toEntity(
-                            partnerLocalId = businessPartnerRepository.getBusinessPartnerByServerId(
-                                partnerTransactionDto.partnerId
-                            ).getOrThrow()!!.localId,
-                            userLocalId = userRepository.getUserByServerId(
-                                partnerTransactionDto.createdByUserId
-                            ).getOrThrow()!!.id.local
-                        )
+                        partnerTransactionDto.toEntity()
                     },
                 )
             }

@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
@@ -12,16 +10,15 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
 data class ProductUnit(
     val name: LocalizedString,
     val abbreviation: LocalizedString,
-    override val id: Id,
-    override val isSynced: Boolean = false,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now(),
-) : Item
+    val id: String,
+    val isSynced: Boolean = false,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now(),
+)
 
 fun ProductUnit.toEntity(): UnitEntity {
     return UnitEntity(
-        localId = id.local,
-        serverId = id.server,
+        localId = id,
         arName = name.arName ?: "",
         enName = name.enName ?: "",
         isSynced = isSynced,
@@ -34,7 +31,7 @@ fun ProductUnit.toEntity(): UnitEntity {
 
 fun ProductUnit.toDto(): UnitDto {
     return UnitDto(
-        id = id.server ?: 0,
+        id = id,
         arName = name.arName,
         enName = name.enName ?: "",
         arAbbreviation = abbreviation.arName,

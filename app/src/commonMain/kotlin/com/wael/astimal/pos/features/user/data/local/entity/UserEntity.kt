@@ -1,9 +1,7 @@
 package com.wael.astimal.pos.features.user.data.local.entity
 
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserRole
@@ -13,21 +11,14 @@ import com.wael.astimal.pos.features.user.domain.entity.UserRole
  * Represents a user's profile in the local Room database.
  * This entity is designed to mirror the structure of the 'profiles' table in Supabase.
  */
-@Entity(
-    tableName = "users",
-    indices = [Index(value = ["supabaseId"], unique = true)]
-)
+@Entity(tableName = "users")
 data class UserEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L,
-
-    val supabaseId: String?,
-
+    @PrimaryKey
+    val id: String,
     var isSynced: Boolean = false,
     val createdAt: Long,
     var updatedAt: Long,
     var isDeletedLocally: Boolean = false,
-
     val username: String,
     val arName: String?,
     val enName: String?,
@@ -45,7 +36,7 @@ data class UserEntity(
  */
 fun UserEntity.toDomain(): User {
     return User(
-        id = Id(local = id, serverStringId = supabaseId),
+        id = id,
         name = username,
         localizedName = LocalizedString(arName = arName, enName = enName),
         email = email,
@@ -65,8 +56,7 @@ fun UserEntity.toDomain(): User {
  */
 fun User.toEntity(): UserEntity {
     return UserEntity(
-        id = id.local,
-        supabaseId = id.serverStringId,
+        id = id,
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt,

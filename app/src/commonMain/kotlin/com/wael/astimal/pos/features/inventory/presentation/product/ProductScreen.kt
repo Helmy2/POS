@@ -72,7 +72,7 @@ fun ProductScreen(
                 list = state.products,
                 onItemClick = { product -> onEvent(ProductContract.Event.ProductSelected(product)) },
                 label = { Label(it.name.displayName(language)) },
-                isSelected = { product -> product.id.local == state.selectedProduct?.id?.local },
+                isSelected = { product -> product.id == state.selectedProduct?.id },
             )
         },
         mainContent = {
@@ -119,9 +119,9 @@ fun ProductScreen(
                     label = stringResource(Res.string.category),
                     items = state.dropdownData.categories,
                     selectedItemId = state.selectedCategoryId,
-                    onItemSelected = { onEvent(ProductContract.Event.CategoryIdChanged(it.id.local)) },
+                    onItemSelected = { onEvent(ProductContract.Event.CategoryIdChanged(it.id)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.id },
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )
@@ -131,9 +131,9 @@ fun ProductScreen(
                     label = stringResource(Res.string.main_unit),
                     items = state.dropdownData.units,
                     selectedItemId = state.selectedMainUnitId,
-                    onItemSelected = { onEvent(ProductContract.Event.MainUnitIdChanged(it.id.local)) },
+                    onItemSelected = { onEvent(ProductContract.Event.MainUnitIdChanged(it.id)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.id },
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )
@@ -144,9 +144,9 @@ fun ProductScreen(
                     label = stringResource(Res.string.sub_unit),
                     items = state.dropdownData.units,
                     selectedItemId = state.selectedSubUnitId,
-                    onItemSelected = { onEvent(ProductContract.Event.SubUnitIdChanged(it.id.local)) },
+                    onItemSelected = { onEvent(ProductContract.Event.SubUnitIdChanged(it.id)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id.local },
+                    itemToId = { it.id },
                     canClearSelection = true,
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)

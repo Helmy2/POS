@@ -19,21 +19,17 @@ data class EmployeeTransactionDto(
     val notes: String?
 )
 
-fun EmployeeTransactionDto.toEntity(
-    employeeId: Long,
-    createdByEmployeeId: Long
-): EmployeeTransactionEntity {
+fun EmployeeTransactionDto.toEntity(): EmployeeTransactionEntity {
     return EmployeeTransactionEntity(
-        serverId = id,
+        localId = id,
         employeeId = employeeId,
-        createdByEmployeeId = createdByEmployeeId,
+        createdByEmployeeId = creatorId,
         type = EmployeeTransactionType.valueOf(transactionType.uppercase()),
         amount = balance,
         notes = notes,
         createdAt = createdAt.parseIsoTimestamp() ?: System.currentTimeMillis(),
         updatedAt = createdAt.parseIsoTimestamp() ?: System.currentTimeMillis(),
         isSynced = true,
-        localId = 0L,
         invoiceId = invoiceId
     )
 }

@@ -69,7 +69,7 @@ fun StoreScreen(
                     onEvent(StoreContract.Event.StoreSelected(store))
                 },
                 label = { Label(it.name.displayName(LocalAppLocale.current)) },
-                isSelected = { store -> store.id.local == state.selectedStore?.id?.local },
+                isSelected = { store -> store.id == state.selectedStore?.id },
             )
         },
         mainContent = {

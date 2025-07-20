@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -99,7 +98,7 @@ class StoreViewModel(
             setState(StoreContract.Event.LoadingStarted)
             viewModelScope.launch {
                 val storeToSave = Store(
-                    id = currentState.selectedStore?.id ?: Id.new,
+                    id = currentState.selectedStore?.id ?: "",
                     name = LocalizedString(
                         arName = currentState.inputArName,
                         enName = currentState.inputEnName

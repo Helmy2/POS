@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
@@ -11,13 +9,15 @@ import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.advance
 import pos.app.generated.resources.bonus
-import pos.app.generated.resources.commission
+import pos.app.generated.resources.commission_for_order
+import pos.app.generated.resources.commission_for_responsibility
 import pos.app.generated.resources.deduction
 import pos.app.generated.resources.difference
 import pos.app.generated.resources.salary
 
 enum class EmployeeTransactionType {
-    COMMISSION,
+    COMMISSION_FOR_ORDER,
+    COMMISSION_FOR_RESPONSIBILITY,
     SALARY,
     DEDUCTION,
     ADVANCE,
@@ -26,7 +26,8 @@ enum class EmployeeTransactionType {
 
     fun getStringResId(): StringResource {
         return when (this) {
-            COMMISSION -> Res.string.commission
+            COMMISSION_FOR_ORDER -> Res.string.commission_for_order
+            COMMISSION_FOR_RESPONSIBILITY -> Res.string.commission_for_responsibility
             SALARY -> Res.string.salary
             DEDUCTION -> Res.string.deduction
             ADVANCE -> Res.string.advance
@@ -43,18 +44,17 @@ data class EmployeeTransaction(
     val amount: Double,
     val notes: String?,
     val invoiceId: String?,
-    override val id: Id,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now(),
-    override val isSynced: Boolean = false,
-) : Item
+    val id: String,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now(),
+    val isSynced: Boolean = false,
+)
 
 fun EmployeeTransaction.toEntity(): EmployeeTransactionEntity {
     return EmployeeTransactionEntity(
-        localId = id.local,
-        serverId = id.serverStringId,
-        employeeId = employee.id.local,
-        createdByEmployeeId = createdByEmployee.id.local,
+        localId = id,
+        employeeId = employee.id,
+        createdByEmployeeId = createdByEmployee.id,
         type = type,
         amount = amount,
         notes = notes,
@@ -77,14 +77,14 @@ fun EmployeeTransaction.matchesQuery(query: String): Boolean {
 
 fun EmployeeTransaction.toDto(): EmployeeTransactionDto {
     return EmployeeTransactionDto(
-        id = id.serverStringId!!,
+        id = id,
         transactionType = type.name.lowercase(),
         balance = amount,
         notes = notes,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),
-        creatorId = createdByEmployee.id.serverStringId!!,
-        employeeId = employee.id.serverStringId!!,
+        creatorId = createdByEmployee.id,
+        employeeId = employee.id,
         invoiceId = invoiceId
     )
 }

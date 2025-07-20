@@ -30,7 +30,7 @@ class ReceivePayVoucherReducer() :
                     dialogState = ReceivePayVoucherContract.DialogState(
                         show = true,
                         voucherToEdit = event.voucher,
-                        selectedPartnerId = event.voucher.partner.id.local,
+                        selectedPartnerId = event.voucher.partner.id,
                         amount = event.voucher.amount.toString(),
                         notes = event.voucher.notes,
                         date = event.voucher.createdAt

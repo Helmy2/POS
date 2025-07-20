@@ -5,8 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.data.entity.ItemEntity
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
@@ -29,19 +27,18 @@ import pos.app.generated.resources.store_type_unspecified
     ]
 )
 data class StoreEntity(
-    @PrimaryKey(autoGenerate = true) override val localId: Long = 0L,
-    override val serverId: Long?,
-    override var isSynced: Boolean = false,
-    override val createdAt: Long = Clock.now(),
-    override val updatedAt: Long = Clock.now(),
-    override var isDeletedLocally: Boolean = false,
+    @PrimaryKey val localId: String,
+    var isSynced: Boolean = false,
+    val createdAt: Long = Clock.now(),
+    val updatedAt: Long = Clock.now(),
+    var isDeletedLocally: Boolean = false,
 
     val arName: String,
     val enName: String,
     val address: String,
     val type: StoreType,
-    val employeeId: Long,
-) : ItemEntity
+    val employeeId: String,
+)
 
 enum class StoreType {
     MAIN, SUB, UNSPECIFIED;
@@ -64,7 +61,7 @@ data class StoreWithDetails(
 
 fun StoreWithDetails.toDomain(): Store {
     return Store(
-        id = Id(store.localId, store.serverId),
+        id = store.localId,
         name = LocalizedString(arName = store.arName, enName = store.enName),
         type = store.type,
         isSynced = store.isSynced,

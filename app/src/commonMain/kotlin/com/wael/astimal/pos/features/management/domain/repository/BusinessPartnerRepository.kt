@@ -10,7 +10,7 @@ interface BusinessPartnerRepository {
     suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit>
     fun getSuppliers(query: String = ""): Flow<List<BusinessPartner>>
     fun getClients(query: String = ""): Flow<List<BusinessPartner>>
-    suspend fun getClient(clientId: Long): BusinessPartner?
+    suspend fun getClient(clientId: String): BusinessPartner?
     suspend fun syncWithServer(list: List<BusinessPartnerEntity>): Result<Unit>
     suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double>
     suspend fun getBusinessPartnerByServerId(serverId: String): Result<BusinessPartnerEntity?>

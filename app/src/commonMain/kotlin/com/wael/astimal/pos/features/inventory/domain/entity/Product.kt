@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
@@ -19,47 +17,46 @@ data class Product(
     val subProductUnit: ProductUnit?,
     val mainProductUnit: ProductUnit,
     val subUnitsPerMainUnit: Double,
-    override val id: Id,
-    override val isSynced: Boolean = false,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now()
-) : Item
+    val id: String,
+    val isSynced: Boolean = false,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now()
+)
 
 fun Product.toEntity(): ProductEntity {
     return ProductEntity(
-        localId = id.local,
-        serverId = id.server,
+        localId = id,
         arName = name.arName ?: "",
         enName = name.enName ?: "",
-        categoryId = category?.id?.local,
+        categoryId = category?.id,
         averagePurchasePrice = averagePrice,
         sellingPrice = sellingPrice,
-        subUnitId = subProductUnit?.id?.local,
+        subUnitId = subProductUnit?.id,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         isSynced = isSynced,
         createdAt = createdAt,
         updatedAt = updatedAt,
         barcode = barcode,
         purchasePrice = purchasePrice,
-        mainUnitId = mainProductUnit.id.local
+        mainUnitId = mainProductUnit.id
     )
 }
 
 fun Product.toDto(): ProductDto {
     return ProductDto(
-        id = id.server ?: 0,
+        id = id,
         arName = name.arName ?: "",
         enName = name.enName ?: "",
-        categoryId = category?.id?.server,
+        categoryId = category?.id,
         averagePurchasePrice = averagePrice,
         sellingPrice = sellingPrice,
-        subUnitId = subProductUnit?.id?.server,
+        subUnitId = subProductUnit?.id,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),
         barcode = barcode,
         purchasePrice = purchasePrice,
-        mainUnitId = mainProductUnit.id.server!!
+        mainUnitId = mainProductUnit.id
     )
 }
 

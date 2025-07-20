@@ -17,7 +17,7 @@ class AccountStatementRepositoryImpl(
     override fun getAccountStatement(partner: BusinessPartner): Flow<List<AccountTransaction>> {
         // Determine which ledger query to use based on the partner type.
         val ledgerFlow = partnerTransactionDao.getTransactionsForPartner(
-            partner.id.local
+            partner.id
         )
 
         // Combine the live ledger data with the static partner data to build the statement.

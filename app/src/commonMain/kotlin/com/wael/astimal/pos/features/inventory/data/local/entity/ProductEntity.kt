@@ -6,8 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.wael.astimal.pos.core.data.entity.ItemEntity
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 
@@ -35,20 +33,18 @@ import com.wael.astimal.pos.features.inventory.domain.entity.Product
         )
     ],
     indices = [
-        Index("serverId", unique = true),
         Index("categoryId"),
         Index("mainUnitId"),
         Index("subUnitId"),
     ]
 )
 data class ProductEntity(
-    @PrimaryKey(autoGenerate = true)
-    override val localId: Long = 0L,
-    override val serverId: Long?,
-    override var isSynced: Boolean = false,
-    override val createdAt: Long,
-    override var updatedAt: Long,
-    override var isDeletedLocally: Boolean = false,
+    @PrimaryKey
+    val localId: String,
+    var isSynced: Boolean = false,
+    val createdAt: Long,
+    var updatedAt: Long,
+    var isDeletedLocally: Boolean = false,
 
     val arName: String?,
     val enName: String,
@@ -56,12 +52,11 @@ data class ProductEntity(
     val purchasePrice: Double,
     val sellingPrice: Double,
     val averagePurchasePrice: Double,
-    val categoryId: Long?,
-    val mainUnitId: Long,
-    val subUnitId: Long?,
+    val categoryId: String?,
+    val mainUnitId: String,
+    val subUnitId: String?,
     val subUnitsPerMainUnit: Double,
-
-    ) : ItemEntity
+)
 
 /**
  * A data class to hold a ProductEntity and its related parent entities (Category, Units, Store)
@@ -85,7 +80,7 @@ data class ProductWithDetails(
  */
 fun ProductWithDetails.toDomain(): Product {
     return Product(
-        id = Id(local = product.localId, server = product.serverId),
+        id = product.localId,
         name = LocalizedString(arName = product.arName, enName = product.enName),
         category = category?.toDomain(),
         averagePrice = product.averagePurchasePrice,

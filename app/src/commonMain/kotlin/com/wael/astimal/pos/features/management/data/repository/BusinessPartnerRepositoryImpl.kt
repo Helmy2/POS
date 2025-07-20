@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.management.data.repository
 
-import com.wael.astimal.pos.core.domain.entity.Id
 import com.wael.astimal.pos.features.management.data.local.dao.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
@@ -44,9 +43,9 @@ class BusinessPartnerRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
-            val entity = if (partner.id == Id.new) {
+            val entity = if (partner.id == "") {
                 partner.toEntity().copy(
-                    serverId = Uuid.random().toString()
+                    localId = Uuid.random().toString()
                 )
             } else {
                 partner.toEntity()
@@ -65,15 +64,8 @@ class BusinessPartnerRepositoryImpl(
         list: List<BusinessPartnerEntity>
     ): Result<Unit> {
         return runCatching {
-            list.map { serverEntity ->
-                val existingLocal = partnerDao.getPartnerBySeverId(
-                    serverEntity.serverId ?: throw Exception("serverId is null")
-                )
-
-                serverEntity.copy(
-                    localId = existingLocal?.localId ?: 0L,
-                )
-            }.forEach {
+            partnerDao.deleteAll()
+            list.forEach {
                 partnerDao.insertOrUpdate(it)
             }
         }
@@ -81,7 +73,7 @@ class BusinessPartnerRepositoryImpl(
 
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return runCatching {
-            partnerDao.softDeletePartnerByLocalId(partner.id.local)
+            partnerDao.softDeletePartnerByLocalId(partner.id)
         }.onFailure {
             it.printStackTrace()
         }
@@ -116,13 +108,13 @@ class BusinessPartnerRepositoryImpl(
         }
     }
 
-    override suspend fun getClient(clientId: Long): BusinessPartner? {
+    override suspend fun getClient(clientId: String): BusinessPartner? {
         return partnerDao.getPartnerByLocalId(clientId)?.toDomain()
     }
 
     override suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double> {
         return runCatching {
-            partnerTransactionDao.getPartnerBalance(partner.id.local) ?: 0.0
+            partnerTransactionDao.getPartnerBalance(partner.id) ?: 0.0
         }
     }
 

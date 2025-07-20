@@ -1,7 +1,5 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
-import com.wael.astimal.pos.core.domain.entity.Id
-import com.wael.astimal.pos.core.domain.entity.Item
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
@@ -10,16 +8,15 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 
 data class Category(
     val name: LocalizedString,
-    override val id: Id,
-    override val isSynced: Boolean = false,
-    override val createdAt: Long,
-    override val updatedAt: Long = Clock.now()
-) : Item
+    val id: String,
+    val isSynced: Boolean = false,
+    val createdAt: Long,
+    val updatedAt: Long = Clock.now()
+)
 
 fun Category.toEntity(): CategoryEntity {
     return CategoryEntity(
-        localId = id.local,
-        serverId = id.server,
+        localId = id,
         arName = name.arName,
         enName = name.enName,
         isSynced = isSynced,
@@ -30,7 +27,7 @@ fun Category.toEntity(): CategoryEntity {
 
 fun Category.toDto(): CategoryDto {
     return CategoryDto(
-        id = id.server ?: 0,
+        id = id,
         arName = name.arName,
         enName = name.enName ?: "",
         createdAt = createdAt.toDateString(),
