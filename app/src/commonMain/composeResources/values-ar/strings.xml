@@ -377,6 +377,8 @@
     <string name="error_password_too_short">كلمة المرور قصيرة جدا</string>
     <string name="employee_created_successfully">تم إنشاء الموظف بنجاح</string>
 
+    <string name="commission_for_order">عمولة إنشاء الطلب</string>
+    <string name="commission_for_responsibility">عمولة المسؤولية</string>
     <string name="pending">قيد الانتظار</string>
     <string name="approved">موافق عليه</string>
     <string name="rejected">مرفوض</string>
@@ -390,4 +392,9 @@
     <string name="start_date">تاريخ البدء</string>
     <string name="end_date">تاريخ الانتهاء</string>
     <string name="apply_filters">تطبيق</string>
+
+    <string name="employee_daily_report">تقرير الموظف اليومي</string>
+    <string name="select_employee">اختر الموظف</string>
+    <string name="activity_type">نوع النشاط</string>
+    <string name="details">التفاصيل</string>
 </resources>

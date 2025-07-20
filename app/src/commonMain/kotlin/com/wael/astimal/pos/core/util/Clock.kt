@@ -43,6 +43,11 @@ fun Long.convertToString(): String {
     return formatter.format(Date(this))
 }
 
+fun Long.convertToDateString(): String {
+    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    return formatter.format(Date(this))
+}
+
 fun Long.toLocalDateTime(): LocalDateTime {
     val instant = Instant.ofEpochMilli(this)
     val zoneId = ZoneId.systemDefault()

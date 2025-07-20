@@ -45,4 +45,12 @@ interface EmployeeFinancesDao {
 
     @Query("DELETE FROM employee_account_transactions")
     suspend fun deleteAllTransactions()
+
+    @Transaction
+    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId AND updatedAt BETWEEN :start AND :end")
+    fun getTransactionsForEmployeeInRange(
+        employeeId: String,
+        start: Long,
+        end: Long
+    ): Flow<List<EmployeeTransactionWithDetailsEntity>>
 }

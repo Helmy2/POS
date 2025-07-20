@@ -4,11 +4,15 @@ package com.wael.astimal.pos.core.util
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
+import com.wael.astimal.pos.features.user.domain.entity.User
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toJavaInstant
+import kotlinx.datetime.toLocalDateTime
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -150,6 +154,74 @@ class HtmlReportGenerator {
                         <th>Date</th>
                         <th>Description</th>
                         <th class="num">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    $transactionRows
+                </tbody>
+            </table>
+        </body>
+        </html>
+        """.trimIndent()
+    }
+
+    fun createEmployeeReportHtml(
+        employee: User,
+        transactions: List<EmployeeTransaction>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): String {
+        val transactionRows = transactions.joinToString("") { trx ->
+            // Convert the Long timestamp from the transaction to a readable date
+            val transactionDate = Instant.fromEpochMilliseconds(trx.createdAt)
+                .toLocalDateTime(TimeZone.UTC).date
+            """
+            <tr>
+                <td>${formatDate(transactionDate)}</td>
+                <td>${trx.notes ?: trx.type.name.replace('_', ' ')}</td>
+                <td class="num">${trx.amount}</td>
+            </tr>
+            """.trimIndent()
+        }
+
+        val formattedStartDate = formatDate(startDate)
+        val formattedEndDate = formatDate(endDate)
+        val dateRangeText = if (formattedStartDate == formattedEndDate) {
+            "Report for date: $formattedStartDate"
+        } else {
+            "Report for period: $formattedStartDate to $formattedEndDate"
+        }
+
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: sans-serif; margin: 25px; }
+                h1 { font-size: 24px; }
+                h2 { font-size: 18px; }
+                p { font-size: 14px; color: #555; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+                th { background-color: #f2f2f2; text-align: left; }
+                .num { text-align: right; font-family: monospace; }
+                .header { margin-bottom: 30px; }
+                .date-range { font-size: 12px; color: #777; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Employee Report</h1>
+                <h2>${employee.name}</h2>
+                <p class="date-range">$dateRangeText</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th class="num">Total Amount</th>
                     </tr>
                 </thead>
                 <tbody>

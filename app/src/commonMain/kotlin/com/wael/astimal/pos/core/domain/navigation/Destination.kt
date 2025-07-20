@@ -72,13 +72,16 @@ sealed class Destination {
 
     // Reports Feature Graph
     @Serializable
-    data object Reports : Destination() // The androidMain landing/hub screen for reports
+    data object Reports : Destination()
 
     @Serializable
     data object AccountStatement : Destination()
 
     @Serializable
     data object CustomerStatement : Destination()
+
+    @Serializable
+    data object EmployeeReport : Destination()
 
     @Serializable
     data object CreateEmployee : Destination()
