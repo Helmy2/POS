@@ -87,14 +87,17 @@ class SyncServiceImpl(
 
                 syncProducts()
 
-                syncPartner()
-                syncTransfer()
-                syncTransferItems()
-                syncInvoice()
-                syncInvoiceItems()
                 syncStockAdjustment()
                 syncPartnerTransactions()
                 syncEmployeesTransactions()
+
+                syncPartner()
+
+                syncTransferItems()
+                syncTransfer()
+
+                syncInvoiceItems()
+                syncInvoice()
 
                 Result.success(Unit)
             } catch (e: Exception) {
@@ -210,6 +213,7 @@ class SyncServiceImpl(
         invoiceRepository.getAllDeletedInvoice().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.forEach {
+            println(it)
             supabaseClient.postgrest["invoices"].delete {
                 filter {
                     eq("id", it.id)

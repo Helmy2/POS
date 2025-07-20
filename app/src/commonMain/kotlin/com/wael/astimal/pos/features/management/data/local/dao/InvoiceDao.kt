@@ -37,6 +37,18 @@ interface InvoiceDao {
         deleteInvoiceById(id)
     }
 
+    @Transaction
+    suspend fun softDeleteInvoiceWithItemsById(id: String) {
+        softDeleteInvoiceItemsByInvoiceId(id)
+        softDeleteInvoiceById(id)
+    }
+
+    @Query("UPDATE invoice_items SET isDeletedLocally = 1 WHERE invoiceId = :id")
+    suspend fun softDeleteInvoiceItemsByInvoiceId(id: String)
+
+    @Query("UPDATE invoices SET isDeletedLocally = 1 WHERE supabaseId = :id")
+    suspend fun softDeleteInvoiceById(id: String)
+
     @Query("DELETE FROM invoices WHERE supabaseId = :id")
     suspend fun deleteInvoiceById(id: String)
 
@@ -48,7 +60,7 @@ interface InvoiceDao {
     fun getAllInvoicesWithItems(): Flow<List<InvoiceWithItems>>
 
     @Transaction
-    @Query("SELECT * FROM invoices WHERE  isDeletedLocally = 0")
+    @Query("SELECT * FROM invoices WHERE  isDeletedLocally = 0 AND isSynced = 0")
     suspend fun getUnsyncedInvoices(): List<InvoiceWithItems>
 
     @Transaction
@@ -59,7 +71,7 @@ interface InvoiceDao {
     suspend fun hardDeleteInvoiceById(id: String)
 
 
-    @Query("SELECT * FROM invoice_items WHERE isDeletedLocally = 0")
+    @Query("SELECT * FROM invoice_items WHERE isDeletedLocally = 0 AND isSynced = 0")
     suspend fun getUnsyncedInvoicesItems(): List<InvoiceItemEntity>
 
     @Query("SELECT * FROM invoice_items WHERE isDeletedLocally = 1")

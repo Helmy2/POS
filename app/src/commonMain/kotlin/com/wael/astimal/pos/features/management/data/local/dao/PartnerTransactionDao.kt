@@ -63,6 +63,9 @@ interface PartnerTransactionDao {
     @Query("DELETE FROM partner_transactions WHERE invoiceId = :id")
     suspend fun deleteTransactionsByInvoiceId(id: String)
 
+    @Query("UPDATE partner_transactions SET isDeletedLocally = 1 WHERE invoiceId = :id")
+    suspend fun softDeleteTransactionsByInvoiceId(id: String)
+
     @Query("DELETE FROM partner_transactions")
     suspend fun deleteAll()
 }

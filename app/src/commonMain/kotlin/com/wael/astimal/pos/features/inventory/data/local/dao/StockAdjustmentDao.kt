@@ -42,6 +42,9 @@ interface StockAdjustmentDao {
     @Query("DELETE FROM stock_adjustments WHERE invoiceId = :id")
     suspend fun deleteAdjustmentsByInvoiceId(id: String)
 
+    @Query("UPDATE stock_adjustments SET isDeletedLocally = 1 WHERE invoiceId = :id")
+    suspend fun softDeleteAdjustmentsByInvoiceId(id: String)
+
     @Query("DELETE FROM stock_adjustments")
     suspend fun deleteAll()
 }

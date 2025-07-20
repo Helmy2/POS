@@ -134,10 +134,10 @@ class InvoiceRepositoryImpl(
     override suspend fun deleteSalesOrder(orderId: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                stockAdjustmentDao.deleteAdjustmentsByInvoiceId(orderId)
-                partnerTransactionDao.deleteTransactionsByInvoiceId(orderId)
-                employeeFinancesDao.deleteTransactionsByInvoiceId(orderId)
-                invoiceDao.deleteInvoiceWithItemsById(orderId)
+                stockAdjustmentDao.softDeleteAdjustmentsByInvoiceId(orderId)
+                partnerTransactionDao.softDeleteTransactionsByInvoiceId(orderId)
+                employeeFinancesDao.softDeleteTransactionsByInvoiceId(orderId)
+                invoiceDao.softDeleteInvoiceWithItemsById(orderId)
                 Result.success(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()
