@@ -107,4 +107,13 @@ interface InvoiceDao {
     @Query("SELECT * FROM invoices WHERE supabaseId = :id")
     suspend fun getInvoiceById(id: String): InvoiceWithItems
 
+    @Transaction
+    @Query(
+        "SELECT * FROM invoices WHERE NOT isDeletedLocally AND employeeId = :userId AND createdAt BETWEEN :startDate AND :endDate"
+    )
+    fun getInvoicesCreatedByEmployeeInRange(
+        userId: String,
+        startDate: Long, endDate: Long
+    ): Flow<List<InvoiceWithItems>>
+
 }

@@ -1,10 +1,12 @@
 package com.wael.astimal.pos.features.reports.data.repository
 
-import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesDao
+import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
-import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
+import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeReportRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -14,21 +16,38 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toJavaInstant
 
 class EmployeeReportRepositoryImpl(
-    private val employeeFinancesDao: EmployeeFinancesDao
+    private val db: AppDatabase
 ) : EmployeeReportRepository {
 
-    override fun getEmployeeTransactionsForDate(
-        employeeId: String, startDate: LocalDate,
+    override fun getEmployeeActivityForDateRange(
+        employeeId: String,
+        startDate: LocalDate,
         endDate: LocalDate
-    ): Flow<List<EmployeeTransaction>> {
-        val startOfDay = startDate.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
-        val endOfDay =
+    ): Flow<List<EmployeeActivity>> {
+        val startEpochMilli = startDate.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
+        val endEpochMilli =
             endDate.atTime(23, 59, 59).toInstant(TimeZone.UTC).toJavaInstant().toEpochMilli()
 
-        return employeeFinancesDao.getTransactionsForEmployeeInRange(
-            employeeId, startOfDay, endOfDay
-        ).map {
-            it.map { it.toDomain() }
+        // Flow 1: Get all invoices created by the employee
+        val invoicesFlow = db.invoiceDao()
+            .getInvoicesCreatedByEmployeeInRange(employeeId, startEpochMilli, endEpochMilli)
+
+        // Flow 2: Get only payment/receipt vouchers created by the employee
+        val vouchersFlow = db.employeeFinancesDao()
+            .getTransactionsForEmployeeInRange(employeeId, startEpochMilli, endEpochMilli)
+            .map { it.map { it.toDomain() } }
+            .map { transactions ->
+                transactions.filter {
+                    it.type == EmployeeTransactionType.COMMISSION_FOR_ORDER || it.type == EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY
+                }
+            }
+
+        // Combine both flows, transform the data, and return a single sorted list
+        return combine(invoicesFlow, vouchersFlow) { invoices, vouchers ->
+            val invoiceActivities = invoices.map { EmployeeActivity.InvoiceActivity(it.toDomain()) }
+            val financialActivities = vouchers.map { EmployeeActivity.FinancialActivity(it) }
+
+            (invoiceActivities + financialActivities).sortedByDescending { it.timestamp }
         }
     }
 }

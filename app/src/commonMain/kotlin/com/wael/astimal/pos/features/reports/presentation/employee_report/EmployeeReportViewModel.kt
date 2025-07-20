@@ -17,7 +17,7 @@ class EmployeeReportViewModel(
     EmployeeReportReducer(),
     EmployeeReportContract.State()
 ) {
-    private var transactionJob: Job? = null
+    private var activityJob: Job? = null
 
     init {
         processEvent(EmployeeReportContract.Event.LoadInitialData)
@@ -27,10 +27,9 @@ class EmployeeReportViewModel(
         when (event) {
             is EmployeeReportContract.Event.LoadInitialData -> loadEmployees()
             is EmployeeReportContract.Event.ApplyFilters -> {
-                setState(event) // Set loading state
-                loadTransactions()
+                setState(event)
+                loadActivities()
             }
-
             is EmployeeReportContract.Event.GeneratePdf -> generatePdf()
             else -> setState(event)
         }
@@ -43,19 +42,18 @@ class EmployeeReportViewModel(
         }
     }
 
-    private fun loadTransactions() {
-        transactionJob?.cancel()
+    private fun loadActivities() {
+        activityJob?.cancel()
         val currentState = state.value
-        val employeeId = currentState.selectedEmployee?.id ?: return
-
-        transactionJob = viewModelScope.launch {
-            reportRepository.getEmployeeTransactionsForDate(
+        val employeeId = currentState.selectedEmployeeId ?: return
+        activityJob = viewModelScope.launch {
+            reportRepository.getEmployeeActivityForDateRange(
                 employeeId,
                 currentState.startDate,
                 currentState.endDate
             )
-                .collect { transactions ->
-                    setState(EmployeeReportContract.Event.ShowTransactions(transactions))
+                .collect { activities ->
+                    setState(EmployeeReportContract.Event.ShowActivities(activities))
                 }
         }
     }
@@ -63,15 +61,13 @@ class EmployeeReportViewModel(
     private fun generatePdf() {
         val currentState = state.value
         currentState.selectedEmployee?.let { employee ->
-            val html = htmlReportGenerator.createEmployeeReportHtml(
+            val html = htmlReportGenerator.createEmployeeActivityReportHtml(
                 employee = employee,
-                transactions = currentState.transactions,
+                activities = currentState.activities,
                 startDate = currentState.startDate,
                 endDate = currentState.endDate
             )
-            setState(
-                EmployeeReportContract.Event.PdfGenerationSuccess(html = html),
-            )
+            setState(EmployeeReportContract.Event.PdfGenerationSuccess(html))
         }
     }
 }

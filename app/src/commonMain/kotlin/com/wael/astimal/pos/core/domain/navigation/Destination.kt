@@ -84,5 +84,8 @@ sealed class Destination {
     data object EmployeeReport : Destination()
 
     @Serializable
+    data object ProfitReport : Destination()
+
+    @Serializable
     data object CreateEmployee : Destination()
 }

@@ -385,4 +385,17 @@
     <string name="select_employee">Select Employee</string>
     <string name="activity_type">Activity Type</string>
     <string name="details">Details</string>
+
+    <!-- ... other strings ... -->
+    <string name="profit_report">Profit Report</string>
+    <string name="commission_on_creation">Creation Commission</string>
+    <string name="commission_on_responsibility">Responsibility Commission</string>
+    <string name="total_commission">Total Commission</string>
+    <string name="profits_report">Profits Report</string>
+    <string name="direct_commission">Direct Commission</string>
+    <string name="responsibility_commission">Responsibility Commission</string>
+
+    <string name="employee_activity_report">Employee Activity Report</string>
+    <string name="invoice_type">Invoice Type</string>
+    <string name="voucher_type">Voucher Type</string>
 </resources>

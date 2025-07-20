@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.reports.presentation.employee_report
+package com.wael.astimal.pos.features.reports.presentation.profits_report
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,39 +41,38 @@ import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
-import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import com.wael.astimal.pos.features.reports.domain.model.EmployeeProfitSummary
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.apply_filters
 import pos.app.generated.resources.date
-import pos.app.generated.resources.description
-import pos.app.generated.resources.employee_activity_report
+import pos.app.generated.resources.direct_commission
 import pos.app.generated.resources.end_date
+import pos.app.generated.resources.profits_report
+import pos.app.generated.resources.responsibility_commission
 import pos.app.generated.resources.select_employee
 import pos.app.generated.resources.start_date
-import pos.app.generated.resources.total_amount
+import pos.app.generated.resources.total_commission
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmployeeReportRoute(
+fun ProfitReportRoute(
     onNavigateBack: () -> Unit,
-    viewModel: EmployeeReportViewModel = koinInject()
+    viewModel: ProfitReportViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
 
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
-        baseFileName = "employee_activity_report_${state.selectedEmployee?.name ?: "report"}",
-        onFinish = { viewModel.processEvent(EmployeeReportContract.Event.PdfGenerationFinished) }
+        baseFileName = "profits_report_${state.selectedEmployee?.name ?: "report"}",
+        onFinish = { viewModel.processEvent(ProfitReportContract.Event.PdfGenerationFinished) }
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(Res.string.employee_activity_report)) },
+                title = { Text(stringResource(Res.string.profits_report)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -84,14 +83,14 @@ fun EmployeeReportRoute(
                 },
                 actions = {
                     IconButton(
-                        onClick = { viewModel.processEvent(EmployeeReportContract.Event.GeneratePdf) },
-                        enabled = state.activities.isNotEmpty()
+                        onClick = { viewModel.processEvent(ProfitReportContract.Event.GeneratePdf) },
+                        enabled = state.profitSummary.isNotEmpty()
                     ) { Icon(Icons.Default.PictureAsPdf, "Generate PDF") }
                 }
             )
         }
     ) { paddingValues ->
-        EmployeeReportScreen(
+        ProfitReportScreen(
             state = state,
             processEvent = viewModel::processEvent,
             modifier = Modifier.padding(paddingValues)
@@ -100,9 +99,9 @@ fun EmployeeReportRoute(
 }
 
 @Composable
-fun EmployeeReportScreen(
-    state: EmployeeReportContract.State,
-    processEvent: (EmployeeReportContract.Event) -> Unit,
+fun ProfitReportScreen(
+    state: ProfitReportContract.State,
+    processEvent: (ProfitReportContract.Event) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -110,29 +109,28 @@ fun EmployeeReportScreen(
 
     if (showStartDatePicker) {
         DataPicker(
-            onDateSelected = { processEvent(EmployeeReportContract.Event.SetStartDate(it)) },
+            onDateSelected = { processEvent(ProfitReportContract.Event.SetStartDate(it)) },
             onDismiss = { showStartDatePicker = false }
         )
     }
     if (showEndDatePicker) {
         DataPicker(
-            onDateSelected = { processEvent(EmployeeReportContract.Event.SetEndDate(it)) },
+            onDateSelected = { processEvent(ProfitReportContract.Event.SetEndDate(it)) },
             onDismiss = { showEndDatePicker = false }
         )
     }
 
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
-
+        // --- Filters ---
         CustomExposedDropdownMenu(
             label = stringResource(Res.string.select_employee),
             currentSelection = state.selectedEmployee?.name ?: "",
             items = state.employees,
-            onItemSelected = { processEvent(EmployeeReportContract.Event.SelectEmployee(it.id)) },
+            onItemSelected = { processEvent(ProfitReportContract.Event.SelectEmployee(it.id)) },
             itemToDisplayString = { it.name },
             modifier = Modifier.padding(8.dp)
         )
         Spacer(Modifier.height(8.dp))
-
         OutlinedTextField(
             value = state.startDate.toString(),
             onValueChange = {},
@@ -145,7 +143,7 @@ fun EmployeeReportScreen(
             },
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
             value = state.endDate.toString(),
@@ -159,9 +157,10 @@ fun EmployeeReportScreen(
             },
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(Modifier.height(16.dp))
         Button(
-            onClick = { processEvent(EmployeeReportContract.Event.ApplyFilters) },
+            onClick = { processEvent(ProfitReportContract.Event.ApplyFilters) },
             enabled = state.selectedEmployeeId != null,
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(Res.string.apply_filters)) }
@@ -176,7 +175,7 @@ fun EmployeeReportScreen(
             ) { CircularProgressIndicator() }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (state.activities.isNotEmpty()) {
+                if (state.profitSummary.isNotEmpty()) {
                     item {
                         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp)) {
                             Text(
@@ -185,21 +184,28 @@ fun EmployeeReportScreen(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
-                                stringResource(Res.string.description),
-                                modifier = Modifier.weight(3f),
-                                style = MaterialTheme.typography.titleSmall
+                                stringResource(Res.string.direct_commission),
+                                modifier = Modifier.weight(2f),
+                                style = MaterialTheme.typography.titleSmall,
+                                textAlign = TextAlign.End
                             )
                             Text(
-                                stringResource(Res.string.total_amount),
-                                modifier = Modifier.weight(1.5f),
+                                stringResource(Res.string.responsibility_commission),
+                                modifier = Modifier.weight(2f),
+                                style = MaterialTheme.typography.titleSmall,
+                                textAlign = TextAlign.End
+                            )
+                            Text(
+                                stringResource(Res.string.total_commission),
+                                modifier = Modifier.weight(2f),
                                 style = MaterialTheme.typography.titleSmall,
                                 textAlign = TextAlign.End
                             )
                         }
                     }
                 }
-                items(state.activities) { activity ->
-                    ActivityRow(activity)
+                items(state.profitSummary) { summary ->
+                    ProfitRow(summary)
                 }
             }
         }
@@ -207,27 +213,32 @@ fun EmployeeReportScreen(
 }
 
 @Composable
-private fun ActivityRow(activity: EmployeeActivity) {
-    val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault()).date
-
+private fun ProfitRow(summary: EmployeeProfitSummary) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                date.toString(),
+                summary.date.toString(),
                 modifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                activity.details,
-                modifier = Modifier.weight(3f),
-                style = MaterialTheme.typography.bodyMedium
+                String.format("%.2f", summary.directCommission),
+                modifier = Modifier.weight(2f),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.End
             )
             Text(
-                String.format("%.2f", activity.amount),
-                modifier = Modifier.weight(1.5f),
+                String.format("%.2f", summary.responsibilityCommission),
+                modifier = Modifier.weight(2f),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.End
+            )
+            Text(
+                String.format("%.2f", summary.totalCommission),
+                modifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End
             )

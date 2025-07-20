@@ -397,4 +397,17 @@
     <string name="select_employee">اختر الموظف</string>
     <string name="activity_type">نوع النشاط</string>
     <string name="details">التفاصيل</string>
+
+    <string name="profit_report">تقرير الأرباح</string>
+    <string name="commission_on_creation">عمولة الإنشاء</string>
+    <string name="commission_on_responsibility">عمولة المسؤولية</string>
+    <string name="total_commission">إجمالي العمولة</string>
+    <string name="direct_commission">عمولة مباشرة</string>
+    <string name="responsibility_commission">عمولة مسؤولية</string>
+    <string name="profits_report">تقرير الأرباح</string>
+
+    <string name="employee_activity_report">تقرير نشاط الموظف</string>
+    <string name="invoice_type">نوع الفاتورة</string>
+    <string name="voucher_type">نوع السند</string>
+
 </resources>

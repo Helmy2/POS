@@ -6,6 +6,8 @@ import com.wael.astimal.pos.features.management.domain.entity.AccountTransaction
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
+import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
+import com.wael.astimal.pos.features.reports.domain.model.EmployeeProfitSummary
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -231,5 +233,137 @@ class HtmlReportGenerator {
         </body>
         </html>
         """.trimIndent()
+    }
+
+    fun createProfitReportHtml(
+        employee: User,
+        summary: List<EmployeeProfitSummary>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): String {
+        val summaryRows = summary.joinToString("") {
+            """
+        <tr>
+            <td>${formatDate(it.date)}</td>
+            <td class="num">${String.format("%.2f", it.directCommission)}</td>
+            <td class="num">${String.format("%.2f", it.responsibilityCommission)}</td>
+            <td class="num">${String.format("%.2f", it.totalCommission)}</td>
+        </tr>
+        """.trimIndent()
+        }
+        val totalDirect = summary.sumOf { it.directCommission }
+        val totalResponsibility = summary.sumOf { it.responsibilityCommission }
+        val grandTotal = summary.sumOf { it.totalCommission }
+
+        val dateRangeText = if (formatDate(startDate) == formatDate(endDate)) {
+            "Report for date: ${formatDate(startDate)}"
+        } else {
+            "Report for period: ${formatDate(startDate)} to ${formatDate(endDate)}"
+        }
+
+        return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: sans-serif; margin: 25px; }
+            h1, h2 { text-align: center; }
+            p { font-size: 14px; color: #555; text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+            th { background-color: #f2f2f2; text-align: center; }
+            .num { text-align: right; font-family: monospace; }
+            .total-row { background-color: #f2f2f2; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>Profits Report</h1>
+        <h2>${employee.name}</h2>
+        <p>$dateRangeText</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th class="num">Direct Commission</th>
+                    <th class="num">Responsibility Commission</th>
+                    <th class="num">Total Commission</th>
+                </tr>
+            </thead>
+            <tbody>
+                $summaryRows
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td>TOTAL</td>
+                    <td class="num">${String.format("%.2f", totalDirect)}</td>
+                    <td class="num">${String.format("%.2f", totalResponsibility)}</td>
+                    <td class="num">${String.format("%.2f", grandTotal)}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </body>
+    </html>
+    """.trimIndent()
+    }
+
+    fun createEmployeeActivityReportHtml(
+        employee: User,
+        activities: List<EmployeeActivity>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): String {
+        val activityRows = activities.joinToString("") { activity ->
+            val date = activity.timestamp.toLocalDateTime(TimeZone.UTC).date
+            """
+        <tr>
+            <td>${formatDate(date)}</td>
+            <td>${activity.type}</td>
+            <td>${activity.details}</td>
+            <td class="num">${String.format("%.2f", activity.amount)}</td>
+        </tr>
+        """.trimIndent()
+        }
+
+        val dateRangeText = if (formatDate(startDate) == formatDate(endDate)) {
+            "Report for date: ${formatDate(startDate)}"
+        } else {
+            "Report for period: ${formatDate(startDate)} to ${formatDate(endDate)}"
+        }
+
+        return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: sans-serif; margin: 25px; }
+            h1, h2, p { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+            th { background-color: #f2f2f2; text-align: left; }
+            .num { text-align: right; font-family: monospace; }
+        </style>
+    </head>
+    <body>
+        <h1>Employee Activity Report</h1>
+        <h2>${employee.name}</h2>
+        <p>$dateRangeText</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Details</th>
+                    <th class="num">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                $activityRows
+            </tbody>
+        </table>
+    </body>
+    </html>
+    """.trimIndent()
     }
 }

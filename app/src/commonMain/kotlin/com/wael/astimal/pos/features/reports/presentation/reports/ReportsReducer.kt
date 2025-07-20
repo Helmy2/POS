@@ -5,6 +5,7 @@ import com.wael.astimal.pos.core.domain.navigation.Destination
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.customer_statement
 import pos.app.generated.resources.employee_daily_report
+import pos.app.generated.resources.profit_report
 
 class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Nothing> {
     override fun reduce(
@@ -22,6 +23,9 @@ class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Not
                     ),
                     ReportsContract.ReportsItem(
                         Destination.EmployeeReport, Res.string.employee_daily_report
+                    ),
+                    ReportsContract.ReportsItem(
+                        Destination.ProfitReport, Res.string.profit_report
                     ),
                 )
                 previousState.copy(items = reportItems) to null

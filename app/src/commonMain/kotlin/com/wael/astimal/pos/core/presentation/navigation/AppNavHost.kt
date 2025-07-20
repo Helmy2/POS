@@ -29,6 +29,7 @@ import com.wael.astimal.pos.features.management.presentation.sales_return.SalesR
 import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportRoute
+import com.wael.astimal.pos.features.reports.presentation.profits_report.ProfitReportRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
 import com.wael.astimal.pos.features.user.presentation.create.CreateEmployeeRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
@@ -123,6 +124,13 @@ fun AppNavHost(
             }
             composable<Destination.EmployeeReport> {
                 EmployeeReportRoute(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<Destination.ProfitReport> {
+                ProfitReportRoute(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
