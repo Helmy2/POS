@@ -68,4 +68,12 @@ interface PartnerTransactionDao {
 
     @Query("DELETE FROM partner_transactions")
     suspend fun deleteAll()
+
+    @Transaction
+    @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :partnerId AND updatedAt BETWEEN :startDate AND :endDate")
+    fun getTransactionsForPartnerInRange(
+        partnerId: String,
+        startDate: Long,
+        endDate: Long
+    ): Flow<List<PartnerTransactionEntity>>
 }

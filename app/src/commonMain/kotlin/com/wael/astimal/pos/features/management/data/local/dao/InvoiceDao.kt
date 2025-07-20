@@ -103,5 +103,8 @@ interface InvoiceDao {
     @Query("DELETE FROM invoices")
     suspend fun deleteAllInvoices()
 
+    @Transaction
+    @Query("SELECT * FROM invoices WHERE supabaseId = :id")
+    suspend fun getInvoiceById(id: String): InvoiceWithItems
 
 }

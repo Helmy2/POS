@@ -159,7 +159,12 @@ class InvoiceRepositoryImpl(
             partnerLocalId = invoice.partner.id,
             employeeLocalId = invoice.employee.id,
             invoiceId = invoice.id,
-            transactionType = TransactionType.INVOICE,
+            transactionType = when (invoice.invoiceType) {
+                InvoiceType.SALES -> TransactionType.SALE_INVOICE
+                InvoiceType.PURCHASE -> TransactionType.PURCHASE_INVOICE
+                InvoiceType.SALES_RETURN -> TransactionType.SALE_RETURN_INVOICE
+                InvoiceType.PURCHASE_RETURN -> TransactionType.PURCHASE_RETURN_INVOICE
+            },
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
             balance = price,
@@ -263,4 +268,9 @@ class InvoiceRepositoryImpl(
         }
     }
 
+    override suspend fun getInvoiceById(id: String): Result<Invoice> {
+        return runCatching {
+            invoiceDao.getInvoiceById(id).toDomain()
+        }
+    }
 }

@@ -17,6 +17,7 @@ import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -132,12 +133,28 @@ class SalesReturnViewModel(
                 }
             }
 
+            is SalesReturnContract.Event.LoadInitialInvoice -> {
+                loadInitialInvoice(event.id)
+            }
+
             else -> setState(event)
         }
     }
 
     init {
         loadInitialData()
+    }
+
+    private fun loadInitialInvoice(id: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            id?.let {
+                invoiceRepository.getInvoiceById(it).onSuccess { invoice ->
+                    setState(SalesReturnContract.Event.OrderSelected(invoice))
+                }.onFailure {
+                    it.printStackTrace()
+                }
+            }
+        }
     }
 
     private fun loadInitialData() {

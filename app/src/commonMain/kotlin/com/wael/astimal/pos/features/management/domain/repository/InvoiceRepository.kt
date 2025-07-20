@@ -22,4 +22,5 @@ interface InvoiceRepository {
     suspend fun hardDeleteInvoiceItems(id: String): Result<Unit>
     suspend fun syncInvoicesItems(entities: List<InvoiceItemEntity>): Result<Unit>
     fun getDailySales(startMillis: Long, endMillis: Long): Flow<List<DailySale>>
+    suspend fun getInvoiceById(id: String): Result<Invoice>
 }

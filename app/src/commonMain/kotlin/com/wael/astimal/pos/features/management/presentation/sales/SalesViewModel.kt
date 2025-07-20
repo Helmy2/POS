@@ -17,6 +17,7 @@ import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -97,7 +98,7 @@ class SalesViewModel(
             }
 
             is SalesContract.Event.PartnerSelected -> {
-                viewModelScope.launch {
+                viewModelScope.launch(Dispatchers.IO) {
                     event.partner?.let {
                         val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
                         setState(SalesContract.Event.PartnerBalanceChanged(balance))
@@ -131,7 +132,23 @@ class SalesViewModel(
                 }
             }
 
+            is SalesContract.Event.LoadInitialInvoice -> {
+                loadInitialInvoice(event.id)
+            }
+
             else -> setState(event)
+        }
+    }
+
+    private fun loadInitialInvoice(id: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            id?.let {
+                invoiceRepository.getInvoiceById(it).onSuccess { invoice ->
+                    setState(SalesContract.Event.OrderSelected(invoice))
+                }.onFailure {
+                    it.printStackTrace()
+                }
+            }
         }
     }
 
@@ -140,7 +157,7 @@ class SalesViewModel(
     }
 
     private fun loadInitialData() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val user = userRepository.getCurrentUser() ?: throw Exception()
             setState(SalesContract.Event.UserLoaded(user))
             combine(
@@ -158,7 +175,7 @@ class SalesViewModel(
     }
 
     private fun saveOrder() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val currentState = state.value
             if (!currentState.canSave || currentState.currentOrderInput.selectedPartner == null || currentState.currentOrderInput.selectedStore == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
@@ -240,7 +257,7 @@ class SalesViewModel(
 
     private fun deleteOrder() {
         setState(SalesContract.Event.LoadingStarted)
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             state.value.selectedOrder?.id?.let {
                 invoiceRepository.deleteSalesOrder(it).onSuccess {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.order_deleted)))
@@ -257,7 +274,7 @@ class SalesViewModel(
 
     private fun observeStockForItem(tempId: String, productId: String) {
         stockObservationJobs[tempId]?.cancel()
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val storeId = state.value.currentOrderInput.selectedStore?.id ?: return@launch
             stockObservationJobs[tempId] =
                 stockRepository.getStockQuantityFlow(storeId, productId).catch {
@@ -271,7 +288,7 @@ class SalesViewModel(
     }
 
     private fun navigateBack() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             navigationController.navigateBack()
         }
     }

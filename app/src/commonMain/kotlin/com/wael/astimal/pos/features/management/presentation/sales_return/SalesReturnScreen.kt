@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.presentation.sales_return
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -23,10 +24,15 @@ import pos.app.generated.resources.stores
 
 @Composable
 fun SalesReturnRoute(
-    viewModel: SalesReturnViewModel = koinViewModel()
+    viewModel: SalesReturnViewModel = koinViewModel(),
+    invoiceId: String? = null
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredReturns by viewModel.filteredOrdersState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.processEvent(SalesReturnContract.Event.LoadInitialInvoice(invoiceId))
+    }
 
     SalesReturnScreen(
         state = state,

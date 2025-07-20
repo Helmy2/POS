@@ -20,10 +20,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.wael.astimal.pos.core.util.convertToString
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.cancel
 import pos.app.generated.resources.ok
 import pos.app.generated.resources.select_date
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,5 +84,40 @@ fun DataPicker(
                 DatePicker(state = datePickerState)
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DataPicker(
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState()
+
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date
+    }
+
+    DatePickerDialog(
+        onDismissRequest = { onDismiss() },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    selectedDate?.let { onDateSelected(it) }
+                    onDismiss()
+                },
+                enabled = selectedDate != null
+            ) {
+                Text(stringResource(Res.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text(stringResource(Res.string.cancel))
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }

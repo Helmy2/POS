@@ -245,9 +245,7 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
             }
 
 
-            is SalesContract.Event.BackClicked,
-            is SalesContract.Event.SaveClicked,
-            is SalesContract.Event.DeleteClicked -> previousState to null
+            else -> previousState to null
         }
     }
 }

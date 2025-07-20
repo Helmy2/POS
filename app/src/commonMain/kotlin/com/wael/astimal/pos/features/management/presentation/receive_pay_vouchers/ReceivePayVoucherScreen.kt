@@ -119,7 +119,7 @@ fun ReceivePayVoucherScreen(
             items(filteredVouchers, key = { it.id }) { voucher ->
                 VoucherItem(
                     voucher = voucher,
-                    canEdit = state.canUserEdit && voucher.transactionType != TransactionType.INVOICE,
+                    canEdit = state.canUserEdit && (voucher.transactionType == TransactionType.OPENING_BALANCE || voucher.transactionType == TransactionType.PAYMENT),
                     onEdit = { onEvent(ReceivePayVoucherContract.Event.EditVoucherClicked(voucher)) },
                     onDelete = {
                         onEvent(

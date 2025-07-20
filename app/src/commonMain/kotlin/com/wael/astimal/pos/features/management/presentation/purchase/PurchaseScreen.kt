@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.presentation.purchase
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -23,10 +24,15 @@ import pos.app.generated.resources.stores
 
 @Composable
 fun PurchaseRoute(
-    viewModel: PurchaseViewModel = koinViewModel()
+    viewModel: PurchaseViewModel = koinViewModel(),
+    invoiceId: String? = null
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredPurchases by viewModel.filteredOrdersState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.processEvent(PurchaseContract.Event.LoadInitialInvoice(invoiceId))
+    }
 
     PurchaseScreen(
         state = state,

@@ -32,19 +32,19 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                         Res.string.receive_pay_voucher
                     ),
                     ManagementContract.ManagementItem(
-                        Destination.SalesOrders,
+                        Destination.SalesOrders(null),
                         Res.string.sales
                     ),
                     ManagementContract.ManagementItem(
-                        Destination.PurchaseOrders,
+                        Destination.PurchaseOrders(null),
                         Res.string.purchase
                     ),
                     ManagementContract.ManagementItem(
-                        Destination.SalesReturns,
+                        Destination.SalesReturns(null),
                         Res.string.sales_return
                     ),
                     ManagementContract.ManagementItem(
-                        Destination.PurchaseReturns,
+                        Destination.PurchaseReturns(null),
                         Res.string.purchase_return
                     ),
                 )

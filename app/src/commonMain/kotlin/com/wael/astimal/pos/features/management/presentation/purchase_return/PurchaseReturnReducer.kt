@@ -246,9 +246,7 @@ class PurchaseReturnReducer() :
             }
 
 
-            is PurchaseReturnContract.Event.BackClicked,
-            is PurchaseReturnContract.Event.SaveClicked,
-            is PurchaseReturnContract.Event.DeleteClicked -> previousState to null
+            else -> previousState to null
         }
     }
 }

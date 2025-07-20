@@ -12,9 +12,12 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
-import pos.app.generated.resources.invoice
 import pos.app.generated.resources.opening_balance
 import pos.app.generated.resources.payment
+import pos.app.generated.resources.purchase
+import pos.app.generated.resources.purchase_return
+import pos.app.generated.resources.sales
+import pos.app.generated.resources.sales_return
 
 
 @Entity(
@@ -45,8 +48,11 @@ data class PartnerTransactionEntity(
 
 enum class TransactionType {
     OPENING_BALANCE,
-    INVOICE,
-    PAYMENT;
+    PAYMENT,
+    SALE_INVOICE,
+    PURCHASE_INVOICE,
+    SALE_RETURN_INVOICE,
+    PURCHASE_RETURN_INVOICE;
 
     companion object {
         fun getTypesForDropdown(): List<TransactionType> {
@@ -60,8 +66,11 @@ enum class TransactionType {
     fun getStringRes(): StringResource {
         return when (this) {
             OPENING_BALANCE -> Res.string.opening_balance
-            INVOICE -> Res.string.invoice
             PAYMENT -> Res.string.payment
+            SALE_INVOICE -> Res.string.sales
+            PURCHASE_INVOICE -> Res.string.purchase
+            SALE_RETURN_INVOICE -> Res.string.sales_return
+            PURCHASE_RETURN_INVOICE -> Res.string.purchase_return
         }
     }
 }

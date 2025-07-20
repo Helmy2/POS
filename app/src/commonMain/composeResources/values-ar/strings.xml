@@ -132,7 +132,7 @@
     <string name="insufficient_stock">المخزون غير كافٍ للكمية المطلوبة.</string>
     <string name="product_not_found_in_store">المنتج غير موجود في المخزن المحدد.</string>
     <string name="not_enough_stock_for">لا يوجد مخزون كافٍ لـ:</string>
-    <string name="sales">المبيعات</string>
+    <string name="sales">مبيعات</string>
     <string name="items">الأصناف</string>
     <string name="add_item">إضافة صنف</string>
     <string name="remove_item">إزالة صنف</string>
@@ -384,4 +384,10 @@
     <string name="sync_success">نجحت المزامنة</string>
     <string name="sync_error">خطأ في المزامنة</string>
     <string name="sync">مزامنة</string>
+
+    <string name="customer_statement">تقرير العميل</string>
+    <string name="select_customer">اختر العميل</string>
+    <string name="start_date">تاريخ البدء</string>
+    <string name="end_date">تاريخ الانتهاء</string>
+    <string name="apply_filters">تطبيق</string>
 </resources>

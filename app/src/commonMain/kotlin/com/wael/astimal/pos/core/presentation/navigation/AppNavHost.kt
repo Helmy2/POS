@@ -27,6 +27,7 @@ import com.wael.astimal.pos.features.management.presentation.receive_pay_voucher
 import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementRoute
+import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
 import com.wael.astimal.pos.features.user.presentation.create.CreateEmployeeRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
@@ -90,15 +91,35 @@ fun AppNavHost(
 
             // --- Management Sub-Screens ---
             composable<Destination.BusinessPartners> { BusinessPartnerRoute() }
-            composable<Destination.SalesOrders> { SalesRoute() }
-            composable<Destination.SalesReturns> { SalesReturnRoute() }
-            composable<Destination.PurchaseOrders> { PurchaseRoute() }
-            composable<Destination.PurchaseReturns> { PurchaseReturnRoute() }
+            composable<Destination.SalesOrders> {
+                val invoiceId = it.toRoute<Destination.SalesOrders>().invoiceId
+                SalesRoute(invoiceId = invoiceId)
+            }
+            composable<Destination.SalesReturns> {
+                val invoiceId = it.toRoute<Destination.SalesReturns>().invoiceId
+                SalesReturnRoute(invoiceId = invoiceId)
+            }
+            composable<Destination.PurchaseOrders> {
+                val invoiceId = it.toRoute<Destination.PurchaseOrders>().invoiceId
+
+                PurchaseRoute(invoiceId = invoiceId)
+            }
+            composable<Destination.PurchaseReturns> {
+                val invoiceId = it.toRoute<Destination.PurchaseReturns>().invoiceId
+                PurchaseReturnRoute(invoiceId = invoiceId)
+            }
             composable<Destination.EmployeeAccounts> { EmployeeAccountRoute() }
             composable<Destination.Vouchers> { ReceivePayVoucherRoute() }
 
             // --- Reports Sub-Screens ---
             composable<Destination.AccountStatement> { AccountStatementRoute() }
+            composable<Destination.CustomerStatement> {
+                CustomerStatementRoute(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
             // Add other report routes here in the future
         }
 

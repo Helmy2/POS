@@ -114,7 +114,6 @@ class SyncServiceImpl(
             supabaseClient.pushAll<StockTransferItemDto>("stock_transfer_items") { it }
         }
 
-        // delete
         stockTransferRepository.getAllDeletedInvoiceItems().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.forEach {

@@ -246,9 +246,7 @@ class SalesReturnReducer() :
             }
 
 
-            is SalesReturnContract.Event.BackClicked,
-            is SalesReturnContract.Event.SaveClicked,
-            is SalesReturnContract.Event.DeleteClicked -> previousState to null
+            else -> previousState to null
         }
     }
 }

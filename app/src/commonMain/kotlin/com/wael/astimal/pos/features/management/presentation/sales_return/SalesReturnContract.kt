@@ -75,6 +75,7 @@ object SalesReturnContract {
         data class ItemMinPriceChanged(val editorId: String, val price: String) : Event
         data class ItemStockChanged(val editorId: String, val stock: Double) : Event
         data class PartnerBalanceChanged(val balance: Double) : Event
+        data class LoadInitialInvoice(val id: String?) : Event
 
 
         // Data results from ViewModel

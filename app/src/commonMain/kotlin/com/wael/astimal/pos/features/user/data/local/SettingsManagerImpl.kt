@@ -81,13 +81,13 @@ class SettingsManagerImpl(
                 val langName =
                     preferences[stringPreferencesKey(LANGUAGE_KEY)]
                 if (langName == null) {
-                    Language.English
+                    Language.Arabic
                 } else {
                     try {
                         Language.valueOf(langName)
                     } catch (e: IllegalArgumentException) {
                         e.printStackTrace()
-                        Language.English
+                        Language.Arabic
                     }
                 }
             }

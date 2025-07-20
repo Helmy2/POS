@@ -245,9 +245,7 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
             }
 
 
-            is PurchaseContract.Event.BackClicked,
-            is PurchaseContract.Event.SaveClicked,
-            is PurchaseContract.Event.DeleteClicked -> previousState to null
+            else -> previousState to null
         }
     }
 }
