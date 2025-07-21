@@ -68,6 +68,8 @@ class BusinessPartnerRepositoryImpl(
             list.forEach {
                 partnerDao.insertOrUpdate(it)
             }
+        }.onFailure {
+            it.printStackTrace()
         }
     }
 

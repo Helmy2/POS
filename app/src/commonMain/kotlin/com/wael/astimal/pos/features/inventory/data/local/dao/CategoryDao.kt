@@ -24,6 +24,6 @@ interface CategoryDao {
     @Query("DELETE FROM categories WHERE localId = :localId")
     suspend fun deleteCategoryById(localId: String)
 
-    @Query("DELETE FROM categories")
+    @Query("UPDATE categories SET isDeletedLocally = 1")
     suspend fun deleteAll()
 }

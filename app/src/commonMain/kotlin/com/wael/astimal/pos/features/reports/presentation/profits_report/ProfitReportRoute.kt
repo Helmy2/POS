@@ -66,7 +66,7 @@ fun ProfitReportRoute(
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
         baseFileName = "profits_report_${state.selectedEmployee?.name ?: "report"}",
-        onFinish = { viewModel.processEvent(ProfitReportContract.Event.PdfGenerationFinished) }
+        onFinish = { viewModel.processEvent(ProfitReportContract.Event.PdfGenerationFinished(it)) }
     )
 
     Scaffold(

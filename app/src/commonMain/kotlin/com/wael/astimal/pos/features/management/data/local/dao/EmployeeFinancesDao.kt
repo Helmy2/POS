@@ -43,7 +43,7 @@ interface EmployeeFinancesDao {
     @Query("UPDATE employee_account_transactions SET isDeletedLocally = 1 WHERE invoiceId = :id")
     suspend fun softDeleteTransactionsByInvoiceId(id: String)
 
-    @Query("DELETE FROM employee_account_transactions")
+    @Query("UPDATE employee_account_transactions SET isDeletedLocally = 1")
     suspend fun deleteAllTransactions()
 
     @Transaction

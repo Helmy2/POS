@@ -24,6 +24,6 @@ interface UnitDao {
     @Query("DELETE FROM units WHERE localId = :localId")
     suspend fun deleteUnitByLocalId(localId: String)
 
-    @Query("DELETE FROM units")
+    @Query("UPDATE units SET isDeletedLocally = 1")
     suspend fun deleteAll()
 }

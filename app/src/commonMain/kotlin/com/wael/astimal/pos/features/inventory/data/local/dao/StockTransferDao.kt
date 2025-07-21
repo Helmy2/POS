@@ -97,9 +97,9 @@ interface StockTransferDao {
     @Query("SELECT * FROM stock_transfers WHERE localId = :transferId")
     suspend fun getStockTransfer(transferId: String): StockTransferWithItemsAndDetails
 
-    @Query("DELETE FROM stock_transfers")
+    @Query("UPDATE stock_transfers SET isDeletedLocally = 1")
     suspend fun deleteAllStockTransfers()
 
-    @Query("DELETE FROM stock_transfer_items")
+    @Query("UPDATE stock_transfers SET isDeletedLocally = 1")
     suspend fun deleteAllStockTransferItems()
 }

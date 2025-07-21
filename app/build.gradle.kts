@@ -4,6 +4,8 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+version = "1.0"
+
 plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.androidApplication)
@@ -15,7 +17,9 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
     alias(libs.plugins.googleServices)
+    alias(libs.plugins.hydraulic)
 }
+
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -25,6 +29,13 @@ kotlin {
     }
 
     jvm("desktop")
+
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+        vendor.set(JvmVendorSpec.JETBRAINS)
+    }
+
+
 
     sourceSets {
         val desktopMain by getting
@@ -125,11 +136,17 @@ dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspDesktop", libs.androidx.room.compiler)
     debugImplementation(compose.uiTooling)
+
+    linuxAmd64(compose.desktop.linux_x64)
+    macAmd64(compose.desktop.macos_x64)
+    macAarch64(compose.desktop.macos_arm64)
+    windowsAmd64(compose.desktop.windows_x64)
 }
 
 room {
     schemaDirectory("$projectDir/schemas")
 }
+
 
 compose.desktop {
     application {
@@ -137,10 +154,12 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
-            packageName = "com.wael.astimal.pos"
+            packageName = "com-wael-astimal-pos"
             packageVersion = "1.0.0"
+
         }
     }
+
 }
 
 
@@ -163,5 +182,11 @@ buildkonfig {
         buildConfigField(STRING, "supabaseKey", supabaseKey)
         buildConfigField(STRING, "supabaseUrl", supabaseUrl)
         buildConfigField(STRING, "serviceRole", serviceRole)
+    }
+}
+
+configurations.all {
+    attributes {
+        attribute(Attribute.of("ui", String::class.java), "awt")
     }
 }

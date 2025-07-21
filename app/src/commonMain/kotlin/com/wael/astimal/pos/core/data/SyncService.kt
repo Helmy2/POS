@@ -261,7 +261,6 @@ class SyncServiceImpl(
         businessPartnerRepository.getAllUnSynced().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
-            println(it)
             supabaseClient.pushAll<BusinessPartnerDto>("business_partners") { it }
         }?.getOrThrow()
 

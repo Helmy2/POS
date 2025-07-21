@@ -38,6 +38,6 @@ interface BusinessPartnerDao {
     @Query("SELECT * FROM business_partners WHERE isDeletedLocally = 1")
     suspend fun getAllDeletedPartners(): List<BusinessPartnerWithDetailsEntity>
 
-    @Query("DELETE FROM business_partners")
+    @Query("UPDATE business_partners SET isDeletedLocally = 1")
     suspend fun deleteAll()
 }

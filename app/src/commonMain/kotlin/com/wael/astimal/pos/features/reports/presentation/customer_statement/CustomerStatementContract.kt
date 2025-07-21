@@ -30,8 +30,7 @@ object CustomerStatementContract {
         data class ShowTransactions(val transactions: List<DetailedTransaction>) : Event
         data class TransactionClicked(val transaction: DetailedTransaction) : Event
         data object GeneratePdf : Event
-        data object PdfGenerationFinished : Event
-
+        data class PdfGenerationFinished(val message: String) : Event
         data class PdfGenerationSuccessful(val html: String) : Event
     }
 

@@ -1,7 +1,10 @@
 package com.wael.astimal.pos.features.reports.presentation.employee_report
 
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.presentation.navigation.AppKoinComponent.snackbarController
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeReportRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -31,6 +34,14 @@ class EmployeeReportViewModel(
                 loadActivities()
             }
             is EmployeeReportContract.Event.GeneratePdf -> generatePdf()
+
+            is EmployeeReportContract.Event.PdfGenerationFinished -> {
+                viewModelScope.launch {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.Dynamic(event.message)))
+                }
+                setState(event)
+            }
+
             else -> setState(event)
         }
     }

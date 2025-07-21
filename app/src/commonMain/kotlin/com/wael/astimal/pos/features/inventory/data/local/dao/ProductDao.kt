@@ -46,6 +46,6 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE isSynced = 0")
     suspend fun getUnsyncedProducts(): List<ProductWithDetails>
 
-    @Query("DELETE FROM products")
+    @Query("UPDATE products SET isDeletedLocally = 1")
     suspend fun deleteAll()
 }

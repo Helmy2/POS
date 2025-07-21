@@ -33,7 +33,7 @@ object EmployeeReportContract {
         data object ApplyFilters : Event
         data class ShowActivities(val activities: List<EmployeeActivity>) : Event
         data object GeneratePdf : Event
-        data object PdfGenerationFinished : Event
+        data class PdfGenerationFinished(val message: String) : Event
         data class PdfGenerationSuccess(val pdfUri: String) : Event
     }
 

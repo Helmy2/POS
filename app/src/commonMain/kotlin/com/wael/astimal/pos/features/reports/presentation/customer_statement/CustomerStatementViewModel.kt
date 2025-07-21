@@ -2,8 +2,11 @@ package com.wael.astimal.pos.features.reports.presentation.customer_statement
 
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.presentation.navigation.AppKoinComponent.snackbarController
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
@@ -45,6 +48,14 @@ class CustomerStatementViewModel(
             is CustomerStatementContract.Event.GeneratePdf -> generatePdf()
             // For all other events, the change is purely a state mutation,
             // so we just pass them to the reducer.
+
+            is CustomerStatementContract.Event.PdfGenerationFinished -> {
+                viewModelScope.launch {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.Dynamic(event.message)))
+                }
+                setState(event)
+            }
+
             else -> setState(event)
         }
     }

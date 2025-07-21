@@ -66,8 +66,8 @@ fun CustomerStatementRoute(
 
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
-        baseFileName = "customer_statement_${state.selectedPartner?.name ?: "report"}",
-        onFinish = { viewModel.processEvent(CustomerStatementContract.Event.PdfGenerationFinished) }
+        baseFileName = "customer_statement_${state.selectedPartner?.name?.enName ?: "report"}",
+        onFinish = { viewModel.processEvent(CustomerStatementContract.Event.PdfGenerationFinished(it)) }
     )
 
     Scaffold(
