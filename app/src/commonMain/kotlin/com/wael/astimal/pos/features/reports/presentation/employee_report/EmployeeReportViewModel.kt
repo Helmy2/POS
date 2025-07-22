@@ -33,6 +33,7 @@ class EmployeeReportViewModel(
                 setState(event)
                 loadActivities()
             }
+
             is EmployeeReportContract.Event.GeneratePdf -> generatePdf()
 
             is EmployeeReportContract.Event.PdfGenerationFinished -> {
@@ -70,15 +71,17 @@ class EmployeeReportViewModel(
     }
 
     private fun generatePdf() {
-        val currentState = state.value
-        currentState.selectedEmployee?.let { employee ->
-            val html = htmlReportGenerator.createEmployeeActivityReportHtml(
-                employee = employee,
-                activities = currentState.activities,
-                startDate = currentState.startDate,
-                endDate = currentState.endDate
-            )
-            setState(EmployeeReportContract.Event.PdfGenerationSuccess(html))
+        viewModelScope.launch {
+            val currentState = state.value
+            currentState.selectedEmployee?.let { employee ->
+                val html = htmlReportGenerator.createEmployeeActivityReportHtml(
+                    employee = employee,
+                    activities = currentState.activities,
+                    startDate = currentState.startDate,
+                    endDate = currentState.endDate
+                )
+                setState(EmployeeReportContract.Event.PdfGenerationSuccess(html))
+            }
         }
     }
 }

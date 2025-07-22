@@ -22,6 +22,10 @@ import pos.app.generated.resources.payment_type_card
 import pos.app.generated.resources.payment_type_cash
 import pos.app.generated.resources.payment_type_other
 import pos.app.generated.resources.payment_type_transfer
+import pos.app.generated.resources.purchase
+import pos.app.generated.resources.purchase_return
+import pos.app.generated.resources.sales
+import pos.app.generated.resources.sales_return
 
 @Entity(
     tableName = "invoices",
@@ -177,7 +181,16 @@ enum class InvoiceType {
     SALES,
     PURCHASE,
     SALES_RETURN,
-    PURCHASE_RETURN
+    PURCHASE_RETURN;
+
+    fun getStringResId(): StringResource {
+        return when (this) {
+            SALES -> Res.string.sales
+            PURCHASE -> Res.string.purchase
+            SALES_RETURN -> Res.string.sales_return
+            PURCHASE_RETURN -> Res.string.purchase_return
+        }
+    }
 }
 
 enum class PaymentMethod {

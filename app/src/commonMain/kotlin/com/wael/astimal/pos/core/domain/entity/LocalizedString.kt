@@ -1,5 +1,8 @@
 package com.wael.astimal.pos.core.domain.entity
 
+import androidx.compose.runtime.Composable
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+
 data class LocalizedString(
     val arName: String? = null,
     val enName: String? = null,
@@ -22,5 +25,15 @@ data class LocalizedString(
             Language.English -> if (enName != null && enName.isNotBlank()) enName
             else if (arName != null && arName.isNotBlank()) arName else "N/A"
         }
+    }
+}
+
+@Composable
+fun LocalizedString.get(): String {
+    val isRtl = LocalAppLocale.current == Language.Arabic
+    return if (isRtl) {
+        arName ?: enName ?: ""
+    } else {
+        enName ?: arName ?: ""
     }
 }

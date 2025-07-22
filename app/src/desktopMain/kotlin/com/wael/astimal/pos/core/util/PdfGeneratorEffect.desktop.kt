@@ -2,9 +2,8 @@ package com.wael.astimal.pos.core.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import com.itextpdf.html2pdf.HtmlConverter
+import java.awt.Desktop
 import java.io.File
-import java.io.FileOutputStream
 
 @Composable
 actual fun PdfGeneratorEffect(
@@ -14,22 +13,20 @@ actual fun PdfGeneratorEffect(
 ) {
     if (htmlContent != null) {
         LaunchedEffect(htmlContent, baseFileName) {
-            val downloadsDir = System.getProperty("user.home") + "/Downloads"
-            val fileName = "${baseFileName.replace(" ", "_")}.pdf"
-            val file = File(downloadsDir, fileName)
-
             try {
-                if (file.exists()) {
-                    file.delete()
+                val tempFile = File.createTempFile(baseFileName.replace(" ", "_"), ".html")
+                tempFile.writeText(htmlContent)
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(tempFile.toURI())
+                    println("✅ HTML report successfully opened in browser: ${tempFile.absolutePath}")
+                } else {
+                    println("❌ Desktop operations not supported. Cannot open browser.")
                 }
-                val fileOutputStream = FileOutputStream(file)
-                HtmlConverter.convertToPdf(htmlContent, fileOutputStream)
-                println("✅ PDF successfully generated at: ${file.absolutePath}")
             } catch (e: Exception) {
                 println("❌ Error generating PDF: ${e.message}")
                 e.printStackTrace()
             } finally {
-                onFinish("✅ PDF successfully generated at: ${file.absolutePath}")
+                onFinish("✅ HTML report successfully opened in browser")
             }
         }
     }

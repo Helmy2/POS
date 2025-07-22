@@ -7,22 +7,37 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.wael.astimal.pos.features.reports.presentation.account_statement.StatementFooter
+import com.wael.astimal.pos.core.presentation.theme.CreditColor
+import com.wael.astimal.pos.core.presentation.theme.DebitColor
+import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.balance_summary_negative
+import pos.app.generated.resources.balance_summary_positive
+import pos.app.generated.resources.balance_summary_settled
 import pos.app.generated.resources.paid
 import pos.app.generated.resources.partner_current_balance
 import pos.app.generated.resources.partner_previous_balance
 import pos.app.generated.resources.remaining
 import pos.app.generated.resources.total_amount
+import java.text.NumberFormat
+import java.util.Locale
+import kotlin.math.abs
 
 @Composable
 fun OrderTotalsSection(
@@ -119,5 +134,45 @@ fun OrderTotalsSection(
                     )
                 )
         )
+    }
+}
+
+
+@Composable
+fun StatementFooter(finalBalance: Double, modifier: Modifier = Modifier) {
+    val language = LocalAppLocale.current
+
+    val numberFormat =
+        remember { NumberFormat.getCurrencyInstance(Locale(language.code, language.country)) }
+    val formattedBalance = numberFormat.format(abs(finalBalance))
+
+    val (summaryText, summaryColor) = when {
+        finalBalance > 0.01 -> stringResource(
+            Res.string.balance_summary_negative, formattedBalance
+        ) to DebitColor
+
+        finalBalance < -0.01 -> stringResource(
+            Res.string.balance_summary_positive, formattedBalance
+        ) to CreditColor
+
+        else -> stringResource(Res.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
+    }
+
+    Surface(modifier = modifier.fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 4.dp) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info, contentDescription = "Info", tint = summaryColor
+            )
+            Text(
+                text = summaryText,
+                style = MaterialTheme.typography.labelLarge,
+                color = summaryColor,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }

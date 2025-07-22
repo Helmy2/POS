@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.wael.astimal.pos.core.domain.entity.get
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
@@ -52,6 +53,9 @@ import pos.app.generated.resources.date
 import pos.app.generated.resources.description
 import pos.app.generated.resources.employee_activity_report
 import pos.app.generated.resources.end_date
+import pos.app.generated.resources.invoice_details_format
+import pos.app.generated.resources.partner_payment
+import pos.app.generated.resources.partner_payment_details_format
 import pos.app.generated.resources.select_employee
 import pos.app.generated.resources.start_date
 import pos.app.generated.resources.total_amount
@@ -210,6 +214,39 @@ fun EmployeeReportScreen(
 private fun ActivityRow(activity: EmployeeActivity) {
     val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault()).date
 
+    // --- NEW LOCALIZATION LOGIC ---
+    // All UI text is now derived here, inside the Composable, where it can access resources.
+    val typeString: String
+    val detailsString: String
+    val amount: Double
+
+    when (activity) {
+        is EmployeeActivity.InvoiceActivity -> {
+            typeString = stringResource(activity.invoice.invoiceType.getStringResId())
+            detailsString = stringResource(
+                Res.string.invoice_details_format,
+                activity.invoice.id,
+                activity.invoice.partner.name.get()
+            )
+            amount = activity.invoice.totalAmount
+        }
+
+        is EmployeeActivity.FinancialActivity -> {
+            typeString = stringResource(activity.transaction.type.getStringResId())
+            detailsString = activity.transaction.notes ?: typeString
+            amount = activity.transaction.amount
+        }
+
+        is EmployeeActivity.PartnerPaymentActivity -> {
+            typeString = stringResource(Res.string.partner_payment)
+            detailsString = stringResource(
+                Res.string.partner_payment_details_format,
+                activity.transaction.partner.name.get()
+            )
+            amount = activity.transaction.amount
+        }
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -220,13 +257,25 @@ private fun ActivityRow(activity: EmployeeActivity) {
                 modifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.bodyMedium
             )
-            Text(
-                activity.details,
+            Column(
                 modifier = Modifier.weight(3f),
-                style = MaterialTheme.typography.bodyMedium
-            )
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    typeString,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                if (detailsString != typeString) { // Only show details if they are different from the type
+                    Text(
+                        detailsString,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Text(
-                String.format("%.2f", activity.amount),
+                String.format("%.2f", amount),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End

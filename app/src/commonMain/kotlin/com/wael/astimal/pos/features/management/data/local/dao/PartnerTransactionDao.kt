@@ -76,4 +76,17 @@ interface PartnerTransactionDao {
         startDate: Long,
         endDate: Long
     ): Flow<List<PartnerTransactionEntity>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM partner_transactions
+        WHERE employeeLocalId = :employeeId AND createdAt BETWEEN :startDate AND :endDate
+        """
+    )
+    fun getTransactionsCreatedByEmployeeInRange(
+        employeeId: String,
+        startDate: Long,
+        endDate: Long
+    ): Flow<List<PartnerTransactionWithDetails>>
 }

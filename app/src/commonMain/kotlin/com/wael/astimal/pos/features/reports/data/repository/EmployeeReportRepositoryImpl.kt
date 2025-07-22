@@ -35,19 +35,28 @@ class EmployeeReportRepositoryImpl(
         // Flow 2: Get only payment/receipt vouchers created by the employee
         val vouchersFlow = db.employeeFinancesDao()
             .getTransactionsForEmployeeInRange(employeeId, startEpochMilli, endEpochMilli)
-            .map { it.map { it.toDomain() } }
-            .map { transactions ->
-                transactions.filter {
-                    it.type == EmployeeTransactionType.COMMISSION_FOR_ORDER || it.type == EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY
-                }
+            .map { entities ->
+                entities.filter {
+                    it.transactionEntity.type != EmployeeTransactionType.COMMISSION_FOR_ORDER &&
+                            it.transactionEntity.type != EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY
+                }.map { it.toDomain() }
             }
 
+        val partnerTransactionsFlow = db.partnerTransactionDao()
+            .getTransactionsCreatedByEmployeeInRange(employeeId, startEpochMilli, endEpochMilli)
+
         // Combine both flows, transform the data, and return a single sorted list
-        return combine(invoicesFlow, vouchersFlow) { invoices, vouchers ->
+        return combine(
+            invoicesFlow,
+            vouchersFlow,
+            partnerTransactionsFlow
+        ) { invoices, vouchers, partnerTransactions ->
             val invoiceActivities = invoices.map { EmployeeActivity.InvoiceActivity(it.toDomain()) }
             val financialActivities = vouchers.map { EmployeeActivity.FinancialActivity(it) }
+            val partnerPaymentActivities =
+                partnerTransactions.map { EmployeeActivity.PartnerPaymentActivity(it.toDomain()) }
 
-            (invoiceActivities + financialActivities).sortedByDescending { it.timestamp }
+            (invoiceActivities + financialActivities + partnerPaymentActivities).sortedByDescending { it.timestamp }
         }
     }
 }

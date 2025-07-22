@@ -75,9 +75,6 @@ sealed class Destination {
     data object Reports : Destination()
 
     @Serializable
-    data object AccountStatement : Destination()
-
-    @Serializable
     data object CustomerStatement : Destination()
 
     @Serializable

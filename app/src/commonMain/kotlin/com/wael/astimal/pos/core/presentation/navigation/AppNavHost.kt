@@ -26,7 +26,6 @@ import com.wael.astimal.pos.features.management.presentation.purchase_return.Pur
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherRoute
 import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
-import com.wael.astimal.pos.features.reports.presentation.account_statement.AccountStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportRoute
 import com.wael.astimal.pos.features.reports.presentation.profits_report.ProfitReportRoute
@@ -114,7 +113,6 @@ fun AppNavHost(
             composable<Destination.Vouchers> { ReceivePayVoucherRoute() }
 
             // --- Reports Sub-Screens ---
-            composable<Destination.AccountStatement> { AccountStatementRoute() }
             composable<Destination.CustomerStatement> {
                 CustomerStatementRoute(
                     onNavigateBack = {
