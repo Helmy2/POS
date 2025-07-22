@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.employee_account
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import kotlin.math.abs
 
 class EmployeeAccountReducer :
     Reducer<EmployeeAccountContract.State, EmployeeAccountContract.Event, Nothing> {
@@ -34,7 +35,7 @@ class EmployeeAccountReducer :
                     show = true,
                     selectedTransaction = event.transaction,
                     selectedEmployee = event.transaction.employee,
-                    amount = event.transaction.amount.toString(),
+                    amount = abs(event.transaction.amount).toString(),
                     transactionType = event.transaction.type,
                     notes = event.transaction.notes ?: ""
                 )

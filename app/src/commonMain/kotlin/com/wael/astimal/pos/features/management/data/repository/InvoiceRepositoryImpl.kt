@@ -24,7 +24,6 @@ import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -57,9 +56,7 @@ class InvoiceRepositoryImpl(
                     invoiceWithItems.second.map { it },
                 )
 
-                if (invoice.invoiceType == InvoiceType.PURCHASE) {
-                    updateProductsAveragePrice(invoice)
-                }
+                updateProductsAveragePrice(invoice)
 
                 createAdjustStock(newInvoice)
                 adjustPartnerTransactions(newInvoice)
@@ -74,16 +71,17 @@ class InvoiceRepositoryImpl(
     }
 
     private suspend fun updateProductsAveragePrice(invoice: Invoice) {
-        invoice.items.forEach { item ->
-            val currentCost =
-                productDao.getProductByLocalId(item.product.id)!!.averagePurchasePrice
-            val currentQuantity = stockRepository.getStockQuantityFlow(
-                storeId = invoice.store.id,
-                productId = item.product.id
-            ).first()
+        if (invoice.invoiceType == InvoiceType.SALES) return
+        if (invoice.invoiceType == InvoiceType.SALES_RETURN) return
 
-            val newCost =
+        invoice.items.forEach { item ->
+            val currentCost = productDao.getAverageCost(item.product.id)
+            val currentQuantity = stockRepository.getStockQuantity(productId = item.product.id)
+
+            val newCost = if (invoice.invoiceType == InvoiceType.PURCHASE)
                 (currentCost * currentQuantity + item.unitPrice + item.quantity) / (currentQuantity + item.quantity)
+            else
+                (currentCost * currentQuantity - item.unitPrice - item.quantity) / (currentQuantity - item.quantity)
 
             productDao.updateAverageCost(item.product.id, newCost)
         }
@@ -91,16 +89,24 @@ class InvoiceRepositoryImpl(
 
     @OptIn(ExperimentalUuidApi::class)
     private suspend fun makeCommission(invoice: Invoice) {
-        val invoiceCommission = when (invoice.invoiceType) {
-            InvoiceType.SALES -> invoice.totalAmount * 25 / 100
-            InvoiceType.SALES_RETURN -> invoice.totalAmount * -25 / 100
+        if (invoice.invoiceType == InvoiceType.PURCHASE) return
+        if (invoice.invoiceType == InvoiceType.PURCHASE_RETURN) return
+
+        val invoicePurchaseTotalPrice =
+            invoice.items.sumOf { productDao.getAverageCost(it.id) * it.quantity }
+
+        val profit = when (invoice.invoiceType) {
+            InvoiceType.SALES -> invoice.totalAmount - invoicePurchaseTotalPrice
+            InvoiceType.SALES_RETURN -> invoicePurchaseTotalPrice - invoice.totalAmount
             else -> return
         }
+
+        val profitCommission = profit * 0.25
 
         val transaction1 = EmployeeTransaction(
             id = Uuid.random().toString(),
             employee = invoice.employee,
-            amount = invoiceCommission,
+            amount = profitCommission,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
             type = EmployeeTransactionType.COMMISSION_FOR_ORDER,
@@ -111,7 +117,7 @@ class InvoiceRepositoryImpl(
         val transaction2 = EmployeeTransaction(
             id = Uuid.random().toString(),
             employee = invoice.partner.responsibleEmployee,
-            amount = invoiceCommission,
+            amount = profitCommission,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
             type = EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY,

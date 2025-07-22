@@ -22,6 +22,9 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
     suspend fun getProductByLocalId(localId: String): ProductEntity?
 
+    @Query("SELECT averagePurchasePrice FROM products WHERE localId = :localId LIMIT 1")
+    suspend fun getAverageCost(localId: String): Double
+
     @Transaction
     @Query(
         """

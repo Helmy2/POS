@@ -163,7 +163,7 @@ class PurchaseReturnViewModel(
             val user = userRepository.getCurrentUser() ?: throw Exception()
             setState(PurchaseReturnContract.Event.UserLoaded(user))
             combine(
-                partnerRepository.getClients(""),
+                partnerRepository.getSuppliers(""),
                 productRepository.getProducts(""),
                 storeRepository.getStoresForUser(user)
             ) { clients, products, stores ->
@@ -279,7 +279,7 @@ class PurchaseReturnViewModel(
         viewModelScope.launch {
             val storeId = state.value.currentOrderInput.selectedStore?.id ?: return@launch
             stockObservationJobs[tempId] =
-                stockRepository.getStockQuantityFlow(storeId, productId).catch {
+                stockRepository.getStockQuantity(storeId, productId).catch {
                     snackbarController.sendEvent(
                         SnackbarEvent(StringResource.FromResource(Res.string.error_fetching_stock))
                     )

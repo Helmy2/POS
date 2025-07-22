@@ -132,7 +132,7 @@
     <string name="insufficient_stock">المخزون غير كافٍ للكمية المطلوبة.</string>
     <string name="product_not_found_in_store">المنتج غير موجود في المخزن المحدد.</string>
     <string name="not_enough_stock_for">لا يوجد مخزون كافٍ لـ:</string>
-    <string name="sales">مبيعات</string>
+    <string name="sales">بيع</string>
     <string name="items">الأصناف</string>
     <string name="add_item">إضافة صنف</string>
     <string name="remove_item">إزالة صنف</string>
@@ -146,7 +146,7 @@
     <string name="order_saved">تم حفظ الطلب بنجاح.</string>
     <string name="order_deleted">تم حذف الطلب بنجاح.</string>
     <string name="error_deleting_order">خطأ: تعذر حذف الطلب.</string>
-    <string name="sales_return">مرتجع مبيعات</string>
+    <string name="sales_return">مرتجع بيع</string>
     <string name="return_saved">تم حفظ المرتجع بنجاح.</string>
     <string name="return_deleted">تم حذف المرتجع بنجاح.</string>
     <string name="error_deleting_return">خطأ: تعذر حذف المرتجع.</string>
@@ -155,10 +155,10 @@
     <string name="one_or_more_order_items_are_invalid">واحد أو أكثر من أصناف الطلب غير صالح.</string>
     <string name="error_searching_orders">خطأ: تعذر البحث عن الطلبات.</string>
 
-    <string name="purchase_saved">تم حفظ المشتريات بنجاح.</string>
+    <string name="purchase_saved">تم حفظ التريات بنجاح.</string>
     <string name="purchase_deleted">تم حذف المشتريات بنجاح.</string>
     <string name="error_deleting_purchase">خطأ: تعذر حذف المشتريات.</string>
-    <string name="purchase_return">مرتجع مشتريات</string>
+    <string name="purchase_return">مرتجع شراء</string>
     <string name="purchase_return_saved">تم حفظ مرتجع المشتريات بنجاح.</string>
     <string name="purchase_return_deleted">تم حذف مرتجع المشتريات بنجاح.</string>
     <string name="error_deleting_purchase_return">خطأ: تعذر حذف مرتجع المشتريات.</string>

@@ -277,7 +277,7 @@ class SalesViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val storeId = state.value.currentOrderInput.selectedStore?.id ?: return@launch
             stockObservationJobs[tempId] =
-                stockRepository.getStockQuantityFlow(storeId, productId).catch {
+                stockRepository.getStockQuantity(storeId, productId).catch {
                     snackbarController.sendEvent(
                         SnackbarEvent(StringResource.FromResource(Res.string.error_fetching_stock))
                     )

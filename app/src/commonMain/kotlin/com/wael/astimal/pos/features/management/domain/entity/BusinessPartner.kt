@@ -14,26 +14,24 @@ import pos.app.generated.resources.supplier
 enum class PartnerType {
     CLIENT,
     SUPPLIER,
-    Both;
+    BOTH;
 
     fun getStringRes(): StringResource {
         return when (this) {
             CLIENT -> Res.string.client
             SUPPLIER -> Res.string.supplier
-            Both -> Res.string.client_and_supplier
+            BOTH -> Res.string.client_and_supplier
         }
     }
 }
 
 data class BusinessPartner(
     val id: String,
-
     val name: LocalizedString,
     val address: String,
     val phone: String,
     val responsibleEmployee: User,
     var type: PartnerType,
-
     val isSynced: Boolean,
     val createdAt: Long,
     val updatedAt: Long

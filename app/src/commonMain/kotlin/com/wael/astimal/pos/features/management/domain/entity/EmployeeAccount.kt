@@ -12,7 +12,6 @@ import pos.app.generated.resources.bonus
 import pos.app.generated.resources.commission_for_order
 import pos.app.generated.resources.commission_for_responsibility
 import pos.app.generated.resources.deduction
-import pos.app.generated.resources.difference
 import pos.app.generated.resources.salary
 
 enum class EmployeeTransactionType {
@@ -21,8 +20,7 @@ enum class EmployeeTransactionType {
     SALARY,
     DEDUCTION,
     ADVANCE,
-    BONUS,
-    DIFFERANCE;
+    BONUS;
 
     fun getStringResId(): StringResource {
         return when (this) {
@@ -32,7 +30,12 @@ enum class EmployeeTransactionType {
             DEDUCTION -> Res.string.deduction
             ADVANCE -> Res.string.advance
             BONUS -> Res.string.bonus
-            DIFFERANCE -> Res.string.difference
+        }
+    }
+
+    companion object {
+        fun getSelectedList(): List<EmployeeTransactionType> {
+            return listOf(SALARY, DEDUCTION, ADVANCE, BONUS)
         }
     }
 }

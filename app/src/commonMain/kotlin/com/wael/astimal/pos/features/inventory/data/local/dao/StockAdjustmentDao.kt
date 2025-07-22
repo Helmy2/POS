@@ -24,6 +24,9 @@ interface StockAdjustmentDao {
     @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE storeId = :storeId AND productId = :productId")
     fun getStockQuantity(storeId: String, productId: String): Flow<Double?>
 
+    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE productId = :productId")
+    suspend fun getStockTotalQuantity(productId: String): Double?
+
     @Query("SELECT * FROM stock_adjustments")
     fun getAll(): Flow<List<StockAdjustmentWithDetails>>
 

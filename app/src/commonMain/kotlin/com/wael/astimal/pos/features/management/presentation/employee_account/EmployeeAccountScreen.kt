@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -54,6 +54,7 @@ import pos.app.generated.resources.new_transaction
 import pos.app.generated.resources.notes_optional
 import pos.app.generated.resources.save
 import pos.app.generated.resources.transaction_type
+import kotlin.math.abs
 
 
 @Composable
@@ -142,7 +143,7 @@ fun EditTransactionDialog(
 
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.transaction_type),
-                    items = EmployeeTransactionType.entries,
+                    items = EmployeeTransactionType.getSelectedList(),
                     selectedItemId = state.dialogState.transactionType.ordinal.toString(),
                     onItemSelected = {
                         onEvent(
@@ -205,40 +206,53 @@ fun TransactionList(
                             transaction
                         )
                     )
-                })
+                },
+            )
         }
     }
 }
 
 @Composable
 fun TransactionItem(
-    transaction: EmployeeTransaction,
-    canEdit: Boolean,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    transaction: EmployeeTransaction, canEdit: Boolean, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val language = LocalAppLocale.current
     Card {
-        Column(
-            modifier = Modifier.padding(16.dp),
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = transaction.employee.localizedName.displayName(language),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column {
                 Text(
-                    text = "%.2f".format(transaction.amount),
+                    text = transaction.employee.localizedName.displayName(language),
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = if (transaction.amount >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
-                Spacer(Modifier.weight(1f))
-                AnimatedVisibility(canEdit) {
+                Text(
+                    text = stringResource(transaction.type.getStringResId()),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                transaction.notes?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            AnimatedVisibility(canEdit) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "%.2f".format(abs(transaction.amount)),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (transaction.amount >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.End).padding(horizontal = 16.dp)
+                    )
                     Row {
                         IconButton(onClick = onEdit) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
@@ -253,28 +267,6 @@ fun TransactionItem(
                     }
                 }
             }
-            Text(
-                text = stringResource(transaction.type.getStringResId()),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            // TODO add related invoice
-//            transaction.relatedCommission?.let { commission ->
-//                Text(
-//                    text = stringResource(commission.sourceTransactionType.getStringResId()) + " " + stringResource(
-//                        Res.string.for_invoice, commission.sourceInvoiceNumber
-//                    ),
-//                    style = MaterialTheme.typography.bodySmall,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                )
-//            }
-            transaction.notes?.takeIf { it.isNotBlank() }?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 
@@ -284,6 +276,5 @@ fun TransactionItem(
         onConfirm = {
             onDelete()
             showDeleteConfirm = false
-        }
-    )
+        })
 }

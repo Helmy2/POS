@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface StockRepository {
     fun getStoreStocks(query: String, selectedStoreId: String?): Flow<List<StockAdjustment>>
 
-    fun getStockQuantityFlow(storeId: String, productId: String): Flow<Double>
+    fun getStockQuantity(storeId: String, productId: String): Flow<Double>
 
     suspend fun addStockAdjustment(adjustment: StockAdjustment): Result<Unit>
 
@@ -17,4 +17,5 @@ interface StockRepository {
     suspend fun getAllUnSynced(): Result<List<StockAdjustment>>
     suspend fun getAllDeleted(): Result<List<StockAdjustment>>
     suspend fun hardDeleteByServerId(id: String): Result<Unit>
+    suspend fun getStockQuantity(productId: String): Double
 }

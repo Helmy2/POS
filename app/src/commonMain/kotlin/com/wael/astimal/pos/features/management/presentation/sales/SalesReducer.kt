@@ -43,6 +43,7 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                 previousState.copy(isLoading = false, orders = event.orders) to null
 
             is SalesContract.Event.OrderSelected -> {
+                println("Order selected: ${event.order}")
                 previousState.copy(
                     selectedOrder = event.order,
                     currentOrderInput = SalesContract.EditableOrder(

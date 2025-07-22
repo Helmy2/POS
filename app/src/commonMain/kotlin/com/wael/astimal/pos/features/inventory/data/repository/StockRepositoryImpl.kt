@@ -24,8 +24,12 @@ class StockRepositoryImpl(
         }
     }
 
-    override fun getStockQuantityFlow(storeId: String, productId: String): Flow<Double> {
+    override fun getStockQuantity(storeId: String, productId: String): Flow<Double> {
         return stockAdjustmentDao.getStockQuantity(storeId, productId).map { it ?: 0.0 }
+    }
+
+    override suspend fun getStockQuantity(productId: String): Double {
+        return stockAdjustmentDao.getStockTotalQuantity(productId) ?: 0.0
     }
 
     @OptIn(ExperimentalUuidApi::class)

@@ -33,7 +33,6 @@ import pos.app.generated.resources.error_deleting_order
 import pos.app.generated.resources.error_fetching_stock
 import pos.app.generated.resources.error_no_order_selected
 import pos.app.generated.resources.error_some_field_are_required
-import pos.app.generated.resources.invalid_item_with_args
 import pos.app.generated.resources.one_or_more_order_items_are_invalid
 import pos.app.generated.resources.order_deleted
 import pos.app.generated.resources.order_saved
@@ -204,25 +203,6 @@ class SalesReturnViewModel(
                 return@launch
             }
 
-            currentState.currentOrderInput.items.forEach { item ->
-                val validStock =
-                    if (item.isSelectedUnitIsMax)
-                        item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) > 0
-                    else item.currentStock - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
-
-                if (!validStock) {
-                    snackbarController.sendEvent(
-                        SnackbarEvent(
-                            StringResource.FromResource(
-                                Res.string.invalid_item_with_args,
-                                item.product?.name?.enName ?: ""
-                            )
-                        )
-                    )
-                    return@launch
-                }
-            }
-
             val orderToSave = Invoice(
                 partner = currentState.currentOrderInput.selectedPartner,
                 employee = currentState.currentUser!!,
@@ -278,7 +258,7 @@ class SalesReturnViewModel(
         viewModelScope.launch {
             val storeId = state.value.currentOrderInput.selectedStore?.id ?: return@launch
             stockObservationJobs[tempId] =
-                stockRepository.getStockQuantityFlow(storeId, productId).catch {
+                stockRepository.getStockQuantity(storeId, productId).catch {
                     snackbarController.sendEvent(
                         SnackbarEvent(StringResource.FromResource(Res.string.error_fetching_stock))
                     )

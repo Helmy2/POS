@@ -137,7 +137,7 @@ class StockManagementViewModel(
                 return@launch
             }
 
-            val currentQuantity = stockRepository.getStockQuantityFlow(
+            val currentQuantity = stockRepository.getStockQuantity(
                 adjustmentStore.id,
                 adjustmentProduct.id
             ).first()

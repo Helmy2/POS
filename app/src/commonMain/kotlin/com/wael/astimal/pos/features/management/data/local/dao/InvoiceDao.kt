@@ -91,7 +91,7 @@ interface InvoiceDao {
             SUM(totalAmount) as totalRevenue,
             COUNT(supabaseId) as numberOfSales
         FROM invoices 
-        WHERE NOT isDeletedLocally AND createdAt BETWEEN :startDate AND :endDate
+        WHERE NOT isDeletedLocally AND invoiceType = 'SALES' AND createdAt BETWEEN :startDate AND :endDate
         GROUP BY saleDate
     """
     )

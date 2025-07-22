@@ -172,7 +172,7 @@ class StockTransferViewModel(
         stockObservationJobs[editorId]?.cancel()
         val fromStoreId = state.value.currentTransferInput.fromStore?.id ?: return
         stockObservationJobs[editorId] =
-            stockRepository.getStockQuantityFlow(fromStoreId, productId)
+            stockRepository.getStockQuantity(fromStoreId, productId)
                 .catch {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stock)))
                 }

@@ -8,12 +8,14 @@ import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
@@ -38,7 +40,12 @@ class EmployeeAccountViewModel(
     }
 
     val filteredTransactionsState: StateFlow<List<EmployeeTransaction>> = combine(
-        state, employeeTransactionRepository.getAllTransaction()
+        state, employeeTransactionRepository.getAllTransaction().map {
+            it.filter { it ->
+                it.type != EmployeeTransactionType.COMMISSION_FOR_ORDER &&
+                        it.type != EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY
+            }
+        }
     ) { state, allTransactions ->
         setState(EmployeeAccountContract.Event.TransactionsLoaded(allTransactions))
         if (state.searchQuery.isBlank()) {
@@ -96,7 +103,11 @@ class EmployeeAccountViewModel(
                 id = dialogState.selectedTransaction?.id ?: "",
                 employee = employee,
                 createdByEmployee = currentUser,
-                amount = amount,
+                amount = when (dialogState.transactionType) {
+                    EmployeeTransactionType.BONUS -> amount
+                    EmployeeTransactionType.COMMISSION_FOR_ORDER, EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY -> return@launch
+                    else -> -amount
+                },
                 type = dialogState.transactionType,
                 notes = dialogState.notes,
                 createdAt = dialogState.selectedTransaction?.createdAt ?: Clock.now(),
