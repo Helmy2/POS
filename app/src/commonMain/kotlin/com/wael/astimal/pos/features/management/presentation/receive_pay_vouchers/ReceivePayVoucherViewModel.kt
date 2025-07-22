@@ -6,6 +6,7 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
@@ -74,7 +76,11 @@ class ReceivePayVoucherViewModel(
         viewModelScope.launch {
             combine(
                 partnerRepository.getBusinessPartners(""),
-                voucherRepository.getVouchers()
+                voucherRepository.getVouchers().map {
+                    it.filter { it ->
+                        it.transactionType == TransactionType.OPENING_BALANCE || it.transactionType == TransactionType.PAYMENT
+                    }
+                }
             ) { partners, vouchers ->
                 setState(ReceivePayVoucherContract.Event.DropdownDataLoaded(partners))
                 setState(ReceivePayVoucherContract.Event.VouchersLoaded(vouchers))
@@ -107,7 +113,7 @@ class ReceivePayVoucherViewModel(
                 id = dialogState.voucherToEdit?.id ?: "",
                 partner = partner,
                 createdBy = currentUser,
-                amount = if (dialogState.isReceiveMoney) amount else -amount,
+                amount = if (dialogState.isReceiveMoney) -amount else amount,
                 notes = dialogState.notes,
                 createdAt = dialogState.date,
                 invoiceId = null,

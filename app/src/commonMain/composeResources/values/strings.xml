@@ -358,8 +358,8 @@
     <string name="payment_type_undefined">Undefined</string>
     <string name="invalid_item_with_args">Invalid item: %1$s</string>
     <string name="is_receive_money">Is receive money</string>
-    <string name="receive_money">Receive money</string>
-    <string name="pay_money">Pay money</string>
+    <string name="receive_money">Receive money From partner</string>
+    <string name="pay_money">Pay money To partner</string>
     <string name="create_employee">Create Employee</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="error_passwords_do_not_match">Passwords do not match</string>
@@ -398,4 +398,9 @@
     <string name="employee_activity_report">Employee Activity Report</string>
     <string name="invoice_type">Invoice Type</string>
     <string name="voucher_type">Voucher Type</string>
+
+    <string name="partner_owns">Partner owns</string>
+    <string name="owns_partner">Owns to partner</string>
+
+
 </resources>

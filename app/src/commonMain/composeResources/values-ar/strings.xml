@@ -368,8 +368,8 @@
 
     <string name="invalid_item_with_args">صنف غير صالح: %1$s</string>
     <string name="is_receive_money">هل هو قبض أموال</string>
-    <string name="receive_money">قبض أموال</string>
-    <string name="pay_money">دفع أموال</string>
+    <string name="receive_money">استلام أموال من الشريك</string>
+    <string name="pay_money">دفع أموال للشريك</string>
     <string name="create_employee">إنشاء موظف</string>
     <string name="confirm_password">تأكيد كلمة المرور</string>
     <string name="error_passwords_do_not_match">كلمات المرور غير متطابقة</string>
@@ -410,4 +410,6 @@
     <string name="invoice_type">نوع الفاتورة</string>
     <string name="voucher_type">نوع السند</string>
 
+    <string name="partner_owns">للشريك</string>
+    <string name="owns_partner">على الشريك</string>
 </resources>

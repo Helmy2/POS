@@ -51,16 +51,19 @@ import pos.app.generated.resources.amount
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.cancel
 import pos.app.generated.resources.edit_voucher
-import pos.app.generated.resources.is_receive_money
 import pos.app.generated.resources.new_voucher
 import pos.app.generated.resources.notes_optional
+import pos.app.generated.resources.owns_partner
+import pos.app.generated.resources.partner_owns
 import pos.app.generated.resources.pay_money
 import pos.app.generated.resources.receive_money
 import pos.app.generated.resources.save
 import pos.app.generated.resources.transaction_type
+import pos.app.generated.resources.type
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 @Composable
 fun ReceivePayVoucherRoute(
@@ -193,7 +196,7 @@ fun VoucherEditDialog(
                 )
 
                 CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.is_receive_money),
+                    label = stringResource(Res.string.type),
                     items = listOf(true, false),
                     selectedItemId = dialogState.isReceiveMoney.toString(),
                     onItemSelected = {
@@ -204,37 +207,34 @@ fun VoucherEditDialog(
                         )
                     },
                     itemToDisplayString = {
-                        if (it) stringResource(Res.string.receive_money) else stringResource(
-                            Res.string.pay_money
-                        )
+                        if (dialogState.transactionType == TransactionType.OPENING_BALANCE) {
+                            if (it) stringResource(Res.string.partner_owns) else stringResource(Res.string.owns_partner)
+                        } else {
+                            if (it) stringResource(Res.string.receive_money) else stringResource(Res.string.pay_money)
+                        }
                     },
                     itemToId = { it.toString() },
                     enabled = state.canUserEdit
                 )
 
                 LabeledTextField(
-                    value = dialogState.amount,
-                    onValueChange = {
+                    value = dialogState.amount, onValueChange = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogAmountChanged(
                                 it
                             )
                         )
-                    },
-                    label = stringResource(Res.string.amount),
-                    enabled = state.canUserEdit
+                    }, label = stringResource(Res.string.amount), enabled = state.canUserEdit
                 )
 
                 DataPicker(
-                    selectedDateMillis = dialogState.date,
-                    onDateSelected = {
+                    selectedDateMillis = dialogState.date, onDateSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogDateChanged(
                                 it
                             )
                         )
-                    },
-                    enabled = state.canUserEdit
+                    }, enabled = state.canUserEdit
                 )
 
                 LabeledTextField(
@@ -269,19 +269,15 @@ fun VoucherItem(
     voucher: ReceivePayVoucher, canEdit: Boolean, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
     val date = remember(voucher.updatedAt) {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(voucher.updatedAt))
+        SimpleDateFormat("yyyy - MM - dd", Locale.getDefault()).format(Date(voucher.updatedAt))
     }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val language = LocalAppLocale.current
 
-    ConfirmDeleteDialog(
-        show = showDeleteConfirm,
-        onConfirm = {
-            showDeleteConfirm = false
-            onDelete()
-        },
-        onDismiss = { showDeleteConfirm = false }
-    )
+    ConfirmDeleteDialog(show = showDeleteConfirm, onConfirm = {
+        showDeleteConfirm = false
+        onDelete()
+    }, onDismiss = { showDeleteConfirm = false })
 
     Card(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(
@@ -290,8 +286,7 @@ fun VoucherItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = voucher.partner.name.displayName(language),
@@ -325,9 +320,10 @@ fun VoucherItem(
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "%.2f".format(voucher.amount),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "%.2f".format(abs(voucher.amount)),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (voucher.amount >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                 )
                 Text(text = date, style = MaterialTheme.typography.bodySmall)
             }
@@ -341,8 +337,7 @@ fun VoucherItem(
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
                     IconButton(
-                        onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.size(24.dp)
+                        onClick = { showDeleteConfirm = true }, modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,

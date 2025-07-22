@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.presentation.receive_pay_vouche
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
+import kotlin.math.abs
 
 class ReceivePayVoucherReducer() :
     Reducer<ReceivePayVoucherContract.State, ReceivePayVoucherContract.Event, Nothing> {
@@ -31,9 +32,11 @@ class ReceivePayVoucherReducer() :
                         show = true,
                         voucherToEdit = event.voucher,
                         selectedPartnerId = event.voucher.partner.id,
-                        amount = event.voucher.amount.toString(),
+                        amount = abs(event.voucher.amount).toString(),
                         notes = event.voucher.notes,
-                        date = event.voucher.createdAt
+                        date = event.voucher.createdAt,
+                        transactionType = event.voucher.transactionType,
+                        isReceiveMoney = event.voucher.amount <= 0
                     )
                 ) to null
 
