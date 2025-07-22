@@ -59,11 +59,9 @@ class UserRepositoryImpl(
             val profileResult = profileApiService.getProfile(supabaseUser.id)
 
             profileResult.onSuccess { profileDto ->
-                // Step 4: Sync the fetched profile with the local database
                 val syncedUserEntity = syncProfile(profileDto)
                 return Result.success(syncedUserEntity.toDomain())
             }.onFailure {
-                // If fetching the profile fails, the login is considered incomplete.
                 return Result.failure(it)
             }
 
@@ -125,8 +123,9 @@ class UserRepositoryImpl(
                 enName = enName,
                 isAdmin = false,
                 updatedAt = Clock.now().toDateString(),
-                avatarUrl = "",
-                fcmToken = null
+                avatarUrl = "https://ofzbmodzxgbpvybfhofr.supabase.co/storage/v1/object/public/bucket//avatar_profile.png",
+                fcmToken = null,
+                email = email
             )
 
             supabaseClient.postgrest["profiles"].upsert(profileDto)
@@ -140,15 +139,86 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun getUserByServerId(id: String): Result<User?> {
-        return runCatching {
-            userDao.getUserBySupabaseId(id).first()?.toDomain()
+    override suspend fun updateUser(
+        id: String,
+        arName: String,
+        enName: String,
+        password: String?,
+        email: String?
+    ): Result<Unit> {
+        return try {
+            val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
+            if (!currentUser.isAdmin) {
+                return Result.failure(Exception("You are not an admin."))
+            }
+
+            // Update password if provided
+            if (password != null) {
+                if (password.length < 6) {
+                    return Result.failure(Exception("Password must be at least 6 characters long."))
+                }
+                adminClient().auth.admin.updateUserById(id) {
+                    this.password = password
+                }
+            }
+
+            // Update email if provided
+            if (email != null) {
+                adminClient().auth.admin.updateUserById(id) {
+                    this.email = email
+                }
+            }
+
+            // Update profile data in Postgrest
+            val updates = mapOf(
+                "ar_name" to arName,
+                "en_name" to enName,
+                "username" to enName,
+                "email" to email,
+                "updated_at" to Clock.now().toDateString()
+            )
+            supabaseClient.postgrest["profiles"].update(updates) { filter { eq("id", id) } }
+
+            // Update local database
+            val localUser = userDao.getUserBySupabaseId(id).first()
+            if (localUser != null) {
+                userDao.upsert(localUser.copy(arName = arName, enName = enName, username = enName))
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    override suspend fun getUserById(id: Long): Result<User?> {
+    override suspend fun deleteUser(id: String): Result<Unit> {
+        return try {
+            val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
+            if (!currentUser.isAdmin) {
+                return Result.failure(Exception("You are not an admin."))
+            }
+
+            // Delete from Supabase Auth
+            adminClient().auth.admin.deleteUser(id)
+
+            // Delete from Postgrest "profiles" table
+            supabaseClient.postgrest["profiles"].delete { filter { eq("id", id) } }
+
+            // Delete from local database
+            val localUser = userDao.getUserBySupabaseId(id).first()
+            if (localUser != null) {
+                userDao.delete(localUser.id)
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserByServerId(id: String): Result<User?> {
         return runCatching {
-            userDao.getUserById(id)?.toDomain()
+            userDao.getUserBySupabaseId(id).first()?.toDomain()
         }
     }
 

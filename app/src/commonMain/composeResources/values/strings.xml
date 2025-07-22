@@ -401,6 +401,12 @@
 
     <string name="partner_owns">Partner owns</string>
     <string name="owns_partner">Owns to partner</string>
+    <string name="employee_deleted_successfully">Employee deleted successfully</string>
+    <string name="employee_saved_successfully">Employee saved successfully</string>
+    <string name="error_deleting_employee">Error deleting employee</string>
+    <string name="error_employee_not_found">Error: Employee not found</string>
+    <string name="error_loading_employee">Error loading employee</string>
+    <string name="error_saving_employee">Error saving employee</string>
 
 
 </resources>

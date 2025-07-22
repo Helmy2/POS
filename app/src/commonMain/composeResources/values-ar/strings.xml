@@ -412,4 +412,11 @@
 
     <string name="partner_owns">للشريك</string>
     <string name="owns_partner">على الشريك</string>
+
+    <string name="employee_deleted_successfully">تم حذف الموظف بنجاح</string>
+    <string name="employee_saved_successfully">تم حفظ الموظف بنجاح</string>
+    <string name="error_deleting_employee">خطأ في حذف الموظف</string>
+    <string name="error_employee_not_found">خطأ: الموظف غير موجود</string>
+    <string name="error_loading_employee">خطأ في تحميل بيانات الموظف</string>
+    <string name="error_saving_employee">خطأ في حفظ بيانات الموظف</string>
 </resources>

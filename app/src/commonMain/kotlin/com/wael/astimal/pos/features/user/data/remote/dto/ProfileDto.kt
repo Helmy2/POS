@@ -25,6 +25,7 @@ data class ProfileDto(
     val isAdmin: Boolean,
     @SerialName("fcm_token")
     val fcmToken: String?,
+    val email: String?,
 )
 
 /**
@@ -43,7 +44,7 @@ fun ProfileDto.toEntity(): UserEntity {
         username = username,
         arName = arName,
         enName = enName,
-        email = null,
+        email = email,
         phone = null,
         avatarUrl = avatarUrl,
         role = role,

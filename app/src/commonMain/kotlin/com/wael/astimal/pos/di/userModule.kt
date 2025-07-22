@@ -10,7 +10,7 @@ import com.wael.astimal.pos.features.user.data.repository.NotificationRepository
 import com.wael.astimal.pos.features.user.data.repository.UserRepositoryImpl
 import com.wael.astimal.pos.features.user.domain.repository.NotificationRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import com.wael.astimal.pos.features.user.presentation.create.CreateEmployeeViewModel
+import com.wael.astimal.pos.features.user.presentation.employee.EmployeeViewModel
 import com.wael.astimal.pos.features.user.presentation.login.LoginViewModel
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsViewModel
 import io.github.jan.supabase.auth.Auth
@@ -52,5 +52,5 @@ val userModule = module {
 
     viewModelOf(::SettingsViewModel)
     viewModelOf(::LoginViewModel)
-    viewModelOf(::CreateEmployeeViewModel)
+    viewModelOf(::EmployeeViewModel)
 }

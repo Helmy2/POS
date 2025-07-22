@@ -11,12 +11,20 @@ interface UserRepository {
     suspend fun getCurrentUser(): User?
     suspend fun logout(): Result<Unit>
     suspend fun getUserByServerId(id: String): Result<User?>
-    suspend fun getUserById(id: Long): Result<User?>
     suspend fun syncWithServer(users: List<UserEntity>): Result<Unit>
     suspend fun createUser(
         email: String,
         arName: String,
         enName: String,
         password: String
+    ): Result<Unit>
+
+    suspend fun deleteUser(id: String): Result<Unit>
+    suspend fun updateUser(
+        id: String,
+        arName: String,
+        enName: String,
+        password: String?,
+        email: String?
     ): Result<Unit>
 }
