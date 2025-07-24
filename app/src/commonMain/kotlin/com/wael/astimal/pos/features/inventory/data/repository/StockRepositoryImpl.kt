@@ -6,6 +6,8 @@ import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -14,6 +16,7 @@ import kotlin.uuid.Uuid
 
 class StockRepositoryImpl(
     private val stockAdjustmentDao: StockAdjustmentDao,
+    private val supabaseClient: SupabaseClient
 ) : StockRepository {
 
     override fun getStoreStocks(
@@ -50,8 +53,17 @@ class StockRepositoryImpl(
     }
 
     override suspend fun deleteStockAdjustment(adjustment: StockAdjustment): Result<Unit> {
-        return runCatching {
-            stockAdjustmentDao.softDeleteByLocalId(adjustment.id)
+        return try {
+            supabaseClient.from("stock_adjustments").delete {
+                filter {
+                    eq("id", adjustment.id)
+                }
+            }
+            stockAdjustmentDao.deleteByServerId(adjustment.id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 

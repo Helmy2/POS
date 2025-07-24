@@ -6,6 +6,8 @@ import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -14,6 +16,7 @@ import kotlin.uuid.Uuid
 
 class EmployeeTransactionRepositoryImpl(
     private val employeeFinancesDao: EmployeeFinancesDao,
+    private val supabaseClient: SupabaseClient
 ) : EmployeeTransactionRepository {
     override fun getAllTransaction(): Flow<List<EmployeeTransaction>> {
         return employeeFinancesDao.getAllTransactions().map { it.map { it -> it.toDomain() } }
@@ -33,9 +36,15 @@ class EmployeeTransactionRepositoryImpl(
 
     override suspend fun deleteManualPayment(transactionId: String): Result<Unit> {
         return try {
-            employeeFinancesDao.softDeleteEmployeeTransaction(transactionId)
+            supabaseClient.from("employee_transactions").delete {
+                filter {
+                    eq("id", transactionId)
+                }
+            }
+            employeeFinancesDao.hardDeleteTransactionById(transactionId)
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

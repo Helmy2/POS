@@ -3,7 +3,6 @@ package com.wael.astimal.pos.core.data
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.util.fetchAll
 import com.wael.astimal.pos.core.util.pushAll
-import com.wael.astimal.pos.features.inventory.data.local.entity.toDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
@@ -35,10 +34,8 @@ import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import toDto
 
 
 class SyncServiceImpl(
@@ -86,18 +83,16 @@ class SyncServiceImpl(
                 }
 
                 syncProducts()
-
-                syncStockAdjustment()
-                syncPartnerTransactions()
-                syncEmployeesTransactions()
-
                 syncPartner()
+
 
                 syncTransferItems()
                 syncTransfer()
-
-                syncInvoiceItems()
                 syncInvoice()
+                syncInvoiceItems()
+                syncStockAdjustment()
+                syncPartnerTransactions()
+                syncEmployeesTransactions()
 
                 Result.success(Unit)
             } catch (e: Exception) {
@@ -108,23 +103,6 @@ class SyncServiceImpl(
     }
 
     private suspend fun syncTransferItems() {
-        stockTransferRepository.getUnsyncedTransfersItems().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.let {
-            supabaseClient.pushAll<StockTransferItemDto>("stock_transfer_items") { it }
-        }
-
-        stockTransferRepository.getAllDeletedInvoiceItems().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            supabaseClient.postgrest["stock_transfer_items"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            stockTransferRepository.hardDeleteInvoiceItems(it.id)
-        }
-
         supabaseClient.fetchAll<StockTransferItemDto>("stock_transfer_items").getOrThrow().also {
             stockTransferRepository.syncTransfersItems(
                 it.map { item ->
@@ -135,21 +113,6 @@ class SyncServiceImpl(
     }
 
     private suspend fun syncTransfer() {
-        stockTransferRepository.getUnsyncedTransfers().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.let {
-            supabaseClient.pushAll<StockTransferDto>("stock_transfers") { it }
-        }
-
-        stockTransferRepository.getAllDeletedInvoice().getOrThrow().forEach {
-            supabaseClient.postgrest["stock_transfers"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            stockTransferRepository.hardDeleteInvoice(it.id)
-        }
-
         supabaseClient.fetchAll<StockTransferDto>("stock_transfers").getOrThrow().also {
             stockTransferRepository.syncTransfers(
                 it.map { transfer ->
@@ -182,17 +145,6 @@ class SyncServiceImpl(
             supabaseClient.pushAll<ItemDto>("invoice_items") { it }
         }?.getOrThrow()
 
-        invoiceRepository.getAllDeletedInvoiceItems().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            supabaseClient.postgrest["invoice_items"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            invoiceRepository.hardDeleteInvoiceItems(it.id)
-        }
-
         supabaseClient.fetchAll<ItemDto>("invoice_items").getOrThrow().also {
             invoiceRepository.syncInvoicesItems(
                 it.map { invoiceItemDto ->
@@ -208,18 +160,6 @@ class SyncServiceImpl(
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<InvoiceDto>("invoices") { it }
         }?.getOrThrow()
-
-        invoiceRepository.getAllDeletedInvoice().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            println(it)
-            supabaseClient.postgrest["invoices"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            invoiceRepository.hardDeleteInvoice(it.id)
-        }
 
         supabaseClient.fetchAll<InvoiceDto>("invoices").getOrThrow().also {
             invoiceRepository.syncInvoices(
@@ -237,17 +177,6 @@ class SyncServiceImpl(
             supabaseClient.pushAll<StockAdjustmentDto>("stock_adjustments") { it }
         }?.getOrThrow()
 
-        stockRepository.getAllDeleted().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            supabaseClient.postgrest["stock_adjustments"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            stockRepository.hardDeleteByServerId(it.id)
-        }
-
         supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
             stockRepository.syncWithServer(
                 it.map { stockAdjustmentDto ->
@@ -264,17 +193,6 @@ class SyncServiceImpl(
             supabaseClient.pushAll<BusinessPartnerDto>("business_partners") { it }
         }?.getOrThrow()
 
-        businessPartnerRepository.getAllDeletedPartners().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            println(it)
-            supabaseClient.postgrest["business_partners"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            businessPartnerRepository.hardDeleteByServerId(it.id)
-        }
 
         supabaseClient.fetchAll<BusinessPartnerDto>("business_partners").getOrThrow().also {
             businessPartnerRepository.syncWithServer(
@@ -292,17 +210,6 @@ class SyncServiceImpl(
             supabaseClient.pushAll<EmployeeTransactionDto>("employee_transactions") { it }
         }?.getOrThrow()
 
-        employeeTransactionRepository.getAllDeletedTransactions().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            supabaseClient.postgrest["employee_transactions"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            employeeTransactionRepository.hardDeleteByServerId(it.id)
-        }
-
         supabaseClient.fetchAll<EmployeeTransactionDto>("employee_transactions").getOrThrow()
             .also {
                 employeeTransactionRepository.syncWithServer(
@@ -319,17 +226,6 @@ class SyncServiceImpl(
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<PartnerTransactionDto>("partner_transactions") { it }
         }?.getOrThrow()
-
-        partnerTransactionRepository.getAllDeletedTransactions().getOrThrow().map {
-            it.toDto()
-        }.takeIf { it.isNotEmpty() }?.forEach {
-            supabaseClient.postgrest["partner_transactions"].delete {
-                filter {
-                    eq("id", it.id)
-                }
-            }
-            partnerTransactionRepository.hardDeleteByServerId(it.id)
-        }
 
         supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions").getOrThrow()
             .also {

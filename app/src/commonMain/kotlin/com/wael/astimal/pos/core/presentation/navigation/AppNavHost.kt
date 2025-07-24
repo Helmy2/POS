@@ -27,8 +27,9 @@ import com.wael.astimal.pos.features.management.presentation.receive_pay_voucher
 import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementRoute
+import com.wael.astimal.pos.features.reports.presentation.employee_ledger.EmployeeLedgerRoute
 import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportRoute
-import com.wael.astimal.pos.features.reports.presentation.profits_report.ProfitReportRoute
+import com.wael.astimal.pos.features.reports.presentation.product_movement.ProductMovementRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
 import com.wael.astimal.pos.features.user.presentation.employee.EmployeeRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
@@ -127,8 +128,16 @@ fun AppNavHost(
                     },
                 )
             }
-            composable<Destination.ProfitReport> {
-                ProfitReportRoute(
+            composable<Destination.EmployeeLedger> {
+                EmployeeLedgerRoute(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            composable<Destination.ProductMovement> {
+                ProductMovementRoute(
                     onNavigateBack = {
                         navController.popBackStack()
                     },

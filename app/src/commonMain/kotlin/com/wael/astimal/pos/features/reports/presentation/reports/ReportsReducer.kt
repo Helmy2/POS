@@ -5,7 +5,8 @@ import com.wael.astimal.pos.core.domain.navigation.Destination
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.customer_statement
 import pos.app.generated.resources.employee_daily_report
-import pos.app.generated.resources.profit_report
+import pos.app.generated.resources.employee_ledger_report
+import pos.app.generated.resources.product_movement_report
 
 class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Nothing> {
     override fun reduce(
@@ -14,10 +15,6 @@ class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Not
         return when (event) {
             is ReportsContract.Event.LoadReports -> {
                 val reportItems = listOf(
-//                    ReportsContract.ReportsItem(
-//                        Destination.AccountStatement,
-//                        Res.string.account_statement
-//                    ),
                     ReportsContract.ReportsItem(
                         Destination.CustomerStatement, Res.string.customer_statement
                     ),
@@ -25,7 +22,10 @@ class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Not
                         Destination.EmployeeReport, Res.string.employee_daily_report
                     ),
                     ReportsContract.ReportsItem(
-                        Destination.ProfitReport, Res.string.profit_report
+                        Destination.EmployeeLedger, Res.string.employee_ledger_report
+                    ),
+                    ReportsContract.ReportsItem(
+                        Destination.ProductMovement, Res.string.product_movement_report
                     ),
                 )
                 previousState.copy(items = reportItems) to null

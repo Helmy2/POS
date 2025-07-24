@@ -4,7 +4,6 @@ import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
-import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
@@ -22,7 +21,8 @@ data class StockAdjustment(
     val reason: StockAdjustmentReason,
     val notes: String?,
     val quantityChange: Double,
-    val invoice: Invoice?,
+    val invoiceId: String?,
+    val transactionId: String?,
     val id: String,
     val isSynced: Boolean = false,
     val createdAt: Long,
@@ -50,7 +50,8 @@ fun StockAdjustment.toEntity(): StockAdjustmentEntity {
         storeId = store.id,
         productId = product.id,
         userId = user.id,
-        invoiceId = invoice?.id,
+        invoiceId = invoiceId,
+        transactionId = transactionId,
         reason = reason,
         notes = notes,
         quantityChange = quantityChange,
@@ -71,6 +72,7 @@ fun StockAdjustment.toDto(): StockAdjustmentDto {
         quantity = quantityChange,
         createdAt = createdAt.toDateString(),
         updatedAt = updatedAt.toDateString(),
-        invoiceId = invoice?.id
+        invoiceId = invoiceId,
+        transactionId = transactionId
     )
 }

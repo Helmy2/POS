@@ -6,6 +6,8 @@ import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -13,6 +15,7 @@ import kotlin.uuid.Uuid
 
 class PartnerTransactionRepositoryImpl(
     private val transactionDao: PartnerTransactionDao,
+    private val supabaseClient: SupabaseClient
 ) : PartnerTransactionRepository {
 
     override fun getVouchers(): Flow<List<ReceivePayVoucher>> {
@@ -35,9 +38,15 @@ class PartnerTransactionRepositoryImpl(
 
     override suspend fun deleteVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return try {
-            transactionDao.softDeleteTransactionById(voucher.id)
+            supabaseClient.from("partner_transactions").delete {
+                filter {
+                    eq("id", voucher.id)
+                }
+            }
+            transactionDao.hardDeleteTransactionById(voucher.id)
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

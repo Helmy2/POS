@@ -43,11 +43,5 @@ interface StockTransferRepository {
     ): Result<Unit>
 
     suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit>
-    suspend fun hardDeleteInvoiceItems(id: String): Result<Unit>
-    suspend fun getAllDeletedInvoiceItems(): Result<List<StockTransferItemEntity>>
-    suspend fun getUnsyncedTransfersItems(): Result<List<StockTransferItemEntity>>
     suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit>
-    suspend fun getAllDeletedInvoice(): Result<List<StockTransfer>>
-    suspend fun getUnsyncedTransfers(): Result<List<StockTransfer>>
-    suspend fun hardDeleteInvoice(id: String): Result<Unit>
 }

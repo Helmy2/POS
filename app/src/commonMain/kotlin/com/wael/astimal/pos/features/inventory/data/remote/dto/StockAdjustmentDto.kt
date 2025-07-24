@@ -24,7 +24,9 @@ data class StockAdjustmentDto(
     val notes: String?,
     val quantity: Double,
     @SerialName("invoice_id")
-    val invoiceId: String?
+    val invoiceId: String?,
+    @SerialName("transfer_id")
+    val transactionId: String?
 )
 
 fun StockAdjustmentDto.toEntity(): StockAdjustmentEntity {
@@ -39,6 +41,7 @@ fun StockAdjustmentDto.toEntity(): StockAdjustmentEntity {
         isSynced = true,
         createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
         updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
-        invoiceId = invoiceId
+        invoiceId = invoiceId,
+        transactionId = transactionId
     )
 }

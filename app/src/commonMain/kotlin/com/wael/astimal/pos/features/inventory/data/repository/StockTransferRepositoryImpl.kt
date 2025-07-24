@@ -145,10 +145,10 @@ class StockTransferRepositoryImpl(
     ): Result<Unit> {
         return try {
             if (status == StockTransferStatus.APPROVED) {
-                return Result.failure(Exception("Cannot delete an approved transfer"))
+                return Result.failure(Exception("Cannot update an approved transfer"))
             }
             if (status == StockTransferStatus.REJECTED) {
-                return Result.failure(Exception("Cannot delete a rejected transfer"))
+                return Result.failure(Exception("Cannot update a rejected transfer"))
             }
             val transferDto = StockTransferDto(
                 id = transferLocalId,
@@ -272,6 +272,10 @@ class StockTransferRepositoryImpl(
                     eq("transfer_id", transferToDelete.id)
                 }
             }
+            supabaseClient.from("stock_adjustments").delete {
+                filter { eq("transfer_id", transferToDelete.id) }
+            }
+
             supabaseClient.from("stock_transfers").delete {
                 filter {
                     eq("id", transferToDelete.id)
@@ -285,49 +289,12 @@ class StockTransferRepositoryImpl(
         }
     }
 
-
-    override suspend fun getUnsyncedTransfers(): Result<List<StockTransfer>> {
-        return runCatching {
-            stockTransferDao.getUnsyncedInvoices().map { it.toDomain() }
-        }
-    }
-
-    override suspend fun getAllDeletedInvoice(): Result<List<StockTransfer>> {
-        return runCatching {
-            stockTransferDao.getDeletedInvoice().map { it.toDomain() }
-        }
-    }
-
-    override suspend fun hardDeleteInvoice(id: String): Result<Unit> {
-        return runCatching {
-            stockTransferDao.hardDeleteTransfer(id)
-        }
-    }
-
     override suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit> {
         return runCatching {
             stockTransferDao.deleteAllStockTransfers()
             entities.forEach {
                 stockTransferDao.insertStockOrUpdateTransfer(it)
             }
-        }
-    }
-
-    override suspend fun getUnsyncedTransfersItems(): Result<List<StockTransferItemEntity>> {
-        return runCatching {
-            stockTransferDao.getUnsyncedInvoicesItems()
-        }
-    }
-
-    override suspend fun getAllDeletedInvoiceItems(): Result<List<StockTransferItemEntity>> {
-        return runCatching {
-            stockTransferDao.getDeletedInvoiceItems()
-        }
-    }
-
-    override suspend fun hardDeleteInvoiceItems(id: String): Result<Unit> {
-        return runCatching {
-            stockTransferDao.hardDeleteInvoiceItems(id)
         }
     }
 

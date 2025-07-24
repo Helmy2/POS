@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -115,6 +116,52 @@ fun <T> CustomExposedDropdownMenu(
                         onItemSelected(item)
                         expanded = false
                     },
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomExposedDropdownMenu(
+    label: String,
+    items: List<String>,
+    selectedIndex: Int?,
+    onItemSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = isExpanded,
+        onExpandedChange = { isExpanded = it },
+        modifier = modifier
+    ) {
+        LabeledTextField(
+            // Display the selected item's text, or an empty string if nothing is selected.
+            value = selectedIndex?.let { items.getOrNull(it) } ?: items.firstOrNull() ?: "",
+            onValueChange = {}, // The text field is not directly editable
+            readOnly = true,
+            label = label,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+            },
+            enabled = true,
+            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.Companion.PrimaryEditable)
+        )
+
+        ExposedDropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false }
+        ) {
+            items.forEachIndexed { index, text ->
+                DropdownMenuItem(
+                    text = { Text(text) },
+                    onClick = {
+                        onItemSelected(index)
+                        isExpanded = false // Close the menu after an item is selected
+                    }
                 )
             }
         }

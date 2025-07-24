@@ -25,6 +25,7 @@ class SettingsManagerImpl(
         private const val THEME_KEY = "themeKey"
         private const val LANGUAGE_KEY = "languageKey"
         private const val USER_ID_KEY = "userIdKey"
+        private const val FCM_TOKEN = "fcmToken"
     }
 
     override fun getThemeMode(): Flow<ThemeMode> {
@@ -110,6 +111,29 @@ class SettingsManagerImpl(
         return try {
             dataStore.data.map {
                 it[stringPreferencesKey(USER_ID_KEY)]
+            }.first().takeIf { it?.isNotBlank() == true }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    override suspend fun saveFcmToken(token: String) {
+        return withContext(Dispatchers.IO) {
+            try {
+                dataStore.edit {
+                    it[stringPreferencesKey(FCM_TOKEN)] = token
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override suspend fun getFcmToken(): String? {
+        return try {
+            dataStore.data.map {
+                it[stringPreferencesKey(FCM_TOKEN)]
             }.first().takeIf { it?.isNotBlank() == true }
         } catch (e: Exception) {
             e.printStackTrace()

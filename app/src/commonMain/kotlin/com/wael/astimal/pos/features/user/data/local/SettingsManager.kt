@@ -11,4 +11,6 @@ interface SettingsManager {
     fun getLanguage(): Flow<Language>
     suspend fun changeUserId(id: String)
     suspend fun getUserId(): String?
+    suspend fun saveFcmToken(token: String)
+    suspend fun getFcmToken(): String?
 }

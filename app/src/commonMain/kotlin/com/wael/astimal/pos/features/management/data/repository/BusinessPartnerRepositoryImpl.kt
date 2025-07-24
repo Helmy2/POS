@@ -8,6 +8,8 @@ import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -16,6 +18,7 @@ import kotlin.uuid.Uuid
 class BusinessPartnerRepositoryImpl(
     private val partnerDao: BusinessPartnerDao,
     private val partnerTransactionDao: PartnerTransactionDao,
+    private val supabaseClient: SupabaseClient
 ) : BusinessPartnerRepository {
 
     override fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
@@ -74,10 +77,17 @@ class BusinessPartnerRepositoryImpl(
     }
 
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
-        return runCatching {
-            partnerDao.softDeletePartnerByLocalId(partner.id)
-        }.onFailure {
-            it.printStackTrace()
+        return try {
+            supabaseClient.from("business_partners").delete {
+                filter {
+                    eq("id", partner.id)
+                }
+            }
+            partnerDao.hardDeletePartnerByServerId(partner.id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 

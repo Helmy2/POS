@@ -20,7 +20,7 @@ class CustomerStatementViewModel(
     private val partnerRepository: BusinessPartnerRepository,
     private val statementRepository: CustomerStatementRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
-    private val navigationController: NavigationController
+    private val navigationController: NavigationController,
 ) : BaseViewModel<CustomerStatementContract.State, CustomerStatementContract.Event, CustomerStatementContract.Effect>(
     CustomerStatementReducer(), CustomerStatementContract.State()
 ) {
@@ -85,16 +85,18 @@ class CustomerStatementViewModel(
     }
 
     private fun generatePdf() {
-        val currentState = state.value
-        currentState.selectedPartner?.let { partner ->
-            val html = htmlReportGenerator.createCustomerStatementHtml(
-                partner = partner,
-                transactions = currentState.transactions,
-                startDate = currentState.startDate,
-                endDate = currentState.endDate
-            )
+        viewModelScope.launch {
+            val currentState = state.value
+            currentState.selectedPartner?.let { partner ->
+                val html = htmlReportGenerator.createCustomerStatementHtml(
+                    partner = partner,
+                    transactions = currentState.transactions,
+                    startDate = currentState.startDate,
+                    endDate = currentState.endDate
+                )
 
-            setState(CustomerStatementContract.Event.PdfGenerationSuccessful(html = html))
+                setState(CustomerStatementContract.Event.PdfGenerationSuccessful(html = html))
+            }
         }
     }
 

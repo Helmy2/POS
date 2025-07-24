@@ -22,6 +22,8 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactio
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -37,7 +39,8 @@ class InvoiceRepositoryImpl(
     private val stockAdjustmentDao: StockAdjustmentDao,
     private val productDao: ProductDao,
     private val stockRepository: StockRepository,
-    private val employeeFinancesDao: EmployeeFinancesDao
+    private val employeeFinancesDao: EmployeeFinancesDao,
+    private val supabaseClient: SupabaseClient
 ) : InvoiceRepository {
 
     override fun getInvoices(): Flow<List<Invoice>> {
@@ -71,19 +74,62 @@ class InvoiceRepositoryImpl(
     }
 
     private suspend fun updateProductsAveragePrice(invoice: Invoice) {
-        if (invoice.invoiceType == InvoiceType.SALES) return
-        if (invoice.invoiceType == InvoiceType.SALES_RETURN) return
+        if (invoice.invoiceType == InvoiceType.SALES || invoice.invoiceType == InvoiceType.SALES_RETURN) {
+            return
+        }
 
         invoice.items.forEach { item ->
             val currentCost = productDao.getAverageCost(item.product.id)
             val currentQuantity = stockRepository.getStockQuantity(productId = item.product.id)
 
-            val newCost = if (invoice.invoiceType == InvoiceType.PURCHASE)
-                (currentCost * currentQuantity + item.unitPrice + item.quantity) / (currentQuantity + item.quantity)
-            else
-                (currentCost * currentQuantity - item.unitPrice - item.quantity) / (currentQuantity - item.quantity)
+            if (item.quantity <= 0) return@forEach
 
+            val newCost = if (invoice.invoiceType == InvoiceType.PURCHASE) {
+                val newTotalQuantity = currentQuantity + item.quantity
+                if (newTotalQuantity > 0) {
+                    ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / newTotalQuantity
+                } else {
+                    currentCost
+                }
+            } else { // PURCHASE_RETURN
+                val newTotalQuantity = currentQuantity - item.quantity
+                if (newTotalQuantity <= 0) {
+                    currentCost
+                } else {
+                    ((currentCost * currentQuantity) - (item.unitPrice * item.quantity)) / newTotalQuantity
+                }
+            }
             productDao.updateAverageCost(item.product.id, newCost)
+        }
+    }
+
+    private suspend fun revertProductsAveragePrice(invoice: Invoice) {
+        if (invoice.invoiceType == InvoiceType.SALES || invoice.invoiceType == InvoiceType.SALES_RETURN) {
+            return
+        }
+
+        invoice.items.forEach { item ->
+            val currentCost = productDao.getAverageCost(item.product.id)
+            val currentQuantity = stockRepository.getStockQuantity(productId = item.product.id)
+
+            if (item.quantity <= 0) return@forEach
+
+            val revertedCost = if (invoice.invoiceType == InvoiceType.PURCHASE) {
+                val originalQuantity = currentQuantity - item.quantity
+                if (originalQuantity <= 0) {
+                    0.0
+                } else {
+                    ((currentCost * currentQuantity) - (item.unitPrice * item.quantity)) / originalQuantity
+                }
+            } else { // PURCHASE_RETURN
+                val originalQuantity = currentQuantity + item.quantity
+                if (originalQuantity > 0) {
+                    ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / originalQuantity
+                } else {
+                    currentCost
+                }
+            }
+            productDao.updateAverageCost(item.product.id, revertedCost)
         }
     }
 
@@ -93,7 +139,9 @@ class InvoiceRepositoryImpl(
         if (invoice.invoiceType == InvoiceType.PURCHASE_RETURN) return
 
         val invoicePurchaseTotalPrice =
-            invoice.items.sumOf { productDao.getAverageCost(it.id) * it.quantity }
+            invoice.items.sumOf {
+                productDao.getAverageCost(it.product.id) * it.quantity
+            }
 
         val profit = when (invoice.invoiceType) {
             InvoiceType.SALES -> invoice.totalAmount - invoicePurchaseTotalPrice
@@ -140,10 +188,22 @@ class InvoiceRepositoryImpl(
     override suspend fun deleteSalesOrder(orderId: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                stockAdjustmentDao.softDeleteAdjustmentsByInvoiceId(orderId)
-                partnerTransactionDao.softDeleteTransactionsByInvoiceId(orderId)
-                employeeFinancesDao.softDeleteTransactionsByInvoiceId(orderId)
-                invoiceDao.softDeleteInvoiceWithItemsById(orderId)
+                val invoiceToDelete = invoiceDao.getInvoiceById(orderId).toDomain()
+                revertProductsAveragePrice(invoiceToDelete)
+
+                supabaseClient.from("invoice_items").delete { filter { eq("invoice_id", orderId) } }
+                supabaseClient.from("stock_adjustments")
+                    .delete { filter { eq("invoice_id", orderId) } }
+                supabaseClient.from("partner_transactions")
+                    .delete { filter { eq("invoice_id", orderId) } }
+                supabaseClient.from("employee_transactions")
+                    .delete { filter { eq("invoice_id", orderId) } }
+                supabaseClient.from("invoices").delete { filter { eq("id", orderId) } }
+
+                stockAdjustmentDao.deleteAdjustmentsByInvoiceId(orderId)
+                partnerTransactionDao.deleteTransactionsByInvoiceId(orderId)
+                employeeFinancesDao.deleteTransactionsByInvoiceId(orderId)
+                invoiceDao.deleteInvoiceWithItemsById(orderId)
                 Result.success(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()

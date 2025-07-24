@@ -2,14 +2,17 @@ package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.reports.data.repository.CustomerStatementRepositoryImpl
+import com.wael.astimal.pos.features.reports.data.repository.EmployeeLedgerRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.EmployeeReportRepositoryImpl
-import com.wael.astimal.pos.features.reports.data.repository.ProfitReportRepositoryImpl
+import com.wael.astimal.pos.features.reports.data.repository.ProductMovementRepositoryImpl
 import com.wael.astimal.pos.features.reports.domain.repository.CustomerStatementRepository
+import com.wael.astimal.pos.features.reports.domain.repository.EmployeeLedgerRepository
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeReportRepository
-import com.wael.astimal.pos.features.reports.domain.repository.ProfitReportRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ProductMovementRepository
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementViewModel
+import com.wael.astimal.pos.features.reports.presentation.employee_ledger.EmployeeLedgerViewModel
 import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportViewModel
-import com.wael.astimal.pos.features.reports.presentation.profits_report.ProfitReportViewModel
+import com.wael.astimal.pos.features.reports.presentation.product_movement.ProductMovementViewModel
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -21,11 +24,13 @@ val reportsModule = module {
 
     singleOf(::CustomerStatementRepositoryImpl) { bind<CustomerStatementRepository>() }
     singleOf(::EmployeeReportRepositoryImpl) { bind<EmployeeReportRepository>() }
-    singleOf(::ProfitReportRepositoryImpl) { bind<ProfitReportRepository>() }
+    singleOf(::EmployeeLedgerRepositoryImpl) { bind<EmployeeLedgerRepository>() }
+    singleOf(::ProductMovementRepositoryImpl) { bind<ProductMovementRepository>() }
 
 
     viewModelOf(::ReportsViewModel)
     viewModelOf(::CustomerStatementViewModel)
     viewModelOf(::EmployeeReportViewModel)
-    viewModelOf(::ProfitReportViewModel)
+    viewModelOf(::EmployeeLedgerViewModel)
+    viewModelOf(::ProductMovementViewModel)
 }

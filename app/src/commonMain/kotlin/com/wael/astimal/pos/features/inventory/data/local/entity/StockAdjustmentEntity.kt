@@ -11,7 +11,6 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceWithItems
-import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 
@@ -94,6 +93,7 @@ fun StockAdjustmentWithDetails.toDomain(): StockAdjustment {
         isSynced = adjustment.isSynced,
         updatedAt = adjustment.updatedAt,
         createdAt = adjustment.createdAt,
-        invoice = invoice?.toDomain()
+        invoiceId = adjustment.invoiceId,
+        transactionId = adjustment.transactionId
     )
 }

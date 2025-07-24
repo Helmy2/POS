@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.reports.data.repository
 
 import com.wael.astimal.pos.core.data.AppDatabase
+import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import com.wael.astimal.pos.features.reports.domain.repository.CustomerStatementRepository
 import kotlinx.coroutines.flow.Flow
@@ -29,20 +30,15 @@ class CustomerStatementRepositoryImpl(
         return db.partnerTransactionDao()
             .getTransactionsForPartnerInRange(partnerId, startEpochMilli, endEpochMilli)
             .map { list ->
-                list.map { entity ->
+                list.map { entity -> entity.toDomain() }.map { entity ->
                     DetailedTransaction(
-                        id = entity.localId,
+                        id = entity.id,
                         date = Instant.fromEpochMilliseconds(entity.createdAt)
                             .toLocalDateTime(TimeZone.UTC).date,
                         transactionType = entity.transactionType,
                         invoiceId = entity.invoiceId.toString(),
-                        totalAmount = entity.balance,
-                        description = "${
-                            entity.transactionType.name.replace(
-                                '_',
-                                ' '
-                            )
-                        } #${entity.invoiceId}"
+                        totalAmount = entity.amount,
+                        partnerName = entity.partner.name
                     )
                 }.sortedByDescending { it.date }
             }

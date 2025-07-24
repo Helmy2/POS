@@ -74,8 +74,8 @@ interface PartnerTransactionDao {
     fun getTransactionsForPartnerInRange(
         partnerId: String,
         startDate: Long,
-        endDate: Long
-    ): Flow<List<PartnerTransactionEntity>>
+        endDate: Long,
+    ): Flow<List<PartnerTransactionWithDetails>>
 
     @Transaction
     @Query(
