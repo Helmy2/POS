@@ -411,4 +411,18 @@
     <string name="invoice_details_format">Invoice #%1$s to %2$s</string>
     <string name="partner_payment_details_format">Payment from/to %1$s</string>
 
+    <string name="employee_ledger_report">Employee Ledger</string>
+    <string name="closing_balance">Closing Balance</string>
+    <string name="totals">Totals</string>
+    <string name="amount_owed">Owed</string>
+
+    <string name="product_movement_report">Product Movement Report</string>
+    <string name="select_product">Select Product</string>
+    <string name="select_store">Select Store</string>
+    <string name="all_products">All Products</string>
+    <string name="quantity_in">In</string>
+    <string name="quantity_out">Out</string>
+    <string name="running_balance">Running Balance</string>
+    <string name="total_in">Total In</string>
+    <string name="total_out">Total Out</string>
 </resources>

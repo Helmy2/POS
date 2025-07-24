@@ -1,23 +1,23 @@
-package com.wael.astimal.pos.features.reports.presentation.profits_report
+package com.wael.astimal.pos.features.reports.presentation.employee_ledger
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
-import com.wael.astimal.pos.features.reports.domain.model.EmployeeProfitSummary
+import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
-object ProfitReportContract {
+object EmployeeLedgerContract {
     data class State(
         val employees: List<User> = emptyList(),
-        val profitSummary: List<EmployeeProfitSummary> = emptyList(),
+        val ledgerEntries: List<EmployeeLedgerEntry> = emptyList(),
         val selectedEmployeeId: String? = null,
         val startDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
         val endDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
         val isLoading: Boolean = false,
         val pdfHtmlToGenerate: String? = null,
-        val pdfGenerationTrigger: Int = 0
+        val pdfGenerationTrigger: Int = 0,
     ) : Reducer.ViewState {
         val selectedEmployee: User?
             get() = employees.find { it.id == selectedEmployeeId }
@@ -30,12 +30,11 @@ object ProfitReportContract {
         data class SetStartDate(val date: LocalDate) : Event
         data class SetEndDate(val date: LocalDate) : Event
         data object ApplyFilters : Event
-        data class ShowProfits(val summary: List<EmployeeProfitSummary>) : Event
+        data class ShowLedger(val entries: List<EmployeeLedgerEntry>) : Event
         data object GeneratePdf : Event
-        data class PdfGenerationFinished(val message: String) : Event
+        data object PdfGenerationFinished : Event
         data class PdfGenerationSuccess(val pdfUri: String) : Event
     }
 
     sealed interface Effect : Reducer.ViewEffect
 }
-

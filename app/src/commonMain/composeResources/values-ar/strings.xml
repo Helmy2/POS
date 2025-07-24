@@ -423,4 +423,19 @@
     <string name="partner_payment">دفعة شريك</string>
     <string name="invoice_details_format">فاتورة #%1$s إلى %2$s</string>
     <string name="partner_payment_details_format">دفعة من/إلى %1$s</string>
+
+    <string name="employee_ledger_report">كشف حساب الموظف</string>
+    <string name="closing_balance">الرصيد الختامي</string>
+    <string name="totals">الإجماليات</string>
+    <string name="amount_owed">عليه</string>
+
+    <string name="product_movement_report">تقرير حركة صنف</string>
+    <string name="select_product">اختر الصنف</string>
+    <string name="select_store">اختر المخزن</string>
+    <string name="all_products">كل الأصناف</string>
+    <string name="quantity_in">داخل</string>
+    <string name="quantity_out">خارج</string>
+    <string name="running_balance">الرصيد الحالي</string>
+    <string name="total_in">إجمالي الداخل</string>
+    <string name="total_out">إجمالي الخارج</string>
 </resources>
