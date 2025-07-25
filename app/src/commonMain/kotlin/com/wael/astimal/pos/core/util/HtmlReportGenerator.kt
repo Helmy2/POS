@@ -3,6 +3,7 @@ package com.wael.astimal.pos.core.util
 
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.reports.domain.model.CurrentStockInfo
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
@@ -69,6 +70,44 @@ class HtmlReportGenerator(
         // Convert LocalDate to a format SimpleDateFormat can use
         val dateInMillis = date.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
         return sdf.format(Date(dateInMillis))
+    }
+
+    suspend fun createCurrentStockReportHtml(
+        stockList: List<CurrentStockInfo>
+    ): String {
+        val lang = settingsManager.getLanguage().first()
+        val isRtl = lang == Language.Arabic
+
+        val totalValue = stockList.sumOf { it.quantity * it.product.averagePrice }
+
+        val stockRows = stockList.joinToString("") { info ->
+            """
+        <tr>
+            <td>${if (isRtl) info.product.name.arName else info.product.name.enName}</td>
+            <td>${if (isRtl) info.store.name.arName else info.store.name.enName}</td>
+            <td class="num">${String.format("%.2f", info.quantity)}</td>
+        </tr>
+        """.trimIndent()
+        }
+
+        val title = if (isRtl) "تقرير المخزون الحالي" else "Current Stock Report"
+        val headers = if (isRtl) {
+            listOf("اسم الصنف", "اسم المخزن", "الكمية الحالية")
+        } else {
+            listOf("Product Name", "Store Name", "Current Quantity")
+        }
+
+
+        val html = generateHtmlShell(
+            title = title,
+            subtitle = "", // No subtitle for this report
+            dateRange = "", // No date range for this report
+            isRtl = isRtl,
+            headers = headers,
+            rows = stockRows,
+        )
+
+        return html
     }
 
     suspend fun createProductMovementReportHtml(

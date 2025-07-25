@@ -425,4 +425,9 @@
     <string name="running_balance">Running Balance</string>
     <string name="total_in">Total In</string>
     <string name="total_out">Total Out</string>
+
+    <string name="current_stock_report">Current Stock Report</string>
+    <string name="product_name">Product Name</string>
+    <string name="store_name">Store Name</string>
+    <string name="total_stock_value">Total Stock Value</string>
 </resources>

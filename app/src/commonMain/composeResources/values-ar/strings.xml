@@ -438,4 +438,9 @@
     <string name="running_balance">الرصيد الحالي</string>
     <string name="total_in">إجمالي الداخل</string>
     <string name="total_out">إجمالي الخارج</string>
+
+    <string name="current_stock_report">تقرير المخزون الحالي</string>
+    <string name="product_name">اسم الصنف</string>
+    <string name="store_name">اسم المخزن</string>
+    <string name="total_stock_value">إجمالي قيمة المخزون</string>
 </resources>

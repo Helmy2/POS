@@ -87,5 +87,8 @@ sealed class Destination {
     data object ProductMovement : Destination()
 
     @Serializable
+    data object CurrentStock : Destination()
+
+    @Serializable
     data object Employee : Destination()
 }
