@@ -90,5 +90,8 @@ sealed class Destination {
     data object CurrentStock : Destination()
 
     @Serializable
+    data object ClientDebit : Destination()
+
+    @Serializable
     data object Employee : Destination()
 }

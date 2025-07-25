@@ -3,6 +3,7 @@ package com.wael.astimal.pos.core.util
 
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
 import com.wael.astimal.pos.features.reports.domain.model.CurrentStockInfo
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
@@ -70,6 +71,56 @@ class HtmlReportGenerator(
         // Convert LocalDate to a format SimpleDateFormat can use
         val dateInMillis = date.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
         return sdf.format(Date(dateInMillis))
+    }
+
+    suspend fun createClientDebitReportHtml(
+        debitList: List<ClientDebitInfo>
+    ): String {
+        val lang = settingsManager.getLanguage().first()
+        val isRtl = lang == Language.Arabic
+
+        val totalDebit = debitList.sumOf { it.debitAmount }
+
+        val debitRows = debitList.joinToString("") { info ->
+            """
+        <tr>
+            <td>${if (isRtl) info.client.name.arName else info.client.name.enName}</td>
+            <td>${info.client.phone ?: ""}</td>
+            <td>${if (isRtl) info.client.responsibleEmployee.localizedName.arName else info.client.responsibleEmployee.localizedName.enName}</td>
+            <td class="num">${String.format("%.2f", info.debitAmount)}</td>
+        </tr>
+        """.trimIndent()
+        }
+
+        val title = if (isRtl) "تقرير مديونية العملاء" else "Client Debit Report"
+        val headers = if (isRtl) {
+            listOf("اسم العميل", "رقم الهاتف", "الموظف المسؤول", "قيمة المديونية")
+        } else {
+            listOf("Client Name", "Phone Number", "Responsible Employee", "Debit Amount")
+        }
+
+        val totalLabel = if (isRtl) "إجمالي المديونيات" else "Total Debits"
+
+        val footer = """
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3" style="text-align: ${if (isRtl) "left" else "right"};">$totalLabel</td>
+                <td class="num">${String.format("%.2f", totalDebit)}</td>
+            </tr>
+        </tfoot>
+    """.trimIndent()
+
+        val html = generateHtmlShell(
+            title = title,
+            subtitle = "",
+            dateRange = "",
+            isRtl = isRtl,
+            headers = headers,
+            rows = debitRows,
+            footer = footer
+        )
+
+        return html
     }
 
     suspend fun createCurrentStockReportHtml(

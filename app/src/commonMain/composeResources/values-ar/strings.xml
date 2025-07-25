@@ -443,4 +443,11 @@
     <string name="product_name">اسم الصنف</string>
     <string name="store_name">اسم المخزن</string>
     <string name="total_stock_value">إجمالي قيمة المخزون</string>
+
+    <string name="client_debit_report">تقرير مديونية العملاء</string>
+    <string name="client_name">اسم العميل</string>
+    <string name="debit_amount">قيمة المديونية</string>
+    <string name="phone_number">رقم الهاتف</string>
+    <string name="total_debits">إجمالي المديونيات</string>
+    <string name="all_employees">كل الموظفين</string>
 </resources>

@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.reports.presentation.reports
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.client_debit_report
 import pos.app.generated.resources.current_stock_report
 import pos.app.generated.resources.customer_statement
 import pos.app.generated.resources.employee_daily_report
@@ -30,6 +31,9 @@ class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Not
                     ),
                     ReportsContract.ReportsItem(
                         Destination.CurrentStock, Res.string.current_stock_report
+                    ),
+                    ReportsContract.ReportsItem(
+                        Destination.ClientDebit, Res.string.client_debit_report
                     ),
                 )
                 previousState.copy(items = reportItems) to null

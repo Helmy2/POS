@@ -26,6 +26,7 @@ import com.wael.astimal.pos.features.management.presentation.purchase_return.Pur
 import com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers.ReceivePayVoucherRoute
 import com.wael.astimal.pos.features.management.presentation.sales.SalesRoute
 import com.wael.astimal.pos.features.management.presentation.sales_return.SalesReturnRoute
+import com.wael.astimal.pos.features.reports.presentation.client_debit.ClientDebitRoute
 import com.wael.astimal.pos.features.reports.presentation.current_stock.CurrentStockRoute
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.employee_ledger.EmployeeLedgerRoute
@@ -147,6 +148,13 @@ fun AppNavHost(
 
             composable<Destination.CurrentStock> {
                 CurrentStockRoute(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<Destination.ClientDebit> {
+                ClientDebitRoute(
                     onNavigateBack = {
                         navController.popBackStack()
                     },

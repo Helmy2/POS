@@ -1,16 +1,19 @@
 package com.wael.astimal.pos.di
 
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
+import com.wael.astimal.pos.features.reports.data.repository.ClientDebitRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.CurrentStockRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.CustomerStatementRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.EmployeeLedgerRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.EmployeeReportRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.ProductMovementRepositoryImpl
+import com.wael.astimal.pos.features.reports.domain.repository.ClientDebitRepository
 import com.wael.astimal.pos.features.reports.domain.repository.CurrentStockRepository
 import com.wael.astimal.pos.features.reports.domain.repository.CustomerStatementRepository
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeLedgerRepository
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeReportRepository
 import com.wael.astimal.pos.features.reports.domain.repository.ProductMovementRepository
+import com.wael.astimal.pos.features.reports.presentation.client_debit.ClientDebitViewModel
 import com.wael.astimal.pos.features.reports.presentation.current_stock.CurrentStockViewModel
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementViewModel
 import com.wael.astimal.pos.features.reports.presentation.employee_ledger.EmployeeLedgerViewModel
@@ -30,6 +33,7 @@ val reportsModule = module {
     singleOf(::EmployeeLedgerRepositoryImpl) { bind<EmployeeLedgerRepository>() }
     singleOf(::ProductMovementRepositoryImpl) { bind<ProductMovementRepository>() }
     singleOf(::CurrentStockRepositoryImpl) { bind<CurrentStockRepository>() }
+    singleOf(::ClientDebitRepositoryImpl) { bind<ClientDebitRepository>() }
 
     viewModelOf(::ReportsViewModel)
     viewModelOf(::CustomerStatementViewModel)
@@ -37,4 +41,5 @@ val reportsModule = module {
     viewModelOf(::EmployeeLedgerViewModel)
     viewModelOf(::ProductMovementViewModel)
     viewModelOf(::CurrentStockViewModel)
+    viewModelOf(::ClientDebitViewModel)
 }

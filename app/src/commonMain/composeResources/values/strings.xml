@@ -430,4 +430,11 @@
     <string name="product_name">Product Name</string>
     <string name="store_name">Store Name</string>
     <string name="total_stock_value">Total Stock Value</string>
+
+    <string name="client_debit_report">Client Debit Report</string>
+    <string name="client_name">Client Name</string>
+    <string name="debit_amount">Debit Amount</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="total_debits">Total Debits</string>
+    <string name="all_employees">All Employees</string>
 </resources>
