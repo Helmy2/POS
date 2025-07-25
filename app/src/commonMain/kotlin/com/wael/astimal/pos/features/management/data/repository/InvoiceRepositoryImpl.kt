@@ -300,11 +300,6 @@ class InvoiceRepositoryImpl(
         }
     }
 
-    override suspend fun getAllDeletedInvoiceItems(): Result<List<InvoiceItemEntity>> {
-        return runCatching {
-            invoiceDao.getDeletedInvoiceItems()
-        }
-    }
 
     override suspend fun hardDeleteInvoiceItems(id: String): Result<Unit> {
         return runCatching {
@@ -318,6 +313,8 @@ class InvoiceRepositoryImpl(
             entities.forEach {
                 invoiceDao.insertInvoiceInvoice(it)
             }
+        }.onFailure {
+            it.printStackTrace()
         }
     }
 

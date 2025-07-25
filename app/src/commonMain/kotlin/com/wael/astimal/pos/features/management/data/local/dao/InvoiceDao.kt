@@ -100,7 +100,7 @@ interface InvoiceDao {
     @Query("UPDATE invoice_items SET isDeletedLocally = 1")
     suspend fun deleteAllInvoiceItems()
 
-    @Query("UPDATE invoice_items SET isDeletedLocally = 1")
+    @Query("UPDATE invoices SET isDeletedLocally = 1")
     suspend fun deleteAllInvoices()
 
     @Transaction

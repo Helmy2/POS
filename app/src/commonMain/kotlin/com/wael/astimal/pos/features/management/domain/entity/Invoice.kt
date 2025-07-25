@@ -65,6 +65,7 @@ fun InvoiceItem.toEntity(
         productId = product.id,
         quantity = quantity,
         unitPrice = unitPrice,
+        isSynced = isSynced
     )
 }
 
