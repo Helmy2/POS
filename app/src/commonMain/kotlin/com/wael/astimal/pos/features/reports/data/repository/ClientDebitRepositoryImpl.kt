@@ -2,7 +2,6 @@ package com.wael.astimal.pos.features.reports.data.repository
 
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
-import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
 import com.wael.astimal.pos.features.reports.domain.repository.ClientDebitRepository
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +17,6 @@ class ClientDebitRepositoryImpl(
         return db.businessPartnerDao().searchPartnersFlow("")
             .map { allPartners ->
                 allPartners
-                    .filter { it.businessPartner.type != PartnerType.SUPPLIER }
                     .filter { responsibleEmployeeId == null || it.businessPartner.responsibleEmployeeLocalId == responsibleEmployeeId }
                     .map {
                         val balance =
@@ -26,9 +24,9 @@ class ClientDebitRepositoryImpl(
                                 ?: 0.0
                         ClientDebitInfo(
                             client = it.toDomain(),
-                            debitAmount = -balance
+                            debitAmount = balance
                         )
-                    }.filter { it.debitAmount >= 0.0 }
+                    }.filter { it.debitAmount > 0.0 }
             }
     }
 }
