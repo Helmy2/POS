@@ -29,6 +29,7 @@ import pos.app.generated.resources.employee_activity_report
 import pos.app.generated.resources.invoice_details_format
 import pos.app.generated.resources.partner_payment
 import pos.app.generated.resources.partner_payment_details_format
+import pos.app.generated.resources.total
 import pos.app.generated.resources.type
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -318,13 +319,22 @@ class HtmlReportGenerator(
             listOf("Date", "Description", "Balance")
         }
 
+        val footer =
+            """
+            <tr>
+                <td colspan="2">${getString(Res.string.total)}</td>
+                <td class="num">${String.format("%.2f", transactions.sumOf { it.totalAmount })}</td>
+            </tr>
+            """.trimIndent()
+
         val html = generateHtmlShell(
             title = title,
             subtitle = subtitle,
             dateRange = dateRangeText,
             isRtl = isRtl,
             headers = headers,
-            rows = activityRows
+            rows = activityRows,
+            footer = footer
         )
 
         return html

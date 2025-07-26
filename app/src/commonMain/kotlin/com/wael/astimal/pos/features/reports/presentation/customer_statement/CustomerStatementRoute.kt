@@ -54,6 +54,7 @@ import pos.app.generated.resources.description
 import pos.app.generated.resources.end_date
 import pos.app.generated.resources.select_customer
 import pos.app.generated.resources.start_date
+import pos.app.generated.resources.total
 import pos.app.generated.resources.total_amount
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -216,6 +217,32 @@ fun CustomerStatementScreen(
                 items(state.transactions) { transaction ->
                     TransactionRow(transaction) {
                         processEvent(CustomerStatementContract.Event.TransactionClicked(transaction))
+                    }
+                }
+                if (state.transactions.isNotEmpty()) {
+                    item {
+                        HorizontalDivider()
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                stringResource(Res.string.total),
+                                modifier = Modifier.weight(2f),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                "",
+                                modifier = Modifier.weight(3f),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                state.transactions.sumOf { it.totalAmount }.toString(),
+                                modifier = Modifier.weight(1.5f),
+                                style = MaterialTheme.typography.titleSmall,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
+                            )
+                        }
                     }
                 }
             }
