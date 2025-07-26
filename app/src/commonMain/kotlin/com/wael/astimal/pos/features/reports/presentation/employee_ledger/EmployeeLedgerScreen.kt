@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.reports.presentation.employee_ledger
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -165,7 +167,7 @@ fun EmployeeLedgerScreen(
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(Res.string.apply_filters)) }
         Spacer(Modifier.height(16.dp))
-        Divider()
+        HorizontalDivider()
 
         // --- Report Data ---
         if (state.isLoading) {
@@ -174,13 +176,18 @@ fun EmployeeLedgerScreen(
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         } else {
-            LedgerTable(entries = state.ledgerEntries)
+            LedgerTable(entries = state.ledgerEntries) {
+                processEvent(EmployeeLedgerContract.Event.SelectEntry(it))
+            }
         }
     }
 }
 
 @Composable
-private fun LedgerTable(entries: List<EmployeeLedgerEntry>) {
+private fun LedgerTable(
+    entries: List<EmployeeLedgerEntry>,
+    onEntryClick: (EmployeeLedgerEntry) -> Unit
+) {
     val totalDebit = entries.sumOf { it.debit }
     val totalCredit = entries.sumOf { it.credit }
     val closingBalance = entries.lastOrNull()?.balance ?: 0.0
@@ -224,12 +231,12 @@ private fun LedgerTable(entries: List<EmployeeLedgerEntry>) {
         }
         // Rows
         items(entries) { entry ->
-            LedgerRow(entry)
+            LedgerRow(entry, onEntryClick)
         }
         // Footer
         if (entries.isNotEmpty()) {
             item {
-                Divider(modifier = Modifier.padding(top = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
                 // Totals Row
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp)) {
                     Text(
@@ -277,12 +284,14 @@ private fun LedgerTable(entries: List<EmployeeLedgerEntry>) {
 }
 
 @Composable
-private fun LedgerRow(entry: EmployeeLedgerEntry) {
+private fun LedgerRow(entry: EmployeeLedgerEntry, onEntryClick: (EmployeeLedgerEntry) -> Unit) {
     val description = stringResource(entry.transactionType.getStringResId())
 
     Row(
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp).clickable {
+            onEntryClick(entry)
+        },
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             entry.date.toString(),

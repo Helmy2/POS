@@ -43,6 +43,7 @@ class EmployeeLedgerRepositoryImpl(
                     currentBalance += trx.amount
                     ledgerEntries.add(
                         EmployeeLedgerEntry(
+                            invoiceId = trx.invoiceId,
                             date = Instant.fromEpochMilliseconds(trx.createdAt)
                                 .toLocalDateTime(TimeZone.UTC).date,
                             transactionType = trx.type,

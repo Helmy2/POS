@@ -4,6 +4,7 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactio
 import kotlinx.datetime.LocalDate
 
 data class EmployeeLedgerEntry(
+    val invoiceId: String?,
     val date: LocalDate,
     val transactionType: EmployeeTransactionType,
     val notes: String,

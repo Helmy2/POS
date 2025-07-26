@@ -1,8 +1,12 @@
 package com.wael.astimal.pos.features.reports.presentation.employee_ledger
 
 import androidx.lifecycle.viewModelScope
+import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
+import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeLedgerRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
@@ -13,6 +17,7 @@ class EmployeeLedgerViewModel(
     private val userRepository: UserRepository,
     private val reportRepository: EmployeeLedgerRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
+    private val navigationController: NavigationController,
 ) : BaseViewModel<EmployeeLedgerContract.State, EmployeeLedgerContract.Event, EmployeeLedgerContract.Effect>(
     EmployeeLedgerReducer(),
     EmployeeLedgerContract.State()
@@ -32,6 +37,8 @@ class EmployeeLedgerViewModel(
             }
 
             is EmployeeLedgerContract.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
+
+            is EmployeeLedgerContract.Event.SelectEntry -> navigateToTransaction(event.activity)
             else -> setState(event)
         }
     }
@@ -69,6 +76,28 @@ class EmployeeLedgerViewModel(
                 endDate = currentState.endDate
             )
             setState(EmployeeLedgerContract.Event.PdfGenerationSuccess(html))
+        }
+    }
+
+    private fun navigateToTransaction(transaction: EmployeeLedgerEntry) {
+
+        val destination = when (transaction.transactionType) {
+            EmployeeTransactionType.COMMISSION_FOR_ORDER,
+            EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_ORDER,
+            EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_ORDER -> Destination.SalesOrders(
+                transaction.invoiceId
+            )
+
+            EmployeeTransactionType.COMMISSION_FOR_RETURN_ORDER,
+            EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_RETURN_ORDER,
+            EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_RETURN_ORDER -> Destination.SalesReturns(
+                transaction.invoiceId
+            )
+
+            else -> null
+        }
+        viewModelScope.launch {
+            destination?.let { navigationController.navigate(it) }
         }
     }
 }

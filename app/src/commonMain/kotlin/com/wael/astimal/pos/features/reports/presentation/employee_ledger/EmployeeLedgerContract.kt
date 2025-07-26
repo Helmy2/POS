@@ -34,6 +34,7 @@ object EmployeeLedgerContract {
         data object GeneratePdf : Event
         data object PdfGenerationFinished : Event
         data class PdfGenerationSuccess(val pdfUri: String) : Event
+        data class SelectEntry(val activity: EmployeeLedgerEntry) : Event
     }
 
     sealed interface Effect : Reducer.ViewEffect

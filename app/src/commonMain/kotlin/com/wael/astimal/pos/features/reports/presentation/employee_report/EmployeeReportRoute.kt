@@ -19,8 +19,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -170,7 +170,7 @@ fun EmployeeReportScreen(
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(Res.string.apply_filters)) }
         Spacer(Modifier.height(16.dp))
-        Divider()
+        HorizontalDivider()
 
         // --- Report Data ---
         if (state.isLoading) {
@@ -203,7 +203,9 @@ fun EmployeeReportScreen(
                     }
                 }
                 items(state.activities) { activity ->
-                    ActivityRow(activity)
+                    ActivityRow(activity) {
+                        processEvent(EmployeeReportContract.Event.SelectActivity(activity))
+                    }
                 }
             }
         }
@@ -211,7 +213,7 @@ fun EmployeeReportScreen(
 }
 
 @Composable
-private fun ActivityRow(activity: EmployeeActivity) {
+private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
     val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault()).date
 
     // --- NEW LOCALIZATION LOGIC ---
@@ -249,7 +251,8 @@ private fun ActivityRow(activity: EmployeeActivity) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
