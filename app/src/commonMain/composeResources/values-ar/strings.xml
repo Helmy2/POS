@@ -99,6 +99,7 @@
     <string name="purchase_price">سعر الشراء</string>
     <string name="selling_price">سعر البيع</string>
     <string name="average_cost_price">متوسط سعر التكلفة</string>
+    <string name="current_stock">المخزون الحالي</string>
 
     <string name="stock_management">إدارة المخزون</string>
     <string name="stock_transfer">تحويل مخزون</string>

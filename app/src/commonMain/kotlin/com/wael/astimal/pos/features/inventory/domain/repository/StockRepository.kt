@@ -18,4 +18,5 @@ interface StockRepository {
     suspend fun getAllDeleted(): Result<List<StockAdjustment>>
     suspend fun hardDeleteByServerId(id: String): Result<Unit>
     suspend fun getStockQuantity(productId: String): Double
+    suspend fun getStockInCurrentStore(productId: String): Double
 }

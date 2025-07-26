@@ -32,16 +32,16 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
             is ProductContract.Event.ProductSelected ->
                 previousState.copy(
                     selectedProduct = event.product,
-                    inputArName = event.product.name.arName ?: "",
-                    inputEnName = event.product.name.enName ?: "",
-                    inputPurchasePrice = event.product.purchasePrice.toString(),
-                    inputSellingPrice = event.product.sellingPrice.toString(),
+                    inputArName = event.product.product.name.arName ?: "",
+                    inputEnName = event.product.product.name.enName ?: "",
+                    inputPurchasePrice = event.product.product.purchasePrice.toString(),
+                    inputSellingPrice = event.product.product.sellingPrice.toString(),
 
-                    inputSubUnitsPerMainUnit = event.product.subUnitsPerMainUnit.toString(),
-                    selectedCategoryId = event.product.category?.id,
+                    inputSubUnitsPerMainUnit = event.product.product.subUnitsPerMainUnit.toString(),
+                    selectedCategoryId = event.product.product.category?.id,
                     // remove the selected store id
-                    selectedSubUnitId = event.product.subProductUnit?.id,
-                    selectedMainUnitId = event.product.mainProductUnit.id,
+                    selectedSubUnitId = event.product.product.subProductUnit?.id,
+                    selectedMainUnitId = event.product.product.mainProductUnit.id,
                     isSearchActive = false
                 ) to null
 

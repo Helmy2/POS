@@ -92,12 +92,8 @@ class StoreRepositoryImpl(
     }
 
     override fun getStoresForUser(user: User): Flow<List<Store>> {
-        return if (user.isAdmin) {
-            getStores()
-        } else {
-            storeDao.getStoreByUserId(user.id).map {
-                listOfNotNull(it?.toDomain())
-            }
+        return storeDao.getStoreByUserId(user.id).map {
+            listOfNotNull(it?.toDomain())
         }
     }
 }

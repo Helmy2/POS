@@ -23,6 +23,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.average_cost_price
 import pos.app.generated.resources.category
+import pos.app.generated.resources.current_stock
 import pos.app.generated.resources.en_name
 import pos.app.generated.resources.main_unit
 import pos.app.generated.resources.purchase_price
@@ -60,7 +61,7 @@ fun ProductScreen(
         onSearch = { onEvent(ProductContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(ProductContract.Event.SearchActiveChanged(it)) },
         onBack = { onEvent(ProductContract.Event.BackClicked) },
-        lastModifiedDate = state.selectedProduct?.updatedAt,
+        lastModifiedDate = state.selectedProduct?.product?.updatedAt,
         onDelete = { onEvent(ProductContract.Event.DeleteClicked) },
         onCreate = { onEvent(ProductContract.Event.SaveClicked) },
         onUpdate = { onEvent(ProductContract.Event.SaveClicked) },
@@ -73,17 +74,20 @@ fun ProductScreen(
                 onItemClick = { product -> onEvent(ProductContract.Event.ProductSelected(product)) },
                 label = {
                     Label(
-                        it.name.displayName(language) + " : " + if (state.canUserEdit) {
+                        it.product.name.displayName(language) + " : " + if (state.canUserEdit) {
                             stringResource(Res.string.average_cost_price) + " : " +
-                                    String.format("%.2f", it.averagePrice)
-                        } else ""
+                                    String.format("%.2f", it.product.averagePrice)
+                        } else {
+                            ""
+                        } + " : " + stringResource(Res.string.current_stock) + " : " +
+                                String.format("%.2f", it.stock)
                     )
                 },
-                isSelected = { product -> product.id == state.selectedProduct?.id },
+                isSelected = { product -> product.product.id == state.selectedProduct?.product?.id },
             )
         },
         mainContent = {
-            if (state.selectedProduct?.averagePrice.takeIf { it != 0.0 } != null && state.canUserEdit) {
+            if (state.selectedProduct?.product?.averagePrice.takeIf { it != 0.0 } != null && state.canUserEdit) {
                 item {
                     Row {
                         Label(
@@ -91,7 +95,24 @@ fun ProductScreen(
                             modifier = Modifier.padding(8.dp)
                         )
                         Label(
-                            text = String.format("%.2f", state.selectedProduct?.averagePrice),
+                            text = String.format(
+                                "%.2f",
+                                state.selectedProduct?.product?.averagePrice
+                            ),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+            }
+            if (state.selectedProduct?.stock != null) {
+                item {
+                    Row {
+                        Label(
+                            text = stringResource(Res.string.current_stock),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        Label(
+                            text = String.format("%.2f", state.selectedProduct.stock),
                             modifier = Modifier.padding(8.dp)
                         )
                     }

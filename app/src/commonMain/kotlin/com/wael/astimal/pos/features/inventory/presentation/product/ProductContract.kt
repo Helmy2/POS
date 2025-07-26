@@ -10,6 +10,11 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 
 object ProductContract {
 
+    data class ProductWithStock(
+        val product: Product,
+        val stock: Double
+    )
+
     data class DropdownData(
         val categories: List<Category> = emptyList(),
         val units: List<ProductUnit> = emptyList(),
@@ -18,8 +23,8 @@ object ProductContract {
 
     data class State(
         val isLoading: Boolean = false,
-        val products: List<Product> = emptyList(),
-        val selectedProduct: Product? = null,
+        val products: List<ProductWithStock> = emptyList(),
+        val selectedProduct: ProductWithStock? = null,
         val searchQuery: String = "",
         val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
         val currentUser: User? = null,
@@ -50,7 +55,7 @@ object ProductContract {
         // UI Actions
         data class SearchQueryChanged(val query: String) : Event
         data class SearchActiveChanged(val isActive: Boolean) : Event
-        data class ProductSelected(val product: Product) : Event
+        data class ProductSelected(val product: ProductWithStock) : Event
         data object NewProductClicked : Event
         data object SaveClicked : Event
         data object DeleteClicked : Event
@@ -71,7 +76,7 @@ object ProductContract {
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val data: DropdownData) : Event
-        data class ProductsLoaded(val products: List<Product>) : Event
+        data class ProductsLoaded(val products: List<ProductWithStock>) : Event
         data object SaveSucceeded : Event
         data object DeleteSucceeded : Event
         data object LoadingStarted : Event

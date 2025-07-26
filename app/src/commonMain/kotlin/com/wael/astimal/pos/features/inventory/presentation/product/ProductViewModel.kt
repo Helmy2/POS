@@ -11,6 +11,7 @@ import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.UnitRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
@@ -39,6 +41,7 @@ class ProductViewModel(
     private val unitRepository: UnitRepository,
     private val storeRepository: StoreRepository,
     private val userRepository: UserRepository,
+    private val stockRepository: StockRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController
 ) : BaseViewModel<ProductContract.State, ProductContract.Event, Nothing>(
@@ -108,9 +111,17 @@ class ProductViewModel(
                 setState(ProductContract.Event.LoadingFinished)
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_products)))
             }
+            .map {
+                it.map { product ->
+                    ProductContract.ProductWithStock(
+                        product,
+                        stockRepository.getStockInCurrentStore(product.id)
+                    )
+                }
+            }
             .onEach { products ->
                 setState(ProductContract.Event.ProductsLoaded(products))
-        }.launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
     }
 
     private fun saveProduct() {
@@ -123,16 +134,16 @@ class ProductViewModel(
             setState(ProductContract.Event.LoadingStarted)
             viewModelScope.launch {
                 val productToSave = Product(
-                    id = currentState.selectedProduct?.id ?: "",
+                    id = currentState.selectedProduct?.product?.id ?: "",
                     name = LocalizedString(currentState.inputArName, currentState.inputEnName),
-                    averagePrice = currentState.selectedProduct?.averagePrice ?: 0.0,
+                    averagePrice = currentState.selectedProduct?.product?.averagePrice ?: 0.0,
                     sellingPrice = currentState.inputSellingPrice.toDouble(),
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
                     category = currentState.dropdownData.categories.find { it.id == currentState.selectedCategoryId }!!,
                     mainProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedMainUnitId }!!,
                     subProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedSubUnitId },
-                    createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
+                    createdAt = currentState.selectedProduct?.product?.createdAt ?: Clock.now(),
                     purchasePrice = currentState.inputPurchasePrice.toDouble(),
                     barcode = "",
                 )
@@ -156,7 +167,7 @@ class ProductViewModel(
         val productToDelete = state.value.selectedProduct ?: return
         setState(ProductContract.Event.LoadingStarted)
         viewModelScope.launch {
-            productRepository.deleteProduct(productToDelete).onSuccess {
+            productRepository.deleteProduct(productToDelete.product).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.product_deleted_successfully)))
                 setState(ProductContract.Event.DeleteSucceeded)
                 searchProducts("")

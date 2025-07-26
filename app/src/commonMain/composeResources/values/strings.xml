@@ -93,7 +93,7 @@
     <string name="purchase_price">Purchase Price</string>
     <string name="selling_price">Selling Price</string>
     <string name="average_cost_price">Average Cost Price</string>
-
+    <string name="current_stock">Current Stock</string>
     <string name="stock_management">Stock Management</string>
     <string name="stock_transfer">Stock Transfer</string>
     <string name="new_stock_transfer">New Stock Transfer</string>

@@ -6,17 +6,24 @@ import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
+import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 
 class StockRepositoryImpl(
     private val stockAdjustmentDao: StockAdjustmentDao,
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
+    private val userRepository: UserRepository,
+    private val storeRepository: StoreRepository
 ) : StockRepository {
 
     override fun getStoreStocks(
@@ -33,6 +40,17 @@ class StockRepositoryImpl(
 
     override suspend fun getStockQuantity(productId: String): Double {
         return stockAdjustmentDao.getStockTotalQuantity(productId) ?: 0.0
+    }
+
+    override suspend fun getStockInCurrentStore(productId: String): Double {
+        return withContext(Dispatchers.IO) {
+            val user = userRepository.getCurrentUser() ?: return@withContext 0.0
+            val stores = storeRepository.getStoresForUser(user)
+                .firstOrNull() ?: return@withContext 0.0
+
+            return@withContext stockAdjustmentDao.getStockInStores(stores.map { it.id }, productId)
+                ?: 0.0
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
