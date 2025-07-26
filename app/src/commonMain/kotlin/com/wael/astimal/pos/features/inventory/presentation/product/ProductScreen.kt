@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,6 +21,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.ar_name
+import pos.app.generated.resources.average_cost_price
 import pos.app.generated.resources.category
 import pos.app.generated.resources.en_name
 import pos.app.generated.resources.main_unit
@@ -36,9 +38,7 @@ fun ProductRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     ProductScreen(
-        state = state,
-        onEvent = viewModel::processEvent,
-        modifier = modifier
+        state = state, onEvent = viewModel::processEvent, modifier = modifier
     )
 }
 
@@ -71,11 +71,32 @@ fun ProductScreen(
             ItemGrid(
                 list = state.products,
                 onItemClick = { product -> onEvent(ProductContract.Event.ProductSelected(product)) },
-                label = { Label(it.name.displayName(language)) },
+                label = {
+                    Label(
+                        it.name.displayName(language) + " : " + if (state.canUserEdit) {
+                            stringResource(Res.string.average_cost_price) + " : " +
+                                    String.format("%.2f", it.averagePrice)
+                        } else ""
+                    )
+                },
                 isSelected = { product -> product.id == state.selectedProduct?.id },
             )
         },
         mainContent = {
+            if (state.selectedProduct?.averagePrice.takeIf { it != 0.0 } != null && state.canUserEdit) {
+                item {
+                    Row {
+                        Label(
+                            text = stringResource(Res.string.average_cost_price),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        Label(
+                            text = String.format("%.2f", state.selectedProduct?.averagePrice),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+            }
             item {
                 LabeledTextField(
                     value = state.inputEnName,

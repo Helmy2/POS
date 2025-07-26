@@ -125,7 +125,7 @@ class ProductViewModel(
                 val productToSave = Product(
                     id = currentState.selectedProduct?.id ?: "",
                     name = LocalizedString(currentState.inputArName, currentState.inputEnName),
-                    averagePrice = currentState.inputPurchasePrice.toDouble(),
+                    averagePrice = currentState.selectedProduct?.averagePrice ?: 0.0,
                     sellingPrice = currentState.inputSellingPrice.toDouble(),
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
@@ -134,7 +134,6 @@ class ProductViewModel(
                     subProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedSubUnitId },
                     createdAt = currentState.selectedProduct?.createdAt ?: Clock.now(),
                     purchasePrice = currentState.inputPurchasePrice.toDouble(),
-                    // todo handle barcode
                     barcode = "",
                 )
 

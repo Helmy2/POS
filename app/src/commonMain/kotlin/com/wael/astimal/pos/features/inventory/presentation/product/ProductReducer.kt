@@ -34,7 +34,7 @@ class ProductReducer : Reducer<ProductContract.State, ProductContract.Event, Not
                     selectedProduct = event.product,
                     inputArName = event.product.name.arName ?: "",
                     inputEnName = event.product.name.enName ?: "",
-                    inputPurchasePrice = event.product.averagePrice.toString(),
+                    inputPurchasePrice = event.product.purchasePrice.toString(),
                     inputSellingPrice = event.product.sellingPrice.toString(),
 
                     inputSubUnitsPerMainUnit = event.product.subUnitsPerMainUnit.toString(),
