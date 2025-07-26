@@ -17,6 +17,9 @@ interface StockTransferDao {
     suspend fun insertStockOrUpdateTransfer(transfer: StockTransferEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStockOrUpdateTransferItem(transfer: StockTransferItemEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStockTransferItems(items: List<StockTransferItemEntity>)
 
     @Query("DELETE FROM stock_transfer_items WHERE stockTransferLocalId = :transferLocalId")
@@ -100,6 +103,6 @@ interface StockTransferDao {
     @Query("UPDATE stock_transfers SET isDeletedLocally = 1")
     suspend fun deleteAllStockTransfers()
 
-    @Query("UPDATE stock_transfers SET isDeletedLocally = 1")
+    @Query("UPDATE stock_transfer_items SET isDeletedLocally = 1")
     suspend fun deleteAllStockTransferItems()
 }

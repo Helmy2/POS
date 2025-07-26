@@ -60,12 +60,10 @@ data class StockTransferEntity(
         entity = StockTransferEntity::class,
         parentColumns = ["localId"],
         childColumns = ["stockTransferLocalId"],
-        onDelete = ForeignKey.CASCADE
     ), ForeignKey(
         entity = ProductEntity::class,
         parentColumns = ["localId"],
         childColumns = ["productLocalId"],
-        onDelete = ForeignKey.RESTRICT
     )]
 )
 data class StockTransferItemEntity(

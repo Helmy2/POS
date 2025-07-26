@@ -73,8 +73,26 @@ class StockTransferRepositoryImpl(
                 )
 
                 if (approved) {
-                    val transfer = stockTransferDao.getStockTransfer(transferId).toDomain()
-                    createAdjustStock(transfer)
+                    val items = supabaseClient.postgrest["stock_transfer_items"]
+                        .select {
+                            filter {
+                                eq("transfer_id", transferId)
+                            }
+                        }.decodeList<StockTransferItemDto>().map { it.toEntity() }
+
+                    val transfer = supabaseClient.postgrest["stock_transfers"]
+                        .select {
+                            filter {
+                                eq("id", transferId)
+                            }
+                        }.decodeSingle<StockTransferDto>().toEntity()
+
+                    stockTransferDao.insertStockTransferItems(items)
+                    stockTransferDao.insertStockOrUpdateTransfer(transfer)
+
+                    val newTransfer =
+                        stockTransferDao.getStockTransfer(transferId).toDomain()
+                    createAdjustStock(newTransfer)
                 }
 
                 Result.success(Unit)
@@ -299,9 +317,13 @@ class StockTransferRepositoryImpl(
     }
 
     override suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit> {
-        return runCatching {
-            stockTransferDao.deleteAllStockTransferItems()
-            stockTransferDao.insertStockTransferItems(entities)
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                stockTransferDao.deleteAllStockTransferItems()
+                entities.forEach {
+                    stockTransferDao.insertStockOrUpdateTransferItem(it)
+                }
+            }
         }
     }
 

@@ -18,6 +18,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class UserRepositoryImpl(
     private val userDao: UserDao,
@@ -53,6 +55,15 @@ class UserRepositoryImpl(
 
             val supabaseUser = supabaseClient.auth.currentUserOrNull()
                 ?: return Result.failure(Exception("Could not retrieve user after login."))
+
+            supabaseClient.postgrest["profiles"]
+                .update(
+                    buildJsonObject { put("fcm_token", settingsManager.getFcmToken()) }
+                ) {
+                    filter {
+                        eq("id", supabaseUser.id)
+                    }
+                }
 
             settingsManager.changeUserId(supabaseUser.id)
 
