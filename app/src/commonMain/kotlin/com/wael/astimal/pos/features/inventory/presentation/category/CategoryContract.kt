@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.category
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -11,7 +12,7 @@ object CategoryContract {
         val categories: List<Category> = emptyList(),
         val selectedCategory: Category? = null,
         val searchQuery: String = "",
-        val isSearchActive: Boolean = false,
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
         val currentUser: User? = null,
         val inputArName: String = "",
         val inputEnName: String = "",

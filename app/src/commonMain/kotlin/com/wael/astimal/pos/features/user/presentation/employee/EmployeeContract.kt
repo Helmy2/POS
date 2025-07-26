@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.user.presentation.employee
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object EmployeeContract {
@@ -23,7 +24,7 @@ object EmployeeContract {
 
         // Search State
         val searchQuery: String = "",
-        val isSearchActive: Boolean = false,
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
         val allEmployees: List<User> = emptyList()
 
     ) : Reducer.ViewState {

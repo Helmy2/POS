@@ -4,6 +4,7 @@ import StockTransfer
 import StockTransferStatus
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
@@ -42,7 +43,7 @@ object StockTransferContract {
         val transfers: List<StockTransfer> = emptyList(),
         val selectedTransfer: StockTransfer? = null,
         val searchQuery: String = "",
-        val isSearchActive: Boolean = false,
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
         val currentUser: User? = null,
         val dropdownData: DropdownData = DropdownData(),
         val currentTransferInput: EditableStockTransfer

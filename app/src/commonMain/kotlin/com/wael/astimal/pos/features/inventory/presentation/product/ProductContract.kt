@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
@@ -20,7 +21,7 @@ object ProductContract {
         val products: List<Product> = emptyList(),
         val selectedProduct: Product? = null,
         val searchQuery: String = "",
-        val isSearchActive: Boolean = false,
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
         val currentUser: User? = null,
         val dropdownData: DropdownData = DropdownData(),
         // Form input state

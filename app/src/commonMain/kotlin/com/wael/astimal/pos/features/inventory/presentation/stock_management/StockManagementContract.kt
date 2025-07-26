@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
@@ -17,7 +18,7 @@ object StockManagementContract {
         val query: String = "",
         val currentUser: User? = null,
 
-        val isSearchActive: Boolean = false,
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
 
         val selectedAdjustment: StockAdjustment? = null,
         val adjustmentStore: Store? = null,

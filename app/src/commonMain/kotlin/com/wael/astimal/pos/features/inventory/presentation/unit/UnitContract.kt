@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.unit
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -11,7 +12,7 @@ object UnitContract {
         val units: List<ProductUnit> = emptyList(),
         val selectedUnit: ProductUnit? = null,
         val searchQuery: String = "",
-        val isSearchActive: Boolean = false,
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
         val currentUser: User? = null,
         // Form input state
         val inputArName: String = "",
