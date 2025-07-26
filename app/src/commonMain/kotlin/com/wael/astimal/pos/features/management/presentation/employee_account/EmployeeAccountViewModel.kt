@@ -15,7 +15,6 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
@@ -40,12 +39,7 @@ class EmployeeAccountViewModel(
     }
 
     val filteredTransactionsState: StateFlow<List<EmployeeTransaction>> = combine(
-        state, employeeTransactionRepository.getAllTransaction().map {
-            it.filter { it ->
-                it.type != EmployeeTransactionType.COMMISSION_FOR_ORDER &&
-                        it.type != EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY
-            }
-        }
+        state, employeeTransactionRepository.getAllTransaction()
     ) { state, allTransactions ->
         setState(EmployeeAccountContract.Event.TransactionsLoaded(allTransactions))
         if (state.searchQuery.isBlank()) {
@@ -105,7 +99,6 @@ class EmployeeAccountViewModel(
                 createdByEmployee = currentUser,
                 amount = when (dialogState.transactionType) {
                     EmployeeTransactionType.BONUS -> amount
-                    EmployeeTransactionType.COMMISSION_FOR_ORDER, EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY -> return@launch
                     else -> -amount
                 },
                 type = dialogState.transactionType,

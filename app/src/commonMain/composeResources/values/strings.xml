@@ -186,6 +186,7 @@
     <string name="deduction">Deduction</string>
     <string name="advance">Advance</string>
     <string name="bonus">Bonus</string>
+    <string name="commission_to_admin">Commission to Admin</string>
     <string name="difference">Difference</string>
     <string name="account_summary">Account Summary</string>
     <string name="current_balance">Current Balance</string>
@@ -374,7 +375,14 @@
     <string name="sync_error">Sync error</string>
     <string name="sync">Sync</string>
     <string name="error_generating_pdf">Error generating PDF</string>
-    <string name="commission_for_order">Commission for create order</string>
+
+    <string name="commission_for_order">For order</string>
+    <string name="commission_for_return_order">For return order</string>
+    <string name="commission_for_responsibility_for_order">Responsibility for order</string>
+    <string name="commission_for_responsibility_for_return_order">Responsibility for return order</string>
+    <string name="commission_to_admin_for_order">Admin for order</string>
+    <string name="commission_to_admin_for_return_order">Admin for return order</string>
+
     <string name="commission_for_responsibility">Commission for responsibility</string>
     <string name="customer_statement">Customer Statement</string>
     <string name="select_customer">Select Customer</string>

@@ -198,7 +198,7 @@ fun TransactionList(
         items(transactions, key = { it.id }) { transaction ->
             TransactionItem(
                 transaction = transaction,
-                canEdit = canEdit && transaction.type != EmployeeTransactionType.COMMISSION_FOR_ORDER && transaction.type != EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY,
+                canEdit = canEdit,
                 onEdit = { onEvent(EmployeeAccountContract.Event.EditTransactionClicked(transaction)) },
                 onDelete = {
                     onEvent(

@@ -14,10 +14,8 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(user: UserEntity): Long
 
-    @Query("SELECT * FROM users WHERE role = :role")
-    fun getAllEmployeesFlow(
-        role: UserRole = UserRole.EMPLOYEE
-    ): Flow<List<UserEntity>>
+    @Query("SELECT * FROM users")
+    fun getAllEmployeesFlow(): Flow<List<UserEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(users: List<UserEntity>)
@@ -30,4 +28,7 @@ interface UserDao {
 
     @Query("DELETE FROM users WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT * FROM users WHERE role = :role LIMIT 1")
+    suspend fun getAdmin(role: UserRole = UserRole.ADMIN): UserEntity?
 }

@@ -377,8 +377,12 @@
     <string name="error_password_too_short">كلمة المرور قصيرة جدا</string>
     <string name="employee_created_successfully">تم إنشاء الموظف بنجاح</string>
 
-    <string name="commission_for_order">عمولة إنشاء الطلب</string>
-    <string name="commission_for_responsibility">عمولة المسؤولية</string>
+    <string name="commission_for_order">عمولة الطلب</string>
+    <string name="commission_for_return_order">عمولة الطلب المرتجع</string>
+    <string name="commission_for_responsibility_for_order">عمولة مسؤولية الطلب</string>
+    <string name="commission_for_responsibility_for_return_order">عمولة مسؤولية الطلب المرتجع</string>
+    <string name="commission_to_admin_for_order">عمولة الإدارة للطلب</string>
+    <string name="commission_to_admin_for_return_order">عمولة الإدارة للطلب المرتجع</string>
     <string name="pending">قيد الانتظار</string>
     <string name="approved">موافق عليه</string>
     <string name="rejected">مرفوض</string>
@@ -450,4 +454,5 @@
     <string name="phone_number">رقم الهاتف</string>
     <string name="total_debits">إجمالي المديونيات</string>
     <string name="all_employees">كل الموظفين</string>
+    <string name="commission_to_admin">عمولة للمدير</string>
 </resources>

@@ -238,4 +238,8 @@ class UserRepositoryImpl(
             userDao.upsertAll(users)
         }
     }
+
+    override suspend fun getAdmin(): User? {
+        return userDao.getAdmin()?.toDomain()
+    }
 }

@@ -10,13 +10,21 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.advance
 import pos.app.generated.resources.bonus
 import pos.app.generated.resources.commission_for_order
-import pos.app.generated.resources.commission_for_responsibility
+import pos.app.generated.resources.commission_for_responsibility_for_order
+import pos.app.generated.resources.commission_for_responsibility_for_return_order
+import pos.app.generated.resources.commission_for_return_order
+import pos.app.generated.resources.commission_to_admin_for_order
+import pos.app.generated.resources.commission_to_admin_for_return_order
 import pos.app.generated.resources.deduction
 import pos.app.generated.resources.salary
 
 enum class EmployeeTransactionType {
     COMMISSION_FOR_ORDER,
-    COMMISSION_FOR_RESPONSIBILITY,
+    COMMISSION_FOR_RETURN_ORDER,
+    COMMISSION_FOR_RESPONSIBILITY_FOR_ORDER,
+    COMMISSION_FOR_RESPONSIBILITY_FOR_RETURN_ORDER,
+    COMMISSION_TO_ADMIN_FOR_ORDER,
+    COMMISSION_TO_ADMIN_FOR_RETURN_ORDER,
     SALARY,
     DEDUCTION,
     ADVANCE,
@@ -24,12 +32,16 @@ enum class EmployeeTransactionType {
 
     fun getStringResId(): StringResource {
         return when (this) {
-            COMMISSION_FOR_ORDER -> Res.string.commission_for_order
-            COMMISSION_FOR_RESPONSIBILITY -> Res.string.commission_for_responsibility
             SALARY -> Res.string.salary
             DEDUCTION -> Res.string.deduction
             ADVANCE -> Res.string.advance
             BONUS -> Res.string.bonus
+            COMMISSION_FOR_ORDER -> Res.string.commission_for_order
+            COMMISSION_FOR_RETURN_ORDER -> Res.string.commission_for_return_order
+            COMMISSION_FOR_RESPONSIBILITY_FOR_ORDER -> Res.string.commission_for_responsibility_for_order
+            COMMISSION_FOR_RESPONSIBILITY_FOR_RETURN_ORDER -> Res.string.commission_for_responsibility_for_return_order
+            COMMISSION_TO_ADMIN_FOR_ORDER -> Res.string.commission_to_admin_for_order
+            COMMISSION_TO_ADMIN_FOR_RETURN_ORDER -> Res.string.commission_to_admin_for_return_order
         }
     }
 

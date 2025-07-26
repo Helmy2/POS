@@ -37,8 +37,10 @@ class EmployeeReportRepositoryImpl(
             .getTransactionsForEmployeeInRange(employeeId, startEpochMilli, endEpochMilli)
             .map { entities ->
                 entities.filter {
-                    it.transactionEntity.type != EmployeeTransactionType.COMMISSION_FOR_ORDER &&
-                            it.transactionEntity.type != EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY
+                    it.transactionEntity.type == EmployeeTransactionType.SALARY ||
+                            it.transactionEntity.type == EmployeeTransactionType.DEDUCTION ||
+                            it.transactionEntity.type == EmployeeTransactionType.ADVANCE ||
+                            it.transactionEntity.type == EmployeeTransactionType.BONUS
                 }.map { it.toDomain() }
             }
 

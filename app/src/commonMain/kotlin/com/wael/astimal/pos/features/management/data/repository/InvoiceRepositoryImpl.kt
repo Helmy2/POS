@@ -22,6 +22,7 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactio
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ class InvoiceRepositoryImpl(
     private val productDao: ProductDao,
     private val stockRepository: StockRepository,
     private val employeeFinancesDao: EmployeeFinancesDao,
+    private val userRepository: UserRepository,
     private val supabaseClient: SupabaseClient
 ) : InvoiceRepository {
 
@@ -138,26 +140,27 @@ class InvoiceRepositoryImpl(
         if (invoice.invoiceType == InvoiceType.PURCHASE) return
         if (invoice.invoiceType == InvoiceType.PURCHASE_RETURN) return
 
+        val isOrder = invoice.invoiceType == InvoiceType.SALES
+
         val invoicePurchaseTotalPrice =
             invoice.items.sumOf {
                 productDao.getAverageCost(it.product.id) * it.quantity
             }
 
-        val profit = when (invoice.invoiceType) {
-            InvoiceType.SALES -> invoice.totalAmount - invoicePurchaseTotalPrice
-            InvoiceType.SALES_RETURN -> invoicePurchaseTotalPrice - invoice.totalAmount
-            else -> return
-        }
+        val profit = if (isOrder)
+            invoice.totalAmount - invoicePurchaseTotalPrice
+        else invoicePurchaseTotalPrice - invoice.totalAmount
 
-        val profitCommission = profit * 0.25
+
+        val admin = userRepository.getAdmin() ?: throw Exception("Admin not found")
 
         val transaction1 = EmployeeTransaction(
             id = Uuid.random().toString(),
             employee = invoice.employee,
-            amount = profitCommission,
+            amount = profit * 0.25,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
-            type = EmployeeTransactionType.COMMISSION_FOR_ORDER,
+            type = if (isOrder) EmployeeTransactionType.COMMISSION_FOR_ORDER else EmployeeTransactionType.COMMISSION_FOR_RETURN_ORDER,
             invoiceId = invoice.id,
             notes = null,
             createdByEmployee = invoice.employee
@@ -165,10 +168,21 @@ class InvoiceRepositoryImpl(
         val transaction2 = EmployeeTransaction(
             id = Uuid.random().toString(),
             employee = invoice.partner.responsibleEmployee,
-            amount = profitCommission,
+            amount = profit * 0.25,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
-            type = EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY,
+            type = if (isOrder) EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_ORDER else EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_RETURN_ORDER,
+            invoiceId = invoice.id,
+            notes = null,
+            createdByEmployee = invoice.employee
+        )
+        val transaction3 = EmployeeTransaction(
+            id = Uuid.random().toString(),
+            employee = admin,
+            amount = profit * 0.5,
+            createdAt = Clock.now(),
+            updatedAt = Clock.now(),
+            type = if (isOrder) EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_ORDER else EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_RETURN_ORDER,
             invoiceId = invoice.id,
             notes = null,
             createdByEmployee = invoice.employee
@@ -176,6 +190,7 @@ class InvoiceRepositoryImpl(
 
         employeeFinancesDao.insertOrUpdate(transaction1.toEntity())
         employeeFinancesDao.insertOrUpdate(transaction2.toEntity())
+        employeeFinancesDao.insertOrUpdate(transaction3.toEntity())
     }
 
     override suspend fun updateOrder(invoice: Invoice): Result<Unit> {

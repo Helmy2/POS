@@ -4,6 +4,7 @@ import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesD
 import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
+import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
 import io.github.jan.supabase.SupabaseClient
@@ -19,7 +20,17 @@ class EmployeeTransactionRepositoryImpl(
     private val supabaseClient: SupabaseClient
 ) : EmployeeTransactionRepository {
     override fun getAllTransaction(): Flow<List<EmployeeTransaction>> {
-        return employeeFinancesDao.getAllTransactions().map { it.map { it -> it.toDomain() } }
+        return employeeFinancesDao.getAllTransactions()
+            .map {
+                it.map { it -> it.toDomain() }
+                    .filter { it ->
+                        it.type == EmployeeTransactionType.SALARY ||
+                                it.type == EmployeeTransactionType.DEDUCTION ||
+                                it.type == EmployeeTransactionType.ADVANCE ||
+                                it.type == EmployeeTransactionType.BONUS
+                    }
+            }
+
     }
 
     @OptIn(ExperimentalUuidApi::class)

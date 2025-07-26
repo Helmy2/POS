@@ -27,4 +27,6 @@ interface UserRepository {
         password: String?,
         email: String?
     ): Result<Unit>
+
+    suspend fun getAdmin(): User?
 }
