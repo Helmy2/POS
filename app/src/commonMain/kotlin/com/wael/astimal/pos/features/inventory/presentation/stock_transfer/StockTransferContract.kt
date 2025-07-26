@@ -14,7 +14,8 @@ object StockTransferContract {
 
     // Represents the data needed to fill dropdowns
     data class DropdownData(
-        val stores: List<Store> = emptyList(),
+        val formStores: List<Store> = emptyList(),
+        val toStores: List<Store> = emptyList(),
         val products: List<Product> = emptyList()
     )
 
@@ -50,8 +51,7 @@ object StockTransferContract {
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedTransfer != null
         val canUserEdit: Boolean
-            get() = currentUser?.isAdmin == true &&
-                    selectedTransfer?.status != StockTransferStatus.APPROVED &&
+            get() = selectedTransfer?.status != StockTransferStatus.APPROVED &&
                     selectedTransfer?.status != StockTransferStatus.REJECTED
         val canSave: Boolean
             get() = canUserEdit &&

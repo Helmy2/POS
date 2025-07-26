@@ -93,8 +93,7 @@ class StockTransferViewModel(
             is StockTransferContract.Event.ApprovedClicked -> {
                 viewModelScope.launch {
                     stockTransferRepository.setTransferApprovalStatus(
-                        state.value.selectedTransfer!!.id,
-                        true
+                        state.value.selectedTransfer!!.id, true
                     ).onSuccess {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
                         setState(StockTransferContract.Event.SaveSucceeded)
@@ -108,8 +107,7 @@ class StockTransferViewModel(
             is StockTransferContract.Event.RejectedClicked -> {
                 viewModelScope.launch {
                     stockTransferRepository.setTransferApprovalStatus(
-                        state.value.selectedTransfer!!.id,
-                        false
+                        state.value.selectedTransfer!!.id, false
                     ).onSuccess {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
                         setState(StockTransferContract.Event.SaveSucceeded)
@@ -134,6 +132,8 @@ class StockTransferViewModel(
     }
 
     private fun loadDropdownData() = viewModelScope.launch {
+        val currentUser = userRepository.getCurrentUser() ?: return@launch
+
         combine(storeRepository.getStores("").catch {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stores)))
             setState(StockTransferContract.Event.LoadingFinished)
@@ -142,7 +142,9 @@ class StockTransferViewModel(
             setState(StockTransferContract.Event.LoadingFinished)
         }) { stores, products ->
             StockTransferContract.DropdownData(
-                stores, products
+                stores.filter { it.employee.id == currentUser.id },
+                stores.filter { it.employee.id != currentUser.id },
+                products
             )
         }.collect { dropdownData ->
             setState(StockTransferContract.Event.DropdownDataLoaded(dropdownData))
@@ -172,17 +174,15 @@ class StockTransferViewModel(
         stockObservationJobs[editorId]?.cancel()
         val fromStoreId = state.value.currentTransferInput.fromStore?.id ?: return
         stockObservationJobs[editorId] =
-            stockRepository.getStockQuantity(fromStoreId, productId)
-                .catch {
-                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stock)))
-                }
-                .onEach { stock ->
-                    setState(
-                        StockTransferContract.Event.StockForItemSelected(
-                            editorId, stock
-                        )
+            stockRepository.getStockQuantity(fromStoreId, productId).catch {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stock)))
+            }.onEach { stock ->
+                setState(
+                    StockTransferContract.Event.StockForItemSelected(
+                        editorId, stock
                     )
-                }.launchIn(viewModelScope)
+                )
+            }.launchIn(viewModelScope)
     }
 
     private fun resubscribeAllStockObservers() {
@@ -236,9 +236,7 @@ class StockTransferViewModel(
             val quantity = it.maxUnitQuantity.toDoubleOrNull()
             if (it.product != null && quantity != null && quantity > 0) {
                 StockTransferItem(
-                    product = it.product,
-                    quantity = quantity,
-                    id = Uuid.random().toString()
+                    product = it.product, quantity = quantity, id = Uuid.random().toString()
                 )
             } else null
         }

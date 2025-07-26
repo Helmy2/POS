@@ -206,7 +206,7 @@ fun StockTransferScreen(
             item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.from_store),
-                    items = state.dropdownData.stores,
+                    items = state.dropdownData.formStores,
                     currentSelection = state.currentTransferInput.fromStore?.name?.displayName(
                         language
                     ) ?: "",
@@ -226,7 +226,7 @@ fun StockTransferScreen(
             item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.to_store),
-                    items = state.dropdownData.stores.filter { it.id != state.currentTransferInput.fromStore?.id },
+                    items = state.dropdownData.toStores,
                     currentSelection = state.currentTransferInput.toStore?.name?.displayName(
                         language
                     ) ?: "",
