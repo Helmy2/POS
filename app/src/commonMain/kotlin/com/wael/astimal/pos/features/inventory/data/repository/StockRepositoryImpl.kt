@@ -4,6 +4,7 @@ import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -30,7 +31,9 @@ class StockRepositoryImpl(
         query: String, selectedStoreId: String?
     ): Flow<List<StockAdjustment>> {
         return stockAdjustmentDao.getAll().map { entities ->
-            entities.map { it.toDomain() }
+            entities.map { it.toDomain() }.filter {
+                it.reason != StockAdjustmentReason.INVOICE
+            }
         }
     }
 

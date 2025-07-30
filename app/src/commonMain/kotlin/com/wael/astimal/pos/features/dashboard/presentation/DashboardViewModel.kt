@@ -30,6 +30,7 @@ class DashboardViewModel(
 ) {
 
     init {
+        handleEvent(DashboardContract.Event.PreformSync)
         loadDashboardData()
     }
 

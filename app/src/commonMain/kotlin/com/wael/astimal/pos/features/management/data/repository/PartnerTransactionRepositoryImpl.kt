@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
@@ -20,7 +21,10 @@ class PartnerTransactionRepositoryImpl(
 
     override fun getVouchers(): Flow<List<ReceivePayVoucher>> {
         return transactionDao.getAll().map { list ->
-            list.map { it.toDomain() }
+            list.map { it.toDomain() }.filter {
+                it.transactionType == TransactionType.PAYMENT ||
+                        it.transactionType == TransactionType.OPENING_BALANCE
+            }
         }
     }
 

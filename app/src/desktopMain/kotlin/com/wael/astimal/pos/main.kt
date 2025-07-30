@@ -14,7 +14,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mmk.kmpnotifier.extensions.composeDesktopResourcesPath
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
-import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
@@ -45,7 +44,6 @@ fun main() {
         ) {
             val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
             val userRepository: UserRepository = koinInject()
-            val syncService: SyncService = koinInject()
             val coroutineScope = rememberCoroutineScope()
 
             coroutineScope.launch {
@@ -56,7 +54,6 @@ fun main() {
                         Result.success(Destination.Auth)
                     }
                 }
-                syncService.performFullSync()
             }
 
             POSTheme {

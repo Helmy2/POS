@@ -13,7 +13,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.mmk.kmpnotifier.permission.permissionUtil
-import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
@@ -32,7 +31,6 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
         val userRepository: UserRepository by inject()
-        val syncService: SyncService by inject()
         val permissionUtil by permissionUtil()
 
         permissionUtil.askNotificationPermission()
@@ -45,7 +43,6 @@ class MainActivity : ComponentActivity() {
                     Result.success(Destination.Auth)
                 }
             }
-            syncService.performFullSync()
         }
 
         splashScreen.setKeepOnScreenCondition {
