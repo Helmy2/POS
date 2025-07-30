@@ -44,7 +44,7 @@ object ProductContract {
         val isEditing: Boolean get() = selectedProduct != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean
-            get() = (inputArName.isNotBlank() || inputEnName.isNotBlank()) &&
+            get() = inputArName.isNotBlank() &&
                     inputPurchasePrice.isNotBlank() &&
                     inputSellingPrice.isNotBlank() &&
                     selectedCategoryId != null &&

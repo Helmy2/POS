@@ -24,7 +24,7 @@ object UnitContract {
         val isEditing: Boolean get() = selectedUnit != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean
-            get() = inputEnName.isNotBlank() && inputArName.isNotBlank()
+            get() = inputArName.isNotBlank()
     }
 
     sealed interface Event : Reducer.ViewEvent {

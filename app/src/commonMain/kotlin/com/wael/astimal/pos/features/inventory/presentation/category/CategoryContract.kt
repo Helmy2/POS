@@ -20,7 +20,7 @@ object CategoryContract {
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedCategory != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
-        val canSave: Boolean get() = inputArName.isNotBlank() && inputEnName.isNotBlank()
+        val canSave: Boolean get() = inputArName.isNotBlank()
     }
 
     sealed interface Event : Reducer.ViewEvent {

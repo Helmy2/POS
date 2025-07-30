@@ -26,7 +26,7 @@ object StoreContract {
         val isEditing: Boolean get() = selectedStore != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean
-            get() = inputArName.isNotBlank() && inputEnName.isNotBlank() && selectedEmployee != null
+            get() = inputArName.isNotBlank() && selectedEmployee != null
     }
 
     sealed interface Event : Reducer.ViewEvent {

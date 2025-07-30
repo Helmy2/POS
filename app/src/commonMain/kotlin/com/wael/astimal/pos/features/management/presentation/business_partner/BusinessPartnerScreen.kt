@@ -324,9 +324,9 @@ fun BusinessPartnerEditDialog(
             CustomExposedDropdownMenu(
                 label = stringResource(Res.string.partner_type),
                 items = PartnerType.entries,
-                currentSelection = type.name,
+                currentSelection = stringResource(type.getStringRes()),
                 enabled = canEdit,
-                itemToDisplayString = { it.name },
+                itemToDisplayString = { stringResource(it.getStringRes()) },
                 onItemSelected = {
                     type = it
                 },

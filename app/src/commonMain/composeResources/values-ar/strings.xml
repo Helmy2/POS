@@ -81,10 +81,10 @@
     <string name="employee">الموظف</string>
     <string name="admin">مسؤول</string>
     <string name="business_partners">الشركاء التجاريون</string>
-    <string name="business_partner">الشريك التجاري</string>
+    <string name="business_partner">تسجيل عميل</string>
     <string name="client_and_supplier">عميل ومورد</string>
     <string name="client_or_suppler">عميل أو مورد</string>
-    <string name="add_partner">إضافة شريك</string>
+    <string name="add_partner">تسجيل عميل</string>
     <string name="edit_partner">تعديل شريك</string>
     <string name="is_client">هل هو عميل</string>
     <string name="is_supplier">هل هو مورد</string>
@@ -102,8 +102,8 @@
     <string name="current_stock">المخزون الحالي</string>
 
     <string name="stock_management">إدارة المخزون</string>
-    <string name="stock_transfer">تحويل مخزون</string>
-    <string name="new_stock_transfer">تحويل مخزون جديد</string>
+    <string name="stock_transfer">مناقله مخزون</string>
+    <string name="new_stock_transfer">مناقله مخزون جديد</string>
     <string name="transfer_details">تفاصيل التحويل</string>
     <string name="from_store">من مخزن</string>
     <string name="to_store">إلى مخزن</string>
@@ -429,7 +429,7 @@
     <string name="invoice_details_format">فاتورة #%1$s إلى %2$s</string>
     <string name="partner_payment_details_format">دفعة من/إلى %1$s</string>
 
-    <string name="employee_ledger_report">كشف حساب الموظف</string>
+    <string name="employee_ledger_report">تقرير ارباح</string>
     <string name="closing_balance">الرصيد الختامي</string>
     <string name="totals">الإجماليات</string>
     <string name="amount_owed">عليه</string>

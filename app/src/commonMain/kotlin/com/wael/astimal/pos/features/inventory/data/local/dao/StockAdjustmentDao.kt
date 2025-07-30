@@ -52,5 +52,5 @@ interface StockAdjustmentDao {
     suspend fun deleteAll()
 
     @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE storeId IN (:storesId) AND productId = :productId")
-    fun getStockInStores(storesId: List<String>, productId: String): Double?
+    suspend fun getStockInStores(storesId: List<String>, productId: String): Double?
 }
