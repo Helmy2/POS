@@ -30,11 +30,13 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.balance_summary_negative
 import pos.app.generated.resources.balance_summary_positive
 import pos.app.generated.resources.balance_summary_settled
+import pos.app.generated.resources.owns_you
 import pos.app.generated.resources.paid
 import pos.app.generated.resources.partner_current_balance
 import pos.app.generated.resources.partner_previous_balance
 import pos.app.generated.resources.remaining
 import pos.app.generated.resources.total_amount
+import pos.app.generated.resources.you_owns
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.abs
@@ -97,25 +99,42 @@ fun OrderTotalsSection(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(Modifier.fillMaxWidth()) {
                     Text(
                         stringResource(Res.string.partner_previous_balance),
                         style = MaterialTheme.typography.titleMedium
                     )
+                    Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        "%.2f".format(partnerBalance),
+                        if (partnerBalance > 0.0)
+                            stringResource(Res.string.owns_you)
+                        else if (partnerBalance < 0.0) stringResource(Res.string.you_owns)
+                        else stringResource(Res.string.balance_summary_settled),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.weight(.5f))
+                    Text(
+                        "%.0f".format(abs(partnerBalance)),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
                 HorizontalDivider()
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(Modifier.fillMaxWidth()) {
                     Text(
                         stringResource(Res.string.partner_current_balance),
                         style = MaterialTheme.typography.titleMedium
                     )
+                    Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        "%.2f".format(partnerBalanceAfterThisOrder),
+                        if (partnerBalanceAfterThisOrder > 0.0) stringResource(Res.string.owns_you)
+                        else if (partnerBalanceAfterThisOrder < 0.0) stringResource(Res.string.you_owns)
+                        else stringResource(Res.string.balance_summary_settled),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.weight(.5f))
+                    Text(
+                        "%.0f".format(abs(partnerBalanceAfterThisOrder)),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

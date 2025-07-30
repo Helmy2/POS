@@ -1,9 +1,15 @@
 package com.wael.astimal.pos.features.management.presentation.sales
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,12 +24,14 @@ import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.add_partner
 import pos.app.generated.resources.client
 import pos.app.generated.resources.order_to_with_args
 import pos.app.generated.resources.stores
 
 @Composable
 fun SalesRoute(
+    onNavigateToCreateBusinessPartner: () -> Unit,
     viewModel: SalesViewModel = koinViewModel(),
     invoiceId: String? = null
 ) {
@@ -38,6 +46,7 @@ fun SalesRoute(
         state = state,
         filteredOrders = filteredOrders,
         onEvent = viewModel::processEvent,
+        onNavigateToCreateBusinessPartner = onNavigateToCreateBusinessPartner
     )
 }
 
@@ -46,9 +55,14 @@ fun SalesScreen(
     state: SalesContract.State,
     filteredOrders: List<Invoice>,
     onEvent: (SalesContract.Event) -> Unit,
+    onNavigateToCreateBusinessPartner: () -> Unit,
 ) {
     val language = LocalAppLocale.current
     val orderInput = state.currentOrderInput
+
+    LaunchedEffect(Unit) {
+        onEvent(SalesContract.Event.LoadInitialData)
+    }
 
     SearchScreen(
         query = state.searchQuery,
@@ -89,16 +103,27 @@ fun SalesScreen(
                 )
             }
             item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.client),
-                    items = state.dropdownData.partners,
-                    currentSelection = state.currentOrderInput.selectedPartner?.name?.displayName(
-                        language
-                    ) ?: "",
-                    onItemSelected = { onEvent(SalesContract.Event.PartnerSelected(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    modifier = Modifier.padding(8.dp),
-                )
+                Row {
+                    CustomExposedDropdownMenu(
+                        label = stringResource(Res.string.client),
+                        items = state.dropdownData.partners,
+                        currentSelection = state.currentOrderInput.selectedPartner?.name?.displayName(
+                            language
+                        ) ?: "",
+                        onItemSelected = { onEvent(SalesContract.Event.PartnerSelected(it)) },
+                        itemToDisplayString = { it.name.displayName(language) },
+                        modifier = Modifier.padding(8.dp).weight(1f),
+                    )
+                    IconButton(
+                        onClick = { onNavigateToCreateBusinessPartner() },
+                        modifier = Modifier.padding(8.dp).align(Alignment.Bottom),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(Res.string.add_partner),
+                        )
+                    }
+                }
             }
             item {
                 CustomExposedDropdownMenu(

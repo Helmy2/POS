@@ -136,6 +136,10 @@ class SalesViewModel(
                 loadInitialInvoice(event.id)
             }
 
+            is SalesContract.Event.LoadInitialData -> {
+                loadInitialData()
+            }
+
             else -> setState(event)
         }
     }
@@ -150,10 +154,6 @@ class SalesViewModel(
                 }
             }
         }
-    }
-
-    init {
-        loadInitialData()
     }
 
     private fun loadInitialData() {

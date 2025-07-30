@@ -26,6 +26,7 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
@@ -42,8 +43,7 @@ class StockTransferRepositoryImpl(
 
     @OptIn(SupabaseExperimental::class)
     override suspend fun getPendingTransfersForApproval(): Flow<List<StockTransfer>> {
-        val currentUserId =
-            userRepository.getCurrentUser()?.id ?: throw Exception("No user logged in")
+        val currentUserId = userRepository.getCurrentUser()?.id ?: return emptyFlow()
 
         return stockTransferDao.getPendingTransfersForApproval(
             currentUserId = currentUserId,

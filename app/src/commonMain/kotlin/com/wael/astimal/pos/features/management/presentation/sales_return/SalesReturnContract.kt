@@ -28,7 +28,7 @@ object SalesReturnContract {
     ) {
         val totalAmount: Double get() = items.sumOf { it.lineTotal }
         val amountRemaining: Double get() = totalAmount + (amountPaid.toDoubleOrNull() ?: 0.0)
-        val partnerBalanceAfterThisOrder: Double get() = partnerBalance + amountRemaining
+        val partnerBalanceAfterThisOrder: Double get() = partnerBalance - amountRemaining
     }
 
     data class State(

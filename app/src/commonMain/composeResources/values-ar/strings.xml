@@ -456,4 +456,8 @@
     <string name="total_debits">إجمالي المديونيات</string>
     <string name="all_employees">كل الموظفين</string>
     <string name="commission_to_admin">عمولة للمدير</string>
+
+    <string name="you_owns">لهو</string>
+    <string name="owns_you">عليه</string>
+
 </resources>
