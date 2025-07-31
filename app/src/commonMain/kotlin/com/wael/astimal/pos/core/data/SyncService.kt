@@ -88,8 +88,8 @@ class SyncServiceImpl(
 
                 syncTransferItems()
                 syncTransfer()
-                syncInvoice()
                 syncInvoiceItems()
+                syncInvoice()
                 syncStockAdjustment()
                 syncPartnerTransactions()
                 syncEmployeesTransactions()

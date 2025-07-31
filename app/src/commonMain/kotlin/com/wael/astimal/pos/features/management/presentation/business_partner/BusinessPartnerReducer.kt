@@ -60,9 +60,7 @@ class BusinessPartnerReducer :
                     isLoading = false
                 ) to null
 
-            is BusinessPartnerContract.Event.BackClicked,
-            is BusinessPartnerContract.Event.DeletePartnerClicked,
-            is BusinessPartnerContract.Event.SaveChangesClicked -> previousState to null
+            else -> previousState to null
         }
     }
 

@@ -60,17 +60,22 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_partner
 import pos.app.generated.resources.address
 import pos.app.generated.resources.address_with_args
+import pos.app.generated.resources.amount
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.cancel
+import pos.app.generated.resources.create
 import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit
 import pos.app.generated.resources.edit_partner
 import pos.app.generated.resources.en_name
+import pos.app.generated.resources.owns_partner
+import pos.app.generated.resources.partner_owns
 import pos.app.generated.resources.partner_type
 import pos.app.generated.resources.phone
 import pos.app.generated.resources.phone_placeholder
 import pos.app.generated.resources.responsible_employee
-import pos.app.generated.resources.save
+import pos.app.generated.resources.type
+import pos.app.generated.resources.update
 
 
 @Composable
@@ -143,13 +148,21 @@ fun BusinessPartnerScreen(
                 canEdit = state.canUserEdit,
                 users = state.userDropdownData,
                 onDismiss = { onEvent(BusinessPartnerContract.Event.DismissDialog) },
-                onSave = { partner ->
+                onCreate = { partner, amount ->
                     onEvent(
-                        BusinessPartnerContract.Event.SaveChangesClicked(
+                        BusinessPartnerContract.Event.CreateClicked(
+                            partner, amount
+                        )
+                    )
+                },
+                onUpdate = { partner ->
+                    onEvent(
+                        BusinessPartnerContract.Event.UpdateClicked(
                             partner,
                         )
                     )
-                })
+                },
+            )
         }
 
         is BusinessPartnerContract.Dialog.None -> { /* Do nothing */
@@ -250,7 +263,8 @@ fun BusinessPartnerEditDialog(
     isSaving: Boolean,
     canEdit: Boolean,
     onDismiss: () -> Unit,
-    onSave: (BusinessPartner) -> Unit
+    onCreate: (BusinessPartner, amount: Double) -> Unit,
+    onUpdate: (BusinessPartner) -> Unit
 ) {
     var enName by remember(partner.name.enName) { mutableStateOf(partner.name.enName ?: "") }
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
@@ -259,6 +273,8 @@ fun BusinessPartnerEditDialog(
     var user by remember(partner.responsibleEmployee) {
         mutableStateOf(partner.responsibleEmployee)
     }
+    var isReceiveMoney by remember { mutableStateOf(false) }
+    var amount by remember { mutableStateOf("") }
 
     val isNewPartner = partner.id == ""
     var type by remember {
@@ -266,9 +282,9 @@ fun BusinessPartnerEditDialog(
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
             Column(
-                modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())
+                modifier = Modifier.padding(16.dp)
             ) {
                 Text(
                     text = if (isNewPartner) stringResource(Res.string.add_partner) else stringResource(
@@ -281,7 +297,7 @@ fun BusinessPartnerEditDialog(
                     value = enName,
                     onValueChange = { enName = it },
                     label = stringResource(Res.string.en_name),
-                    enabled = canEdit
+                    enabled = canEdit,
                 )
                 LabeledTextField(
                     value = arName,
@@ -333,6 +349,31 @@ fun BusinessPartnerEditDialog(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
 
+            if (isNewPartner) {
+                LabeledTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = stringResource(Res.string.amount),
+                    enabled = true,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                )
+
+                CustomExposedDropdownMenu(
+                    label = stringResource(Res.string.type),
+                    items = listOf(true, false),
+                    selectedItemId = isReceiveMoney.toString(),
+                    onItemSelected = {
+                        isReceiveMoney = it
+                    },
+                    itemToDisplayString = {
+                        if (it) stringResource(Res.string.partner_owns) else stringResource(Res.string.owns_partner)
+                    },
+                    itemToId = { it.toString() },
+                    enabled = true,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.End
@@ -350,9 +391,14 @@ fun BusinessPartnerEditDialog(
                             type = type,
                             responsibleEmployee = user
                         )
-                        onSave(
-                            updatedPartner,
-                        )
+                        if (isNewPartner) {
+                            onCreate(updatedPartner,
+                                if (isReceiveMoney) -(amount.toDoubleOrNull()
+                                    ?: 0.0) else amount.toDoubleOrNull() ?: 0.0
+                            )
+                        } else {
+                            onUpdate(updatedPartner)
+                        }
                     }, enabled = !isSaving && (enName.isNotBlank() || arName.isNotBlank())
                 ) {
                     if (isSaving) {
@@ -362,7 +408,7 @@ fun BusinessPartnerEditDialog(
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
-                        Text(stringResource(Res.string.save))
+                        Text(stringResource(if (isNewPartner) Res.string.create else Res.string.update))
                     }
                 }
             }

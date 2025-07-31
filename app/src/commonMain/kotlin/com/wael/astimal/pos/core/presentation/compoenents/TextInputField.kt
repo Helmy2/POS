@@ -31,6 +31,7 @@ fun TextInputField(
         onValueChange = onValueChange,
         minLines = numberOfLines,
         maxLines = numberOfLines,
+        singleLine = numberOfLines == 1,
         readOnly = readOnly,
         label = label?.let { { Text(text = it) } },
         trailingIcon = trailingIcon,

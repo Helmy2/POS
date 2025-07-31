@@ -32,7 +32,8 @@ object BusinessPartnerContract {
         data object AddNewPartnerClicked : Event
         data class EditPartnerClicked(val partner: BusinessPartner) : Event
         data class DeletePartnerClicked(val partner: BusinessPartner) : Event
-        data class SaveChangesClicked(val partner: BusinessPartner) : Event
+        data class CreateClicked(val partner: BusinessPartner, val amount: Double) : Event
+        data class UpdateClicked(val partner: BusinessPartner) : Event
 
         data object DismissDialog : Event
         data object BackClicked : Event

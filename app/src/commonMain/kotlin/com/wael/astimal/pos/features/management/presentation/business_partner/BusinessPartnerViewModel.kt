@@ -6,8 +6,12 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +27,7 @@ import pos.app.generated.resources.partner_saved_successfully
 
 class BusinessPartnerViewModel(
     private val businessPartnerRepository: BusinessPartnerRepository,
+    private val voucherRepository: PartnerTransactionRepository,
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController
@@ -49,11 +54,46 @@ class BusinessPartnerViewModel(
     override fun handleEvent(event: BusinessPartnerContract.Event) {
         when (event) {
             is BusinessPartnerContract.Event.LoadInitialData -> loadCurrentUser()
-            is BusinessPartnerContract.Event.SaveChangesClicked -> savePartner(event.partner)
+            is BusinessPartnerContract.Event.CreateClicked -> createPartner(
+                event.partner,
+                event.amount
+            )
+
+            is BusinessPartnerContract.Event.UpdateClicked -> updatePartner(event.partner)
 
             is BusinessPartnerContract.Event.DeletePartnerClicked -> deletePartner(event.partner)
             is BusinessPartnerContract.Event.BackClicked -> navigateBack()
             else -> setState(event)
+        }
+    }
+
+    private fun createPartner(
+        partner: BusinessPartner,
+        amount: Double
+    ) {
+        viewModelScope.launch {
+
+            businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
+                val voucherToSave = ReceivePayVoucher(
+                    id = "",
+                    partner = partner.copy(id = it),
+                    createdBy = state.value.currentUser!!,
+                    amount = amount,
+                    notes = "",
+                    createdAt = Clock.now(),
+                    invoiceId = null,
+                    transactionType = TransactionType.OPENING_BALANCE
+                )
+
+                voucherRepository.saveVoucher(voucherToSave).onSuccess {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.partner_saved_successfully)))
+                    setState(BusinessPartnerContract.Event.SaveSucceeded)
+                }.onFailure {
+                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_saving_partner)))
+                }
+            }.onFailure {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_saving_partner)))
+            }
         }
     }
 
@@ -65,7 +105,7 @@ class BusinessPartnerViewModel(
         }
     }
 
-    private fun savePartner(partner: BusinessPartner) {
+    private fun updatePartner(partner: BusinessPartner) {
         viewModelScope.launch {
             businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.partner_saved_successfully)))

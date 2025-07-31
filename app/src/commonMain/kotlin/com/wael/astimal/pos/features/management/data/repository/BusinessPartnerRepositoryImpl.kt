@@ -44,7 +44,7 @@ class BusinessPartnerRepositoryImpl(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<Unit> {
+    override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<String> {
         return try {
             val entity = if (partner.id == "") {
                 partner.toEntity().copy(
@@ -56,7 +56,7 @@ class BusinessPartnerRepositoryImpl(
 
             partnerDao.insertOrUpdate(entity)
 
-            Result.success(Unit)
+            Result.success(entity.localId)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
