@@ -17,7 +17,8 @@ data class BusinessPartnerDto(
     @SerialName("responsible_employee_id") val responsibleId: String,
     @SerialName("partner_type") val partnerType: String?,
     @SerialName("created_at") val createdAt: String,
-    @SerialName("updated_at") val updatedAt: String
+    @SerialName("updated_at") val updatedAt: String,
+    @SerialName("is_private") val isPrivate: Boolean
 )
 
 fun BusinessPartnerDto.toEntity() = BusinessPartnerEntity(
@@ -30,5 +31,6 @@ fun BusinessPartnerDto.toEntity() = BusinessPartnerEntity(
     createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
     updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
     responsibleEmployeeLocalId = responsibleId,
+    isPrivate = isPrivate,
     isSynced = true
 )

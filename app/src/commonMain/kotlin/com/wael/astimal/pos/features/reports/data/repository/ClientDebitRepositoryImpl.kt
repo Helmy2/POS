@@ -1,29 +1,33 @@
 package com.wael.astimal.pos.features.reports.data.repository
 
 import com.wael.astimal.pos.core.data.AppDatabase
-import com.wael.astimal.pos.features.management.data.local.entity.toDomain
+import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
 import com.wael.astimal.pos.features.reports.domain.repository.ClientDebitRepository
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ClientDebitRepositoryImpl(
-    private val db: AppDatabase
+    val userRepository: UserRepository,
+    val businessPartnerRepository: BusinessPartnerRepository,
+    val db: AppDatabase
 ) : ClientDebitRepository {
 
-    override fun getClientsWithDebit(
+    override suspend fun getClientsWithDebit(
         responsibleEmployeeId: String?
     ): Flow<List<ClientDebitInfo>> {
-        return db.businessPartnerDao().searchPartnersFlow("")
+        return businessPartnerRepository
+            .getBusinessPartners("")
             .map { allPartners ->
                 allPartners
-                    .filter { responsibleEmployeeId == null || it.businessPartner.responsibleEmployeeLocalId == responsibleEmployeeId }
+                    .filter { responsibleEmployeeId == null || it.responsibleEmployee.id == responsibleEmployeeId }
                     .map {
                         val balance =
-                            db.partnerTransactionDao().getPartnerBalance(it.businessPartner.localId)
+                            db.partnerTransactionDao().getPartnerBalance(it.id)
                                 ?: 0.0
                         ClientDebitInfo(
-                            client = it.toDomain(),
+                            client = it,
                             debitAmount = balance
                         )
                     }.filter { it.debitAmount > 0.0 }

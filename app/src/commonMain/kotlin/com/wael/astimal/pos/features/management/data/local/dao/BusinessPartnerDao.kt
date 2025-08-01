@@ -16,7 +16,9 @@ interface BusinessPartnerDao {
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND (enName LIKE '%' || :query || '%' OR arName LIKE '%' || :query || '%')")
-    fun searchPartnersFlow(query: String): Flow<List<BusinessPartnerWithDetailsEntity>>
+    fun searchPartnersFlow(
+        query: String,
+    ): Flow<List<BusinessPartnerWithDetailsEntity>>
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")

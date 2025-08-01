@@ -13,11 +13,7 @@ import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.error_deleting_partner
@@ -36,22 +32,10 @@ class BusinessPartnerViewModel(
     initialState = BusinessPartnerContract.State()
 ) {
 
-    val filteredPartnersState: StateFlow<List<BusinessPartner>> =
-        combine(
-            state,
-            businessPartnerRepository.getBusinessPartners("")
-        ) { state, allPartners ->
-            if (state.searchQuery.isBlank()) {
-                allPartners
-            } else {
-                allPartners.filter { it.name.contains(state.searchQuery) }
-            }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     override fun handleEvent(event: BusinessPartnerContract.Event) {
         when (event) {
             is BusinessPartnerContract.Event.LoadInitialData -> {
-                loadCurrentUser {
+                loadInitialData {
                     if (event.isOpenNew) {
                         setState(BusinessPartnerContract.Event.AddNewPartnerClicked)
                     }
@@ -76,7 +60,6 @@ class BusinessPartnerViewModel(
         amount: Double
     ) {
         viewModelScope.launch {
-
             businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
                 val voucherToSave = ReceivePayVoucher(
                     id = "",
@@ -101,13 +84,18 @@ class BusinessPartnerViewModel(
         }
     }
 
-    private fun loadCurrentUser(
+    private fun loadInitialData(
         doAfterLoad: suspend () -> Unit
     ) {
         viewModelScope.launch {
+            val allPartners = businessPartnerRepository
+                .getBusinessPartners("").first()
+            setState(BusinessPartnerContract.Event.PartnersLoaded(allPartners))
+
             val currentUser = userRepository.getCurrentUser()!!
             val users = userRepository.getEmployeesFlow().first()
             setState(BusinessPartnerContract.Event.UserLoaded(currentUser, users))
+
             doAfterLoad()
         }
     }

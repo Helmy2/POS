@@ -8,6 +8,7 @@ import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.PartnerType
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
@@ -16,30 +17,36 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class BusinessPartnerRepositoryImpl(
+    private val userRepository: UserRepository,
     private val partnerDao: BusinessPartnerDao,
     private val partnerTransactionDao: PartnerTransactionDao,
     private val supabaseClient: SupabaseClient
 ) : BusinessPartnerRepository {
 
-    override fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
+    override suspend fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
+        val canHandlePrivate =
+            userRepository.getCurrentUser()?.canHandlePrivatePartner ?: throw Exception()
+
         return partnerDao.searchPartnersFlow(query).map { entities ->
-            entities.map { it.toDomain() }
+            entities.map { it.toDomain() }.filter {
+                canHandlePrivate || !it.isPrivate
+            }
         }
     }
 
-    override fun getClients(query: String): Flow<List<BusinessPartner>> {
-        return partnerDao.searchPartnersFlow(query).map { entities ->
-            entities.filter {
-                it.businessPartner.type != PartnerType.SUPPLIER
-            }.map { it.toDomain() }
+    override suspend fun getClients(query: String): Flow<List<BusinessPartner>> {
+        return getBusinessPartners(query).map {
+            it.filter {
+                it.type != PartnerType.CLIENT
+            }
         }
     }
 
-    override fun getSuppliers(query: String): Flow<List<BusinessPartner>> {
-        return partnerDao.searchPartnersFlow(query).map { entities ->
-            entities.filter {
-                it.businessPartner.type != PartnerType.CLIENT
-            }.map { it.toDomain() }
+    override suspend fun getSuppliers(query: String): Flow<List<BusinessPartner>> {
+        return getBusinessPartners(query).map {
+            it.filter {
+                it.type == PartnerType.SUPPLIER
+            }
         }
     }
 

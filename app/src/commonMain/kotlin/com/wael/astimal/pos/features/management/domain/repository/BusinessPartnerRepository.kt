@@ -5,11 +5,11 @@ import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import kotlinx.coroutines.flow.Flow
 
 interface BusinessPartnerRepository {
-    fun getBusinessPartners(query: String = ""): Flow<List<BusinessPartner>>
+    suspend fun getBusinessPartners(query: String = ""): Flow<List<BusinessPartner>>
     suspend fun saveBusinessPartner(partner: BusinessPartner): Result<String>
     suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit>
-    fun getSuppliers(query: String = ""): Flow<List<BusinessPartner>>
-    fun getClients(query: String = ""): Flow<List<BusinessPartner>>
+    suspend fun getSuppliers(query: String = ""): Flow<List<BusinessPartner>>
+    suspend fun getClients(query: String = ""): Flow<List<BusinessPartner>>
     suspend fun getClient(clientId: String): BusinessPartner?
     suspend fun syncWithServer(list: List<BusinessPartnerEntity>): Result<Unit>
     suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double>

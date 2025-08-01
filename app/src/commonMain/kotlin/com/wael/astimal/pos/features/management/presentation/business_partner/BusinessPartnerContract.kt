@@ -22,6 +22,10 @@ object BusinessPartnerContract {
     ) : Reducer.ViewState {
         val canUserEdit: Boolean get() = true
         val isAdmin: Boolean get() = currentUser?.isAdmin == true
+        val filteredPartners
+            get() = partners.filter {
+                it.name.contains(searchQuery)
+            }
     }
 
     sealed interface Event : Reducer.ViewEvent {

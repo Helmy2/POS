@@ -32,7 +32,7 @@ data class BusinessPartnerEntity(
     val createdAt: Long = Clock.now(),
     val updatedAt: Long = Clock.now(),
     var isDeletedLocally: Boolean = false,
-
+    var isPrivate: Boolean = false,
     val arName: String,
     val enName: String,
     val phone: String,
@@ -61,5 +61,6 @@ fun BusinessPartnerWithDetailsEntity.toDomain(): BusinessPartner {
         responsibleEmployee = responsibleEmployeeUser?.toDomain() ?: throw NullPointerException(),
         createdAt = businessPartner.createdAt,
         updatedAt = businessPartner.updatedAt,
+        isPrivate = businessPartner.isPrivate
     )
 }

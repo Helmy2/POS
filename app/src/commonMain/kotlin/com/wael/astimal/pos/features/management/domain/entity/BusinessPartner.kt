@@ -34,7 +34,8 @@ data class BusinessPartner(
     var type: PartnerType,
     val isSynced: Boolean,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val isPrivate: Boolean
 )
 
 fun BusinessPartner.toEntity() = BusinessPartnerEntity(
@@ -58,5 +59,6 @@ fun BusinessPartner.toDto() = BusinessPartnerDto(
     partnerType = type.name.lowercase(),
     createdAt = createdAt.toDateString(),
     updatedAt = updatedAt.toDateString(),
-    responsibleId = responsibleEmployee.id
+    responsibleId = responsibleEmployee.id,
+    isPrivate = isPrivate
 )

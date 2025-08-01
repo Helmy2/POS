@@ -136,7 +136,9 @@ class UserRepositoryImpl(
                 updatedAt = Clock.now().toDateString(),
                 avatarUrl = "https://ofzbmodzxgbpvybfhofr.supabase.co/storage/v1/object/public/bucket//avatar_profile.png",
                 fcmToken = null,
-                email = email
+                email = email,
+                // TODO: canHandlePrivatePartner
+                canHandlePrivatePartner = false
             )
 
             supabaseClient.postgrest["profiles"].upsert(profileDto)

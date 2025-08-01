@@ -28,6 +28,7 @@ data class UserEntity(
     val role: UserRole,
     val isActive: Boolean,
     val fcmToken: String?,
+    val canHandlePrivatePartner: Boolean?,
 )
 
 /**
@@ -47,7 +48,8 @@ fun UserEntity.toDomain(): User {
         isSynced = isSynced,
         updatedAt = updatedAt,
         createdAt = createdAt,
-        fcmToken = fcmToken
+        fcmToken = fcmToken,
+        canHandlePrivatePartner = canHandlePrivatePartner == true
     )
 }
 
@@ -68,6 +70,7 @@ fun User.toEntity(): UserEntity {
         avatarUrl = avatarUrl,
         role = if (isAdmin) UserRole.ADMIN else UserRole.EMPLOYEE,
         isActive = true,
-        fcmToken = fcmToken
+        fcmToken = fcmToken,
+        canHandlePrivatePartner = canHandlePrivatePartner
     )
 }

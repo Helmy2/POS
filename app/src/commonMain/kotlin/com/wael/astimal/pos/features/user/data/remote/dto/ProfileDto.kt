@@ -25,6 +25,8 @@ data class ProfileDto(
     val isAdmin: Boolean,
     @SerialName("fcm_token")
     val fcmToken: String?,
+    @SerialName("can_handle_private_partner")
+    val canHandlePrivatePartner: Boolean?,
     val email: String?,
 )
 
@@ -49,6 +51,7 @@ fun ProfileDto.toEntity(): UserEntity {
         avatarUrl = avatarUrl,
         role = role,
         isActive = true,
-        fcmToken = fcmToken
+        canHandlePrivatePartner = canHandlePrivatePartner,
+        fcmToken = fcmToken,
     )
 }

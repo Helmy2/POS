@@ -84,7 +84,6 @@ fun BusinessPartnerRoute(
     isOpenNew: Boolean,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val filteredPartners by viewModel.filteredPartnersState.collectAsStateWithLifecycle()
 
     LaunchedEffect(isOpenNew) {
         viewModel.processEvent(BusinessPartnerContract.Event.LoadInitialData(isOpenNew))
@@ -93,7 +92,6 @@ fun BusinessPartnerRoute(
 
     BusinessPartnerScreen(
         state = state,
-        filteredPartners = filteredPartners,
         onEvent = viewModel::processEvent,
     )
 }
@@ -101,7 +99,6 @@ fun BusinessPartnerRoute(
 @Composable
 fun BusinessPartnerScreen(
     state: BusinessPartnerContract.State,
-    filteredPartners: List<BusinessPartner>,
     onEvent: (BusinessPartnerContract.Event) -> Unit,
 ) {
     Screen(
@@ -126,7 +123,7 @@ fun BusinessPartnerScreen(
         },
     ) {
         BusinessPartnerList(
-            partners = filteredPartners,
+            partners = state.filteredPartners,
             onPartnerClick = { onEvent(BusinessPartnerContract.Event.PartnerClicked(it)) },
             modifier = Modifier.padding(horizontal = 16.dp)
         )

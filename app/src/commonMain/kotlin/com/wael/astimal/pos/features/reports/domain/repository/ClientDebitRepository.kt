@@ -4,7 +4,7 @@ import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
 import kotlinx.coroutines.flow.Flow
 
 interface ClientDebitRepository {
-    fun getClientsWithDebit(
+    suspend fun getClientsWithDebit(
         responsibleEmployeeId: String? // Nullable for "All Employees"
     ): Flow<List<ClientDebitInfo>>
 }

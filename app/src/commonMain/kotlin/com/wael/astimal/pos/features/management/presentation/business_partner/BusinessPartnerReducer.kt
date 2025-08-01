@@ -75,6 +75,8 @@ class BusinessPartnerReducer :
             isSynced = false,
             createdAt = Clock.now(),
             updatedAt = Clock.now(),
+            // TODO: change it
+            isPrivate = false
         )
     }
 }
