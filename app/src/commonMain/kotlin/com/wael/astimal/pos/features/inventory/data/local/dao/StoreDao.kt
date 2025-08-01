@@ -15,7 +15,7 @@ interface StoreDao {
     suspend fun insertOrUpdate(store: StoreEntity): Long
 
     @Transaction
-    @Query("SELECT * FROM stores WHERE localId = :localId LIMIT 1")
+    @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
     suspend fun getStoreByLocalId(localId: String): StoreWithDetails?
 
     @Transaction
@@ -26,14 +26,14 @@ interface StoreDao {
     suspend fun upsertAll(stores: List<StoreEntity>)
 
     @Transaction
-    @Query("SELECT * FROM stores WHERE localId = :serverId LIMIT 1")
+    @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND localId = :serverId LIMIT 1")
     suspend fun getStoreByServerId(serverId: String): StoreWithDetails?
 
     @Query("DELETE FROM stores WHERE localId = :localId")
     suspend fun deleteStoreByLocalId(localId: String)
 
     @Transaction
-    @Query("SELECT * FROM stores WHERE employeeId = :local LIMIT 1")
+    @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND employeeId = :local LIMIT 1")
     fun getStoreByUserId(local: String): Flow<StoreWithDetails?>
 
     @Query("UPDATE stores SET isDeletedLocally = 1")

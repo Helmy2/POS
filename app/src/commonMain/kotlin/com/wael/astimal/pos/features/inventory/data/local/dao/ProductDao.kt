@@ -16,13 +16,13 @@ interface ProductDao {
     suspend fun insertOrUpdate(product: ProductEntity): Long
 
     @Transaction
-    @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
+    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
     suspend fun getProductWithDetailsByLocalId(localId: String): ProductWithDetails?
 
-    @Query("SELECT * FROM products WHERE localId = :localId LIMIT 1")
+    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
     suspend fun getProductByLocalId(localId: String): ProductEntity?
 
-    @Query("SELECT averagePurchasePrice FROM products WHERE localId = :localId LIMIT 1")
+    @Query("SELECT averagePurchasePrice FROM products WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
     suspend fun getAverageCost(localId: String): Double
 
     @Transaction
@@ -36,7 +36,7 @@ interface ProductDao {
     )
     fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetails>>
 
-    @Query("SELECT * FROM products WHERE localId = :id LIMIT 1")
+    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
     suspend fun getProductById(id: String): ProductWithDetails?
 
     @Query("DELETE FROM products WHERE localId = :localId")
@@ -46,7 +46,7 @@ interface ProductDao {
     suspend fun updateAverageCost(id: String, newCost: Double)
 
     @Transaction
-    @Query("SELECT * FROM products WHERE isSynced = 0")
+    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND isSynced = 0")
     suspend fun getUnsyncedProducts(): List<ProductWithDetails>
 
     @Query("UPDATE products SET isDeletedLocally = 1")

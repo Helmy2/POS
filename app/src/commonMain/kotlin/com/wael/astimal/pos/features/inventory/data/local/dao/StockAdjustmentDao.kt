@@ -18,25 +18,25 @@ interface StockAdjustmentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(adjustments: List<StockAdjustmentEntity>)
 
-    @Query("SELECT * FROM stock_adjustments WHERE localId = :id")
+    @Query("SELECT * FROM stock_adjustments WHERE NOT isDeletedLocally AND localId = :id")
     suspend fun getAdjustmentByServerId(id: String): StockAdjustmentEntity?
 
-    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE storeId = :storeId AND productId = :productId")
+    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE NOT isDeletedLocally AND storeId = :storeId AND productId = :productId")
     fun getStockQuantity(storeId: String, productId: String): Flow<Double?>
 
-    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE productId = :productId")
+    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE NOT isDeletedLocally AND productId = :productId")
     suspend fun getStockTotalQuantity(productId: String): Double?
 
     @Query("SELECT * FROM stock_adjustments")
     fun getAll(): Flow<List<StockAdjustmentWithDetails>>
 
-    @Query("UPDATE stock_adjustments SET isDeletedLocally = 1 WHERE localId = :id")
+    @Query("UPDATE stock_adjustments SET isDeletedLocally = 1 WHERE NOT isDeletedLocally AND localId = :id")
     suspend fun softDeleteByLocalId(id: String)
 
-    @Query("DELETE FROM stock_adjustments WHERE localId = :id")
+    @Query("DELETE FROM stock_adjustments WHERE NOT isDeletedLocally AND localId = :id")
     suspend fun deleteByServerId(id: String)
 
-    @Query("SELECT * FROM stock_adjustments WHERE NOT isSynced")
+    @Query("SELECT * FROM stock_adjustments WHERE NOT isDeletedLocally AND NOT isSynced")
     suspend fun getAllUnSynced(): List<StockAdjustmentWithDetails>
 
     @Query("SELECT * FROM stock_adjustments WHERE isDeletedLocally = 1")
@@ -51,6 +51,6 @@ interface StockAdjustmentDao {
     @Query("UPDATE stock_adjustments SET isDeletedLocally = 1")
     suspend fun deleteAll()
 
-    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE storeId IN (:storesId) AND productId = :productId")
+    @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE NOT isDeletedLocally AND storeId IN (:storesId) AND productId = :productId")
     suspend fun getStockInStores(storesId: List<String>, productId: String): Double?
 }

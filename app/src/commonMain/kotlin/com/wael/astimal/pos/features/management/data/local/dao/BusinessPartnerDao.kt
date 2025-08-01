@@ -19,10 +19,10 @@ interface BusinessPartnerDao {
     fun searchPartnersFlow(query: String): Flow<List<BusinessPartnerWithDetailsEntity>>
 
     @Transaction
-    @Query("SELECT * FROM business_partners WHERE localId = :localId LIMIT 1")
+    @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
     suspend fun getPartnerByLocalId(localId: String): BusinessPartnerWithDetailsEntity?
 
-    @Query("SELECT * FROM business_partners WHERE localId = :id LIMIT 1")
+    @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
     suspend fun getPartnerBySeverId(id: String): BusinessPartnerEntity?
 
     @Query("UPDATE business_partners SET isDeletedLocally = 1 WHERE localId = :localId")
@@ -32,7 +32,7 @@ interface BusinessPartnerDao {
     suspend fun hardDeletePartnerByServerId(id: String)
 
     @Transaction
-    @Query("SELECT * FROM business_partners WHERE NOT isSynced")
+    @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND NOT isSynced")
     suspend fun getAllUnSynced(): List<BusinessPartnerWithDetailsEntity>
 
     @Query("SELECT * FROM business_partners WHERE isDeletedLocally = 1")

@@ -97,7 +97,7 @@ interface StockTransferDao {
     suspend fun setTransferApprovalStatus(transferId: String, status: StockTransferStatus)
 
     @Transaction
-    @Query("SELECT * FROM stock_transfers WHERE localId = :transferId")
+    @Query("SELECT * FROM stock_transfers WHERE NOT isDeletedLocally AND localId = :transferId")
     suspend fun getStockTransfer(transferId: String): StockTransferWithItemsAndDetails
 
     @Query("UPDATE stock_transfers SET isDeletedLocally = 1")

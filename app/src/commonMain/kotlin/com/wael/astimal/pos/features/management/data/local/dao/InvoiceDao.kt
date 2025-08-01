@@ -104,7 +104,7 @@ interface InvoiceDao {
     suspend fun deleteAllInvoices()
 
     @Transaction
-    @Query("SELECT * FROM invoices WHERE supabaseId = :id")
+    @Query("SELECT * FROM invoices WHERE NOT isDeletedLocally AND supabaseId = :id")
     suspend fun getInvoiceById(id: String): InvoiceWithItems
 
     @Transaction

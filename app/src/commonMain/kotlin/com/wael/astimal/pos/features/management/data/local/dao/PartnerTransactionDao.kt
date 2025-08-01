@@ -17,10 +17,10 @@ interface PartnerTransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(transaction: PartnerTransactionEntity)
 
-    @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :partnerLocalId")
+    @Query("SELECT * FROM partner_transactions WHERE NOT isDeletedLocally AND partnerLocalId = :partnerLocalId")
     fun getTransactionsForPartner(partnerLocalId: String): Flow<List<PartnerTransactionEntity>>
 
-    @Query("SELECT SUM(balance) FROM partner_transactions WHERE partnerLocalId = :clientId")
+    @Query("SELECT SUM(balance) FROM partner_transactions WHERE NOT isDeletedLocally AND partnerLocalId = :clientId")
     suspend fun getPartnerBalance(clientId: String): Double?
 
     @Query("DELETE FROM partner_transactions WHERE partnerLocalId = :partnerId AND transactionType = :type")
@@ -42,15 +42,15 @@ interface PartnerTransactionDao {
     suspend fun softDeleteTransactionById(id: String)
 
     @Transaction
-    @Query("SELECT * FROM partner_transactions WHERE localId = :id")
+    @Query("SELECT * FROM partner_transactions WHERE NOT isDeletedLocally AND localId = :id")
     suspend fun getTransactionById(id: String): PartnerTransactionWithDetails?
 
 
-    @Query("SELECT * FROM partner_transactions WHERE localId = :id LIMIT 1")
+    @Query("SELECT * FROM partner_transactions WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): PartnerTransactionEntity?
 
     @Transaction
-    @Query("SELECT * FROM partner_transactions WHERE isSynced = 0")
+    @Query("SELECT * FROM partner_transactions WHERE NOT isDeletedLocally AND isSynced = 0")
     suspend fun getUnsyncedTransactions(): List<PartnerTransactionWithDetails>
 
     @Transaction
@@ -70,7 +70,7 @@ interface PartnerTransactionDao {
     suspend fun deleteAll()
 
     @Transaction
-    @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :partnerId AND updatedAt BETWEEN :startDate AND :endDate")
+    @Query("SELECT * FROM partner_transactions WHERE NOT isDeletedLocally AND partnerLocalId = :partnerId AND updatedAt BETWEEN :startDate AND :endDate")
     fun getTransactionsForPartnerInRange(
         partnerId: String,
         startDate: Long,
@@ -81,7 +81,7 @@ interface PartnerTransactionDao {
     @Query(
         """
         SELECT * FROM partner_transactions
-        WHERE employeeLocalId = :employeeId AND createdAt BETWEEN :startDate AND :endDate
+        WHERE NOT isDeletedLocally AND employeeLocalId = :employeeId AND createdAt BETWEEN :startDate AND :endDate
         """
     )
     fun getTransactionsCreatedByEmployeeInRange(

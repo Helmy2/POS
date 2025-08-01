@@ -12,7 +12,7 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(category: CategoryEntity): Long
 
-    @Query("SELECT * FROM categories WHERE localId = :localId LIMIT 1")
+    @Query("SELECT * FROM categories WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1 ")
     suspend fun getCategoryById(localId: String): CategoryEntity?
 
     @Query("SELECT * FROM categories WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY enName ASC, arName ASC")

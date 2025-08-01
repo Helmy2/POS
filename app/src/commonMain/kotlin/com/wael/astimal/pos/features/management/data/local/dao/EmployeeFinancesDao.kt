@@ -24,17 +24,17 @@ interface EmployeeFinancesDao {
     suspend fun softDeleteEmployeeTransaction(localId: String)
 
     @Transaction
-    @Query("SELECT * FROM employee_account_transactions WHERE isSynced = 0")
+    @Query("SELECT * FROM employee_account_transactions WHERE NOT isDeletedLocally AND isSynced = 0")
     suspend fun getUnsyncedTransactions(): List<EmployeeTransactionWithDetailsEntity>
 
     @Transaction
-    @Query("SELECT * FROM employee_account_transactions WHERE isDeletedLocally = 1")
+    @Query("SELECT * FROM employee_account_transactions WHERE NOT isDeletedLocally AND isDeletedLocally = 1")
     suspend fun getAllDeletedTransactions(): List<EmployeeTransactionWithDetailsEntity>
 
     @Query("DELETE FROM employee_account_transactions WHERE localId = :id")
     suspend fun hardDeleteTransactionById(id: String)
 
-    @Query("SELECT * FROM employee_account_transactions WHERE localId = :id LIMIT 1")
+    @Query("SELECT * FROM employee_account_transactions WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): EmployeeTransactionEntity?
 
     @Query("DELETE FROM employee_account_transactions WHERE invoiceId = :id")
@@ -47,7 +47,7 @@ interface EmployeeFinancesDao {
     suspend fun deleteAllTransactions()
 
     @Transaction
-    @Query("SELECT * FROM employee_account_transactions WHERE employeeId = :employeeId AND updatedAt BETWEEN :start AND :end")
+    @Query("SELECT * FROM employee_account_transactions WHERE NOT isDeletedLocally AND employeeId = :employeeId AND updatedAt BETWEEN :start AND :end")
     fun getTransactionsForEmployeeInRange(
         employeeId: String,
         start: Long,
