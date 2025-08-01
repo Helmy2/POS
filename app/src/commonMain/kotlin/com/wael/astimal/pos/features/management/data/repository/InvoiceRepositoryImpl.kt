@@ -76,9 +76,7 @@ class InvoiceRepositoryImpl(
     }
 
     private suspend fun updateProductsAveragePrice(invoice: Invoice) {
-        if (invoice.invoiceType == InvoiceType.SALES || invoice.invoiceType == InvoiceType.SALES_RETURN) {
-            return
-        }
+        if (invoice.invoiceType == InvoiceType.SALES) return
 
         invoice.items.forEach { item ->
             val currentCost = productDao.getAverageCost(item.product.id)
@@ -86,7 +84,8 @@ class InvoiceRepositoryImpl(
 
             if (item.quantity <= 0) return@forEach
 
-            val newCost = if (invoice.invoiceType == InvoiceType.PURCHASE) {
+            val newCost =
+                if (invoice.invoiceType == InvoiceType.PURCHASE || invoice.invoiceType == InvoiceType.SALES_RETURN) {
                 val newTotalQuantity = currentQuantity + item.quantity
                 if (newTotalQuantity > 0) {
                     ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / newTotalQuantity
@@ -106,9 +105,7 @@ class InvoiceRepositoryImpl(
     }
 
     private suspend fun revertProductsAveragePrice(invoice: Invoice) {
-        if (invoice.invoiceType == InvoiceType.SALES || invoice.invoiceType == InvoiceType.SALES_RETURN) {
-            return
-        }
+        if (invoice.invoiceType == InvoiceType.SALES) return
 
         invoice.items.forEach { item ->
             val currentCost = productDao.getAverageCost(item.product.id)
@@ -116,7 +113,8 @@ class InvoiceRepositoryImpl(
 
             if (item.quantity <= 0) return@forEach
 
-            val revertedCost = if (invoice.invoiceType == InvoiceType.PURCHASE) {
+            val revertedCost =
+                if (invoice.invoiceType == InvoiceType.PURCHASE || invoice.invoiceType == InvoiceType.SALES_RETURN) {
                 val originalQuantity = currentQuantity - item.quantity
                 if (originalQuantity <= 0) {
                     0.0
