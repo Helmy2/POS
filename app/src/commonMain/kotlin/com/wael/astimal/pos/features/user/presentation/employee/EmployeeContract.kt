@@ -16,6 +16,7 @@ object EmployeeContract {
         val confirmPassword: String = "",
         val arName: String = "",
         val enName: String = "",
+        val canHandlePrivatePartner: Boolean = false,
 
         // UI State
         val isPasswordVisible: Boolean = false,
@@ -50,6 +51,7 @@ object EmployeeContract {
         data class ConfirmPasswordChanged(val value: String) : Event
         data class ArNameChanged(val value: String) : Event
         data class EnNameChanged(val value: String) : Event
+        data class CanHandlePrivatePartnerChanged(val value: Boolean) : Event
         data object TogglePasswordVisibility : Event
         data object ToggleConfirmPasswordVisibility : Event
 

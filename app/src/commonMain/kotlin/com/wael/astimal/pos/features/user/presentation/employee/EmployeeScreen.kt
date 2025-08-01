@@ -3,10 +3,12 @@ package com.wael.astimal.pos.features.user.presentation.employee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +29,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.ar_name
+import pos.app.generated.resources.can_handle_private_partners
 import pos.app.generated.resources.confirm_password
 import pos.app.generated.resources.email
 import pos.app.generated.resources.en_name
@@ -77,7 +80,6 @@ fun EmployeeScreen(
         onUpdate = { onEvent(EmployeeContract.Event.SaveClicked) },
         onNew = { onEvent(EmployeeContract.Event.NewEmployeeClicked) },
         canEdit = state.canEdit,
-//        canSave = state.canSave,
         searchResults = {
             ItemGrid(
                 list = filteredEmployees,
@@ -87,6 +89,28 @@ fun EmployeeScreen(
             )
         }
     ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(Res.string.can_handle_private_partners),
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = state.canHandlePrivatePartner,
+                    onCheckedChange = {
+                        onEvent(
+                            EmployeeContract.Event.CanHandlePrivatePartnerChanged(
+                                it
+                            )
+                        )
+                    },
+                )
+            }
+        }
+
         item {
             LabeledTextField(
                 value = state.enName,

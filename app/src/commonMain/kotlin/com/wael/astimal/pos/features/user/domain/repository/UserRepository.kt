@@ -16,7 +16,8 @@ interface UserRepository {
         email: String,
         arName: String,
         enName: String,
-        password: String
+        password: String,
+        canHandlePrivatePartner: Boolean
     ): Result<Unit>
 
     suspend fun deleteUser(id: String): Result<Unit>
@@ -25,7 +26,8 @@ interface UserRepository {
         arName: String,
         enName: String,
         password: String?,
-        email: String?
+        email: String?,
+        canHandlePrivatePartner: Boolean
     ): Result<Unit>
 
     suspend fun getAdmin(): User?

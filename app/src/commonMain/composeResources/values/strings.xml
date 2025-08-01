@@ -446,4 +446,6 @@
     <string name="total_debits">Total Debits</string>
     <string name="all_employees">All Employees</string>
     <string name="no_selection">No Selection</string>
+    <string name="is_private">Is Private</string>
+    <string name="can_handle_private_partners">Can Handle Private Partners</string>
 </resources>

@@ -15,6 +15,9 @@ class EmployeeReducer :
             is EmployeeContract.Event.ConfirmPasswordChanged -> previousState.copy(confirmPassword = event.value) to null
             is EmployeeContract.Event.ArNameChanged -> previousState.copy(arName = event.value) to null
             is EmployeeContract.Event.EnNameChanged -> previousState.copy(enName = event.value) to null
+            is EmployeeContract.Event.CanHandlePrivatePartnerChanged -> previousState.copy(
+                canHandlePrivatePartner = event.value
+            ) to null
             is EmployeeContract.Event.TogglePasswordVisibility -> previousState.copy(
                 isPasswordVisible = !previousState.isPasswordVisible
             ) to null
@@ -22,6 +25,7 @@ class EmployeeReducer :
             is EmployeeContract.Event.ToggleConfirmPasswordVisibility -> previousState.copy(
                 isConfirmPasswordVisible = !previousState.isConfirmPasswordVisible
             ) to null
+
 
             // Data Loading
             is EmployeeContract.Event.CurrentUserLoaded -> previousState.copy(currentUser = event.user) to null

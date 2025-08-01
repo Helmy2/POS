@@ -460,5 +460,6 @@
     <string name="you_owns">له</string>
     <string name="owns_you">عليه</string>
     <string name="no_selection">غير محدد</string>
-
+    <string name="is_private">خاص</string>
+    <string name="can_handle_private_partners">يمكن التعامل مع الشريكات الخاصة</string>
 </resources>

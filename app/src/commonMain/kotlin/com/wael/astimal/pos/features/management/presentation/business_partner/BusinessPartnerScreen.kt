@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +70,7 @@ import pos.app.generated.resources.delete
 import pos.app.generated.resources.edit
 import pos.app.generated.resources.edit_partner
 import pos.app.generated.resources.en_name
+import pos.app.generated.resources.is_private
 import pos.app.generated.resources.owns_partner
 import pos.app.generated.resources.partner_owns
 import pos.app.generated.resources.partner_type
@@ -269,16 +272,12 @@ fun BusinessPartnerEditDialog(
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
     var address by remember(partner.address) { mutableStateOf(partner.address) }
     var phone by remember(partner.phone) { mutableStateOf(partner.phone) }
-    var user by remember(partner.responsibleEmployee) {
-        mutableStateOf(partner.responsibleEmployee)
-    }
+    var user by remember(partner.responsibleEmployee) { mutableStateOf(partner.responsibleEmployee) }
     var isReceiveMoney by remember { mutableStateOf(false) }
     var amount by remember { mutableStateOf("") }
-
     val isNewPartner = partner.id == ""
-    var type by remember {
-        mutableStateOf(partner.type)
-    }
+    var type by remember { mutableStateOf(partner.type) }
+    var isPrivate by remember { mutableStateOf(partner.isPrivate) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
@@ -348,6 +347,18 @@ fun BusinessPartnerEditDialog(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
 
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(stringResource(Res.string.is_private), modifier = Modifier.weight(1f))
+                Switch(
+                    checked = isPrivate,
+                    onCheckedChange = { isPrivate = it },
+                    enabled = canEdit
+                )
+            }
+
             if (isNewPartner) {
                 LabeledTextField(
                     value = amount,
@@ -388,7 +399,8 @@ fun BusinessPartnerEditDialog(
                             address = address,
                             phone = phone,
                             type = type,
-                            responsibleEmployee = user
+                            responsibleEmployee = user,
+                            isPrivate = isPrivate
                         )
                         if (isNewPartner) {
                             onCreate(

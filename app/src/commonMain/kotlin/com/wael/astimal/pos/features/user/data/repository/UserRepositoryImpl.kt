@@ -85,9 +85,10 @@ class UserRepositoryImpl(
 
 
     private suspend fun syncProfile(profileDto: ProfileDto): UserEntity {
-        val existingUser = userDao.getUserBySupabaseId(profileDto.id).first()
+        val existingUser =
+            userDao.getUserBySupabaseId(profileDto.id).first() ?: return profileDto.toEntity()
         val userEntity = profileDto.toEntity().copy(
-            id = existingUser?.id!!,
+            id = existingUser.id,
             createdAt = existingUser.createdAt
         )
         userDao.upsert(userEntity)
@@ -109,6 +110,7 @@ class UserRepositoryImpl(
         arName: String,
         enName: String,
         password: String,
+        canHandlePrivatePartner: Boolean,
     ): Result<Unit> {
         return try {
             val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
@@ -137,8 +139,7 @@ class UserRepositoryImpl(
                 avatarUrl = "https://ofzbmodzxgbpvybfhofr.supabase.co/storage/v1/object/public/bucket//avatar_profile.png",
                 fcmToken = null,
                 email = email,
-                // TODO: canHandlePrivatePartner
-                canHandlePrivatePartner = false
+                canHandlePrivatePartner = canHandlePrivatePartner
             )
 
             supabaseClient.postgrest["profiles"].upsert(profileDto)
@@ -157,7 +158,8 @@ class UserRepositoryImpl(
         arName: String,
         enName: String,
         password: String?,
-        email: String?
+        email: String?,
+        canHandlePrivatePartner: Boolean
     ): Result<Unit> {
         return try {
             val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
@@ -188,6 +190,7 @@ class UserRepositoryImpl(
                 "en_name" to enName,
                 "username" to enName,
                 "email" to email,
+                "can_handle_private_partner" to canHandlePrivatePartner,
                 "updated_at" to Clock.now().toDateString()
             )
             supabaseClient.postgrest["profiles"].update(updates) { filter { eq("id", id) } }
