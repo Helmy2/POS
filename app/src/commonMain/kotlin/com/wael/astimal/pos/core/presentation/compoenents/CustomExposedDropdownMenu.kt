@@ -1,24 +1,32 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.resources.stringResource
-import pos.app.generated.resources.Res
-import pos.app.generated.resources.clear_selection
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,48 +39,20 @@ fun <T> CustomExposedDropdownMenu(
     itemToId: (T) -> String?,
     modifier: Modifier = Modifier,
     onClearItem: () -> Unit = {},
-    canClearSelection: Boolean = false,
     enabled: Boolean = true,
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val selectedItem = items.find { itemToId(it) == selectedItemId }
     val currentSelectionString = selectedItem?.let { itemToDisplayString(it) } ?: ""
 
-    ExposedDropdownMenuBox(
-        expanded = expanded, onExpandedChange = { expanded = !expanded }, modifier = modifier
-    ) {
-        LabeledTextField(
-            value = currentSelectionString,
-            onValueChange = {},
-            label = label,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.Companion.PrimaryEditable)
-                .onFocusEvent {
-                    expanded = it.hasFocus
-                },
-
-            enabled = enabled,
-            readOnly = true,
-        )
-        ExposedDropdownMenu(
-            expanded = expanded && enabled, onDismissRequest = { expanded = false }) {
-            items.forEach { item ->
-                DropdownMenuItem(text = { Text(itemToDisplayString(item)) }, onClick = {
-                    onItemSelected(item)
-                    expanded = false
-                })
-            }
-            if (selectedItem != null && canClearSelection) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(Res.string.clear_selection)) },
-                    onClick = {
-                        onClearItem()
-                        expanded = false
-                    })
-            }
-        }
-    }
+    ExposedDropdownMenu(
+        options = items.map { itemToDisplayString(it) },
+        onItemSelected = { onItemSelected(items[it]) },
+        onNoSelection = onClearItem,
+        noSelectionText = label,
+        modifier = modifier,
+        initialText = currentSelectionString,
+        enabled = enabled,
+    )
 }
 
 
@@ -87,39 +67,15 @@ fun <T> CustomExposedDropdownMenu(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded, onExpandedChange = { expanded = !expanded }, modifier = modifier
-    ) {
-        LabeledTextField(
-            value = currentSelection,
-            onValueChange = {},
-            label = label,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.Companion.PrimaryEditable)
-                .onFocusEvent {
-                    expanded = it.hasFocus
-                },
-            enabled = enabled,
-            readOnly = true,
-        )
-        ExposedDropdownMenu(
-            expanded = expanded && enabled, onDismissRequest = { expanded = false }) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = {
-                        Text(itemToDisplayString(item), modifier = Modifier.padding(8.dp))
-                    },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    },
-                )
-            }
-        }
-    }
+    ExposedDropdownMenu(
+        options = items.map { itemToDisplayString(it) },
+        onItemSelected = { onItemSelected(items[it]) },
+        onNoSelection = {},
+        noSelectionText = label,
+        modifier = modifier,
+        initialText = currentSelection,
+        enabled = enabled,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,37 +87,142 @@ fun CustomExposedDropdownMenu(
     onItemSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenu(
+        options = items,
+        onItemSelected = { onItemSelected(it) },
+        onNoSelection = {},
+        noSelectionText = label,
+        modifier = modifier,
+        initialText = items.getOrNull(selectedIndex ?: -1) ?: "",
+    )
+}
+
+@Preview
+@Composable
+fun ExposedDropdownMenuPrev() {
+    ExposedDropdownMenu(
+        listOf(
+            "Option 1",
+            "Option 2",
+            "Option 3",
+            "Option 4",
+            "Option 5",
+            "Option 6",
+            "Option 7",
+            "Option 8",
+            "Option 9",
+        ),
+        onItemSelected = {},
+        onNoSelection = {},
+        noSelectionText = "No Selection",
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExposedDropdownMenu(
+    options: List<String>,
+    onItemSelected: (Int) -> Unit,
+    onNoSelection: () -> Unit,
+    noSelectionText: String,
+    modifier: Modifier = Modifier,
+    initialText: String = "",
+    enabled: Boolean = true,
+    dropDownMaxHeight: Dp = 200.dp
+) {
+    val focusManager = LocalFocusManager.current
+
+    val textFieldState = rememberTextFieldState(initialText = initialText)
+
+    val filteredOptions = options.filter { it.contains(textFieldState.text, ignoreCase = true) }
+
+    val (allowExpanded, setExpanded) = remember { mutableStateOf(false) }
+    val expanded = allowExpanded && filteredOptions.isNotEmpty()
+
+
+    LaunchedEffect(options) {
+        if (options.size == 1) {
+            onItemSelected(0)
+        }
+    }
 
     ExposedDropdownMenuBox(
-        expanded = isExpanded,
-        onExpandedChange = { isExpanded = it },
-        modifier = modifier
+        modifier = modifier,
+        expanded = expanded,
+        onExpandedChange = setExpanded,
     ) {
-        LabeledTextField(
-            // Display the selected item's text, or an empty string if nothing is selected.
-            value = selectedIndex?.let { items.getOrNull(it) } ?: items.firstOrNull() ?: "",
-            onValueChange = {}, // The text field is not directly editable
-            readOnly = true,
-            label = label,
+        OutlinedTextField(
+            enabled = enabled,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                    .onFocusEvent {
+                        if (!it.hasFocus) {
+                            if (options.contains(textFieldState.text)) {
+                                onItemSelected(options.indexOf(textFieldState.text))
+                            } else {
+                                onNoSelection()
+                                textFieldState.setTextAndPlaceCursorAtEnd("")
+                            }
+                        }
+                    },
+            state = textFieldState,
+            lineLimits = TextFieldLineLimits.SingleLine,
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded,
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
+                )
             },
-            enabled = true,
-            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.Companion.PrimaryEditable)
+            placeholder = {
+                if (options.size == 1) {
+                    Text(
+                        text = options.first(),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                } else {
+                    Text(
+                        text = noSelectionText,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            },
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Text,
+            ),
+            onKeyboardAction = {
+                filteredOptions.firstOrNull()?.let {
+                    textFieldState.setTextAndPlaceCursorAtEnd(it)
+                    setExpanded(false)
+                } ?: {
+                    textFieldState.setTextAndPlaceCursorAtEnd(noSelectionText)
+                    setExpanded(false)
+                }
+                focusManager.clearFocus()
+            }
         )
-
         ExposedDropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { isExpanded = false }
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = dropDownMaxHeight),
+            expanded = expanded,
+            onDismissRequest = { setExpanded(false) },
         ) {
-            items.forEachIndexed { index, text ->
+            filteredOptions.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(text) },
+                    text = { Text(option, style = MaterialTheme.typography.bodyLarge) },
                     onClick = {
-                        onItemSelected(index)
-                        isExpanded = false // Close the menu after an item is selected
-                    }
+                        textFieldState.setTextAndPlaceCursorAtEnd(option)
+                        setExpanded(false)
+                        focusManager.clearFocus()
+                    },
+                    enabled = enabled,
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                 )
             }
         }

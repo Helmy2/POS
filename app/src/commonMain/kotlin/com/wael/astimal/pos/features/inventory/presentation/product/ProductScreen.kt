@@ -189,7 +189,6 @@ fun ProductScreen(
                     onItemSelected = { onEvent(ProductContract.Event.SubUnitIdChanged(it.id)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     itemToId = { it.id },
-                    canClearSelection = true,
                     enabled = state.canUserEdit,
                     modifier = Modifier.padding(8.dp)
                 )

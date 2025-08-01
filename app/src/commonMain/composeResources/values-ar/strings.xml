@@ -457,7 +457,7 @@
     <string name="all_employees">كل الموظفين</string>
     <string name="commission_to_admin">عمولة للمدير</string>
 
-    <string name="you_owns">لهو</string>
+    <string name="you_owns">له</string>
     <string name="owns_you">عليه</string>
 
 </resources>
