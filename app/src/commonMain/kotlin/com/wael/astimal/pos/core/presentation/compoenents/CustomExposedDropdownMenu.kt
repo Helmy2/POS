@@ -1,5 +1,7 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -26,7 +28,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.no_selection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +53,8 @@ fun <T> CustomExposedDropdownMenu(
         options = items.map { itemToDisplayString(it) },
         onItemSelected = { onItemSelected(items[it]) },
         onNoSelection = onClearItem,
-        noSelectionText = label,
+        label = label,
+        noSelectionText = stringResource(Res.string.no_selection),
         modifier = modifier,
         initialText = currentSelectionString,
         enabled = enabled,
@@ -71,7 +77,8 @@ fun <T> CustomExposedDropdownMenu(
         options = items.map { itemToDisplayString(it) },
         onItemSelected = { onItemSelected(items[it]) },
         onNoSelection = {},
-        noSelectionText = label,
+        label = label,
+        noSelectionText = stringResource(Res.string.no_selection),
         modifier = modifier,
         initialText = currentSelection,
         enabled = enabled,
@@ -91,7 +98,8 @@ fun CustomExposedDropdownMenu(
         options = items,
         onItemSelected = { onItemSelected(it) },
         onNoSelection = {},
-        noSelectionText = label,
+        label = label,
+        noSelectionText = stringResource(Res.string.no_selection),
         modifier = modifier,
         initialText = items.getOrNull(selectedIndex ?: -1) ?: "",
     )
@@ -115,6 +123,7 @@ fun ExposedDropdownMenuPrev() {
         onItemSelected = {},
         onNoSelection = {},
         noSelectionText = "No Selection",
+        label = "",
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -128,6 +137,7 @@ fun ExposedDropdownMenu(
     onItemSelected: (Int) -> Unit,
     onNoSelection: () -> Unit,
     noSelectionText: String,
+    label: String,
     modifier: Modifier = Modifier,
     initialText: String = "",
     enabled: Boolean = true,
@@ -150,65 +160,69 @@ fun ExposedDropdownMenu(
     }
 
     ExposedDropdownMenuBox(
-        modifier = modifier,
         expanded = expanded,
         onExpandedChange = setExpanded,
     ) {
-        OutlinedTextField(
-            enabled = enabled,
-            modifier =
-                Modifier.fillMaxWidth()
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
-                    .onFocusEvent {
-                        if (!it.hasFocus) {
-                            if (options.contains(textFieldState.text)) {
-                                onItemSelected(options.indexOf(textFieldState.text))
-                            } else {
-                                onNoSelection()
-                                textFieldState.setTextAndPlaceCursorAtEnd("")
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(label)
+            OutlinedTextField(
+                enabled = enabled,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                        .onFocusEvent {
+                            if (!it.hasFocus) {
+                                if (options.contains(textFieldState.text)) {
+                                    onItemSelected(options.indexOf(textFieldState.text))
+                                } else {
+                                    onNoSelection()
+                                    textFieldState.setTextAndPlaceCursorAtEnd("")
+                                }
                             }
-                        }
-                    },
-            state = textFieldState,
-            lineLimits = TextFieldLineLimits.SingleLine,
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = expanded,
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
-                )
-            },
-            placeholder = {
-                if (options.size == 1) {
-                    Text(
-                        text = options.first(),
-                        style = MaterialTheme.typography.bodyLarge,
+                        },
+                state = textFieldState,
+                lineLimits = TextFieldLineLimits.SingleLine,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = expanded,
+                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
                     )
-                } else {
-                    Text(
-                        text = noSelectionText,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                },
+                placeholder = {
+                    if (options.size == 1) {
+                        Text(
+                            text = options.first(),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    } else {
+                        Text(
+                            text = noSelectionText,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                },
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Text,
+                ),
+                onKeyboardAction = {
+                    filteredOptions.firstOrNull()?.let {
+                        textFieldState.setTextAndPlaceCursorAtEnd(it)
+                        setExpanded(false)
+                    } ?: {
+                        textFieldState.setTextAndPlaceCursorAtEnd(noSelectionText)
+                        setExpanded(false)
+                    }
+                    focusManager.clearFocus()
                 }
-            },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Text,
-            ),
-            onKeyboardAction = {
-                filteredOptions.firstOrNull()?.let {
-                    textFieldState.setTextAndPlaceCursorAtEnd(it)
-                    setExpanded(false)
-                } ?: {
-                    textFieldState.setTextAndPlaceCursorAtEnd(noSelectionText)
-                    setExpanded(false)
-                }
-                focusManager.clearFocus()
-            }
-        )
+            )
+        }
         ExposedDropdownMenu(
             modifier = Modifier
-                .fillMaxWidth()
                 .heightIn(max = dropDownMaxHeight),
             expanded = expanded,
             onDismissRequest = { setExpanded(false) },

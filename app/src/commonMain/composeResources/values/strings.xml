@@ -445,4 +445,5 @@
     <string name="phone_number">Phone Number</string>
     <string name="total_debits">Total Debits</string>
     <string name="all_employees">All Employees</string>
+    <string name="no_selection">No Selection</string>
 </resources>

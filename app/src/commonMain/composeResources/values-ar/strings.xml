@@ -459,5 +459,6 @@
 
     <string name="you_owns">له</string>
     <string name="owns_you">عليه</string>
+    <string name="no_selection">غير محدد</string>
 
 </resources>
