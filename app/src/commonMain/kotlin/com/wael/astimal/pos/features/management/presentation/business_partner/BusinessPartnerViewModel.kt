@@ -35,9 +35,6 @@ class BusinessPartnerViewModel(
     reducer = BusinessPartnerReducer(),
     initialState = BusinessPartnerContract.State()
 ) {
-    init {
-        processEvent(BusinessPartnerContract.Event.LoadInitialData)
-    }
 
     val filteredPartnersState: StateFlow<List<BusinessPartner>> =
         combine(
@@ -53,7 +50,14 @@ class BusinessPartnerViewModel(
 
     override fun handleEvent(event: BusinessPartnerContract.Event) {
         when (event) {
-            is BusinessPartnerContract.Event.LoadInitialData -> loadCurrentUser()
+            is BusinessPartnerContract.Event.LoadInitialData -> {
+                loadCurrentUser {
+                    if (event.isOpenNew) {
+                        setState(BusinessPartnerContract.Event.AddNewPartnerClicked)
+                    }
+                }
+            }
+
             is BusinessPartnerContract.Event.CreateClicked -> createPartner(
                 event.partner,
                 event.amount
@@ -97,11 +101,14 @@ class BusinessPartnerViewModel(
         }
     }
 
-    private fun loadCurrentUser() {
+    private fun loadCurrentUser(
+        doAfterLoad: suspend () -> Unit
+    ) {
         viewModelScope.launch {
             val currentUser = userRepository.getCurrentUser()!!
             val users = userRepository.getEmployeesFlow().first()
             setState(BusinessPartnerContract.Event.UserLoaded(currentUser, users))
+            doAfterLoad()
         }
     }
 

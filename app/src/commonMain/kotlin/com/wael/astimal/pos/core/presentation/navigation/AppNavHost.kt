@@ -94,12 +94,15 @@ fun AppNavHost(
 
 
             // --- Management Sub-Screens ---
-            composable<Destination.BusinessPartners> { BusinessPartnerRoute() }
+            composable<Destination.BusinessPartners> {
+                val isOpenNew = it.toRoute<Destination.BusinessPartners>().openNew
+                BusinessPartnerRoute(isOpenNew = isOpenNew)
+            }
             composable<Destination.SalesOrders> {
                 val invoiceId = it.toRoute<Destination.SalesOrders>().invoiceId
                 SalesRoute(
                     onNavigateToCreateBusinessPartner = {
-                        navController.navigate(Destination.BusinessPartners)
+                        navController.navigate(Destination.BusinessPartners(true))
                     },
                     invoiceId = invoiceId
                 )

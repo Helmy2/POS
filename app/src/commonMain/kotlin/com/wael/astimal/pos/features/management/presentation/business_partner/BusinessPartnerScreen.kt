@@ -81,13 +81,15 @@ import pos.app.generated.resources.update
 @Composable
 fun BusinessPartnerRoute(
     viewModel: BusinessPartnerViewModel = koinViewModel(),
+    isOpenNew: Boolean,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredPartners by viewModel.filteredPartnersState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.processEvent(BusinessPartnerContract.Event.LoadInitialData)
+    LaunchedEffect(isOpenNew) {
+        viewModel.processEvent(BusinessPartnerContract.Event.LoadInitialData(isOpenNew))
     }
+
 
     BusinessPartnerScreen(
         state = state,
@@ -392,7 +394,8 @@ fun BusinessPartnerEditDialog(
                             responsibleEmployee = user
                         )
                         if (isNewPartner) {
-                            onCreate(updatedPartner,
+                            onCreate(
+                                updatedPartner,
                                 if (isReceiveMoney) -(amount.toDoubleOrNull()
                                     ?: 0.0) else amount.toDoubleOrNull() ?: 0.0
                             )

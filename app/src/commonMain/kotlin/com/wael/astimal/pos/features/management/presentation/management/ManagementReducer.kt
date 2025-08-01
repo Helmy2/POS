@@ -24,7 +24,7 @@ class ManagementReducer : Reducer<ManagementContract.State, ManagementContract.E
                         Res.string.employee_account
                     ),
                     ManagementContract.ManagementItem(
-                        Destination.BusinessPartners,
+                        Destination.BusinessPartners(),
                         Res.string.business_partner
                     ),
                     ManagementContract.ManagementItem(

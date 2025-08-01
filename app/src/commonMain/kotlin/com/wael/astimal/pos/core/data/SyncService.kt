@@ -86,10 +86,10 @@ class SyncServiceImpl(
                 syncPartner()
 
 
-                syncTransferItems()
                 syncTransfer()
-                syncInvoiceItems()
+                syncTransferItems()
                 syncInvoice()
+                syncInvoiceItems()
                 syncStockAdjustment()
                 syncPartnerTransactions()
                 syncEmployeesTransactions()

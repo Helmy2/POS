@@ -26,7 +26,7 @@ object BusinessPartnerContract {
 
     sealed interface Event : Reducer.ViewEvent {
         // UI Actions
-        data object LoadInitialData : Event
+        data class LoadInitialData(val isOpenNew: Boolean) : Event
         data class SearchQueryChanged(val query: String) : Event
         data class PartnerClicked(val partner: BusinessPartner) : Event
         data object AddNewPartnerClicked : Event

@@ -50,7 +50,7 @@ sealed class Destination {
     data object Management : Destination() // The androidMain landing/hub screen for management
 
     @Serializable
-    data object BusinessPartners : Destination()
+    data class BusinessPartners(val openNew: Boolean = false) : Destination()
 
     @Serializable
     data class SalesOrders(val invoiceId: String?) : Destination()
