@@ -271,13 +271,25 @@ fun BusinessPartnerEditDialog(
     var enName by remember(partner.name.enName) { mutableStateOf(partner.name.enName ?: "") }
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
     var address by remember(partner.address) { mutableStateOf(partner.address) }
-    var phone by remember(partner.phone) { mutableStateOf(partner.phone) }
     var user by remember(partner.responsibleEmployee) { mutableStateOf(partner.responsibleEmployee) }
     var isReceiveMoney by remember { mutableStateOf(false) }
     var amount by remember { mutableStateOf("") }
     val isNewPartner = partner.id == ""
     var type by remember { mutableStateOf(partner.type) }
     var isPrivate by remember { mutableStateOf(partner.isPrivate) }
+
+
+    var phone1 by remember(partner.phone) {
+        mutableStateOf(partner.phone.split(",").getOrNull(0) ?: "")
+    }
+    var phone2 by remember(partner.phone) {
+        mutableStateOf(partner.phone.split(",").getOrNull(1) ?: "")
+    }
+    var phone3 by remember(partner.phone) {
+        mutableStateOf(partner.phone.split(",").getOrNull(2) ?: "")
+    }
+
+
 
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
@@ -311,8 +323,26 @@ fun BusinessPartnerEditDialog(
                     enabled = canEdit
                 )
                 LabeledTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
+                    value = phone1,
+                    onValueChange = { phone1 = it },
+                    label = stringResource(Res.string.phone),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone
+                    ),
+                    enabled = canEdit
+                )
+                LabeledTextField(
+                    value = phone2,
+                    onValueChange = { phone2 = it },
+                    label = stringResource(Res.string.phone),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone
+                    ),
+                    enabled = canEdit
+                )
+                LabeledTextField(
+                    value = phone3,
+                    onValueChange = { phone3 = it },
                     label = stringResource(Res.string.phone),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Phone
@@ -397,7 +427,7 @@ fun BusinessPartnerEditDialog(
                         val updatedPartner = partner.copy(
                             name = partner.name.copy(enName = enName, arName = arName),
                             address = address,
-                            phone = phone,
+                            phone = "$phone1,$phone2,$phone3",
                             type = type,
                             responsibleEmployee = user,
                             isPrivate = isPrivate
