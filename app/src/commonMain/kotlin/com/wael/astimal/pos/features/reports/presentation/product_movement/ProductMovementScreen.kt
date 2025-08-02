@@ -130,28 +130,25 @@ fun ProductMovementScreen(
     }
 
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CustomExposedDropdownMenu(
-                label = stringResource(Res.string.select_product),
-                items = listOf(stringResource(Res.string.all_products)) + state.products.map { it.name.get() },
-                selectedIndex = state.selectedProductId?.let { id -> state.products.indexOfFirst { it.id == id } + 1 },
-                onItemSelected = { index ->
-                    val productId = if (index == 0) null else state.products[index - 1].id
-                    processEvent(ProductMovementContract.Event.SelectProduct(productId))
-                },
-                modifier = Modifier.weight(1f)
-            )
-            CustomExposedDropdownMenu(
-                label = stringResource(Res.string.select_store),
-                items = listOf(stringResource(Res.string.all_stores)) + state.stores.map { it.name.get() },
-                selectedIndex = state.selectedStoreId?.let { id -> state.stores.indexOfFirst { it.id == id } + 1 },
-                onItemSelected = { index ->
-                    val storeId = if (index == 0) null else state.stores[index - 1].id
-                    processEvent(ProductMovementContract.Event.SelectStore(storeId))
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
+        CustomExposedDropdownMenu(
+            label = stringResource(Res.string.select_product),
+            items = listOf(stringResource(Res.string.all_products)) + state.products.map { it.name.get() },
+            selectedIndex = state.selectedProductId?.let { id -> state.products.indexOfFirst { it.id == id } + 1 },
+            onItemSelected = { index ->
+                val productId = if (index == 0) null else state.products[index - 1].id
+                processEvent(ProductMovementContract.Event.SelectProduct(productId))
+            },
+        )
+        Spacer(Modifier.height(8.dp))
+        CustomExposedDropdownMenu(
+            label = stringResource(Res.string.select_store),
+            items = listOf(stringResource(Res.string.all_stores)) + state.stores.map { it.name.get() },
+            selectedIndex = state.selectedStoreId?.let { id -> state.stores.indexOfFirst { it.id == id } + 1 },
+            onItemSelected = { index ->
+                val storeId = if (index == 0) null else state.stores[index - 1].id
+                processEvent(ProductMovementContract.Event.SelectStore(storeId))
+            },
+        )
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(

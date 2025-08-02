@@ -134,32 +134,29 @@ fun EmployeeLedgerScreen(
             modifier = Modifier.padding(8.dp)
         )
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = state.startDate.toString(),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(Res.string.start_date)) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showStartDatePicker = true
-                    }) { Icon(Icons.Default.DateRange, null) }
-                },
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = state.endDate.toString(),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(Res.string.end_date)) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showEndDatePicker = true
-                    }) { Icon(Icons.Default.DateRange, null) }
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
+        OutlinedTextField(
+            value = state.startDate.toString(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(Res.string.start_date)) },
+            trailingIcon = {
+                IconButton(onClick = {
+                    showStartDatePicker = true
+                }) { Icon(Icons.Default.DateRange, null) }
+            },
+        )
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = state.endDate.toString(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(Res.string.end_date)) },
+            trailingIcon = {
+                IconButton(onClick = {
+                    showEndDatePicker = true
+                }) { Icon(Icons.Default.DateRange, null) }
+            },
+        )
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = { processEvent(EmployeeLedgerContract.Event.ApplyFilters) },
