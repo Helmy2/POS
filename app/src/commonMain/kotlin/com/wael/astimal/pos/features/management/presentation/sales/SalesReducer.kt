@@ -51,6 +51,7 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                         paymentType = event.order.paymentMethod,
                         date = event.order.createdAt,
                         items = event.order.items.map {
+                            println("item: $it")
                             EditableItem(
                                 product = it.product,
                                 mainUnitQuantity = it.quantity.toString(),
@@ -243,6 +244,14 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                     )
                 ) to null
             }
+
+            is SalesContract.Event.PdfGenerationFinished -> previousState.copy(
+                pdfHtmlToGenerate = null
+            ) to null
+
+            is SalesContract.Event.PdfGenerationSuccess -> previousState.copy(
+                pdfHtmlToGenerate = event.html
+            ) to null
 
 
             else -> previousState to null

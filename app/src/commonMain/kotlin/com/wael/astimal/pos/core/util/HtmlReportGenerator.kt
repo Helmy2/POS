@@ -3,6 +3,7 @@ package com.wael.astimal.pos.core.util
 
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
 import com.wael.astimal.pos.features.reports.domain.model.CurrentStockInfo
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
@@ -12,6 +13,7 @@ import com.wael.astimal.pos.features.reports.domain.model.ProductMovementGroup
 import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -21,16 +23,28 @@ import org.jetbrains.compose.resources.getString
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.account_statement
 import pos.app.generated.resources.amount
+import pos.app.generated.resources.amount_due
 import pos.app.generated.resources.balance
+import pos.app.generated.resources.bill_to_label
 import pos.app.generated.resources.date
+import pos.app.generated.resources.date_label
 import pos.app.generated.resources.description
 import pos.app.generated.resources.details
 import pos.app.generated.resources.employee_activity_report
+import pos.app.generated.resources.employee_label
+import pos.app.generated.resources.invoice
 import pos.app.generated.resources.invoice_details_format
+import pos.app.generated.resources.invoice_no_label
+import pos.app.generated.resources.item_description
+import pos.app.generated.resources.paid_amount
 import pos.app.generated.resources.partner_payment
 import pos.app.generated.resources.partner_payment_details_format
+import pos.app.generated.resources.quantity
+import pos.app.generated.resources.store_label
+import pos.app.generated.resources.subtotal
 import pos.app.generated.resources.total
 import pos.app.generated.resources.type
+import pos.app.generated.resources.unit_price
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -72,6 +86,155 @@ class HtmlReportGenerator(
         // Convert LocalDate to a format SimpleDateFormat can use
         val dateInMillis = date.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
         return sdf.format(Date(dateInMillis))
+    }
+
+    suspend fun createInvoiceHtml(
+        invoice: Invoice
+    ): String {
+        val lang = settingsManager.getLanguage().first()
+        val isRtl = lang == Language.Arabic
+
+        val labels = mapOf(
+            "invoice" to getString(Res.string.invoice),
+            "invoice_no" to getString(Res.string.invoice_no_label),
+            "date" to getString(Res.string.date_label),
+            "store" to getString(Res.string.store_label),
+            "employee" to getString(Res.string.employee_label),
+            "bill_to" to getString(Res.string.bill_to_label),
+            "item" to getString(Res.string.item_description),
+            "qty" to getString(Res.string.quantity),
+            "price" to getString(Res.string.unit_price),
+            "total" to getString(Res.string.total),
+            "subtotal" to getString(Res.string.subtotal),
+            "paid" to getString(Res.string.paid_amount),
+            "due" to getString(Res.string.amount_due)
+        )
+
+
+        // 2. Build the table rows for the invoice items
+        val itemRows = invoice.items.joinToString("") { item ->
+            val itemTotal = item.quantity * item.unitPrice
+            """
+        <tr>
+            <td>${if (isRtl) item.product.name.arName else item.product.name.enName}</td>
+            <td class="num">${item.quantity}</td>
+            <td class="num">${String.format("%.2f", item.unitPrice)}</td>
+            <td class="num">${String.format("%.2f", itemTotal)}</td>
+        </tr>
+        """.trimIndent()
+        }
+
+        // 3. Build the final HTML using the translated labels and data
+        val html = generateInvoiceHtmlShell(
+            labels = labels,
+            isRtl = isRtl,
+            invoice = invoice,
+            itemRows = itemRows
+        )
+
+        return html
+    }
+
+    private fun generateInvoiceHtmlShell(
+        labels: Map<String, String>,
+        isRtl: Boolean,
+        invoice: Invoice,
+        itemRows: String
+    ): String {
+        val dir = if (isRtl) "rtl" else "ltr"
+        val langAttr = if (isRtl) "ar" else "en"
+        val fontFamily = if (isRtl) "'Noto Sans Arabic', sans-serif" else "sans-serif"
+        val textAlign = if (isRtl) "right" else "left"
+
+        val amountDue = invoice.totalAmount - invoice.paidAmount
+        val orderDate = Instant.fromEpochMilliseconds(invoice.orderDate)
+            .toLocalDateTime(TimeZone.UTC).date
+
+        return """
+    <!DOCTYPE html>
+    <html lang="$langAttr" dir="$dir">
+    <head>
+        <meta charset="UTF-8" />
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
+            body { font-family: $fontFamily; margin: 40px; color: #333; }
+            .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, .15); font-size: 16px; line-height: 24px; }
+            .header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+            .header .title { font-size: 45px; line-height: 45px; color: #333; font-weight: bold; }
+            .header .invoice-details { text-align: $textAlign; }
+            .addresses { display: flex; justify-content: space-between; margin-bottom: 40px; }
+            .items-table { width: 100%; line-height: inherit; text-align: $textAlign; border-collapse: collapse; }
+            .items-table th { background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; padding: 5px; }
+            .items-table td { padding: 8px; border-bottom: 1px solid #eee; }
+            .items-table .num { text-align: right; }
+            .totals { margin-top: 30px; text-align: $textAlign; }
+            .totals table { width: 40%; float: ${if (isRtl) "left" else "right"}; }
+            .totals td { padding: 5px; }
+            .totals .label { font-weight: bold; }
+            .totals .value { text-align: right; }
+        </style>
+    </head>
+    <body>
+        <div class="invoice-box">
+            <div class="header">
+                <div>
+                    <div class="title">${labels["invoice"]}</div>
+                </div>
+                <div class="invoice-details">
+                    <b>${labels["invoice_no"]}</b> ${invoice.id.substring(0, 8)}<br>
+                    <b>${labels["date"]}</b> ${
+            formatDate(
+                orderDate,
+                if (isRtl) Language.Arabic else Language.English
+            )
+        }<br>
+                    <b>${labels["store"]}</b> ${if (isRtl) invoice.store.name.arName else invoice.store.name.enName}
+                </div>
+            </div>
+            <div class="addresses">
+                <div>
+                    <b>${labels["bill_to"]}</b><br>
+                    ${if (isRtl) invoice.partner.name.arName else invoice.partner.name.enName}<br>
+                    ${invoice.partner.phone ?: ""}
+                </div>
+                <div>
+                    <b>${labels["employee"]}</b><br>
+                    ${invoice.employee.name}
+                </div>
+            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>${labels["item"]}</th>
+                        <th class="num">${labels["qty"]}</th>
+                        <th class="num">${labels["price"]}</th>
+                        <th class="num">${labels["total"]}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    $itemRows
+                </tbody>
+            </table>
+            <div class="totals">
+                <table>
+                    <tr>
+                        <td class="label">${labels["subtotal"]}:</td>
+                        <td class="value">${String.format("%.2f", invoice.totalAmount)}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">${labels["paid"]}:</td>
+                        <td class="value">${String.format("%.2f", invoice.paidAmount)}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">${labels["due"]}:</td>
+                        <td class="value">${String.format("%.2f", amountDue)}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </body>
+    </html>
+    """.trimIndent()
     }
 
     suspend fun createClientDebitReportHtml(

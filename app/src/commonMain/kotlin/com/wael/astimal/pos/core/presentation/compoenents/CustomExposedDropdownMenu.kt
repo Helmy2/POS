@@ -18,11 +18,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -153,12 +151,6 @@ fun ExposedDropdownMenu(
     val expanded = allowExpanded && filteredOptions.isNotEmpty()
 
 
-    LaunchedEffect(options) {
-        if (options.size == 1) {
-            onItemSelected(0)
-        }
-    }
-
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = setExpanded,
@@ -172,17 +164,7 @@ fun ExposedDropdownMenu(
                 enabled = enabled,
                 modifier =
                     Modifier.fillMaxWidth()
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
-                        .onFocusEvent {
-                            if (!it.hasFocus) {
-                                if (options.contains(textFieldState.text)) {
-                                    onItemSelected(options.indexOf(textFieldState.text))
-                                } else {
-                                    onNoSelection()
-                                    textFieldState.setTextAndPlaceCursorAtEnd("")
-                                }
-                            }
-                        },
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
                 state = textFieldState,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 trailingIcon = {
@@ -192,17 +174,10 @@ fun ExposedDropdownMenu(
                     )
                 },
                 placeholder = {
-                    if (options.size == 1) {
-                        Text(
-                            text = options.first(),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    } else {
-                        Text(
-                            text = noSelectionText,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
+                    Text(
+                        text = noSelectionText,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
                 },
                 colors = ExposedDropdownMenuDefaults.textFieldColors(),
                 keyboardOptions = KeyboardOptions(

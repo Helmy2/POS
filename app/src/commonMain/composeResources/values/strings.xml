@@ -448,4 +448,15 @@
     <string name="no_selection">No Selection</string>
     <string name="is_private">Is Private</string>
     <string name="can_handle_private_partners">Can Handle Private Partners</string>
+
+    <string name="invoice_no_label">Invoice #:</string>
+    <string name="date_label">Date:</string>
+    <string name="store_label">Store:</string>
+    <string name="employee_label">Sold By:</string>
+    <string name="bill_to_label">Bill To:</string>
+    <string name="item_description">Item Description</string>
+    <string name="unit_price">Unit Price</string>
+    <string name="paid_amount">Paid Amount</string>
+    <string name="amount_due">Amount Due</string>
+    <string name="generate_pdf">Generate PDF</string>
 </resources>

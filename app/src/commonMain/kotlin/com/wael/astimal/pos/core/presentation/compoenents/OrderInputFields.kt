@@ -28,6 +28,7 @@ import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.in_stock_with_args
+import pos.app.generated.resources.no_selection
 import pos.app.generated.resources.price
 import pos.app.generated.resources.product
 import pos.app.generated.resources.qty
@@ -58,12 +59,19 @@ fun OrderItemRow(
             horizontalArrangement = Arrangement.Center,
         ) {
             Box(modifier = Modifier.weight(1f)) {
-                CustomExposedDropdownMenu(
-                    currentSelection = item.product?.name?.displayName(language) ?: "",
+                ExposedDropdownMenu(
+                    options = availableProducts.map { it.name.displayName(language) },
+                    onItemSelected = {
+                        onUpdateSelectedItem(
+                            item.tempEditorId,
+                            availableProducts[it]
+                        )
+                    },
+                    onNoSelection = {},
                     label = stringResource(Res.string.product),
-                    items = availableProducts,
-                    onItemSelected = { onUpdateSelectedItem(item.tempEditorId, it) },
-                    itemToDisplayString = { it.name.displayName(language) },
+                    noSelectionText = stringResource(Res.string.no_selection),
+                    initialText = item.product?.name?.displayName(language) ?: "",
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             IconButton(

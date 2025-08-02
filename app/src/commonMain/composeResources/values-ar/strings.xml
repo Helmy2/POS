@@ -462,4 +462,15 @@
     <string name="no_selection">غير محدد</string>
     <string name="is_private">خاص</string>
     <string name="can_handle_private_partners">يمكن التعامل مع الشريكات الخاصة</string>
+
+    <string name="invoice_no_label">رقم الفاتورة:</string>
+    <string name="date_label">التاريخ:</string>
+    <string name="store_label">المخزن:</string>
+    <string name="employee_label">البائع:</string>
+    <string name="bill_to_label">فاتورة إلى:</string>
+    <string name="item_description">وصف الصنف</string>
+    <string name="unit_price">سعر الوحدة</string>
+    <string name="paid_amount">المبلغ المدفوع</string>
+    <string name="amount_due">المبلغ المستحق</string>
+    <string name="generate_pdf">توليد PDF</string>
 </resources>

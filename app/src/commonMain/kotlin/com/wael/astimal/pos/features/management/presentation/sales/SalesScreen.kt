@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,12 +22,14 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_partner
 import pos.app.generated.resources.client
+import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.order_to_with_args
 import pos.app.generated.resources.stores
 
@@ -37,6 +41,12 @@ fun SalesRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredOrders by viewModel.filteredOrdersState.collectAsStateWithLifecycle()
+
+    PdfGeneratorEffect(
+        htmlContent = state.pdfHtmlToGenerate,
+        baseFileName = "sales_report",
+        onFinish = { viewModel.processEvent(SalesContract.Event.PdfGenerationFinished) }
+    )
 
     LaunchedEffect(Unit) {
         viewModel.processEvent(SalesContract.Event.LoadInitialInvoice(invoiceId))
@@ -95,6 +105,17 @@ fun SalesScreen(
             )
         },
         mainContent = {
+            if (state.selectedOrder != null) {
+                item {
+                    Button(
+                        {
+                            onEvent(SalesContract.Event.GeneratePdf(state.selectedOrder))
+                        }
+                    ) {
+                        Text(text = stringResource(Res.string.generate_pdf))
+                    }
+                }
+            }
             item {
                 DataPicker(
                     selectedDateMillis = orderInput.date,
