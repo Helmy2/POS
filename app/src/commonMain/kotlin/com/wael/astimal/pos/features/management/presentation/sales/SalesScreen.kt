@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.sales
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -156,7 +157,7 @@ fun SalesScreen(
                     onItemSelected = { onEvent(SalesContract.Event.StoreChanged(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(8.dp).fillMaxWidth(),
                 )
             }
             editableOrderItems(
