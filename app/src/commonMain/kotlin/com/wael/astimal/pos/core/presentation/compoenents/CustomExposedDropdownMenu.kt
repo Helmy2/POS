@@ -145,11 +145,10 @@ fun ExposedDropdownMenu(
 
     val textFieldState = rememberTextFieldState(initialText = initialText)
 
-    val filteredOptions = options.filter { it.contains(textFieldState.text, ignoreCase = true) }
+    val sortedOptions =
+        options.sortedByDescending { it.contains(textFieldState.text, ignoreCase = true) }
 
-    val (allowExpanded, setExpanded) = remember { mutableStateOf(false) }
-    val expanded = allowExpanded && filteredOptions.isNotEmpty()
-
+    val (expanded, setExpanded) = remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -185,11 +184,13 @@ fun ExposedDropdownMenu(
                     keyboardType = KeyboardType.Text,
                 ),
                 onKeyboardAction = {
-                    filteredOptions.firstOrNull()?.let {
+                    sortedOptions.firstOrNull()?.let {
                         textFieldState.setTextAndPlaceCursorAtEnd(it)
+                        onItemSelected(sortedOptions.indexOf(it))
                         setExpanded(false)
                     } ?: {
                         textFieldState.setTextAndPlaceCursorAtEnd(noSelectionText)
+                        onNoSelection()
                         setExpanded(false)
                     }
                     focusManager.clearFocus()
@@ -202,11 +203,12 @@ fun ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { setExpanded(false) },
         ) {
-            filteredOptions.forEach { option ->
+            sortedOptions.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option, style = MaterialTheme.typography.bodyLarge) },
                     onClick = {
                         textFieldState.setTextAndPlaceCursorAtEnd(option)
+                        onItemSelected(sortedOptions.indexOf(option))
                         setExpanded(false)
                         focusManager.clearFocus()
                     },
