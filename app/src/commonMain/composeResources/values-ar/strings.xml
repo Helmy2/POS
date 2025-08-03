@@ -473,4 +473,7 @@
     <string name="paid_amount">المبلغ المدفوع</string>
     <string name="amount_due">المبلغ المستحق</string>
     <string name="generate_pdf">توليد PDF</string>
+    <string name="stock_transfer_report">تقرير المناقلات المخزنية</string>
+    <string name="initiated_by">بواسطة</string>
+    <string name="status">الحالة</string>
 </resources>

@@ -33,6 +33,7 @@ import com.wael.astimal.pos.features.reports.presentation.employee_ledger.Employ
 import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportRoute
 import com.wael.astimal.pos.features.reports.presentation.product_movement.ProductMovementRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
+import com.wael.astimal.pos.features.reports.presentation.stock_transfer.StockTransferReportRoute
 import com.wael.astimal.pos.features.user.presentation.employee.EmployeeRoute
 import com.wael.astimal.pos.features.user.presentation.login.LoginRoute
 
@@ -163,6 +164,13 @@ fun AppNavHost(
             }
             composable<Destination.ClientDebit> {
                 ClientDebitRoute(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<Destination.StockTransferReport> {
+                StockTransferReportRoute(
                     onNavigateBack = {
                         navController.popBackStack()
                     },

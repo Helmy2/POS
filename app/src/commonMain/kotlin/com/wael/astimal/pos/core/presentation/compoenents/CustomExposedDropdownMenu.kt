@@ -2,7 +2,6 @@ package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -123,7 +122,6 @@ fun ExposedDropdownMenuPrev() {
         noSelectionText = "No Selection",
         label = "",
         modifier = Modifier
-            .fillMaxWidth()
             .padding(16.dp)
     )
 }
@@ -162,8 +160,7 @@ fun ExposedDropdownMenu(
             OutlinedTextField(
                 enabled = enabled,
                 modifier =
-                    Modifier.fillMaxWidth()
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
+                    Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
                 state = textFieldState,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 trailingIcon = {

@@ -459,4 +459,8 @@
     <string name="paid_amount">Paid Amount</string>
     <string name="amount_due">Amount Due</string>
     <string name="generate_pdf">Generate PDF</string>
+
+    <string name="stock_transfer_report">Stock Transfer Report</string>
+    <string name="initiated_by">Initiated By</string>
+    <string name="status">Status</string>
 </resources>

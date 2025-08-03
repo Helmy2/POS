@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.core.util
 
 
+import StockTransfer
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
@@ -88,6 +89,149 @@ class HtmlReportGenerator(
         // Convert LocalDate to a format SimpleDateFormat can use
         val dateInMillis = date.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
         return sdf.format(Date(dateInMillis))
+    }
+
+    suspend fun createStockTransferReportHtml(
+        transfers: List<StockTransfer>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): String {
+        val lang = settingsManager.getLanguage().first()
+        val isRtl = lang == Language.Arabic
+
+        val transferRows = transfers.joinToString("") { transfer ->
+            val date =
+                Instant.fromEpochMilliseconds(transfer.createdAt).toLocalDateTime(TimeZone.UTC).date
+
+            // --- NEW: Build the nested table for transfer items ---
+            val itemHeaders = if (isRtl) {
+                "<th>الصنف</th><th class='num'>الكمية</th>"
+            } else {
+                "<th>Product</th><th class='num'>Quantity</th>"
+            }
+            val itemsHtml = transfer.items.joinToString("") { item ->
+                """
+                <tr>
+                    <td>${if (isRtl) item.product.name.arName else item.product.name.enName}</td>
+                    <td class="num">${item.quantity}</td>
+                </tr>
+                """.trimIndent()
+            }
+            val itemsTable = """
+            <table class="nested-table">
+                <thead><tr>$itemHeaders</tr></thead>
+                <tbody>$itemsHtml</tbody>
+            </table>
+            """.trimIndent()
+            // --- END OF NEW LOGIC ---
+
+            """
+            <tr class="main-row">
+                <td>${formatDate(date, lang)}</td>
+                <td>${if (isRtl) transfer.fromStore.name.arName else transfer.fromStore.name.enName}</td>
+                <td>${if (isRtl) transfer.toStore.name.arName else transfer.toStore.name.enName}</td>
+                <td>${transfer.status.name}</td>
+                <td>${if (isRtl) transfer.initiatingUser.localizedName.arName else transfer.initiatingUser.localizedName.enName}</td>
+            </tr>
+            <tr class="details-row">
+                <td colspan="5">
+                    ${itemsTable}
+                </td>
+            </tr>
+            """.trimIndent()
+        }
+
+        val dateRangeText = if (formatDate(startDate, lang) == formatDate(endDate, lang)) {
+            if (isRtl) "تقرير لتاريخ: ${
+                formatDate(
+                    startDate,
+                    lang
+                )
+            }" else "Report for date: ${formatDate(startDate, lang)}"
+        } else {
+            if (isRtl) "تقرير للفترة: ${formatDate(startDate, lang)} إلى ${
+                formatDate(
+                    endDate,
+                    lang
+                )
+            }" else "Report for period: ${formatDate(startDate, lang)} to ${
+                formatDate(
+                    endDate,
+                    lang
+                )
+            }"
+        }
+
+        val title = if (isRtl) "تقرير المناقلات المخزنية" else "Stock Transfer Report"
+        val headers = if (isRtl) {
+            listOf("التاريخ", "من مخزن", "إلى مخزن", "الحالة", "بواسطة")
+        } else {
+            listOf("Date", "From Store", "To Store", "Status", "Initiated By")
+        }
+
+        // Pass the new CSS for the nested table to the shell
+        val html = generateHtmlShellWithItemDetails(
+            title = title,
+            subtitle = "",
+            dateRange = dateRangeText,
+            isRtl = isRtl,
+            headers = headers,
+            rows = transferRows
+        )
+
+        return html
+    }
+
+    private fun generateHtmlShellWithItemDetails(
+        title: String,
+        subtitle: String,
+        dateRange: String,
+        isRtl: Boolean,
+        headers: List<String>,
+        rows: String,
+        footer: String? = null
+    ): String {
+        val dir = if (isRtl) "rtl" else "ltr"
+        val langAttr = if (isRtl) "ar" else "en"
+        val fontFamily = if (isRtl) "'Noto Sans Arabic', sans-serif" else "sans-serif"
+        val textAlign = if (isRtl) "right" else "left"
+
+        val headerCells = headers.joinToString("") { header ->
+            "<th style='text-align: $textAlign;'>$header</th>"
+        }
+
+        return """
+        <!DOCTYPE html>
+        <html lang="$langAttr" dir="$dir">
+        <head>
+            <meta charset="UTF-8" />
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
+                body { font-family: $fontFamily; margin: 25px; }
+                h1, h2, p { text-align: center; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+                th { background-color: #f2f2f2; }
+                .num { text-align: right; font-family: monospace; }
+                .main-row > td { background-color: #f9f9f9; font-weight: bold; }
+                .details-row > td { padding: 0; border: 0; }
+                .nested-table { width: 100%; margin: 0; border: 0; }
+                .nested-table th { background-color: #e9e9e9; }
+                .nested-table td { border-left: 0; border-right: 0; border-bottom: 0; }
+            </style>
+        </head>
+        <body>
+            <h1>$title</h1>
+            <h2>$subtitle</h2>
+            <p>$dateRange</p>
+            <table>
+                <thead><tr>$headerCells</tr></thead>
+                <tbody>$rows</tbody>
+                ${footer ?: ""}
+            </table>
+        </body>
+        </html>
+        """.trimIndent()
     }
 
     suspend fun createInvoiceHtml(

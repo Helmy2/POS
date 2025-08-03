@@ -9,6 +9,7 @@ import pos.app.generated.resources.customer_statement
 import pos.app.generated.resources.employee_daily_report
 import pos.app.generated.resources.employee_ledger_report
 import pos.app.generated.resources.product_movement_report
+import pos.app.generated.resources.stock_transfer_report
 
 class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Nothing> {
     override fun reduce(
@@ -34,6 +35,9 @@ class ReportsReducer : Reducer<ReportsContract.State, ReportsContract.Event, Not
                     ),
                     ReportsContract.ReportsItem(
                         Destination.ClientDebit, Res.string.client_debit_report
+                    ),
+                    ReportsContract.ReportsItem(
+                        Destination.StockTransferReport, Res.string.stock_transfer_report
                     ),
                 )
                 previousState.copy(items = reportItems) to null

@@ -7,12 +7,14 @@ import com.wael.astimal.pos.features.reports.data.repository.CustomerStatementRe
 import com.wael.astimal.pos.features.reports.data.repository.EmployeeLedgerRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.EmployeeReportRepositoryImpl
 import com.wael.astimal.pos.features.reports.data.repository.ProductMovementRepositoryImpl
+import com.wael.astimal.pos.features.reports.data.repository.StockTransferReportRepositoryImpl
 import com.wael.astimal.pos.features.reports.domain.repository.ClientDebitRepository
 import com.wael.astimal.pos.features.reports.domain.repository.CurrentStockRepository
 import com.wael.astimal.pos.features.reports.domain.repository.CustomerStatementRepository
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeLedgerRepository
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeReportRepository
 import com.wael.astimal.pos.features.reports.domain.repository.ProductMovementRepository
+import com.wael.astimal.pos.features.reports.domain.repository.StockTransferReportRepository
 import com.wael.astimal.pos.features.reports.presentation.client_debit.ClientDebitViewModel
 import com.wael.astimal.pos.features.reports.presentation.current_stock.CurrentStockViewModel
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementViewModel
@@ -20,6 +22,7 @@ import com.wael.astimal.pos.features.reports.presentation.employee_ledger.Employ
 import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportViewModel
 import com.wael.astimal.pos.features.reports.presentation.product_movement.ProductMovementViewModel
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsViewModel
+import com.wael.astimal.pos.features.reports.presentation.stock_transfer.StockTransferReportViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -34,6 +37,7 @@ val reportsModule = module {
     singleOf(::ProductMovementRepositoryImpl) { bind<ProductMovementRepository>() }
     singleOf(::CurrentStockRepositoryImpl) { bind<CurrentStockRepository>() }
     singleOf(::ClientDebitRepositoryImpl) { bind<ClientDebitRepository>() }
+    singleOf(::StockTransferReportRepositoryImpl) { bind<StockTransferReportRepository>() }
 
     viewModelOf(::ReportsViewModel)
     viewModelOf(::CustomerStatementViewModel)
@@ -42,4 +46,5 @@ val reportsModule = module {
     viewModelOf(::ProductMovementViewModel)
     viewModelOf(::CurrentStockViewModel)
     viewModelOf(::ClientDebitViewModel)
+    viewModelOf(::StockTransferReportViewModel)
 }

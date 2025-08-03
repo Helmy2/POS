@@ -93,5 +93,8 @@ sealed class Destination {
     data object ClientDebit : Destination()
 
     @Serializable
+    data object StockTransferReport : Destination()
+
+    @Serializable
     data object Employee : Destination()
 }
