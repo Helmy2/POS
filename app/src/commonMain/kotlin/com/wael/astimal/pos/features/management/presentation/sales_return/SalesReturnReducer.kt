@@ -245,6 +245,14 @@ class SalesReturnReducer() :
                 ) to null
             }
 
+            is SalesReturnContract.Event.PdfGenerationFinished -> previousState.copy(
+                pdfHtmlToGenerate = null
+            ) to null
+
+            is SalesReturnContract.Event.PdfGenerationSuccess -> previousState.copy(
+                pdfHtmlToGenerate = event.html
+            ) to null
+
 
             else -> previousState to null
         }

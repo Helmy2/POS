@@ -15,8 +15,10 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
@@ -147,8 +149,13 @@ class HtmlReportGenerator(
         val textAlign = if (isRtl) "right" else "left"
 
         val amountDue = invoice.totalAmount - invoice.paidAmount
-        val orderDate = Instant.fromEpochMilliseconds(invoice.orderDate)
-            .toLocalDateTime(TimeZone.UTC).date
+
+        val format = LocalDateTime.Format {
+            byUnicodePattern("yyyy-MM-dd HH:MM")
+        }
+        val date = Instant.fromEpochMilliseconds(invoice.orderDate)
+            .toLocalDateTime(TimeZone.UTC)
+        val orderDate = format.format(date)
 
         return """
     <!DOCTYPE html>
@@ -183,10 +190,7 @@ class HtmlReportGenerator(
                 <div class="invoice-details">
                     <b>${labels["invoice_no"]}</b> ${invoice.id.substring(0, 8)}<br>
                     <b>${labels["date"]}</b> ${
-            formatDate(
-                orderDate,
-                if (isRtl) Language.Arabic else Language.English
-            )
+            orderDate
         }<br>
                     <b>${labels["store"]}</b> ${if (isRtl) invoice.store.name.arName else invoice.store.name.enName}
                 </div>
@@ -214,8 +218,7 @@ class HtmlReportGenerator(
                 <tbody>
                     $itemRows
                 </tbody>
-            </table>
-            <div class="totals">
+                <div class="totals">
                 <table>
                     <tr>
                         <td class="label">${labels["subtotal"]}:</td>
@@ -231,6 +234,7 @@ class HtmlReportGenerator(
                     </tr>
                 </table>
             </div>
+            </table>
         </div>
     </body>
     </html>

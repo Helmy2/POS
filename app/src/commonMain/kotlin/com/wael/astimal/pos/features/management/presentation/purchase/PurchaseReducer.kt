@@ -244,6 +244,14 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                 ) to null
             }
 
+            is PurchaseContract.Event.PdfGenerationFinished -> previousState.copy(
+                pdfHtmlToGenerate = null
+            ) to null
+
+            is PurchaseContract.Event.PdfGenerationSuccess -> previousState.copy(
+                pdfHtmlToGenerate = event.html
+            ) to null
+
 
             else -> previousState to null
         }

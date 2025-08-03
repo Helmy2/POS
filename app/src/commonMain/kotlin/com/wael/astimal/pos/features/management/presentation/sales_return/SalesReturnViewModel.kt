@@ -7,6 +7,7 @@ import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -47,6 +48,7 @@ class SalesReturnViewModel(
     private val stockRepository: StockRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController,
+    private val htmlReportGenerator: HtmlReportGenerator,
 ) : BaseViewModel<SalesReturnContract.State, SalesReturnContract.Event, Nothing>(
     reducer = SalesReturnReducer(),
     initialState = SalesReturnContract.State(
@@ -134,6 +136,12 @@ class SalesReturnViewModel(
 
             is SalesReturnContract.Event.LoadInitialInvoice -> {
                 loadInitialInvoice(event.id)
+            }
+
+            is SalesReturnContract.Event.GeneratePdf -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    generatePdf(event.invoice)
+                }
             }
 
             else -> setState(event)
@@ -272,5 +280,13 @@ class SalesReturnViewModel(
         viewModelScope.launch {
             navigationController.navigateBack()
         }
+    }
+
+    private suspend fun generatePdf(
+        invoice: Invoice
+    ) {
+        val html = htmlReportGenerator.createInvoiceHtml(invoice = invoice)
+
+        setState(SalesReturnContract.Event.PdfGenerationSuccess(html))
     }
 }

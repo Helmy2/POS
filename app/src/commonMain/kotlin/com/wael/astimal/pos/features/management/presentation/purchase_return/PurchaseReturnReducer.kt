@@ -245,6 +245,14 @@ class PurchaseReturnReducer() :
                 ) to null
             }
 
+            is PurchaseReturnContract.Event.PdfGenerationFinished -> previousState.copy(
+                pdfHtmlToGenerate = null
+            ) to null
+
+            is PurchaseReturnContract.Event.PdfGenerationSuccess -> previousState.copy(
+                pdfHtmlToGenerate = event.html
+            ) to null
+
 
             else -> previousState to null
         }

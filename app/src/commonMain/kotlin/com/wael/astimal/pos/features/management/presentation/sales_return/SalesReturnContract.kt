@@ -39,7 +39,8 @@ object SalesReturnContract {
         val isSearchActive: Boolean = false,
         val currentUser: User? = null,
         val dropdownData: DropdownData = DropdownData(),
-        val currentOrderInput: EditableOrder
+        val currentOrderInput: EditableOrder,
+        val pdfHtmlToGenerate: String? = null,
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
         val canSave: Boolean
@@ -86,5 +87,9 @@ object SalesReturnContract {
         data object DeleteSucceeded : Event
         data object LoadingStarted : Event
         data object LoadingFinished : Event
+
+        data object PdfGenerationFinished : Event
+        data class GeneratePdf(val invoice: Invoice) : Event
+        data class PdfGenerationSuccess(val html: String) : Event
     }
 }

@@ -1,6 +1,8 @@
 package com.wael.astimal.pos.features.management.presentation.purchase_return
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,11 +16,13 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.client
+import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.order_to_with_args
 import pos.app.generated.resources.stores
 
@@ -29,6 +33,12 @@ fun PurchaseReturnRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredReturns by viewModel.filteredOrdersState.collectAsStateWithLifecycle()
+
+    PdfGeneratorEffect(
+        htmlContent = state.pdfHtmlToGenerate,
+        baseFileName = "purchase_return_report",
+        onFinish = { viewModel.processEvent(PurchaseReturnContract.Event.PdfGenerationFinished) }
+    )
 
     LaunchedEffect(Unit) {
         viewModel.processEvent(PurchaseReturnContract.Event.LoadInitialInvoice(invoiceId))
@@ -81,6 +91,17 @@ fun PurchaseReturnScreen(
             )
         },
         mainContent = {
+            if (state.selectedOrder != null) {
+                item {
+                    Button(
+                        {
+                            onEvent(PurchaseReturnContract.Event.GeneratePdf(state.selectedOrder))
+                        }
+                    ) {
+                        Text(text = stringResource(Res.string.generate_pdf))
+                    }
+                }
+            }
             item {
                 DataPicker(
                     selectedDateMillis = orderInput.date,
