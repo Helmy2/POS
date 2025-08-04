@@ -4,23 +4,17 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
  * Manages the last synchronization timestamp.
  */
 interface SyncManager {
-    /**
-     * A flow that emits the last saved sync date string in the required API format.
-     * Returns a default past date if no sync has ever occurred.
-     */
-    fun getLastSyncDate(): Flow<String>
 
-    /**
-     * Updates the last sync date to the new value provided by the server.
-     */
-    suspend fun updateLastSyncDate(newDate: String)
+    suspend fun lastDeletedSyncDate(): String
+
+    suspend fun updateLastDeletedSyncDate(newDate: String)
 }
 
 class SyncManagerImpl(
@@ -28,20 +22,18 @@ class SyncManagerImpl(
 ) : SyncManager {
 
     private object PreferencesKeys {
-        val LAST_SYNC_DATE = stringPreferencesKey("last_sync_date")
+        val LAST_DELETED_SYNC_DATE = stringPreferencesKey("last_deleted_sync_date")
     }
 
-    override fun getLastSyncDate(): Flow<String> {
+    override suspend fun lastDeletedSyncDate(): String {
         return dataStore.data.map { preferences ->
-            // todo
-//            preferences[PreferencesKeys.LAST_SYNC_DATE] ?: getDefaultSyncDate()
-            getDefaultSyncDate()
-        }
+            preferences[PreferencesKeys.LAST_DELETED_SYNC_DATE] ?: getDefaultSyncDate()
+        }.first()
     }
 
-    override suspend fun updateLastSyncDate(newDate: String) {
+    override suspend fun updateLastDeletedSyncDate(newDate: String) {
         dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LAST_SYNC_DATE] = newDate
+            preferences[PreferencesKeys.LAST_DELETED_SYNC_DATE] = newDate
         }
     }
 

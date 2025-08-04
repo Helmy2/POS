@@ -1,8 +1,10 @@
 package com.wael.astimal.pos.core.util
 
+import com.wael.astimal.pos.core.data.entity.DeletedRecordResponse
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.rpc
 
 
 /**
@@ -17,9 +19,7 @@ import io.github.jan.supabase.postgrest.query.Columns
  */
 suspend inline fun <reified T : Any> SupabaseClient.fetchAll(tableName: String): Result<List<T>> {
     return try {
-        val result = this.postgrest[tableName]
-            .select(columns = Columns.ALL)
-            .decodeList<T>()
+        val result = this.postgrest[tableName].select(columns = Columns.ALL).decodeList<T>()
         Result.success(result)
     } catch (e: Exception) {
         e.printStackTrace()
@@ -37,13 +37,40 @@ suspend inline fun <reified T : Any> SupabaseClient.fetchAll(tableName: String):
  * @return A [Result] object containing the list of pushed data if successful, or an exception if an error occurs.
  */
 suspend inline fun <reified T : Any> SupabaseClient.pushAll(
-    tableName: String,
-    data: () -> List<T>
+    tableName: String, data: () -> List<T>
 ): Result<Unit> {
     return try {
-        this.postgrest[tableName]
-            .upsert(data())
+        this.postgrest[tableName].upsert(data())
         Result.success(Unit)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Result.failure(e)
+    }
+}
+
+suspend fun SupabaseClient.deleteRecordAndLog(
+    targetTableName: String, targetRecordId: String
+): Result<Unit> {
+    return try {
+        postgrest.rpc(
+            "delete_record_and_log", mapOf(
+                "target_table_name" to targetTableName, "target_record_id" to targetRecordId
+            )
+        )
+        Result.success(Unit)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Result.failure(e)
+    }
+}
+
+suspend fun SupabaseClient.pullDeletedRecords(lastSyncTimestamp: String): Result<DeletedRecordResponse> {
+    return try {
+        val result = postgrest.rpc(
+            "pull_deleted_records",
+            mapOf("last_sync_timestamp" to lastSyncTimestamp)
+        ).decodeAs<DeletedRecordResponse>()
+        Result.success(result)
     } catch (e: Exception) {
         e.printStackTrace()
         Result.failure(e)

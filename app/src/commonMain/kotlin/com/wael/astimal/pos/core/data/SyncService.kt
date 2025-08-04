@@ -2,6 +2,7 @@ package com.wael.astimal.pos.core.data
 
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.util.fetchAll
+import com.wael.astimal.pos.core.util.pullDeletedRecords
 import com.wael.astimal.pos.core.util.pushAll
 import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
@@ -34,7 +35,17 @@ import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
@@ -55,9 +66,51 @@ class SyncServiceImpl(
     private val navigationController: NavigationController
 ) : SyncService {
 
+    private var realtimeJob: Job? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
+    override fun startRealtimeDeletionsListener() {
+        // Ensure we don't have multiple listeners running
+        stopRealtimeDeletionsListener()
+        try {
+            val channel = supabaseClient.channel("deleted_records_listener")
+
+            val changeFlow = channel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
+                table = "deleted_records"
+            }
+
+            realtimeJob = changeFlow.onEach { insertAction ->
+                pullDeletedRecords()
+            }.catch { e ->
+                e.printStackTrace()
+            }.launchIn(coroutineScope)
+
+            coroutineScope.launch {
+                channel.subscribe()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun stopRealtimeDeletionsListener() {
+        realtimeJob?.cancel()
+        realtimeJob = null
+    }
+
+    suspend fun pullDeletedRecords() {
+        supabaseClient.pullDeletedRecords(
+            lastSyncTimestamp = syncManager.getLastDelSyncDate().first()
+        ).onSuccess {
+            syncManager.updateLastDeletedSyncDate(it.lastSyncTimestamp)
+        }
+    }
+
     override suspend fun performFullSync(): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
+                pullDeletedRecords()
+
                 supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
                     userRepository.syncWithServer(
                         it.map { profileDto -> profileDto.toEntity() },
@@ -240,4 +293,5 @@ class SyncServiceImpl(
 
 interface SyncService {
     suspend fun performFullSync(): Result<Unit>
+    fun startRealtimeDeletionsListener()
 }

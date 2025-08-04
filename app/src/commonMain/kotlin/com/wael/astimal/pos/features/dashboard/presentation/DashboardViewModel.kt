@@ -30,6 +30,7 @@ class DashboardViewModel(
 ) {
 
     init {
+        syncService.startRealtimeDeletionsListener()
         handleEvent(DashboardContract.Event.PreformSync)
         loadDashboardData()
     }
