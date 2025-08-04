@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.reports.presentation.current_stock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -99,8 +99,10 @@ fun CurrentStockScreen(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
-        // --- Filters ---
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             CustomExposedDropdownMenu(
                 label = stringResource(Res.string.select_product),
                 items = listOf(stringResource(Res.string.all_products)) + state.products.map { it.name.get() },
@@ -109,7 +111,6 @@ fun CurrentStockScreen(
                     val productId = if (index == 0) null else state.products[index - 1].id
                     processEvent(CurrentStockContract.Event.SelectProduct(productId))
                 },
-                modifier = Modifier.weight(1f)
             )
             CustomExposedDropdownMenu(
                 label = stringResource(Res.string.select_store),
@@ -119,7 +120,6 @@ fun CurrentStockScreen(
                     val storeId = if (index == 0) null else state.stores[index - 1].id
                     processEvent(CurrentStockContract.Event.SelectStore(storeId))
                 },
-                modifier = Modifier.weight(1f)
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -128,7 +128,7 @@ fun CurrentStockScreen(
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(Res.string.apply_filters)) }
         Spacer(Modifier.height(16.dp))
-        Divider()
+        HorizontalDivider()
 
         // --- Report Data ---
         if (state.isLoading) {

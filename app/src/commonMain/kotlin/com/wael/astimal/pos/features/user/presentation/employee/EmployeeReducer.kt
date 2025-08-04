@@ -41,7 +41,8 @@ class EmployeeReducer :
                 enName = event.employee.localizedName.enName ?: "",
                 password = "",
                 confirmPassword = "",
-                isSearchActive = false
+                isSearchActive = false,
+                canHandlePrivatePartner = event.employee.canHandlePrivatePartner
             ) to null
 
             // User Actions
