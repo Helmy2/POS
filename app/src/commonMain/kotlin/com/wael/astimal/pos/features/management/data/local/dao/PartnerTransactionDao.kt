@@ -58,7 +58,7 @@ interface PartnerTransactionDao {
     suspend fun getAllDeletedTransactions(): List<PartnerTransactionWithDetails>
 
     @Query("DELETE FROM partner_transactions WHERE localId = :id")
-    suspend fun hardDeleteTransactionById(id: String)
+    suspend fun hardDelete(id: String)
 
     @Query("DELETE FROM partner_transactions WHERE invoiceId = :id")
     suspend fun deleteTransactionsByInvoiceId(id: String)
@@ -89,4 +89,7 @@ interface PartnerTransactionDao {
         startDate: Long,
         endDate: Long
     ): Flow<List<PartnerTransactionWithDetails>>
+
+    @Query("SELECT * FROM partner_transactions WHERE  invoiceId = :invoiceId")
+    suspend fun getTransactionsByInvoiceId(invoiceId: String): List<PartnerTransactionEntity>
 }

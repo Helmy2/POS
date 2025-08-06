@@ -10,6 +10,6 @@ interface EmployeeTransactionRepository {
     suspend fun deleteManualPayment(transactionId: String): Result<Unit>
     suspend fun getUnsyncedTransactions(): Result<List<EmployeeTransaction>>
     suspend fun getAllDeletedTransactions(): Result<List<EmployeeTransaction>>
-    suspend fun hardDeleteByServerId(serverId: String): Result<Unit>
     suspend fun syncWithServer(entities: List<EmployeeTransactionEntity>): Result<Unit>
+    suspend fun deleteAll(ids: List<String>): Result<Unit>
 }

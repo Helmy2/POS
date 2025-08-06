@@ -116,4 +116,7 @@ interface InvoiceDao {
         startDate: Long, endDate: Long
     ): Flow<List<InvoiceWithItems>>
 
+
+    @Query("SELECT * FROM invoice_items WHERE invoiceId = :invoiceId")
+    suspend fun getInvoiceItemsByInvoiceId(invoiceId: String): List<InvoiceItemEntity>
 }

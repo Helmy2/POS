@@ -21,8 +21,8 @@ interface UnitDao {
     @Query("SELECT * FROM units WHERE NOT isDeletedLocally AND localId = :serverId LIMIT 1")
     suspend fun getUnitByServerId(serverId: String): UnitEntity?
 
-    @Query("DELETE FROM units WHERE localId = :localId")
-    suspend fun deleteUnitByLocalId(localId: String)
+    @Query("DELETE FROM units WHERE localId = :id")
+    suspend fun hardDelete(id: String)
 
     @Query("UPDATE units SET isDeletedLocally = 1")
     suspend fun deleteAll()

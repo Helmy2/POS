@@ -39,8 +39,8 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
     suspend fun getProductById(id: String): ProductWithDetails?
 
-    @Query("DELETE FROM products WHERE localId = :localId")
-    suspend fun deleteProductById(localId: String)
+    @Query("DELETE FROM products WHERE localId = :id")
+    suspend fun hardDelete(id: String)
 
     @Query("UPDATE products SET  isSynced = 0, averagePurchasePrice = :newCost WHERE localId = :id")
     suspend fun updateAverageCost(id: String, newCost: Double)

@@ -12,4 +12,5 @@ interface ProductRepository {
     suspend fun syncWithServer(productsDto: List<ProductEntity>): Result<Unit>
     suspend fun getProductByServerId(serverId: String): Result<Product>
     suspend fun getUnsyncedProducts(): Result<List<Product>>
+    suspend fun deleteAll(ids: List<String>): Result<Unit>
 }

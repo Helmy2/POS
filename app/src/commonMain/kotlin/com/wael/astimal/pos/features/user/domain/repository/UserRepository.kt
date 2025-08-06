@@ -31,4 +31,6 @@ interface UserRepository {
     ): Result<Unit>
 
     suspend fun getAdmin(): User?
+
+    suspend fun deleteAll(ids: List<String>): Result<Unit>
 }

@@ -105,4 +105,13 @@ interface StockTransferDao {
 
     @Query("UPDATE stock_transfer_items SET isDeletedLocally = 1")
     suspend fun deleteAllStockTransferItems()
+
+    @Query("Delete FROM stock_transfer_items WHERE localId = :id")
+    suspend fun hardDeleteStockTransferItem(id: String)
+
+    @Query("Delete FROM stock_transfers WHERE localId = :id")
+    suspend fun hardDeleteStockTransfer(id: String)
+
+    @Query("SELECT * FROM stock_transfer_items WHERE stockTransferLocalId = :transferLocalId")
+    suspend fun getItemsForTransfer(transferLocalId: String): List<StockTransferItemEntity>
 }

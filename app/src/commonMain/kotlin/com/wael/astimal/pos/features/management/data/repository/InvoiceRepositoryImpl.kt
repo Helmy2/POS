@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
@@ -24,7 +25,6 @@ import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -86,20 +86,20 @@ class InvoiceRepositoryImpl(
 
             val newCost =
                 if (invoice.invoiceType == InvoiceType.PURCHASE || invoice.invoiceType == InvoiceType.SALES_RETURN) {
-                val newTotalQuantity = currentQuantity + item.quantity
-                if (newTotalQuantity > 0) {
-                    ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / newTotalQuantity
-                } else {
-                    currentCost
+                    val newTotalQuantity = currentQuantity + item.quantity
+                    if (newTotalQuantity > 0) {
+                        ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / newTotalQuantity
+                    } else {
+                        currentCost
+                    }
+                } else { // PURCHASE_RETURN
+                    val newTotalQuantity = currentQuantity - item.quantity
+                    if (newTotalQuantity <= 0) {
+                        currentCost
+                    } else {
+                        ((currentCost * currentQuantity) - (item.unitPrice * item.quantity)) / newTotalQuantity
+                    }
                 }
-            } else { // PURCHASE_RETURN
-                val newTotalQuantity = currentQuantity - item.quantity
-                if (newTotalQuantity <= 0) {
-                    currentCost
-                } else {
-                    ((currentCost * currentQuantity) - (item.unitPrice * item.quantity)) / newTotalQuantity
-                }
-            }
             productDao.updateAverageCost(item.product.id, newCost)
         }
     }
@@ -115,20 +115,20 @@ class InvoiceRepositoryImpl(
 
             val revertedCost =
                 if (invoice.invoiceType == InvoiceType.PURCHASE || invoice.invoiceType == InvoiceType.SALES_RETURN) {
-                val originalQuantity = currentQuantity - item.quantity
-                if (originalQuantity <= 0) {
-                    0.0
-                } else {
-                    ((currentCost * currentQuantity) - (item.unitPrice * item.quantity)) / originalQuantity
+                    val originalQuantity = currentQuantity - item.quantity
+                    if (originalQuantity <= 0) {
+                        0.0
+                    } else {
+                        ((currentCost * currentQuantity) - (item.unitPrice * item.quantity)) / originalQuantity
+                    }
+                } else { // PURCHASE_RETURN
+                    val originalQuantity = currentQuantity + item.quantity
+                    if (originalQuantity > 0) {
+                        ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / originalQuantity
+                    } else {
+                        currentCost
+                    }
                 }
-            } else { // PURCHASE_RETURN
-                val originalQuantity = currentQuantity + item.quantity
-                if (originalQuantity > 0) {
-                    ((currentCost * currentQuantity) + (item.unitPrice * item.quantity)) / originalQuantity
-                } else {
-                    currentCost
-                }
-            }
             productDao.updateAverageCost(item.product.id, revertedCost)
         }
     }
@@ -204,19 +204,39 @@ class InvoiceRepositoryImpl(
                 val invoiceToDelete = invoiceDao.getInvoiceById(orderId).toDomain()
                 revertProductsAveragePrice(invoiceToDelete)
 
-                supabaseClient.from("invoice_items").delete { filter { eq("invoice_id", orderId) } }
-                supabaseClient.from("stock_adjustments")
-                    .delete { filter { eq("invoice_id", orderId) } }
-                supabaseClient.from("partner_transactions")
-                    .delete { filter { eq("invoice_id", orderId) } }
-                supabaseClient.from("employee_transactions")
-                    .delete { filter { eq("invoice_id", orderId) } }
-                supabaseClient.from("invoices").delete { filter { eq("id", orderId) } }
+                invoiceDao.getInvoiceItemsByInvoiceId(orderId).forEach { item ->
+                    supabaseClient.deleteRecordAndLog(
+                        targetTableName = "invoice_items",
+                        targetRecordId = item.supabaseId
+                    ).getOrThrow()
+                }
 
-                stockAdjustmentDao.deleteAdjustmentsByInvoiceId(orderId)
-                partnerTransactionDao.deleteTransactionsByInvoiceId(orderId)
-                employeeFinancesDao.deleteTransactionsByInvoiceId(orderId)
-                invoiceDao.deleteInvoiceWithItemsById(orderId)
+                stockAdjustmentDao.getAdjustmentsByInvoiceId(orderId).forEach { adjustment ->
+                    supabaseClient.deleteRecordAndLog(
+                        targetTableName = "stock_adjustments",
+                        targetRecordId = adjustment.localId
+                    ).getOrThrow()
+                }
+
+                partnerTransactionDao.getTransactionsByInvoiceId(orderId).forEach { transaction ->
+                    supabaseClient.deleteRecordAndLog(
+                        targetTableName = "partner_transactions",
+                        targetRecordId = transaction.localId
+                    ).getOrThrow()
+                }
+
+                employeeFinancesDao.getTransactionsByInvoiceId(orderId).forEach { transaction ->
+                    supabaseClient.deleteRecordAndLog(
+                        targetTableName = "employee_transactions",
+                        targetRecordId = transaction.localId
+                    ).getOrThrow()
+                }
+
+                supabaseClient.deleteRecordAndLog(
+                    targetTableName = "invoices",
+                    targetRecordId = orderId
+                ).getOrThrow()
+
                 Result.success(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -347,6 +367,17 @@ class InvoiceRepositoryImpl(
     override suspend fun getInvoiceById(id: String): Result<Invoice> {
         return runCatching {
             invoiceDao.getInvoiceById(id).toDomain()
+        }
+    }
+
+    override suspend fun deleteAll(invoiceIds: List<String>, itemsIds: List<String>): Result<Unit> {
+        return try {
+            invoiceIds.forEach { invoiceDao.hardDeleteInvoiceById(it) }
+            itemsIds.forEach { invoiceDao.hardDeleteInvoiceItemsById(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

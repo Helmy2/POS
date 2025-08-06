@@ -45,7 +45,7 @@ import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
         InvoiceEntity::class,
         InvoiceItemEntity::class
     ],
-    version = 37,
+    version = 38,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {

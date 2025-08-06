@@ -42,7 +42,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -80,6 +79,7 @@ class SyncServiceImpl(
             }
 
             realtimeJob = changeFlow.onEach { insertAction ->
+                println("Deleted record: $insertAction")
                 pullDeletedRecords()
             }.catch { e ->
                 e.printStackTrace()
@@ -100,9 +100,41 @@ class SyncServiceImpl(
 
     suspend fun pullDeletedRecords() {
         supabaseClient.pullDeletedRecords(
-            lastSyncTimestamp = syncManager.getLastDelSyncDate().first()
-        ).onSuccess {
-            syncManager.updateLastDeletedSyncDate(it.lastSyncTimestamp)
+            lastSyncTimestamp = syncManager.lastDeletedSyncDate()
+        ).onSuccess { (deletedList, lastSyncTimestamp) ->
+            val map = deletedList
+                .groupBy { it.tableName }
+
+            stockRepository.deleteAll(map["stock_adjustments"]?.map { it.recordId } ?: emptyList())
+                .getOrThrow()
+            partnerTransactionRepository.deleteAll(map["partner_transactions"]?.map { it.recordId }
+                ?: emptyList()).getOrThrow()
+            employeeTransactionRepository.deleteAll(map["employee_transactions"]?.map { it.recordId }
+                ?: emptyList()).getOrThrow()
+
+
+            stockTransferRepository.deleteAll(map["stock_transfers"]?.map { it.recordId }
+                ?: emptyList(),
+                map["stock_transfer_items"]?.map { it.recordId } ?: emptyList()).getOrThrow()
+            invoiceRepository.deleteAll(map["invoices"]?.map { it.recordId } ?: emptyList(),
+                map["invoice_items"]?.map { it.recordId } ?: emptyList())
+                .getOrThrow()
+
+
+            productRepository.deleteAll(map["products"]?.map { it.recordId } ?: emptyList())
+                .getOrThrow()
+            businessPartnerRepository.deleteAll(map["business_partners"]?.map { it.recordId }
+                ?: emptyList()).getOrThrow()
+
+            storeRepository.deleteAll(map["stores"]?.map { it.recordId } ?: emptyList())
+                .getOrThrow()
+            categoryRepository.deleteAll(map["categories"]?.map { it.recordId } ?: emptyList())
+                .getOrThrow()
+            unitRepository.deleteAll(map["units"]?.map { it.recordId } ?: emptyList()).getOrThrow()
+            userRepository.deleteAll(map["profiles"]?.map { it.recordId } ?: emptyList())
+                .getOrThrow()
+
+            syncManager.updateLastDeletedSyncDate(lastSyncTimestamp)
         }
     }
 

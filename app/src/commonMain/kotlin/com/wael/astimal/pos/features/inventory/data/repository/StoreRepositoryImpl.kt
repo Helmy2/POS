@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.inventory.data.local.dao.StoreDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -74,13 +75,14 @@ class StoreRepositoryImpl(
     }
 
     override suspend fun deleteStore(store: Store): Result<Unit> {
-        return runCatching {
-            supabaseClient.from("stores").delete {
-                filter {
-                    eq("id", store.id)
-                }
-            }
-            storeDao.deleteStoreByLocalId(store.id)
+        return try {
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "stores",
+                targetRecordId = store.id
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 
@@ -94,6 +96,16 @@ class StoreRepositoryImpl(
     override fun getStoresForUser(user: User): Flow<List<Store>> {
         return storeDao.getStoreByUserId(user.id).map {
             listOfNotNull(it?.toDomain())
+        }
+    }
+
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { storeDao.hardDelete(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

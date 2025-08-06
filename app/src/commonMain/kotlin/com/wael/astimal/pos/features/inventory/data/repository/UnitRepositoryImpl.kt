@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.inventory.data.local.dao.UnitDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -58,14 +59,12 @@ class UnitRepositoryImpl(
 
     override suspend fun deleteUnit(unit: ProductUnit): Result<Unit> {
         return try {
-            supabaseClient.from("units").delete {
-                filter {
-                    eq("id", unit.id)
-                }
-            }
-            unitDao.deleteUnitByLocalId(unit.id)
-            Result.success(Unit)
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "units",
+                targetRecordId = unit.id
+            )
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -82,6 +81,16 @@ class UnitRepositoryImpl(
     ): Result<ProductUnit> {
         return runCatching {
             unitDao.getUnitByServerId(id)?.toDomain() ?: throw Exception("Unit not found")
+        }
+    }
+
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { unitDao.hardDelete(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -10,7 +11,6 @@ import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -48,8 +48,8 @@ class StockRepositoryImpl(
     override suspend fun getStockInCurrentStore(productId: String): Double {
         return withContext(Dispatchers.IO) {
             val user = userRepository.getCurrentUser() ?: return@withContext 0.0
-            val stores = storeRepository.getStoresForUser(user)
-                .firstOrNull() ?: return@withContext 0.0
+            val stores =
+                storeRepository.getStoresForUser(user).firstOrNull() ?: return@withContext 0.0
 
             return@withContext stockAdjustmentDao.getStockInStores(stores.map { it.id }, productId)
                 ?: 0.0
@@ -59,11 +59,9 @@ class StockRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun addStockAdjustment(adjustment: StockAdjustment): Result<Unit> {
         return try {
-            val adjustmentToInsert =
-                if (adjustment.id == "")
-                    adjustment.toEntity().copy(localId = Uuid.random().toString())
-                else
-                    adjustment.toEntity()
+            val adjustmentToInsert = if (adjustment.id == "") adjustment.toEntity()
+                .copy(localId = Uuid.random().toString())
+            else adjustment.toEntity()
 
             stockAdjustmentDao.insert(adjustmentToInsert)
             Result.success(Unit)
@@ -75,13 +73,10 @@ class StockRepositoryImpl(
 
     override suspend fun deleteStockAdjustment(adjustment: StockAdjustment): Result<Unit> {
         return try {
-            supabaseClient.from("stock_adjustments").delete {
-                filter {
-                    eq("id", adjustment.id)
-                }
-            }
-            stockAdjustmentDao.deleteByServerId(adjustment.id)
-            Result.success(Unit)
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "stock_adjustments",
+                targetRecordId = adjustment.id
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
@@ -113,9 +108,9 @@ class StockRepositoryImpl(
         }
     }
 
-    override suspend fun hardDeleteByServerId(id: String): Result<Unit> {
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
         return try {
-            stockAdjustmentDao.deleteByServerId(id)
+            ids.forEach { stockAdjustmentDao.hardDelete(it) }
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()

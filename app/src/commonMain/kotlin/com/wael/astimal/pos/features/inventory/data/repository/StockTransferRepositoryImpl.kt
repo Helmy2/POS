@@ -4,6 +4,7 @@ import StockTransfer
 import StockTransferItem
 import StockTransferStatus
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
@@ -285,22 +286,22 @@ class StockTransferRepositoryImpl(
             return Result.failure(Exception("Cannot delete a rejected transfer"))
         }
         return try {
-            supabaseClient.from("stock_transfer_items").delete {
-                filter {
-                    eq("transfer_id", transferToDelete.id)
-                }
-            }
-            supabaseClient.from("stock_adjustments").delete {
-                filter { eq("transfer_id", transferToDelete.id) }
+            stockTransferDao.getItemsForTransfer(transferToDelete.id).forEach {
+                supabaseClient.deleteRecordAndLog(
+                    targetTableName = "stock_transfer_items", targetRecordId = it.localId
+                ).getOrThrow()
             }
 
-            supabaseClient.from("stock_transfers").delete {
-                filter {
-                    eq("id", transferToDelete.id)
-                }
+            stockAdjustmentDao.getAdjustmentsByTransferId(transferToDelete.id).forEach {
+                supabaseClient.deleteRecordAndLog(
+                    targetTableName = "stock_adjustments", targetRecordId = it.localId
+                ).getOrThrow()
             }
-            stockTransferDao.hardDeleteItemsForTransfer(transferToDelete.id)
-            stockTransferDao.hardDeleteTransfer(transferToDelete.id)
+
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "stock_transfers", targetRecordId = transferToDelete.id
+            ).getOrThrow()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -355,6 +356,20 @@ class StockTransferRepositoryImpl(
             // 4. Handle any errors
             e.printStackTrace()
             println("Error invoking function: ${e.message}")
+        }
+    }
+
+    override suspend fun deleteAll(
+        transferIds: List<String>,
+        transferItemIds: List<String>
+    ): Result<Unit> {
+        return try {
+            transferItemIds.forEach { stockTransferDao.hardDeleteStockTransferItem(it) }
+            transferIds.forEach { stockTransferDao.hardDeleteStockTransfer(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

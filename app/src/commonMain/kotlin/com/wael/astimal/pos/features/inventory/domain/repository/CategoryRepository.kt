@@ -9,5 +9,5 @@ interface CategoryRepository {
     suspend fun saveCategory(category: Category): Result<Long>
     suspend fun deleteCategory(category: Category): Result<Unit>
     suspend fun syncWithServer(entities: List<CategoryEntity>): Result<Unit>
-    suspend fun getCategoryByServerId(id: String): Result<Category>
+    suspend fun deleteAll(ids: List<String>): Result<Unit>
 }

@@ -44,4 +44,5 @@ interface StockTransferRepository {
 
     suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit>
     suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit>
+    suspend fun deleteAll(transferIds: List<String>, transferItemIds: List<String>): Result<Unit>
 }

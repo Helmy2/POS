@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -65,14 +66,12 @@ class ProductRepositoryImpl(
 
     override suspend fun deleteProduct(product: Product): Result<Unit> {
         return try {
-            supabaseClient.from("products").delete {
-                filter {
-                    eq("id", product.id)
-                }
-            }
-            productDao.deleteProductById(product.id)
-            Result.success(Unit)
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "products",
+                targetRecordId = product.id
+            )
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -96,6 +95,15 @@ class ProductRepositoryImpl(
     override suspend fun getUnsyncedProducts(): Result<List<Product>> {
         return try {
             Result.success(productDao.getUnsyncedProducts().map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { productDao.hardDelete(it) }
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

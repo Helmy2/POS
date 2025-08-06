@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.management.data.local.dao.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
@@ -10,7 +11,6 @@ import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -85,24 +85,10 @@ class BusinessPartnerRepositoryImpl(
 
     override suspend fun deleteBusinessPartner(partner: BusinessPartner): Result<Unit> {
         return try {
-            supabaseClient.from("business_partners").delete {
-                filter {
-                    eq("id", partner.id)
-                }
-            }
-            partnerDao.hardDeletePartnerByServerId(partner.id)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Result.failure(e)
-        }
-    }
-
-
-    override suspend fun hardDeleteByServerId(serverId: String): Result<Unit> {
-        return try {
-            partnerDao.hardDeletePartnerByServerId(serverId)
-            Result.success(Unit)
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "business_partners",
+                targetRecordId = partner.id
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
@@ -140,6 +126,16 @@ class BusinessPartnerRepositoryImpl(
     override suspend fun getBusinessPartnerByServerId(serverId: String): Result<BusinessPartnerEntity?> {
         return runCatching {
             partnerDao.getPartnerBySeverId(serverId) ?: throw Exception("Partner not found")
+        }
+    }
+
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { partnerDao.hardDelete(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

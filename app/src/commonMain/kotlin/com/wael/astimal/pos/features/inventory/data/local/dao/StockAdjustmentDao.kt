@@ -27,14 +27,14 @@ interface StockAdjustmentDao {
     @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE NOT isDeletedLocally AND productId = :productId")
     suspend fun getStockTotalQuantity(productId: String): Double?
 
-    @Query("SELECT * FROM stock_adjustments")
+    @Query("SELECT * FROM stock_adjustments WHERE NOT isDeletedLocally")
     fun getAll(): Flow<List<StockAdjustmentWithDetails>>
 
     @Query("UPDATE stock_adjustments SET isDeletedLocally = 1 WHERE NOT isDeletedLocally AND localId = :id")
     suspend fun softDeleteByLocalId(id: String)
 
-    @Query("DELETE FROM stock_adjustments WHERE NOT isDeletedLocally AND localId = :id")
-    suspend fun deleteByServerId(id: String)
+    @Query("DELETE FROM stock_adjustments WHERE localId = :id")
+    suspend fun hardDelete(id: String)
 
     @Query("SELECT * FROM stock_adjustments WHERE NOT isDeletedLocally AND NOT isSynced")
     suspend fun getAllUnSynced(): List<StockAdjustmentWithDetails>
@@ -53,4 +53,11 @@ interface StockAdjustmentDao {
 
     @Query("SELECT sum(quantityChange) FROM stock_adjustments WHERE NOT isDeletedLocally AND storeId IN (:storesId) AND productId = :productId")
     suspend fun getStockInStores(storesId: List<String>, productId: String): Double?
+
+    @Query("SELECT * FROM stock_adjustments WHERE transactionId = :transferId")
+    suspend fun getAdjustmentsByTransferId(transferId: String): List<StockAdjustmentEntity>
+
+    @Query("SELECT * FROM stock_adjustments WHERE invoiceId = :invoiceId")
+    suspend fun getAdjustmentsByInvoiceId(invoiceId: String): List<StockAdjustmentEntity>
+
 }

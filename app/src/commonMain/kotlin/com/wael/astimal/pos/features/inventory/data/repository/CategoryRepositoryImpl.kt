@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.inventory.data.local.dao.CategoryDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
@@ -60,13 +61,10 @@ class CategoryRepositoryImpl(
 
     override suspend fun deleteCategory(category: Category): Result<Unit> {
         return try {
-            supabaseClient.from("categories").delete {
-                filter {
-                    eq("id", category.id)
-                }
-            }
-            categoryDao.deleteCategoryById(category.id)
-            Result.success(Unit)
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "categories",
+                targetRecordId = category.id
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
@@ -80,12 +78,13 @@ class CategoryRepositoryImpl(
         }
     }
 
-    override suspend fun getCategoryByServerId(
-        id: String
-    ): Result<Category> {
-        return runCatching {
-            categoryDao.getCategoryById(id)?.toDomain()
-                ?: throw Exception("Category not found")
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { categoryDao.hardDelete(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

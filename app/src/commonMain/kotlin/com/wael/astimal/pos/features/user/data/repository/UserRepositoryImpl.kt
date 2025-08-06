@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.user.data.repository
 
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
@@ -218,12 +219,15 @@ class UserRepositoryImpl(
             adminClient().auth.admin.deleteUser(id)
 
             // Delete from Postgrest "profiles" table
-            supabaseClient.postgrest["profiles"].delete { filter { eq("id", id) } }
+            supabaseClient.deleteRecordAndLog(
+                targetTableName = "profiles",
+                targetRecordId = id
+            )
 
             // Delete from local database
             val localUser = userDao.getUserBySupabaseId(id).first()
             if (localUser != null) {
-                userDao.delete(localUser.id)
+                userDao.hardDelete(localUser.id)
             }
 
             Result.success(Unit)
@@ -246,5 +250,14 @@ class UserRepositoryImpl(
 
     override suspend fun getAdmin(): User? {
         return userDao.getAdmin()?.toDomain()
+    }
+
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { userDao.hardDelete(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

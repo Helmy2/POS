@@ -31,7 +31,7 @@ interface BusinessPartnerDao {
     suspend fun softDeletePartnerByLocalId(localId: String)
 
     @Query("DELETE FROM business_partners WHERE localId = :id")
-    suspend fun hardDeletePartnerByServerId(id: String)
+    suspend fun hardDelete(id: String)
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND NOT isSynced")

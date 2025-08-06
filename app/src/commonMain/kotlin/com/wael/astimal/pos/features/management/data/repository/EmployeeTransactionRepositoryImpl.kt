@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
@@ -8,7 +9,6 @@ import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactio
 import com.wael.astimal.pos.features.management.domain.entity.toEntity
 import com.wael.astimal.pos.features.management.domain.repository.EmployeeTransactionRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
@@ -47,13 +47,10 @@ class EmployeeTransactionRepositoryImpl(
 
     override suspend fun deleteManualPayment(transactionId: String): Result<Unit> {
         return try {
-            supabaseClient.from("employee_transactions").delete {
-                filter {
-                    eq("id", transactionId)
-                }
-            }
-            employeeFinancesDao.hardDeleteTransactionById(transactionId)
-            Result.success(Unit)
+            return supabaseClient.deleteRecordAndLog(
+                targetTableName = "employee_transactions",
+                targetRecordId = transactionId
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
@@ -72,18 +69,22 @@ class EmployeeTransactionRepositoryImpl(
         }
     }
 
-    override suspend fun hardDeleteByServerId(serverId: String): Result<Unit> {
-        return runCatching {
-            employeeFinancesDao.hardDeleteTransactionById(serverId)
-        }
-    }
-
     override suspend fun syncWithServer(entities: List<EmployeeTransactionEntity>): Result<Unit> {
         return runCatching {
             employeeFinancesDao.deleteAllTransactions()
             entities.forEach {
                 employeeFinancesDao.insertOrUpdate(it)
             }
+        }
+    }
+
+    override suspend fun deleteAll(ids: List<String>): Result<Unit> {
+        return try {
+            ids.forEach { employeeFinancesDao.hardDelete(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

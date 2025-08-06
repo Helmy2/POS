@@ -32,7 +32,7 @@ interface EmployeeFinancesDao {
     suspend fun getAllDeletedTransactions(): List<EmployeeTransactionWithDetailsEntity>
 
     @Query("DELETE FROM employee_account_transactions WHERE localId = :id")
-    suspend fun hardDeleteTransactionById(id: String)
+    suspend fun hardDelete(id: String)
 
     @Query("SELECT * FROM employee_account_transactions WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
     suspend fun getTransactionBySeverId(id: String): EmployeeTransactionEntity?
@@ -53,4 +53,7 @@ interface EmployeeFinancesDao {
         start: Long,
         end: Long
     ): Flow<List<EmployeeTransactionWithDetailsEntity>>
+
+    @Query("SELECT * FROM employee_account_transactions WHERE invoiceId = :invoiceId")
+    suspend fun getTransactionsByInvoiceId(invoiceId: String): List<EmployeeTransactionEntity>
 }

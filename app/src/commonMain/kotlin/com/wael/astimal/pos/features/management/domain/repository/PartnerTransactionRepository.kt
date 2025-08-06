@@ -11,5 +11,5 @@ interface PartnerTransactionRepository {
     suspend fun syncWithServer(entities: List<PartnerTransactionEntity>): Result<Unit>
     suspend fun getUnsyncedTransactions(): Result<List<ReceivePayVoucher>>
     suspend fun getAllDeletedTransactions(): Result<List<ReceivePayVoucher>>
-    suspend fun hardDeleteByServerId(serverId: String): Result<Unit>
+    suspend fun deleteAll(ids: List<String>): Result<Unit>
 }

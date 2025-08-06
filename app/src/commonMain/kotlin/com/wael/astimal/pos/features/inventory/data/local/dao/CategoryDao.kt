@@ -22,7 +22,7 @@ interface CategoryDao {
     suspend fun upsertAll(categories: List<CategoryEntity>)
 
     @Query("DELETE FROM categories WHERE localId = :localId")
-    suspend fun deleteCategoryById(localId: String)
+    suspend fun hardDelete(localId: String)
 
     @Query("UPDATE categories SET isDeletedLocally = 1")
     suspend fun deleteAll()

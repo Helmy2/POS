@@ -30,7 +30,7 @@ interface StoreDao {
     suspend fun getStoreByServerId(serverId: String): StoreWithDetails?
 
     @Query("DELETE FROM stores WHERE localId = :localId")
-    suspend fun deleteStoreByLocalId(localId: String)
+    suspend fun hardDelete(localId: String)
 
     @Transaction
     @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND employeeId = :local LIMIT 1")

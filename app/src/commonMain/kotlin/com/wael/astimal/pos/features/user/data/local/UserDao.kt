@@ -27,7 +27,7 @@ interface UserDao {
     suspend fun getUserById(localId: Long): UserEntity?
 
     @Query("DELETE FROM users WHERE id = :id")
-    suspend fun delete(id: String)
+    suspend fun hardDelete(id: String)
 
     @Query("SELECT * FROM users WHERE role = :role LIMIT 1")
     suspend fun getAdmin(role: UserRole = UserRole.ADMIN): UserEntity?

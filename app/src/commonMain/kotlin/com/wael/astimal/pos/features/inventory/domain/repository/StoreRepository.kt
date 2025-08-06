@@ -13,4 +13,5 @@ interface StoreRepository {
     suspend fun deleteStore(store: Store): Result<Unit>
     suspend fun syncWithServer(stores: List<StoreEntity>): Result<Unit>
     fun getStoresForUser(user: User): Flow<List<Store>>
+    suspend fun deleteAll(ids: List<String>): Result<Unit>
 }
