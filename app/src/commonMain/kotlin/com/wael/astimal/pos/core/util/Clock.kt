@@ -13,6 +13,12 @@ object Clock {
     fun now(): Long {
         return Instant.now().toEpochMilli()
     }
+
+    fun getCurrentDateTime(): String {
+        val instant = Instant.now()
+        val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+        return formatter.format(instant.atZone(ZoneId.systemDefault()))
+    }
 }
 
 /**

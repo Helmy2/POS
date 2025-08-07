@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.core.data
 
-import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.fetchAll
 import com.wael.astimal.pos.core.util.pullDeletedRecords
 import com.wael.astimal.pos.core.util.pushAll
@@ -62,25 +62,36 @@ class SyncServiceImpl(
     private val employeeTransactionRepository: EmployeeTransactionRepository,
     private val invoiceRepository: InvoiceRepository,
     private val stockTransferRepository: StockTransferRepository,
-    private val navigationController: NavigationController
 ) : SyncService {
 
-    private var realtimeJob: Job? = null
+    private var deletionListenerJob: Job? = null
+    private var listenerJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun startRealtimeDeletionsListener() {
         // Ensure we don't have multiple listeners running
         stopRealtimeDeletionsListener()
         try {
-            val channel = supabaseClient.channel("deleted_records_listener")
+            val channel = supabaseClient.channel("records_listener")
 
-            val changeFlow = channel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
-                table = "deleted_records"
-            }
+            val deletedRecordsFlow =
+                channel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
+                    table = "deleted_records"
+                }
 
-            realtimeJob = changeFlow.onEach { insertAction ->
+            val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public")
+
+
+            deletionListenerJob = deletedRecordsFlow.onEach { insertAction ->
                 println("Deleted record: $insertAction")
                 pullDeletedRecords()
+            }.catch { e ->
+                e.printStackTrace()
+            }.launchIn(coroutineScope)
+
+            listenerJob = changeFlow.onEach {
+                println("Change: $it")
+                syncAllDataWithServer()
             }.catch { e ->
                 e.printStackTrace()
             }.launchIn(coroutineScope)
@@ -94,16 +105,17 @@ class SyncServiceImpl(
     }
 
     fun stopRealtimeDeletionsListener() {
-        realtimeJob?.cancel()
-        realtimeJob = null
+        deletionListenerJob?.cancel()
+        deletionListenerJob = null
+        listenerJob?.cancel()
+        listenerJob = null
     }
 
     suspend fun pullDeletedRecords() {
         supabaseClient.pullDeletedRecords(
             lastSyncTimestamp = syncManager.lastDeletedSyncDate()
         ).onSuccess { (deletedList, lastSyncTimestamp) ->
-            val map = deletedList
-                .groupBy { it.tableName }
+            val map = deletedList.groupBy { it.tableName }
 
             stockRepository.deleteAll(map["stock_adjustments"]?.map { it.recordId } ?: emptyList())
                 .getOrThrow()
@@ -114,11 +126,10 @@ class SyncServiceImpl(
 
 
             stockTransferRepository.deleteAll(map["stock_transfers"]?.map { it.recordId }
-                ?: emptyList(),
-                map["stock_transfer_items"]?.map { it.recordId } ?: emptyList()).getOrThrow()
-            invoiceRepository.deleteAll(map["invoices"]?.map { it.recordId } ?: emptyList(),
-                map["invoice_items"]?.map { it.recordId } ?: emptyList())
+                ?: emptyList(), map["stock_transfer_items"]?.map { it.recordId } ?: emptyList())
                 .getOrThrow()
+            invoiceRepository.deleteAll(map["invoices"]?.map { it.recordId } ?: emptyList(),
+                map["invoice_items"]?.map { it.recordId } ?: emptyList()).getOrThrow()
 
 
             productRepository.deleteAll(map["products"]?.map { it.recordId } ?: emptyList())
@@ -139,46 +150,37 @@ class SyncServiceImpl(
     }
 
     override suspend fun performFullSync(): Result<Unit> {
+        return try {
+            pullDeletedRecords()
+            syncAllDataWithServer()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+
+    private suspend fun syncAllDataWithServer() {
         return withContext(Dispatchers.IO) {
             try {
-                pullDeletedRecords()
+                val lastSyncDate = syncManager.lastSyncDate()
+                syncProfile(lastSyncDate)
+                syncStore(lastSyncDate)
+                syncCategory(lastSyncDate)
+                syncUnits(lastSyncDate)
+                syncProducts(lastSyncDate)
+                syncPartner(lastSyncDate)
+                syncTransfer(lastSyncDate)
+                syncTransferItems(lastSyncDate)
+                syncInvoice(lastSyncDate)
+                syncInvoiceItems(lastSyncDate)
+                syncStockAdjustment(lastSyncDate)
+                syncPartnerTransactions(lastSyncDate)
+                syncEmployeesTransactions(lastSyncDate)
 
-                supabaseClient.fetchAll<ProfileDto>("profiles").getOrThrow().also {
-                    userRepository.syncWithServer(
-                        it.map { profileDto -> profileDto.toEntity() },
-                    )
-                }
-
-                supabaseClient.fetchAll<StoreDto>("stores").getOrThrow().also {
-                    storeRepository.syncWithServer(
-                        it.map { storeDto ->
-                            storeDto.toEntity()
-                        },
-                    )
-                }
-
-                supabaseClient.fetchAll<CategoryDto>("categories").getOrThrow().also {
-                    categoryRepository.syncWithServer(
-                        it.map { categoryDto -> categoryDto.toEntity() })
-                }
-
-                supabaseClient.fetchAll<UnitDto>("units").getOrThrow().also {
-                    unitRepository.syncWithServer(
-                        it.map { unitDto -> unitDto.toEntity() })
-                }
-
-                syncProducts()
-                syncPartner()
-
-
-                syncTransfer()
-                syncTransferItems()
-                syncInvoice()
-                syncInvoiceItems()
-                syncStockAdjustment()
-                syncPartnerTransactions()
-                syncEmployeesTransactions()
-
+                val currentDateTime = Clock.getCurrentDateTime()
+                syncManager.updateLastSyncDate(currentDateTime)
                 Result.success(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -187,18 +189,50 @@ class SyncServiceImpl(
         }
     }
 
-    private suspend fun syncTransferItems() {
-        supabaseClient.fetchAll<StockTransferItemDto>("stock_transfer_items").getOrThrow().also {
-            stockTransferRepository.syncTransfersItems(
-                it.map { item ->
-                    item.toEntity()
-                }
+    private suspend fun syncProfile(updatedAt: String) {
+        supabaseClient.fetchAll<ProfileDto>("profiles", updatedAt).getOrThrow().also {
+            userRepository.syncWithServer(
+                it.map { profileDto -> profileDto.toEntity() },
             )
         }
     }
 
-    private suspend fun syncTransfer() {
-        supabaseClient.fetchAll<StockTransferDto>("stock_transfers").getOrThrow().also {
+    private suspend fun syncStore(updatedAt: String) {
+        supabaseClient.fetchAll<StoreDto>("stores", updatedAt).getOrThrow().also {
+            storeRepository.syncWithServer(
+                it.map { storeDto ->
+                    storeDto.toEntity()
+                },
+            )
+        }
+    }
+
+    private suspend fun syncCategory(updatedAt: String) {
+        supabaseClient.fetchAll<CategoryDto>("categories", updatedAt).getOrThrow().also {
+            categoryRepository.syncWithServer(
+                it.map { categoryDto -> categoryDto.toEntity() })
+        }
+    }
+
+    private suspend fun syncUnits(updatedAt: String) {
+        supabaseClient.fetchAll<UnitDto>("units", updatedAt).getOrThrow().also {
+            unitRepository.syncWithServer(
+                it.map { unitDto -> unitDto.toEntity() })
+        }
+    }
+
+    private suspend fun syncTransferItems(updatedAt: String) {
+        supabaseClient.fetchAll<StockTransferItemDto>("stock_transfer_items", updatedAt)
+            .getOrThrow().also {
+            stockTransferRepository.syncTransfersItems(
+                it.map { item ->
+                    item.toEntity()
+                })
+        }
+    }
+
+    private suspend fun syncTransfer(updatedAt: String) {
+        supabaseClient.fetchAll<StockTransferDto>("stock_transfers", updatedAt).getOrThrow().also {
             stockTransferRepository.syncTransfers(
                 it.map { transfer ->
                     transfer.toEntity()
@@ -207,14 +241,14 @@ class SyncServiceImpl(
         }
     }
 
-    private suspend fun syncProducts() {
+    private suspend fun syncProducts(updatedAt: String) {
         productRepository.getUnsyncedProducts().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<ProductDto>("products") { it }
         }
 
-        supabaseClient.fetchAll<ProductDto>("products").getOrThrow().also {
+        supabaseClient.fetchAll<ProductDto>("products", updatedAt).getOrThrow().also {
             productRepository.syncWithServer(
                 it.map { unitDto ->
                     unitDto.toEntity()
@@ -223,14 +257,14 @@ class SyncServiceImpl(
         }
     }
 
-    private suspend fun syncInvoiceItems() {
+    private suspend fun syncInvoiceItems(updatedAt: String) {
         invoiceRepository.getUnsyncedInvoicesItems().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<ItemDto>("invoice_items") { it }
         }?.getOrThrow()
 
-        supabaseClient.fetchAll<ItemDto>("invoice_items").getOrThrow().also {
+        supabaseClient.fetchAll<ItemDto>("invoice_items", updatedAt).getOrThrow().also {
             invoiceRepository.syncInvoicesItems(
                 it.map { invoiceItemDto ->
                     invoiceItemDto.toEntity()
@@ -239,14 +273,14 @@ class SyncServiceImpl(
         }
     }
 
-    private suspend fun syncInvoice() {
+    private suspend fun syncInvoice(updatedAt: String) {
         invoiceRepository.getUnsyncedInvoices().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<InvoiceDto>("invoices") { it }
         }?.getOrThrow()
 
-        supabaseClient.fetchAll<InvoiceDto>("invoices").getOrThrow().also {
+        supabaseClient.fetchAll<InvoiceDto>("invoices", updatedAt).getOrThrow().also {
             invoiceRepository.syncInvoices(
                 it.map { invoiceDto ->
                     invoiceDto.toEntity()
@@ -255,23 +289,24 @@ class SyncServiceImpl(
         }
     }
 
-    private suspend fun syncStockAdjustment() {
+    private suspend fun syncStockAdjustment(updatedAt: String) {
         stockRepository.getAllUnSynced().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<StockAdjustmentDto>("stock_adjustments") { it }
         }?.getOrThrow()
 
-        supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments").getOrThrow().also {
-            stockRepository.syncWithServer(
-                it.map { stockAdjustmentDto ->
-                    stockAdjustmentDto.toEntity()
-                },
-            )
-        }
+        supabaseClient.fetchAll<StockAdjustmentDto>("stock_adjustments", updatedAt).getOrThrow()
+            .also {
+                stockRepository.syncWithServer(
+                    it.map { stockAdjustmentDto ->
+                        stockAdjustmentDto.toEntity()
+                    },
+                )
+            }
     }
 
-    private suspend fun syncPartner() {
+    private suspend fun syncPartner(updatedAt: String) {
         businessPartnerRepository.getAllUnSynced().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
@@ -279,24 +314,25 @@ class SyncServiceImpl(
         }?.getOrThrow()
 
 
-        supabaseClient.fetchAll<BusinessPartnerDto>("business_partners").getOrThrow().also {
-            businessPartnerRepository.syncWithServer(
-                it.map { businessPartnerDto ->
-                    businessPartnerDto.toEntity()
-                },
-            )
-        }
+        supabaseClient.fetchAll<BusinessPartnerDto>("business_partners", updatedAt).getOrThrow()
+            .also {
+                businessPartnerRepository.syncWithServer(
+                    it.map { businessPartnerDto ->
+                        businessPartnerDto.toEntity()
+                    },
+                )
+            }
     }
 
-    private suspend fun syncEmployeesTransactions() {
+    private suspend fun syncEmployeesTransactions(updatedAt: String) {
         employeeTransactionRepository.getUnsyncedTransactions().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<EmployeeTransactionDto>("employee_transactions") { it }
         }?.getOrThrow()
 
-        supabaseClient.fetchAll<EmployeeTransactionDto>("employee_transactions").getOrThrow()
-            .also {
+        supabaseClient.fetchAll<EmployeeTransactionDto>("employee_transactions", updatedAt)
+            .getOrThrow().also {
                 employeeTransactionRepository.syncWithServer(
                     it.map { employeeTransactionDto ->
                         employeeTransactionDto.toEntity()
@@ -305,15 +341,15 @@ class SyncServiceImpl(
             }
     }
 
-    private suspend fun syncPartnerTransactions() {
+    private suspend fun syncPartnerTransactions(updatedAt: String) {
         partnerTransactionRepository.getUnsyncedTransactions().getOrThrow().map {
             it.toDto()
         }.takeIf { it.isNotEmpty() }?.let {
             supabaseClient.pushAll<PartnerTransactionDto>("partner_transactions") { it }
         }?.getOrThrow()
 
-        supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions").getOrThrow()
-            .also {
+        supabaseClient.fetchAll<PartnerTransactionDto>("partner_transactions", updatedAt)
+            .getOrThrow().also {
                 partnerTransactionRepository.syncWithServer(
                     it.map { partnerTransactionDto ->
                         partnerTransactionDto.toEntity()

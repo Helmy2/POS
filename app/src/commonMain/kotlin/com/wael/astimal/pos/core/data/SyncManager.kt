@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.map
 interface SyncManager {
 
     suspend fun lastDeletedSyncDate(): String
+    suspend fun lastSyncDate(): String
 
     suspend fun updateLastDeletedSyncDate(newDate: String)
+    suspend fun updateLastSyncDate(newDate: String)
 }
 
 class SyncManagerImpl(
@@ -23,6 +25,7 @@ class SyncManagerImpl(
 
     private object PreferencesKeys {
         val LAST_DELETED_SYNC_DATE = stringPreferencesKey("last_deleted_sync_date")
+        val LAST_SYNC_DATE = stringPreferencesKey("last_sync_date")
     }
 
     override suspend fun lastDeletedSyncDate(): String {
@@ -34,6 +37,18 @@ class SyncManagerImpl(
     override suspend fun updateLastDeletedSyncDate(newDate: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.LAST_DELETED_SYNC_DATE] = newDate
+        }
+    }
+
+    override suspend fun lastSyncDate(): String {
+        return dataStore.data.map { preferences ->
+            preferences[PreferencesKeys.LAST_SYNC_DATE] ?: getDefaultSyncDate()
+        }.first()
+    }
+
+    override suspend fun updateLastSyncDate(newDate: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LAST_SYNC_DATE] = newDate
         }
     }
 

@@ -17,9 +17,18 @@ import io.github.jan.supabase.postgrest.rpc
  * @return A [Result] object. If the operation is successful, it contains a [List] of objects of type T.
  *         If an error occurs, it contains the [Exception] that was thrown.
  */
-suspend inline fun <reified T : Any> SupabaseClient.fetchAll(tableName: String): Result<List<T>> {
+suspend inline fun <reified T : Any> SupabaseClient.fetchAll(
+    tableName: String,
+    updatedAt: String
+): Result<List<T>> {
     return try {
-        val result = this.postgrest[tableName].select(columns = Columns.ALL).decodeList<T>()
+        val result = this.postgrest[tableName]
+            .select(columns = Columns.ALL) {
+                filter {
+                    gte("updated_at", updatedAt)
+                }
+            }
+            .decodeList<T>()
         Result.success(result)
     } catch (e: Exception) {
         e.printStackTrace()
