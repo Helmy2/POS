@@ -52,7 +52,6 @@ class PartnerTransactionRepositoryImpl(
 
     override suspend fun syncWithServer(entities: List<PartnerTransactionEntity>): Result<Unit> {
         return runCatching {
-            transactionDao.deleteAll()
             entities.forEach {
                 transactionDao.insertOrUpdate(it)
             }

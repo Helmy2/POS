@@ -320,7 +320,6 @@ class InvoiceRepositoryImpl(
 
     override suspend fun syncInvoices(entities: List<InvoiceEntity>): Result<Unit> {
         return runCatching {
-            invoiceDao.deleteAllInvoices()
             entities.forEach {
                 invoiceDao.insertInvoice(it)
             }
@@ -342,7 +341,6 @@ class InvoiceRepositoryImpl(
 
     override suspend fun syncInvoicesItems(entities: List<InvoiceItemEntity>): Result<Unit> {
         return runCatching {
-            invoiceDao.deleteAllInvoiceItems()
             entities.forEach {
                 invoiceDao.insertInvoiceInvoice(it)
             }

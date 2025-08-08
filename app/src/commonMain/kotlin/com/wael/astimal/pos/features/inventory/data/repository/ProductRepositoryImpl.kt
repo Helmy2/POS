@@ -78,7 +78,6 @@ class ProductRepositoryImpl(
 
     override suspend fun syncWithServer(productsDto: List<ProductEntity>): Result<Unit> {
         return runCatching {
-            productDao.deleteAll()
             productsDto.forEach {
                 productDao.insertOrUpdate(it)
             }

@@ -14,21 +14,21 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(user: UserEntity): Long
 
-    @Query("SELECT * FROM users")
+    @Query("SELECT * FROM users WHERE NOT isDeletedLocally")
     fun getAllEmployeesFlow(): Flow<List<UserEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(users: List<UserEntity>)
 
-    @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
+    @Query("SELECT * FROM users WHERE  NOT isDeletedLocally AND id = :id LIMIT 1 ")
     fun getUserBySupabaseId(id: String): Flow<UserEntity?>
 
-    @Query("SELECT * FROM users WHERE id = :localId LIMIT 1")
+    @Query("SELECT * FROM users WHERE  NOT isDeletedLocally AND id = :localId LIMIT 1")
     suspend fun getUserById(localId: Long): UserEntity?
 
     @Query("DELETE FROM users WHERE id = :id")
     suspend fun hardDelete(id: String)
 
-    @Query("SELECT * FROM users WHERE role = :role LIMIT 1")
+    @Query("SELECT * FROM users WHERE  NOT isDeletedLocally AND role = :role LIMIT 1")
     suspend fun getAdmin(role: UserRole = UserRole.ADMIN): UserEntity?
 }

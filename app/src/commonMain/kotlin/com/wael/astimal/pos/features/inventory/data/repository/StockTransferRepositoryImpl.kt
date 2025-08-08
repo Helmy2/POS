@@ -310,7 +310,6 @@ class StockTransferRepositoryImpl(
 
     override suspend fun syncTransfers(entities: List<StockTransferEntity>): Result<Unit> {
         return runCatching {
-            stockTransferDao.deleteAllStockTransfers()
             entities.forEach {
                 stockTransferDao.insertStockOrUpdateTransfer(it)
             }

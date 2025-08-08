@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mmk.kmpnotifier.extensions.composeDesktopResourcesPath
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
+import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
@@ -23,12 +24,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.java.KoinJavaComponent.inject
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.something_went_wrong
 import java.io.File
 
 fun main() {
     initKoin()
+    val syncService: SyncService by inject(SyncService::class.java)
+    syncService.startRealtimeListener()
 
     NotifierManager.initialize(
         NotificationPlatformConfiguration.Desktop(
@@ -39,7 +43,10 @@ fun main() {
 
     application {
         Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = {
+                syncService.stopRealtimeListener()
+                exitApplication()
+            },
             title = "Pos",
         ) {
             val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
@@ -53,6 +60,9 @@ fun main() {
                     } else {
                         Result.success(Destination.Auth)
                     }
+                }
+                launch {
+                    syncService.performSync()
                 }
             }
 

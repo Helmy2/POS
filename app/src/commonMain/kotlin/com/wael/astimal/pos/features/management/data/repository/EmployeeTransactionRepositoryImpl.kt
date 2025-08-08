@@ -71,7 +71,6 @@ class EmployeeTransactionRepositoryImpl(
 
     override suspend fun syncWithServer(entities: List<EmployeeTransactionEntity>): Result<Unit> {
         return runCatching {
-            employeeFinancesDao.deleteAllTransactions()
             entities.forEach {
                 employeeFinancesDao.insertOrUpdate(it)
             }

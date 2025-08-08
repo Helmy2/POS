@@ -24,8 +24,7 @@ class BusinessPartnerRepositoryImpl(
 ) : BusinessPartnerRepository {
 
     override suspend fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
-        val canHandlePrivate =
-            userRepository.getCurrentUser()?.canHandlePrivatePartner ?: throw Exception()
+        val canHandlePrivate = userRepository.getCurrentUser()?.canHandlePrivatePartner ?: false
 
         return partnerDao.searchPartnersFlow(query).map { entities ->
             entities.map { it.toDomain() }.filter {
@@ -74,10 +73,7 @@ class BusinessPartnerRepositoryImpl(
         list: List<BusinessPartnerEntity>
     ): Result<Unit> {
         return runCatching {
-            partnerDao.deleteAll()
-            list.forEach {
-                partnerDao.insertOrUpdate(it)
-            }
+            list.forEach { partnerDao.insertOrUpdate(it) }
         }.onFailure {
             it.printStackTrace()
         }

@@ -85,7 +85,6 @@ class StockRepositoryImpl(
 
     override suspend fun syncWithServer(adjustments: List<StockAdjustmentEntity>): Result<Unit> {
         return runCatching {
-            stockAdjustmentDao.deleteAll()
             stockAdjustmentDao.upsertAll(adjustments)
         }
     }

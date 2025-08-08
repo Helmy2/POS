@@ -17,6 +17,8 @@ interface SyncManager {
 
     suspend fun updateLastDeletedSyncDate(newDate: String)
     suspend fun updateLastSyncDate(newDate: String)
+
+    suspend fun restSyncDate()
 }
 
 class SyncManagerImpl(
@@ -49,6 +51,13 @@ class SyncManagerImpl(
     override suspend fun updateLastSyncDate(newDate: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.LAST_SYNC_DATE] = newDate
+        }
+    }
+
+    override suspend fun restSyncDate() {
+        dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.LAST_SYNC_DATE)
+            preferences.remove(PreferencesKeys.LAST_DELETED_SYNC_DATE)
         }
     }
 

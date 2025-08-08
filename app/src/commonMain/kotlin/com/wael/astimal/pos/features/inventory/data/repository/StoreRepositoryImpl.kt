@@ -88,7 +88,6 @@ class StoreRepositoryImpl(
 
     override suspend fun syncWithServer(stores: List<StoreEntity>): Result<Unit> {
         return runCatching {
-            storeDao.deleteAll()
             storeDao.upsertAll(stores)
         }
     }

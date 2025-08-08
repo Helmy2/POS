@@ -13,6 +13,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.mmk.kmpnotifier.permission.permissionUtil
+import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
@@ -25,6 +26,8 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.something_went_wrong
 
 class MainActivity : ComponentActivity() {
+    val syncService: SyncService by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -32,6 +35,8 @@ class MainActivity : ComponentActivity() {
         val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
         val userRepository: UserRepository by inject()
         val permissionUtil by permissionUtil()
+
+        syncService.startRealtimeListener()
 
         permissionUtil.askNotificationPermission()
 
@@ -42,6 +47,9 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Result.success(Destination.Auth)
                 }
+            }
+            launch {
+                syncService.performSync()
             }
         }
 
@@ -65,5 +73,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        syncService.stopRealtimeListener()
     }
 }

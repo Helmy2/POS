@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.core.data
 
+import com.wael.astimal.pos.core.data.entity.DeletedRecord
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.fetchAll
 import com.wael.astimal.pos.core.util.pullDeletedRecords
@@ -37,6 +38,7 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.decodeRecordOrNull
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,34 +66,29 @@ class SyncServiceImpl(
     private val stockTransferRepository: StockTransferRepository,
 ) : SyncService {
 
-    private var deletionListenerJob: Job? = null
-    private var listenerJob: Job? = null
+    private var syncListenerJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    override fun startRealtimeDeletionsListener() {
-        // Ensure we don't have multiple listeners running
-        stopRealtimeDeletionsListener()
+    override fun startRealtimeListener() {
+        stopRealtimeListener()
         try {
-            val channel = supabaseClient.channel("records_listener")
-
-            val deletedRecordsFlow =
-                channel.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
-                    table = "deleted_records"
-                }
+            val channel = supabaseClient.channel("sync_records_listener")
 
             val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public")
 
+            syncListenerJob = changeFlow.onEach {
+                println("Sync record: $it")
+                when (it) {
+                    is PostgresAction.Insert -> {
+                        if (it.decodeRecordOrNull<DeletedRecord>() != null) {
+                            pullDeletedRecords()
+                        }
+                    }
 
-            deletionListenerJob = deletedRecordsFlow.onEach { insertAction ->
-                println("Deleted record: $insertAction")
-                pullDeletedRecords()
-            }.catch { e ->
-                e.printStackTrace()
-            }.launchIn(coroutineScope)
-
-            listenerJob = changeFlow.onEach {
-                println("Change: $it")
-                syncAllDataWithServer()
+                    else -> {
+                        syncAllDataWithServer()
+                    }
+                }
             }.catch { e ->
                 e.printStackTrace()
             }.launchIn(coroutineScope)
@@ -104,11 +101,9 @@ class SyncServiceImpl(
         }
     }
 
-    fun stopRealtimeDeletionsListener() {
-        deletionListenerJob?.cancel()
-        deletionListenerJob = null
-        listenerJob?.cancel()
-        listenerJob = null
+    override fun stopRealtimeListener() {
+        syncListenerJob?.cancel()
+        syncListenerJob = null
     }
 
     suspend fun pullDeletedRecords() {
@@ -149,10 +144,10 @@ class SyncServiceImpl(
         }
     }
 
-    override suspend fun performFullSync(): Result<Unit> {
+    override suspend fun performSync(): Result<Unit> {
         return try {
-            pullDeletedRecords()
             syncAllDataWithServer()
+            pullDeletedRecords()
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -224,11 +219,11 @@ class SyncServiceImpl(
     private suspend fun syncTransferItems(updatedAt: String) {
         supabaseClient.fetchAll<StockTransferItemDto>("stock_transfer_items", updatedAt)
             .getOrThrow().also {
-            stockTransferRepository.syncTransfersItems(
-                it.map { item ->
-                    item.toEntity()
-                })
-        }
+                stockTransferRepository.syncTransfersItems(
+                    it.map { item ->
+                        item.toEntity()
+                    })
+            }
     }
 
     private suspend fun syncTransfer(updatedAt: String) {
@@ -360,6 +355,7 @@ class SyncServiceImpl(
 }
 
 interface SyncService {
-    suspend fun performFullSync(): Result<Unit>
-    fun startRealtimeDeletionsListener()
+    suspend fun performSync(): Result<Unit>
+    fun startRealtimeListener()
+    fun stopRealtimeListener()
 }

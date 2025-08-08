@@ -35,6 +35,7 @@ val userModule = module {
             supabaseClient = get(),
             settingsManager = get(),
             profileApiService = get(),
+            syncManager = get(),
             adminClient = {
                 createSupabaseClient(
                     supabaseKey = BuildKonfig.supabaseKey,

@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.user.data.repository
 
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.core.util.toDateString
@@ -27,6 +28,7 @@ class UserRepositoryImpl(
     private val supabaseClient: SupabaseClient,
     private val settingsManager: SettingsManager,
     private val profileApiService: ProfileApiService,
+    private val syncManager: SyncManager,
     private val adminClient: suspend () -> SupabaseClient,
 ) : UserRepository {
 
@@ -49,6 +51,7 @@ class UserRepositoryImpl(
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
+            syncManager.restSyncDate()
             supabaseClient.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
@@ -98,6 +101,7 @@ class UserRepositoryImpl(
 
     override suspend fun logout(): Result<Unit> {
         return try {
+            syncManager.restSyncDate()
             settingsManager.changeUserId("")
             supabaseClient.auth.signOut()
             Result.success(Unit)

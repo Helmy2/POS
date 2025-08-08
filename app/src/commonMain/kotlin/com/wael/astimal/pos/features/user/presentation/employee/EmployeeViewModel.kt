@@ -9,6 +9,7 @@ import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -64,8 +65,7 @@ class EmployeeViewModel(
 
     private fun loadAllEmployees() {
         viewModelScope.launch {
-            userRepository.getEmployeesFlow().collect {
-                println(it)
+            userRepository.getEmployeesFlow().collectLatest {
                 setState(EmployeeContract.Event.AllEmployeesLoaded(it))
             }
         }

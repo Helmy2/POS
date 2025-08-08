@@ -73,7 +73,6 @@ class CategoryRepositoryImpl(
 
     override suspend fun syncWithServer(entities: List<CategoryEntity>): Result<Unit> {
         return runCatching {
-            categoryDao.deleteAll()
             categoryDao.upsertAll(entities)
         }
     }

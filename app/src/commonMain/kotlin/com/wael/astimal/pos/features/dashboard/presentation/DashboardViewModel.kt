@@ -30,8 +30,6 @@ class DashboardViewModel(
 ) {
 
     init {
-        syncService.startRealtimeDeletionsListener()
-        handleEvent(DashboardContract.Event.PreformSync)
         loadDashboardData()
     }
 
@@ -49,7 +47,7 @@ class DashboardViewModel(
             is DashboardContract.Event.PreformSync -> {
                 setState(DashboardContract.Event.LoadingSyncChange(true))
                 viewModelScope.launch {
-                    syncService.performFullSync().fold(
+                    syncService.performSync().fold(
                         onSuccess = {
                             snackbarController.sendEvent(
                                 SnackbarEvent(

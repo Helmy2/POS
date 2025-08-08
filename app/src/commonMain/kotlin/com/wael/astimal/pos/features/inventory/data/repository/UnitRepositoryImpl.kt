@@ -71,7 +71,6 @@ class UnitRepositoryImpl(
 
     override suspend fun syncWithServer(units: List<UnitEntity>): Result<Unit> {
         return runCatching {
-            unitDao.deleteAll()
             unitDao.upsertAll(units)
         }
     }
