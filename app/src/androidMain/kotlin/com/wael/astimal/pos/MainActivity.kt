@@ -75,8 +75,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onDestroy() {
+        super.onDestroy()
         syncService.stopRealtimeListener()
     }
 }

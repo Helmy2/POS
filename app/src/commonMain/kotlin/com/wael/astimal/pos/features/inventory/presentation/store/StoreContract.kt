@@ -44,7 +44,7 @@ object StoreContract {
         data class EnNameChanged(val name: String) : Event
         data class AddressChanged(val address: String) : Event
         data class TypeChanged(val type: StoreType) : Event
-        data class EmployeeSelected(val employee: User) : Event
+        data class EmployeeSelected(val employee: User?) : Event
 
         data class UserLoaded(val currentUser: User?, val employees: List<User>) : Event
         data class StoresLoaded(val stores: List<Store>) : Event

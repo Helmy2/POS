@@ -61,7 +61,7 @@ fun StockAdjustment.toEntity(): StockAdjustmentEntity {
     )
 }
 
-fun StockAdjustment.toDto(): StockAdjustmentDto {
+fun StockAdjustment.toDto(updatedAt: String): StockAdjustmentDto {
     return StockAdjustmentDto(
         id = id,
         storeId = store.id,
@@ -71,7 +71,7 @@ fun StockAdjustment.toDto(): StockAdjustmentDto {
         notes = notes,
         quantity = quantityChange,
         createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString(),
+        updatedAt = updatedAt,
         invoiceId = invoiceId,
         transactionId = transactionId
     )

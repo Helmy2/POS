@@ -166,13 +166,14 @@ fun InvoiceWithItems.toDomain(): Invoice {
     )
 }
 
-fun InvoiceItemEntity.toDto(): ItemDto {
+fun InvoiceItemEntity.toDto(updatedAt: String): ItemDto {
     return ItemDto(
         id = supabaseId,
         productId = productId,
         quantity = quantity,
         unitPrice = unitPrice,
-        invoiceId = invoiceId
+        invoiceId = invoiceId,
+        updatedAt = updatedAt
     )
 }
 

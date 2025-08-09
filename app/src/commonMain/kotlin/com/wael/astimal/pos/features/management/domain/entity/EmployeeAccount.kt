@@ -90,14 +90,14 @@ fun EmployeeTransaction.matchesQuery(query: String): Boolean {
             type.name.contains(queryLower, ignoreCase = true)
 }
 
-fun EmployeeTransaction.toDto(): EmployeeTransactionDto {
+fun EmployeeTransaction.toDto(updatedAt: String): EmployeeTransactionDto {
     return EmployeeTransactionDto(
         id = id,
         transactionType = type.name.lowercase(),
         balance = amount,
         notes = notes,
         createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString(),
+        updatedAt = updatedAt,
         creatorId = createdByEmployee.id,
         employeeId = employee.id,
         invoiceId = invoiceId

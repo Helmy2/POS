@@ -47,10 +47,11 @@ fun BusinessPartner.toEntity() = BusinessPartnerEntity(
     type = type,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    responsibleEmployeeLocalId = responsibleEmployee.id
+    responsibleEmployeeLocalId = responsibleEmployee.id,
+    isPrivate = isPrivate
 )
 
-fun BusinessPartner.toDto() = BusinessPartnerDto(
+fun BusinessPartner.toDto(updatedAt: String) = BusinessPartnerDto(
     id = id,
     arName = name.arName ?: "",
     enName = name.enName ?: "",
@@ -58,7 +59,7 @@ fun BusinessPartner.toDto() = BusinessPartnerDto(
     phone = phone,
     partnerType = type.name.lowercase(),
     createdAt = createdAt.toDateString(),
-    updatedAt = updatedAt.toDateString(),
+    updatedAt = updatedAt,
     responsibleId = responsibleEmployee.id,
     isPrivate = isPrivate
 )

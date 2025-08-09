@@ -15,7 +15,9 @@ data class ItemDto(
     @SerialName("quantity")
     val quantity: Double,
     @SerialName("unit_price")
-    val unitPrice: Double
+    val unitPrice: Double,
+    @SerialName("updated_at")
+    val updatedAt: String
 )
 
 fun ItemDto.toEntity() = InvoiceItemEntity(

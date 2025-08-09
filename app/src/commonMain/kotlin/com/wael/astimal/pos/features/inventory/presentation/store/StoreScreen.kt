@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
@@ -24,6 +25,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.address
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.en_name
+import pos.app.generated.resources.no_selection
 import pos.app.generated.resources.responsible_employee
 import pos.app.generated.resources.store_type
 
@@ -118,14 +120,19 @@ fun StoreScreen(
             }
 
             item {
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.responsible_employee),
-                    currentSelection = state.selectedEmployee?.name ?: "",
-                    items = state.employees,
-                    onItemSelected = { onEvent(StoreContract.Event.EmployeeSelected(it)) },
+                    options = state.employees.map { it.name },
+                    onItemSelected = {
+                        onEvent(StoreContract.Event.EmployeeSelected(state.employees[it]))
+                    },
+                    modifier = Modifier.padding(8.dp),
+                    onNoSelection = {
+                        onEvent(StoreContract.Event.EmployeeSelected(null))
+                    },
+                    noSelectionText = stringResource(Res.string.no_selection),
+                    initialText = state.selectedEmployee?.name ?: "",
                     enabled = state.canUserEdit,
-                    itemToDisplayString = { it.name },
-                    modifier = Modifier.padding(8.dp)
                 )
             }
 

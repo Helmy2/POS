@@ -81,22 +81,24 @@ fun Invoice.matchesQuery(query: String): Boolean {
 }
 
 fun InvoiceItem.toDto(
-    invoiceId: String
+    invoiceId: String,
+    updatedAt: String
 ): ItemDto {
     return ItemDto(
         id = id,
         productId = product.id,
         quantity = quantity,
         unitPrice = unitPrice,
-        invoiceId = invoiceId
+        invoiceId = invoiceId,
+        updatedAt = updatedAt,
     )
 }
 
-fun Invoice.toDto(): InvoiceDto {
+fun Invoice.toDto(updatedAt: String): InvoiceDto {
     return InvoiceDto(
         id = id,
         createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString(),
+        updatedAt = updatedAt,
         partnerId = partner.id,
         employeeId = employee.id,
         paidAmount = paidAmount,

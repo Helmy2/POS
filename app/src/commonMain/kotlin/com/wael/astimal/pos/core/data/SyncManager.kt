@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
  * Manages the last synchronization timestamp.
  */
 interface SyncManager {
-
+    // Sync date tracking
     suspend fun lastDeletedSyncDate(): String
     suspend fun lastSyncDate(): String
 
@@ -22,7 +22,7 @@ interface SyncManager {
 }
 
 class SyncManagerImpl(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
 ) : SyncManager {
 
     private object PreferencesKeys {
@@ -36,16 +36,16 @@ class SyncManagerImpl(
         }.first()
     }
 
-    override suspend fun updateLastDeletedSyncDate(newDate: String) {
-        dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LAST_DELETED_SYNC_DATE] = newDate
-        }
-    }
-
     override suspend fun lastSyncDate(): String {
         return dataStore.data.map { preferences ->
             preferences[PreferencesKeys.LAST_SYNC_DATE] ?: getDefaultSyncDate()
         }.first()
+    }
+
+    override suspend fun updateLastDeletedSyncDate(newDate: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LAST_DELETED_SYNC_DATE] = newDate
+        }
     }
 
     override suspend fun updateLastSyncDate(newDate: String) {

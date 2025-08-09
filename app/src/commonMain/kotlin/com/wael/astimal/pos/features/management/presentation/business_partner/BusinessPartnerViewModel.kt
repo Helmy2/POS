@@ -28,8 +28,7 @@ class BusinessPartnerViewModel(
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController
 ) : BaseViewModel<BusinessPartnerContract.State, BusinessPartnerContract.Event, Nothing>(
-    reducer = BusinessPartnerReducer(),
-    initialState = BusinessPartnerContract.State()
+    reducer = BusinessPartnerReducer(), initialState = BusinessPartnerContract.State()
 ) {
 
     override fun handleEvent(event: BusinessPartnerContract.Event) {
@@ -43,8 +42,7 @@ class BusinessPartnerViewModel(
             }
 
             is BusinessPartnerContract.Event.CreateClicked -> createPartner(
-                event.partner,
-                event.amount
+                event.partner, event.amount
             )
 
             is BusinessPartnerContract.Event.UpdateClicked -> updatePartner(event.partner)
@@ -56,8 +54,7 @@ class BusinessPartnerViewModel(
     }
 
     private fun createPartner(
-        partner: BusinessPartner,
-        amount: Double
+        partner: BusinessPartner, amount: Double
     ) {
         viewModelScope.launch {
             businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
@@ -88,10 +85,12 @@ class BusinessPartnerViewModel(
         doAfterLoad: suspend () -> Unit
     ) {
         viewModelScope.launch {
-            val allPartners = businessPartnerRepository
-                .getBusinessPartners("").first()
-            setState(BusinessPartnerContract.Event.PartnersLoaded(allPartners))
-
+            launch {
+                businessPartnerRepository.getBusinessPartners("").collect {
+                    println("update $it")
+                    setState(BusinessPartnerContract.Event.PartnersLoaded(it))
+                }
+            }
             val currentUser = userRepository.getCurrentUser()!!
             val users = userRepository.getEmployeesFlow().first()
             setState(BusinessPartnerContract.Event.UserLoaded(currentUser, users))

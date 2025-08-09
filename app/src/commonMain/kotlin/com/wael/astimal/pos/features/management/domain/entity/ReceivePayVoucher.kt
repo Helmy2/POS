@@ -44,14 +44,14 @@ fun ReceivePayVoucher.toEntity() = PartnerTransactionEntity(
 )
 
 
-fun ReceivePayVoucher.toDto(): PartnerTransactionDto {
+fun ReceivePayVoucher.toDto(updatedAt: String): PartnerTransactionDto {
     return PartnerTransactionDto(
         id = id,
         transactionType = transactionType.name.lowercase(),
         balance = amount,
         notes = notes,
         createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString(),
+        updatedAt = updatedAt,
         createdByUserId = createdBy.id,
         invoiceId = invoiceId.takeIf { it?.isNotBlank() == true },
         partnerId = partner.id

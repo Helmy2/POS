@@ -32,7 +32,7 @@ data class BusinessPartnerEntity(
     val createdAt: Long = Clock.now(),
     val updatedAt: Long = Clock.now(),
     var isDeletedLocally: Boolean = false,
-    var isPrivate: Boolean = false,
+    var isPrivate: Boolean,
     val arName: String,
     val enName: String,
     val phone: String,
