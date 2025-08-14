@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.management.data.local.dao.BusinessPartnerDao
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
@@ -20,7 +21,8 @@ class BusinessPartnerRepositoryImpl(
     private val userRepository: UserRepository,
     private val partnerDao: BusinessPartnerDao,
     private val partnerTransactionDao: PartnerTransactionDao,
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
+    private val syncManager: SyncManager
 ) : BusinessPartnerRepository {
 
     override suspend fun getBusinessPartners(query: String): Flow<List<BusinessPartner>> {
@@ -53,14 +55,14 @@ class BusinessPartnerRepositoryImpl(
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<String> {
         return try {
             val entity = if (partner.id == "") {
-                partner.toEntity().copy(
-                    localId = Uuid.random().toString()
-                )
+                partner.toEntity().copy(localId = Uuid.random().toString())
             } else {
                 partner.toEntity()
             }
 
             partnerDao.insertOrUpdate(entity)
+
+            syncManager.requestSync()
 
             Result.success(entity.localId)
         } catch (e: Exception) {
@@ -85,6 +87,8 @@ class BusinessPartnerRepositoryImpl(
                 targetTableName = "business_partners",
                 targetRecordId = partner.id
             )
+            partnerDao.hardDelete(partner.id)
+            Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
@@ -110,7 +114,7 @@ class BusinessPartnerRepositoryImpl(
     }
 
     override suspend fun getClient(clientId: String): BusinessPartner? {
-        return partnerDao.getPartnerByLocalId(clientId)?.toDomain()
+        return partnerDao.getPartnerById(clientId)?.toDomain()
     }
 
     override suspend fun getPartnerBalance(partner: BusinessPartner): Result<Double> {
@@ -121,7 +125,8 @@ class BusinessPartnerRepositoryImpl(
 
     override suspend fun getBusinessPartnerByServerId(serverId: String): Result<BusinessPartnerEntity?> {
         return runCatching {
-            partnerDao.getPartnerBySeverId(serverId) ?: throw Exception("Partner not found")
+            partnerDao.getPartnerById(serverId)?.businessPartner
+                ?: throw Exception("Partner not found")
         }
     }
 

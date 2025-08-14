@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.management.data.repository
 
 
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
@@ -42,7 +43,8 @@ class InvoiceRepositoryImpl(
     private val stockRepository: StockRepository,
     private val employeeFinancesDao: EmployeeFinancesDao,
     private val userRepository: UserRepository,
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
+    private val syncManager: SyncManager
 ) : InvoiceRepository {
 
     override fun getInvoices(): Flow<List<Invoice>> {
@@ -66,6 +68,8 @@ class InvoiceRepositoryImpl(
                 createAdjustStock(newInvoice)
                 adjustPartnerTransactions(newInvoice)
                 makeCommission(newInvoice)
+
+                syncManager.requestSync()
 
                 Result.success(Unit)
             } catch (e: Exception) {
@@ -101,6 +105,7 @@ class InvoiceRepositoryImpl(
                     }
                 }
             productDao.updateAverageCost(item.product.id, newCost)
+            syncManager.requestSync()
         }
     }
 
@@ -195,6 +200,7 @@ class InvoiceRepositoryImpl(
         return runCatching {
             deleteSalesOrder(invoice.id)
             addSalesOrder(invoice)
+            syncManager.requestSync()
         }
     }
 
@@ -237,6 +243,7 @@ class InvoiceRepositoryImpl(
                     targetRecordId = orderId
                 ).getOrThrow()
 
+                syncManager.requestSync()
                 Result.success(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()

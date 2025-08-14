@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -19,11 +20,16 @@ interface SyncManager {
     suspend fun updateLastSyncDate(newDate: String)
 
     suspend fun restSyncDate()
+
+    suspend fun requestSync()
+    val syncFlow: MutableSharedFlow<Unit>
 }
 
 class SyncManagerImpl(
     private val dataStore: DataStore<Preferences>,
 ) : SyncManager {
+
+    override val syncFlow: MutableSharedFlow<Unit> = MutableSharedFlow()
 
     private object PreferencesKeys {
         val LAST_DELETED_SYNC_DATE = stringPreferencesKey("last_deleted_sync_date")
@@ -59,6 +65,10 @@ class SyncManagerImpl(
             preferences.remove(PreferencesKeys.LAST_SYNC_DATE)
             preferences.remove(PreferencesKeys.LAST_DELETED_SYNC_DATE)
         }
+    }
+
+    override suspend fun requestSync() {
+        syncFlow.emit(Unit)
     }
 
     /**

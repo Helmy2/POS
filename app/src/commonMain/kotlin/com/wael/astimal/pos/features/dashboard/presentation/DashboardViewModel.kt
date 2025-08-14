@@ -47,7 +47,7 @@ class DashboardViewModel(
             is DashboardContract.Event.PreformSync -> {
                 setState(DashboardContract.Event.LoadingSyncChange(true))
                 viewModelScope.launch {
-                    syncService.performSync().fold(
+                    syncService.performFullSync().fold(
                         onSuccess = {
                             snackbarController.sendEvent(
                                 SnackbarEvent(

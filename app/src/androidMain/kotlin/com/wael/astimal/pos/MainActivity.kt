@@ -13,6 +13,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.mmk.kmpnotifier.permission.permissionUtil
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
@@ -27,6 +28,7 @@ import pos.app.generated.resources.something_went_wrong
 
 class MainActivity : ComponentActivity() {
     val syncService: SyncService by inject()
+    val syncManager: SyncManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,15 +43,13 @@ class MainActivity : ComponentActivity() {
         permissionUtil.askNotificationPermission()
 
         lifecycleScope.launch {
+            syncManager.requestSync()
             userRepository.isUserLoggedIn().let {
                 startDestination.value = if (it) {
                     Result.success(Destination.Main)
                 } else {
                     Result.success(Destination.Auth)
                 }
-            }
-            launch {
-                syncService.performSync()
             }
         }
 

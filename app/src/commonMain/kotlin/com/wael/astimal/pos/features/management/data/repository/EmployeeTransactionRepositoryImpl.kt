@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.management.data.local.dao.EmployeeFinancesDao
 import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
@@ -17,7 +18,8 @@ import kotlin.uuid.Uuid
 
 class EmployeeTransactionRepositoryImpl(
     private val employeeFinancesDao: EmployeeFinancesDao,
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
+    private val syncManager: SyncManager
 ) : EmployeeTransactionRepository {
     override fun getAllTransaction(): Flow<List<EmployeeTransaction>> {
         return employeeFinancesDao.getAllTransactions()
@@ -42,15 +44,18 @@ class EmployeeTransactionRepositoryImpl(
                 transaction.toEntity()
             }
             employeeFinancesDao.insertOrUpdate(toInsert)
+            syncManager.requestSync()
         }
     }
 
     override suspend fun deleteManualPayment(transactionId: String): Result<Unit> {
         return try {
-            return supabaseClient.deleteRecordAndLog(
+            supabaseClient.deleteRecordAndLog(
                 targetTableName = "employee_transactions",
                 targetRecordId = transactionId
             )
+            employeeFinancesDao.hardDelete(transactionId)
+            Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)

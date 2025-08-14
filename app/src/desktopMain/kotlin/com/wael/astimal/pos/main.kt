@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mmk.kmpnotifier.extensions.composeDesktopResourcesPath
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
@@ -32,6 +33,7 @@ import java.io.File
 fun main() {
     initKoin()
     val syncService: SyncService by inject(SyncService::class.java)
+    val syncManger: SyncManager by inject(SyncManager::class.java)
     syncService.startRealtimeListener()
 
     NotifierManager.initialize(
@@ -62,7 +64,7 @@ fun main() {
                     }
                 }
                 launch {
-                    syncService.performSync()
+                    syncManger.requestSync()
                 }
             }
 

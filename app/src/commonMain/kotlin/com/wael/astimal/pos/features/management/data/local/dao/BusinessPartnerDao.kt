@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface BusinessPartnerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdate(partner: BusinessPartnerEntity): Long
+    suspend fun insertOrUpdate(partner: BusinessPartnerEntity)
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND (enName LIKE '%' || :query || '%' OR arName LIKE '%' || :query || '%')")
@@ -22,10 +22,7 @@ interface BusinessPartnerDao {
 
     @Transaction
     @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
-    suspend fun getPartnerByLocalId(localId: String): BusinessPartnerWithDetailsEntity?
-
-    @Query("SELECT * FROM business_partners WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
-    suspend fun getPartnerBySeverId(id: String): BusinessPartnerEntity?
+    suspend fun getPartnerById(localId: String): BusinessPartnerWithDetailsEntity?
 
     @Query("UPDATE business_partners SET isDeletedLocally = 1 WHERE localId = :localId")
     suspend fun softDeletePartnerByLocalId(localId: String)

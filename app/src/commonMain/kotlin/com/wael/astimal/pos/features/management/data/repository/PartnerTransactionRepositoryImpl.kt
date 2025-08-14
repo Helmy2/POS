@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.management.data.repository
 
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.management.data.local.dao.PartnerTransactionDao
 import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
@@ -15,7 +16,9 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class PartnerTransactionRepositoryImpl(
-    private val transactionDao: PartnerTransactionDao, private val supabaseClient: SupabaseClient
+    private val transactionDao: PartnerTransactionDao,
+    private val supabaseClient: SupabaseClient,
+    private val syncManager: SyncManager
 ) : PartnerTransactionRepository {
 
     override fun getVouchers(): Flow<List<ReceivePayVoucher>> {
@@ -35,6 +38,7 @@ class PartnerTransactionRepositoryImpl(
                 voucher.toEntity()
             }
             transactionDao.insertOrUpdate(toInsert)
+            syncManager.requestSync()
         }
     }
 
@@ -44,6 +48,8 @@ class PartnerTransactionRepositoryImpl(
                 targetTableName = "partner_transactions",
                 targetRecordId = voucher.id
             )
+            transactionDao.hardDelete(voucher.id)
+            Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)

@@ -51,6 +51,7 @@ import kotlinx.coroutines.withContext
 class SyncServiceImpl(
     private val supabaseClient: SupabaseClient,
     private val syncManager: SyncManager,
+
     private val unitRepository: UnitRepository,
     private val userRepository: UserRepository,
     private val storeRepository: StoreRepository,
@@ -67,6 +68,15 @@ class SyncServiceImpl(
 
     private var syncListenerJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
+    init {
+        syncManager.syncFlow.onEach {
+            pullDeletedRecords()
+            syncAllDataWithServer()
+        }.catch {
+            it.printStackTrace()
+        }.launchIn(coroutineScope)
+    }
 
     override fun startRealtimeListener() {
         stopRealtimeListener()
@@ -134,8 +144,9 @@ class SyncServiceImpl(
         }
     }
 
-    override suspend fun performSync(): Result<Unit> {
+    override suspend fun performFullSync(): Result<Unit> {
         return try {
+            syncManager.restSyncDate()
             syncAllDataWithServer()
             pullDeletedRecords()
             Result.success(Unit)
@@ -362,7 +373,7 @@ class SyncServiceImpl(
 }
 
 interface SyncService {
-    suspend fun performSync(): Result<Unit>
+    suspend fun performFullSync(): Result<Unit>
     fun startRealtimeListener()
     fun stopRealtimeListener()
 }
