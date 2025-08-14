@@ -64,10 +64,9 @@ fun OrderItemRow(
                     onItemSelected = {
                         onUpdateSelectedItem(
                             item.tempEditorId,
-                            availableProducts[it]
+                            it?.let { availableProducts[it] }
                         )
                     },
-                    onNoSelection = {},
                     label = stringResource(Res.string.product),
                     noSelectionText = stringResource(Res.string.no_selection),
                     initialText = item.product?.name?.displayName(language) ?: "",

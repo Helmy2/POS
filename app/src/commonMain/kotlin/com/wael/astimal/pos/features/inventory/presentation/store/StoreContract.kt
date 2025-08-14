@@ -18,7 +18,7 @@ object StoreContract {
         val inputArName: String = "",
         val inputEnName: String = "",
         val inputAddress: String = "",
-        val inputType: StoreType = StoreType.SUB,
+        val inputType: StoreType? = null,
         val showDeleteDialog: Boolean = false,
         val selectedEmployee: User? = null,
         val employees: List<User> = emptyList(),
@@ -43,7 +43,7 @@ object StoreContract {
         data class ArNameChanged(val name: String) : Event
         data class EnNameChanged(val name: String) : Event
         data class AddressChanged(val address: String) : Event
-        data class TypeChanged(val type: StoreType) : Event
+        data class TypeChanged(val type: StoreType?) : Event
         data class EmployeeSelected(val employee: User?) : Event
 
         data class UserLoaded(val currentUser: User?, val employees: List<User>) : Event

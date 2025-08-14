@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -48,8 +49,13 @@ fun <T> CustomExposedDropdownMenu(
 
     ExposedDropdownMenu(
         options = items.map { itemToDisplayString(it) },
-        onItemSelected = { onItemSelected(items[it]) },
-        onNoSelection = onClearItem,
+        onItemSelected = {
+            if (it == null) {
+                onClearItem
+            } else {
+                onItemSelected(items[it])
+            }
+        },
         label = label,
         noSelectionText = stringResource(Res.string.no_selection),
         modifier = modifier,
@@ -72,8 +78,11 @@ fun <T> CustomExposedDropdownMenu(
 ) {
     ExposedDropdownMenu(
         options = items.map { itemToDisplayString(it) },
-        onItemSelected = { onItemSelected(items[it]) },
-        onNoSelection = {},
+        onItemSelected = {
+            it?.let {
+                onItemSelected(items[it])
+            }
+        },
         label = label,
         noSelectionText = stringResource(Res.string.no_selection),
         modifier = modifier,
@@ -93,8 +102,11 @@ fun CustomExposedDropdownMenu(
 ) {
     ExposedDropdownMenu(
         options = items,
-        onItemSelected = { onItemSelected(it) },
-        onNoSelection = {},
+        onItemSelected = {
+            it?.let {
+                onItemSelected(it)
+            }
+        },
         label = label,
         noSelectionText = stringResource(Res.string.no_selection),
         modifier = modifier,
@@ -118,7 +130,6 @@ fun ExposedDropdownMenuPrev() {
             "Option 9",
         ),
         onItemSelected = {},
-        onNoSelection = {},
         noSelectionText = "No Selection",
         label = "",
         modifier = Modifier
@@ -130,9 +141,8 @@ fun ExposedDropdownMenuPrev() {
 @Composable
 fun ExposedDropdownMenu(
     options: List<String>,
-    onItemSelected: (Int) -> Unit,
-    onNoSelection: () -> Unit,
-    noSelectionText: String,
+    onItemSelected: (Int?) -> Unit,
+    noSelectionText: String = stringResource(Res.string.no_selection),
     label: String,
     modifier: Modifier = Modifier,
     initialText: String = "",
@@ -147,6 +157,10 @@ fun ExposedDropdownMenu(
         options.sortedByDescending { it.contains(textFieldState.text, ignoreCase = true) }
 
     val (expanded, setExpanded) = remember { mutableStateOf(false) }
+
+    LaunchedEffect(initialText) {
+        textFieldState.setTextAndPlaceCursorAtEnd(initialText)
+    }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -187,7 +201,7 @@ fun ExposedDropdownMenu(
                         setExpanded(false)
                     } ?: {
                         textFieldState.setTextAndPlaceCursorAtEnd(noSelectionText)
-                        onNoSelection()
+                        onItemSelected(null)
                         setExpanded(false)
                     }
                     focusManager.clearFocus()

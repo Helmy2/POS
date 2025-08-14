@@ -91,7 +91,7 @@ class StoreViewModel(
     private fun saveStore() {
         viewModelScope.launch {
             val currentState = state.value
-            if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank()) {
+            if (currentState.inputArName.isBlank() && currentState.inputEnName.isBlank() && currentState.inputType == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
                 return@launch
             }
@@ -103,7 +103,7 @@ class StoreViewModel(
                         arName = currentState.inputArName,
                         enName = currentState.inputEnName
                     ),
-                    type = currentState.inputType,
+                    type = currentState.inputType!!,
                     createdAt = currentState.selectedStore?.createdAt ?: Clock.now(),
                     address = currentState.inputAddress,
                     employee = currentState.selectedEmployee!!

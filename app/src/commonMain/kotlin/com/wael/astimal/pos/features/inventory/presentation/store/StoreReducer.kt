@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
-import com.wael.astimal.pos.features.inventory.data.local.entity.StoreType
 
 class StoreReducer : Reducer<StoreContract.State, StoreContract.Event, Nothing> {
     override fun reduce(
@@ -20,7 +19,6 @@ class StoreReducer : Reducer<StoreContract.State, StoreContract.Event, Nothing> 
                 previousState.copy(
                     currentUser = event.currentUser,
                     employees = event.employees,
-                    selectedEmployee = event.employees.firstOrNull()
                 ) to null
 
             is StoreContract.Event.EmployeeSelected ->
@@ -47,7 +45,8 @@ class StoreReducer : Reducer<StoreContract.State, StoreContract.Event, Nothing> 
                 selectedStore = null,
                 inputArName = "",
                 inputEnName = "",
-                inputType = StoreType.SUB
+                inputType = null,
+                selectedEmployee = null
             ) to null
 
             is StoreContract.Event.ArNameChanged -> previousState.copy(inputArName = event.name) to null
