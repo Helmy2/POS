@@ -20,7 +20,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownM
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
 import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
@@ -75,7 +75,7 @@ fun SalesScreen(
         onEvent(SalesContract.Event.LoadInitialData)
     }
 
-    SearchScreen(
+    SearchScreen2(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,

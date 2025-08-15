@@ -45,7 +45,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun isUserLoggedIn(): Boolean {
-        return settingsManager.getUserId() != null
+        return getCurrentUser() != null
     }
 
 

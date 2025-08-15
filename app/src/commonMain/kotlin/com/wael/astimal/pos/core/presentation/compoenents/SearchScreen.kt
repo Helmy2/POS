@@ -1,12 +1,16 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
@@ -46,7 +50,7 @@ import pos.app.generated.resources.update_at
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(
+fun SearchScreen2(
     query: String,
     isSearchActive: Boolean,
     isNew: Boolean,
@@ -187,6 +191,154 @@ fun SearchScreen(
                 }
             }
             item { Box(Modifier.padding(FloatingActionButtonDefaults.LargeIconSize)) }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(
+    query: String,
+    isSearchActive: Boolean,
+    isNew: Boolean,
+    lastModifiedDate: Long?,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onSearchActiveChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
+    onDelete: () -> Unit,
+    onCreate: () -> Unit,
+    onUpdate: () -> Unit,
+    onNew: () -> Unit,
+    modifier: Modifier = Modifier,
+    canEdit: Boolean = true,
+    canSave: Boolean = true,
+    searchResults: @Composable () -> Unit,
+    mainContent: @Composable FlowRowScope.() -> Unit,
+) {
+    val openNewString = stringResource(Res.string.open_new)
+    val deleteString = stringResource(Res.string.delete)
+    val createString = stringResource(Res.string.create)
+    val updateString = stringResource(Res.string.update)
+
+    val fabActions =
+        remember(isNew, canEdit, openNewString, deleteString, createString, updateString) {
+            buildList {
+                if (isNew.not()) {
+                    add(
+                        FabAction(
+                            icon = Icons.Default.FileCopy,
+                            label = openNewString,
+                            onClick = onNew
+                        )
+                    )
+                    if (canEdit) {
+                        add(
+                            FabAction(
+                                icon = Icons.Default.Delete,
+                                label = deleteString,
+                                onClick = onDelete
+                            )
+                        )
+                    }
+                }
+                if (canEdit) {
+                    add(
+                        FabAction(
+                            icon = Icons.Default.Check,
+                            label = if (isNew) createString else updateString,
+                            onClick = if (isNew) onCreate else onUpdate
+                        )
+                    )
+                }
+            }
+        }
+
+    BackHandler {
+        if (isSearchActive) onSearchActiveChange(false)
+        else onBack()
+    }
+
+    Screen(
+        topBar = {
+            DockedSearchBar(
+                modifier = modifier
+                    .statusBarsPadding()
+                    .padding(top = 16.dp, end = 16.dp, start = 16.dp)
+                    .fillMaxWidth()
+                    .semantics { traversalIndex = 0f },
+                inputField = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BackButton(
+                            onClick = {
+                                if (isSearchActive) onSearchActiveChange(false)
+                                else onBack()
+                            },
+                        )
+                        SearchBarDefaults.InputField(
+                            query = query,
+                            onQueryChange = onQueryChange,
+                            onSearch = onSearch,
+                            expanded = isSearchActive,
+                            onExpandedChange = onSearchActiveChange,
+                            placeholder = { Text(stringResource(Res.string.search)) },
+                            trailingIcon = {
+                                IconButton(onClick = { onSearch(query) }) {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                }
+                            },
+                            modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight)
+                                .weight(1f),
+                        )
+                    }
+                },
+                expanded = isSearchActive,
+                onExpandedChange = onSearchActiveChange,
+            ) {
+                Box(Modifier.padding(8.dp)) {
+                    searchResults()
+                }
+            }
+        },
+        floatingActionButton = {
+            MultiActionFab(
+                actions = fabActions,
+                enabled = canEdit && canSave,
+                modifier = Modifier.imePadding()
+            )
+        },
+    ) {
+        FlowRow(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.imePadding().padding(horizontal = 16.dp),
+        ) {
+            mainContent()
+
+            AnimatedVisibility(
+                visible = !isNew,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+            ) {
+                Row(
+                    modifier = Modifier.padding(8.dp),
+                ) {
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = stringResource(Res.string.update_at),
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = lastModifiedDate?.convertToString()
+                            ?: stringResource(Res.string.last_modified_date_not_available),
+                    )
+                }
+            }
+
+            Box(Modifier.padding(FloatingActionButtonDefaults.LargeIconSize))
         }
     }
 }

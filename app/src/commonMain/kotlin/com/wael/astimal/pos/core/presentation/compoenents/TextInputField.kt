@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +26,8 @@ fun TextInputField(
     keyboardActions: KeyboardActions = KeyboardActions.Companion.Default,
 ) {
     OutlinedTextField(
-        modifier = modifier.height(OutlinedTextFieldDefaults.MinHeight),
+        modifier = modifier.height(OutlinedTextFieldDefaults.MinHeight)
+            .width(OutlinedTextFieldDefaults.MinWidth * 1.5f),
         value = value,
         enabled = enabled,
         onValueChange = onValueChange,

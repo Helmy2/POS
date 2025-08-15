@@ -22,7 +22,7 @@ import com.wael.astimal.pos.core.base.ObserveEffect
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.user.presentation.components.PasswordTextField
 import org.jetbrains.compose.resources.stringResource
@@ -66,7 +66,7 @@ fun EmployeeScreen(
 ) {
     val language = LocalAppLocale.current
 
-    SearchScreen(
+    SearchScreen2(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = state.isNewEmployee,

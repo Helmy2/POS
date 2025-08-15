@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -41,7 +43,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -290,9 +294,12 @@ fun BusinessPartnerEditDialog(
     }
 
 
-
+    val imePadding = WindowInsets.ime.getBottom(LocalDensity.current).dp
     Dialog(onDismissRequest = onDismiss) {
-        Card(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Card(
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(bottom = imePadding)
+        ) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
@@ -308,26 +315,36 @@ fun BusinessPartnerEditDialog(
                     onValueChange = { enName = it },
                     label = stringResource(Res.string.en_name),
                     enabled = canEdit,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    )
                 )
                 LabeledTextField(
                     value = arName,
                     onValueChange = { arName = it },
                     label = stringResource(Res.string.ar_name),
-                    enabled = canEdit
+                    enabled = canEdit,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    )
                 )
 
                 LabeledTextField(
                     value = address,
                     onValueChange = { address = it },
                     label = stringResource(Res.string.address),
-                    enabled = canEdit
+                    enabled = canEdit,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    )
                 )
                 LabeledTextField(
                     value = phone1,
                     onValueChange = { phone1 = it },
                     label = stringResource(Res.string.phone),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Next
                     ),
                     enabled = canEdit
                 )
@@ -336,7 +353,8 @@ fun BusinessPartnerEditDialog(
                     onValueChange = { phone2 = it },
                     label = stringResource(Res.string.phone),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Next
                     ),
                     enabled = canEdit
                 )
@@ -345,7 +363,8 @@ fun BusinessPartnerEditDialog(
                     onValueChange = { phone3 = it },
                     label = stringResource(Res.string.phone),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Next
                     ),
                     enabled = canEdit
                 )
@@ -395,7 +414,10 @@ fun BusinessPartnerEditDialog(
                     onValueChange = { amount = it },
                     label = stringResource(Res.string.amount),
                     enabled = true,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    )
                 )
 
                 CustomExposedDropdownMenu(

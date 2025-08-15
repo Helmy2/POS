@@ -1,13 +1,11 @@
 package com.wael.astimal.pos.features.inventory.presentation.category
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
@@ -23,6 +21,7 @@ import pos.app.generated.resources.en_name
 
 @Composable
 fun CategoryRoute(
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CategoryViewModel = koinViewModel(),
 ) {
@@ -31,6 +30,7 @@ fun CategoryRoute(
     CategoryScreen(
         state = state,
         onEvent = viewModel::processEvent,
+        onBack = onBack,
         modifier = modifier
     )
 }
@@ -38,9 +38,10 @@ fun CategoryRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
-    state: CategoryContract.State,
-    onEvent: (CategoryContract.Event) -> Unit,
+    state: CategoryReducer.State,
+    onEvent: (CategoryReducer.Event) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: () -> Unit,
 ) {
     val language = LocalAppLocale.current
 
@@ -49,53 +50,44 @@ fun CategoryScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        onQueryChange = { onEvent(CategoryContract.Event.SearchQueryChanged(it)) },
-        onSearch = { onEvent(CategoryContract.Event.SearchQueryChanged(it)) },
-        onSearchActiveChange = { onEvent(CategoryContract.Event.SearchActiveChanged(it)) },
-        onBack = { onEvent(CategoryContract.Event.BackClicked) },
+        onQueryChange = { onEvent(CategoryReducer.Event.SearchQueryChanged(it)) },
+        onSearch = { onEvent(CategoryReducer.Event.SearchQueryChanged(it)) },
+        onSearchActiveChange = { onEvent(CategoryReducer.Event.SearchActiveChanged(it)) },
+        onBack = onBack,
         lastModifiedDate = state.selectedCategory?.updatedAt,
-        onDelete = { onEvent(CategoryContract.Event.DeleteClicked) },
-        onCreate = { onEvent(CategoryContract.Event.SaveClicked) },
-        onUpdate = { onEvent(CategoryContract.Event.SaveClicked) },
-        onNew = { onEvent(CategoryContract.Event.NewCategoryClicked) },
+        onDelete = { onEvent(CategoryReducer.Event.DeleteClicked) },
+        onCreate = { onEvent(CategoryReducer.Event.SaveClicked) },
+        onUpdate = { onEvent(CategoryReducer.Event.SaveClicked) },
+        onNew = { onEvent(CategoryReducer.Event.NewCategoryClicked) },
         canEdit = state.canUserEdit,
         canSave = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.categories,
-                onItemClick = { category -> onEvent(CategoryContract.Event.CategorySelected(category)) },
+                onItemClick = { category -> onEvent(CategoryReducer.Event.CategorySelected(category)) },
                 label = { Label(it.name.displayName(language)) },
                 isSelected = { category -> category.id == state.selectedCategory?.id },
             )
         },
         mainContent = {
-            item {
-                LabeledTextField(
-                    value = state.inputEnName,
-                    onValueChange = { onEvent(CategoryContract.Event.EnNameChanged(it)) },
-                    label = stringResource(Res.string.en_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                LabeledTextField(
-                    value = state.inputArName,
-                    onValueChange = { onEvent(CategoryContract.Event.ArNameChanged(it)) },
-                    label = stringResource(Res.string.ar_name),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                ConfirmDeleteDialog(
-                    onConfirm = { onEvent(CategoryContract.Event.DeleteConfirmed) },
-                    onDismiss = { onEvent(CategoryContract.Event.DeleteCanceled) },
-                    show = state.showDeleteDialog
-                )
-            }
+            LabeledTextField(
+                value = state.inputEnName,
+                onValueChange = { onEvent(CategoryReducer.Event.EnNameChanged(it)) },
+                label = stringResource(Res.string.en_name),
+                enabled = state.canUserEdit,
+            )
+            LabeledTextField(
+                value = state.inputArName,
+                onValueChange = { onEvent(CategoryReducer.Event.ArNameChanged(it)) },
+                label = stringResource(Res.string.ar_name),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                enabled = state.canUserEdit,
+            )
+            ConfirmDeleteDialog(
+                onConfirm = { onEvent(CategoryReducer.Event.DeleteConfirmed) },
+                onDismiss = { onEvent(CategoryReducer.Event.DeleteCanceled) },
+                show = state.showDeleteDialog
+            )
         },
     )
 }

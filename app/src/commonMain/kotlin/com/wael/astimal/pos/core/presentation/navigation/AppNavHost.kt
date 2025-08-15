@@ -81,7 +81,13 @@ fun AppNavHost(
                     },
                 )
             }
-            composable<Destination.Categories> { CategoryRoute() }
+            composable<Destination.Categories> {
+                CategoryRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
             composable<Destination.Products> { ProductRoute() }
             composable<Destination.Stores> { StoreRoute() }
             composable<Destination.Units> { UnitRoute() }
@@ -104,8 +110,7 @@ fun AppNavHost(
                 SalesRoute(
                     onNavigateToCreateBusinessPartner = {
                         navController.navigate(Destination.BusinessPartners(true))
-                    },
-                    invoiceId = invoiceId
+                    }, invoiceId = invoiceId
                 )
             }
             composable<Destination.SalesReturns> {

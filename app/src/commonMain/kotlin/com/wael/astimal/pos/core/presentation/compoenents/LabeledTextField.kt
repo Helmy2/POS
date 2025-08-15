@@ -2,12 +2,12 @@ package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -17,7 +17,7 @@ fun LabeledTextField(
     label: String,
     modifier: Modifier = Modifier,
     numberOfLines: Int = 1,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean,
     readOnly: Boolean = false,
@@ -34,7 +34,6 @@ fun LabeledTextField(
             numberOfLines = numberOfLines,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
-            modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
             trailingIcon = trailingIcon,
             readOnly = readOnly

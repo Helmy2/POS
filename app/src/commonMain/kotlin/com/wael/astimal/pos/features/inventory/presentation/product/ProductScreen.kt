@@ -15,7 +15,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownM
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -52,7 +52,7 @@ fun ProductScreen(
 ) {
     val language = LocalAppLocale.current
 
-    SearchScreen(
+    SearchScreen2(
         modifier = modifier,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
