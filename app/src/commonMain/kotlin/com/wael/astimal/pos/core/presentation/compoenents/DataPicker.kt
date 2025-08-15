@@ -29,6 +29,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.cancel
 import pos.app.generated.resources.ok
 import pos.app.generated.resources.select_date
+import kotlin.time.ExperimentalTime
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +88,7 @@ fun DataPicker(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 @Composable
 fun DataPicker(
     onDateSelected: (LocalDate) -> Unit,

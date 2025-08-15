@@ -4,11 +4,13 @@ import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.reports.domain.model.ProductMovementGroup
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 object ProductMovementContract {
     data class State(
         val products: List<Product> = emptyList(),

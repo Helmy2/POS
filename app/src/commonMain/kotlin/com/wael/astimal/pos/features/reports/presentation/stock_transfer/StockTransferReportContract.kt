@@ -3,11 +3,13 @@ package com.wael.astimal.pos.features.reports.presentation.stock_transfer
 import StockTransfer
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 object StockTransferReportContract {
     data class State(
         val stores: List<Store> = emptyList(),

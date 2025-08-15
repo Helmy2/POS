@@ -20,7 +20,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format.byUnicodePattern
-import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
 import pos.app.generated.resources.Res
@@ -51,11 +50,14 @@ import pos.app.generated.resources.unit_price
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.ExperimentalTime
+import kotlin.time.toJavaInstant
 
 /**
  * Generates a self-contained HTML string for reports.
  * This is the single source of truth for the report's layout and styling.
  */
+@OptIn(ExperimentalTime::class)
 class HtmlReportGenerator(
     val settingsManager: SettingsManager,
 ) {
@@ -80,6 +82,7 @@ class HtmlReportGenerator(
         val credit: String,
         val balance: String,
     )
+
 
     private fun formatDate(date: LocalDate, lang: Language = Language.English): String {
         val sdf = SimpleDateFormat(

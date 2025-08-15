@@ -12,12 +12,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toJavaInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
+import kotlin.time.toJavaInstant
 
 class CustomerStatementRepositoryImpl(
     private val db: AppDatabase
 ) : CustomerStatementRepository {
+    @OptIn(ExperimentalTime::class)
     override fun getTransactionsForPartner(
         partnerId: String,
         startDate: LocalDate,

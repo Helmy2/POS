@@ -3,11 +3,13 @@ package com.wael.astimal.pos.features.reports.presentation.employee_ledger
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
 import com.wael.astimal.pos.features.user.domain.entity.User
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 object EmployeeLedgerContract {
     data class State(
         val employees: List<User> = emptyList(),

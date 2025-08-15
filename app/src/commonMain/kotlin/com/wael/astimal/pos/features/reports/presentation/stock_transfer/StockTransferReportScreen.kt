@@ -44,7 +44,6 @@ import com.wael.astimal.pos.core.domain.entity.get
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
@@ -59,6 +58,8 @@ import pos.app.generated.resources.start_date
 import pos.app.generated.resources.status
 import pos.app.generated.resources.stock_transfer_report
 import pos.app.generated.resources.to_store
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -225,6 +226,7 @@ fun StockTransferReportScreen(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 private fun TransferRow(transfer: StockTransfer) {
     val date = Instant.fromEpochMilliseconds(transfer.createdAt)

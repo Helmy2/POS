@@ -93,13 +93,14 @@ kotlin {
             implementation(libs.sqlite.bundled)
 
             implementation(libs.vico.multiplatform)
-            api(libs.mirzemehdi.kmpnotifier)
+            implementation(libs.mirzemehdi.kmpnotifier)
         }
 
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.logback.classic)
         }
     }
 }

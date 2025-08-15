@@ -1,34 +1,33 @@
 [versions]
-agp = "8.11.0"
+agp = "8.12.0"
 android-compileSdk = "36"
 android-minSdk = "28"
 android-targetSdk = "36"
-fontAsian = "9.2.0"
-html2pdf = "6.2.0"
-kmpnotifierVersion = "1.5.1"
-kotlin = "2.2.0"
+kmpnotifierVersion = "1.6.0"
+kotlin = "2.2.10"
 ksp = "2.2.0-2.0.2"
 koin = "4.1.0"
 coreSplashscreen = "1.0.1"
+logbackClassic = "1.5.18"
 vico = "2.1.3"
-ktor = "3.2.1"
-coil = "3.2.0"
+ktor = "3.2.3"
+coil = "3.3.0"
 composeHotReload = "1.0.0-beta04"
 androidx-activityCompose = "1.10.1"
-androidx-lifecycle = "2.9.1"
+androidx-lifecycle = "2.9.2"
 compose-multiplatform = "1.8.2"
 filekitCompose = "0.8.8"
 kotlinx-coroutines = "1.10.2"
 androidx-navigation = "2.8.0-alpha13"
 kotlinx-serialization = "1.9.0"
-supabase = "3.2.0"
+supabase = "3.2.2"
 buildkonfig = "0.17.1"
 adaptive = "1.1.2"
 material3WindowSizeClass = "1.8.2"
 sqlite = "2.5.2"
 androidx-room = "2.7.2"
 datastore = "1.1.7"
-material3 = "1.9.0-alpha04"
+material3 = "1.9.0-beta03"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -61,6 +60,7 @@ ktor-auth = { group = "io.ktor", name = "ktor-client-auth", version.ref = "ktor"
 adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackClassic" }
 material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
 material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 
@@ -78,9 +78,6 @@ sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sql
 
 vico-multiplatform = { group = "com.patrykandpatrick.vico", name = "multiplatform-m3", version.ref = "vico" }
 datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
-
-font-asian = { module = "com.itextpdf:font-asian", version.ref = "fontAsian" }
-html2pdf = { module = "com.itextpdf:html2pdf", version.ref = "html2pdf" }
 
 [plugins]
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

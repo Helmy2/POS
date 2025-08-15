@@ -3,13 +3,14 @@ package com.wael.astimal.pos.features.reports.presentation.customer_statement
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 object CustomerStatementContract {
-    data class State(
+    data class State @OptIn(ExperimentalTime::class) constructor(
         val partners: List<BusinessPartner> = emptyList(),
         val transactions: List<DetailedTransaction> = emptyList(),
         val selectedPartner: BusinessPartner? = null,

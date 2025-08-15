@@ -3,12 +3,13 @@ package com.wael.astimal.pos.features.reports.presentation.employee_report
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import com.wael.astimal.pos.features.user.domain.entity.User
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
-// --- CONTRACT ---
+@OptIn(ExperimentalTime::class)
 object EmployeeReportContract {
     data class State(
         val employees: List<User> = emptyList(),

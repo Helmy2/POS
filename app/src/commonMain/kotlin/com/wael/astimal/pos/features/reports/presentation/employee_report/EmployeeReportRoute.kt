@@ -59,6 +59,7 @@ import pos.app.generated.resources.partner_payment_details_format
 import pos.app.generated.resources.select_employee
 import pos.app.generated.resources.start_date
 import pos.app.generated.resources.total_amount
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -212,6 +213,7 @@ fun EmployeeReportScreen(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
     val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault()).date
