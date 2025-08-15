@@ -2,8 +2,10 @@ package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -15,13 +17,14 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
@@ -147,10 +150,9 @@ fun ExposedDropdownMenu(
     modifier: Modifier = Modifier,
     initialText: String = "",
     enabled: Boolean = true,
+    imeAction: ImeAction = ImeAction.Next,
     dropDownMaxHeight: Dp = 200.dp
 ) {
-    val focusManager = LocalFocusManager.current
-
     val textFieldState = rememberTextFieldState(initialText = initialText)
 
     val sortedOptions =
@@ -160,6 +162,12 @@ fun ExposedDropdownMenu(
 
     LaunchedEffect(initialText) {
         textFieldState.setTextAndPlaceCursorAtEnd(initialText)
+    }
+
+    LaunchedEffect(textFieldState.text) {
+        if (textFieldState.text.isNotEmpty() && !expanded && !options.any { textFieldState.text == it }) {
+            setExpanded(true)
+        }
     }
 
     ExposedDropdownMenuBox(
@@ -174,7 +182,8 @@ fun ExposedDropdownMenu(
             OutlinedTextField(
                 enabled = enabled,
                 modifier =
-                    Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
+                    Modifier.height(OutlinedTextFieldDefaults.MinHeight)
+                        .width(320.dp).menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
                 state = textFieldState,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 trailingIcon = {
@@ -189,9 +198,8 @@ fun ExposedDropdownMenu(
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 },
-                colors = ExposedDropdownMenuDefaults.textFieldColors(),
                 keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done,
+                    imeAction = imeAction,
                     keyboardType = KeyboardType.Text,
                 ),
                 onKeyboardAction = {
@@ -204,8 +212,12 @@ fun ExposedDropdownMenu(
                         onItemSelected(null)
                         setExpanded(false)
                     }
-                    focusManager.clearFocus()
-                }
+                    true
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
+                ),
             )
         }
         ExposedDropdownMenu(
@@ -221,7 +233,6 @@ fun ExposedDropdownMenu(
                         textFieldState.setTextAndPlaceCursorAtEnd(option)
                         onItemSelected(sortedOptions.indexOf(option))
                         setExpanded(false)
-                        focusManager.clearFocus()
                     },
                     enabled = enabled,
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,

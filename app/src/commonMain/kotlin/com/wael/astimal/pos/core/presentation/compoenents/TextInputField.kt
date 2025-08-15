@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun TextInputField(
@@ -27,7 +28,7 @@ fun TextInputField(
 ) {
     OutlinedTextField(
         modifier = modifier.height(OutlinedTextFieldDefaults.MinHeight)
-            .width(OutlinedTextFieldDefaults.MinWidth * 1.5f),
+            .width(320.dp),
         value = value,
         enabled = enabled,
         onValueChange = onValueChange,

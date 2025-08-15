@@ -88,7 +88,13 @@ fun AppNavHost(
                     },
                 )
             }
-            composable<Destination.Products> { ProductRoute() }
+            composable<Destination.Products> {
+                ProductRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
             composable<Destination.Stores> { StoreRoute() }
             composable<Destination.Units> { UnitRoute() }
             composable<Destination.StockManagement> { StockManagementRoute() }

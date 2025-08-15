@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
 import androidx.lifecycle.viewModelScope
-import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
@@ -43,9 +42,8 @@ class ProductViewModel(
     private val userRepository: UserRepository,
     private val stockRepository: StockRepository,
     private val snackbarController: SnackbarController,
-    private val navigationController: NavigationController
-) : BaseViewModel<ProductContract.State, ProductContract.Event, Nothing>(
-    reducer = ProductReducer(), initialState = ProductContract.State()
+) : BaseViewModel<ProductReducer.State, ProductReducer.Event, Nothing>(
+    reducer = ProductReducer(), initialState = ProductReducer.State()
 ) {
     private var searchJob: Job? = null
 
@@ -55,23 +53,22 @@ class ProductViewModel(
         searchProducts("") // Initial load
     }
 
-    override fun handleEvent(event: ProductContract.Event) {
+    override fun handleEvent(event: ProductReducer.Event) {
         when (event) {
-            is ProductContract.Event.SearchQueryChanged -> {
+            is ProductReducer.Event.SearchQueryChanged -> {
                 setState(event)
                 searchProducts(event.query)
             }
 
-            is ProductContract.Event.SaveClicked -> saveProduct()
-            is ProductContract.Event.DeleteConfirmed -> deleteProduct()
-            is ProductContract.Event.BackClicked -> navigateBack()
+            is ProductReducer.Event.SaveClicked -> saveProduct()
+            is ProductReducer.Event.DeleteConfirmed -> deleteProduct()
             else -> setState(event)
         }
     }
 
     private fun loadCurrentUser() {
         viewModelScope.launch {
-            setState(ProductContract.Event.UserLoaded(userRepository.getCurrentUser()))
+            setState(ProductReducer.Event.UserLoaded(userRepository.getCurrentUser()))
         }
     }
 
@@ -79,25 +76,25 @@ class ProductViewModel(
         viewModelScope.launch {
             combine(
                 categoryRepository.getCategories("").catch {
-                    setState(ProductContract.Event.LoadingFinished)
+                    setState(ProductReducer.Event.LoadingFinished)
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_categories)))
                 },
                 unitRepository.getUnits("").catch {
-                    setState(ProductContract.Event.LoadingFinished)
+                    setState(ProductReducer.Event.LoadingFinished)
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_units)))
                 },
                 storeRepository.getStores("").catch {
-                    setState(ProductContract.Event.LoadingFinished)
+                    setState(ProductReducer.Event.LoadingFinished)
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stores)))
                 }
             ) { categories, units, stores ->
-                ProductContract.DropdownData(
+                ProductReducer.DropdownData(
                     categories,
                     units,
                     stores,
                 )
             }.collect { dropdownData ->
-                setState(ProductContract.Event.DropdownDataLoaded(dropdownData))
+                setState(ProductReducer.Event.DropdownDataLoaded(dropdownData))
             }
         }
     }
@@ -105,22 +102,22 @@ class ProductViewModel(
     @OptIn(FlowPreview::class)
     private fun searchProducts(query: String) {
         searchJob?.cancel()
-        setState(ProductContract.Event.LoadingStarted)
+        setState(ProductReducer.Event.LoadingStarted)
         searchJob = productRepository.getProducts(query).debounce(300L)
             .catch {
-                setState(ProductContract.Event.LoadingFinished)
+                setState(ProductReducer.Event.LoadingFinished)
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_products)))
             }
             .map {
                 it.map { product ->
-                    ProductContract.ProductWithStock(
+                    ProductReducer.ProductWithStock(
                         product,
                         stockRepository.getStockInCurrentStore(product.id)
                     )
                 }
             }
             .onEach { products ->
-                setState(ProductContract.Event.ProductsLoaded(products))
+                setState(ProductReducer.Event.ProductsLoaded(products))
             }.launchIn(viewModelScope)
     }
 
@@ -131,7 +128,7 @@ class ProductViewModel(
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
                 return@launch
             }
-            setState(ProductContract.Event.LoadingStarted)
+            setState(ProductReducer.Event.LoadingStarted)
             viewModelScope.launch {
                 val productToSave = Product(
                     id = currentState.selectedProduct?.product?.id ?: "",
@@ -140,9 +137,9 @@ class ProductViewModel(
                     sellingPrice = currentState.inputSellingPrice.toDouble(),
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
-                    category = currentState.dropdownData.categories.find { it.id == currentState.selectedCategoryId }!!,
-                    mainProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedMainUnitId }!!,
-                    subProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedSubUnitId },
+                    category = currentState.dropdownData.categories.find { it.id == currentState.selectedCategory?.id }!!,
+                    mainProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedMainUnit?.id }!!,
+                    subProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedSubUnit?.id },
                     createdAt = currentState.selectedProduct?.product?.createdAt ?: Clock.now(),
                     purchasePrice = currentState.inputPurchasePrice.toDouble(),
                     barcode = "",
@@ -152,35 +149,29 @@ class ProductViewModel(
 
                 result.onSuccess {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.product_saved_successfully)))
-                    setState(ProductContract.Event.SaveSucceeded)
+                    setState(ProductReducer.Event.SaveSucceeded)
                     searchProducts("")
                 }.onFailure {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_product)))
-                    setState(ProductContract.Event.LoadingFinished)
+                    setState(ProductReducer.Event.LoadingFinished)
                 }
             }
         }
     }
 
     private fun deleteProduct() {
-        setState(ProductContract.Event.DeleteConfirmed)
+        setState(ProductReducer.Event.DeleteConfirmed)
         val productToDelete = state.value.selectedProduct ?: return
-        setState(ProductContract.Event.LoadingStarted)
+        setState(ProductReducer.Event.LoadingStarted)
         viewModelScope.launch {
             productRepository.deleteProduct(productToDelete.product).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.product_deleted_successfully)))
-                setState(ProductContract.Event.DeleteSucceeded)
+                setState(ProductReducer.Event.DeleteSucceeded)
                 searchProducts("")
             }.onFailure {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_delete_product)))
-                setState(ProductContract.Event.LoadingFinished)
+                setState(ProductReducer.Event.LoadingFinished)
             }
-        }
-    }
-
-    private fun navigateBack() {
-        viewModelScope.launch {
-            navigationController.navigateBack()
         }
     }
 }

@@ -27,14 +27,6 @@ class ProductRepositoryImpl(
         }
     }
 
-    override suspend fun getProductByLocalId(localId: String): Result<Product> {
-        return runCatching {
-            val entity = productDao.getProductWithDetailsByLocalId(localId)
-            if (entity?.product?.isDeletedLocally == true) throw Exception("Product not found")
-            entity?.toDomain() ?: throw Exception("Product not found")
-        }
-    }
-
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveProduct(product: Product): Result<Long> {
         return try {
@@ -81,13 +73,6 @@ class ProductRepositoryImpl(
             productsDto.forEach {
                 productDao.insertOrUpdate(it)
             }
-        }
-    }
-
-    override suspend fun getProductByServerId(serverId: String): Result<Product> {
-        return runCatching {
-            productDao.getProductById(serverId)?.toDomain()
-                ?: throw Exception("Product not found")
         }
     }
 

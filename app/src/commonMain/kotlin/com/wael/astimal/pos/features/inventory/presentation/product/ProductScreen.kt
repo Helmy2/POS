@@ -1,22 +1,21 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.util.formate
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
@@ -33,12 +32,14 @@ import pos.app.generated.resources.sub_unit_per_main_unit
 
 @Composable
 fun ProductRoute(
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     ProductScreen(
+        onBack = onBack,
         state = state, onEvent = viewModel::processEvent, modifier = modifier
     )
 }
@@ -46,41 +47,42 @@ fun ProductRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductScreen(
-    state: ProductContract.State,
-    onEvent: (ProductContract.Event) -> Unit,
+    state: ProductReducer.State,
+    onEvent: (ProductReducer.Event) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: () -> Unit,
 ) {
     val language = LocalAppLocale.current
 
-    SearchScreen2(
+    SearchScreen(
         modifier = modifier,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        onQueryChange = { onEvent(ProductContract.Event.SearchQueryChanged(it)) },
-        onSearch = { onEvent(ProductContract.Event.SearchQueryChanged(it)) },
-        onSearchActiveChange = { onEvent(ProductContract.Event.SearchActiveChanged(it)) },
-        onBack = { onEvent(ProductContract.Event.BackClicked) },
+        onQueryChange = { onEvent(ProductReducer.Event.SearchQueryChanged(it)) },
+        onSearch = { onEvent(ProductReducer.Event.SearchQueryChanged(it)) },
+        onSearchActiveChange = { onEvent(ProductReducer.Event.SearchActiveChanged(it)) },
+        onBack = onBack,
         lastModifiedDate = state.selectedProduct?.product?.updatedAt,
-        onDelete = { onEvent(ProductContract.Event.DeleteClicked) },
-        onCreate = { onEvent(ProductContract.Event.SaveClicked) },
-        onUpdate = { onEvent(ProductContract.Event.SaveClicked) },
-        onNew = { onEvent(ProductContract.Event.NewProductClicked) },
+        onDelete = { onEvent(ProductReducer.Event.DeleteClicked) },
+        onCreate = { onEvent(ProductReducer.Event.SaveClicked) },
+        onUpdate = { onEvent(ProductReducer.Event.SaveClicked) },
+        onNew = { onEvent(ProductReducer.Event.NewProductClicked) },
         canEdit = state.canUserEdit,
         canSave = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.products,
-                onItemClick = { product -> onEvent(ProductContract.Event.ProductSelected(product)) },
+                onItemClick = { product -> onEvent(ProductReducer.Event.ProductSelected(product)) },
                 label = {
                     Label(
                         it.product.name.displayName(language) + " : " + if (state.canUserEdit) {
                             stringResource(Res.string.average_cost_price) + " : " +
-                                    String.format("%.2f", it.product.averagePrice)
+                                    it.product.averagePrice.formate()
                         } else {
                             ""
                         } + " : " + stringResource(Res.string.current_stock) + " : " +
-                                String.format("%.2f", it.stock)
+                                it.stock.formate()
                     )
                 },
                 isSelected = { product -> product.product.id == state.selectedProduct?.product?.id },
@@ -88,130 +90,83 @@ fun ProductScreen(
         },
         mainContent = {
             if (state.selectedProduct?.product?.averagePrice.takeIf { it != 0.0 } != null && state.canUserEdit) {
-                item {
-                    Row {
-                        Label(
-                            text = stringResource(Res.string.average_cost_price),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                        Label(
-                            text = String.format(
-                                "%.2f",
-                                state.selectedProduct?.product?.averagePrice
-                            ),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
+                LabeledTextField(
+                    value = state.selectedProduct?.product?.averagePrice.formate(),
+                    onValueChange = { },
+                    label = stringResource(Res.string.average_cost_price),
+                    enabled = false,
+                )
             }
             if (state.selectedProduct?.stock != null) {
-                item {
-                    Row {
-                        Label(
-                            text = stringResource(Res.string.current_stock),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                        Label(
-                            text = String.format("%.2f", state.selectedProduct.stock),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
-            }
-            item {
                 LabeledTextField(
-                    value = state.inputEnName,
-                    onValueChange = { onEvent(ProductContract.Event.EnNameChanged(it)) },
-                    label = stringResource(Res.string.en_name),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
+                    value = state.selectedProduct.stock.formate(),
+                    onValueChange = { },
+                    label = stringResource(Res.string.current_stock),
+                    enabled = false,
                 )
             }
-            item {
-                LabeledTextField(
-                    value = state.inputArName,
-                    onValueChange = { onEvent(ProductContract.Event.ArNameChanged(it)) },
-                    label = stringResource(Res.string.ar_name),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                LabeledTextField(
-                    value = state.inputPurchasePrice,
-                    onValueChange = { onEvent(ProductContract.Event.PurchasePriceChanged(it)) },
-                    label = stringResource(Res.string.purchase_price),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                LabeledTextField(
-                    value = state.inputSellingPrice,
-                    onValueChange = { onEvent(ProductContract.Event.SellingPriceChanged(it)) },
-                    label = stringResource(Res.string.selling_price),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.category),
-                    items = state.dropdownData.categories,
-                    selectedItemId = state.selectedCategoryId,
-                    onItemSelected = { onEvent(ProductContract.Event.CategoryIdChanged(it.id)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id },
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.main_unit),
-                    items = state.dropdownData.units,
-                    selectedItemId = state.selectedMainUnitId,
-                    onItemSelected = { onEvent(ProductContract.Event.MainUnitIdChanged(it.id)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id },
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
+            LabeledTextField(
+                value = state.inputEnName,
+                onValueChange = { onEvent(ProductReducer.Event.EnNameChanged(it)) },
+                label = stringResource(Res.string.en_name),
+                enabled = state.canUserEdit,
+            )
 
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.sub_unit),
-                    items = state.dropdownData.units,
-                    selectedItemId = state.selectedSubUnitId,
-                    onItemSelected = { onEvent(ProductContract.Event.SubUnitIdChanged(it.id)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id },
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-
-            item {
-                LabeledTextField(
-                    value = state.inputSubUnitsPerMainUnit,
-                    onValueChange = { onEvent(ProductContract.Event.SubUnitsPerMainUnitChanged(it)) },
-                    label = stringResource(Res.string.sub_unit_per_main_unit),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = state.canUserEdit,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-
-            item {
-                ConfirmDeleteDialog(
-                    onConfirm = { onEvent(ProductContract.Event.DeleteConfirmed) },
-                    onDismiss = { onEvent(ProductContract.Event.DeleteCanceled) },
-                    show = state.showDeleteDialog
-                )
-            }
+            LabeledTextField(
+                value = state.inputArName,
+                onValueChange = { onEvent(ProductReducer.Event.ArNameChanged(it)) },
+                label = stringResource(Res.string.ar_name),
+                enabled = state.canUserEdit,
+            )
+            LabeledTextField(
+                value = state.inputPurchasePrice,
+                onValueChange = { onEvent(ProductReducer.Event.PurchasePriceChanged(it)) },
+                label = stringResource(Res.string.purchase_price),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = state.canUserEdit,
+            )
+            LabeledTextField(
+                value = state.inputSellingPrice,
+                onValueChange = { onEvent(ProductReducer.Event.SellingPriceChanged(it)) },
+                label = stringResource(Res.string.selling_price),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = state.canUserEdit,
+            )
+            ExposedDropdownMenu(
+                label = stringResource(Res.string.category),
+                options = state.dropdownData.categories.map { it.name.displayName(language) },
+                onItemSelected = { onEvent(ProductReducer.Event.CategoryIdChanged(it?.let { it -> state.dropdownData.categories[it] })) },
+                enabled = state.canUserEdit,
+                initialText = state.selectedCategory?.name.displayName(language)
+            )
+            ExposedDropdownMenu(
+                label = stringResource(Res.string.main_unit),
+                options = state.dropdownData.units.map { it.name.displayName(language) },
+                onItemSelected = { onEvent(ProductReducer.Event.MainUnitIdChanged(it?.let { it -> state.dropdownData.units[it] })) },
+                enabled = state.canUserEdit,
+                initialText = state.selectedMainUnit?.name.displayName(language)
+            )
+            ExposedDropdownMenu(
+                label = stringResource(Res.string.sub_unit),
+                options = state.dropdownData.units.map { it.name.displayName(language) },
+                onItemSelected = {
+                    onEvent(ProductReducer.Event.SubUnitIdChanged(it?.let { it -> state.dropdownData.units[it] }))
+                },
+                enabled = state.canUserEdit,
+                initialText = state.selectedSubUnit?.name.displayName(language)
+            )
+            LabeledTextField(
+                value = state.inputSubUnitsPerMainUnit,
+                onValueChange = { onEvent(ProductReducer.Event.SubUnitsPerMainUnitChanged(it)) },
+                label = stringResource(Res.string.sub_unit_per_main_unit),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = state.canUserEdit,
+            )
+            ConfirmDeleteDialog(
+                onConfirm = { onEvent(ProductReducer.Event.DeleteConfirmed) },
+                onDismiss = { onEvent(ProductReducer.Event.DeleteCanceled) },
+                show = state.showDeleteDialog
+            )
         },
     )
 }

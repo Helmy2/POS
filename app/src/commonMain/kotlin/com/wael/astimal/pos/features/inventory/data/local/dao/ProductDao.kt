@@ -15,13 +15,6 @@ interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(product: ProductEntity): Long
 
-    @Transaction
-    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
-    suspend fun getProductWithDetailsByLocalId(localId: String): ProductWithDetails?
-
-    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
-    suspend fun getProductByLocalId(localId: String): ProductEntity?
-
     @Query("SELECT averagePurchasePrice FROM products WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
     suspend fun getAverageCost(localId: String): Double
 
@@ -36,9 +29,6 @@ interface ProductDao {
     )
     fun searchProductsWithDetailsFlow(query: String): Flow<List<ProductWithDetails>>
 
-    @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
-    suspend fun getProductById(id: String): ProductWithDetails?
-
     @Query("DELETE FROM products WHERE localId = :id")
     suspend fun hardDelete(id: String)
 
@@ -48,7 +38,4 @@ interface ProductDao {
     @Transaction
     @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND isSynced = 0")
     suspend fun getUnsyncedProducts(): List<ProductWithDetails>
-
-    @Query("UPDATE products SET isDeletedLocally = 1")
-    suspend fun deleteAll()
 }
