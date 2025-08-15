@@ -95,7 +95,13 @@ fun AppNavHost(
                     },
                 )
             }
-            composable<Destination.Stores> { StoreRoute() }
+            composable<Destination.Stores> {
+                StoreRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
             composable<Destination.Units> { UnitRoute() }
             composable<Destination.StockManagement> { StockManagementRoute() }
             composable<Destination.StockTransfer> {

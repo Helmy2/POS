@@ -5,6 +5,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.displayName
@@ -135,14 +136,26 @@ fun ProductScreen(
             ExposedDropdownMenu(
                 label = stringResource(Res.string.category),
                 options = state.dropdownData.categories.map { it.name.displayName(language) },
-                onItemSelected = { onEvent(ProductReducer.Event.CategoryIdChanged(it?.let { it -> state.dropdownData.categories[it] })) },
+                onItemSelected = {
+                    onEvent(ProductReducer.Event.CategoryIdChanged(it?.let { it ->
+                        state.dropdownData.categories.getOrNull(
+                            it
+                        )
+                    }))
+                },
                 enabled = state.canUserEdit,
                 initialText = state.selectedCategory?.name.displayName(language)
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.main_unit),
                 options = state.dropdownData.units.map { it.name.displayName(language) },
-                onItemSelected = { onEvent(ProductReducer.Event.MainUnitIdChanged(it?.let { it -> state.dropdownData.units[it] })) },
+                onItemSelected = {
+                    onEvent(ProductReducer.Event.MainUnitIdChanged(it?.let { it ->
+                        state.dropdownData.units.getOrNull(
+                            it
+                        )
+                    }))
+                },
                 enabled = state.canUserEdit,
                 initialText = state.selectedMainUnit?.name.displayName(language)
             )
@@ -150,7 +163,11 @@ fun ProductScreen(
                 label = stringResource(Res.string.sub_unit),
                 options = state.dropdownData.units.map { it.name.displayName(language) },
                 onItemSelected = {
-                    onEvent(ProductReducer.Event.SubUnitIdChanged(it?.let { it -> state.dropdownData.units[it] }))
+                    onEvent(ProductReducer.Event.SubUnitIdChanged(it?.let { it ->
+                        state.dropdownData.units.getOrNull(
+                            it
+                        )
+                    }))
                 },
                 enabled = state.canUserEdit,
                 initialText = state.selectedSubUnit?.name.displayName(language)
@@ -159,7 +176,10 @@ fun ProductScreen(
                 value = state.inputSubUnitsPerMainUnit,
                 onValueChange = { onEvent(ProductReducer.Event.SubUnitsPerMainUnitChanged(it)) },
                 label = stringResource(Res.string.sub_unit_per_main_unit),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
+                ),
                 enabled = state.canUserEdit,
             )
             ConfirmDeleteDialog(

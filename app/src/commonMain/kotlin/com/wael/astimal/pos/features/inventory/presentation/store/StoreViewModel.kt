@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
 import androidx.lifecycle.viewModelScope
-import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
@@ -31,10 +30,9 @@ class StoreViewModel(
     private val storeRepository: StoreRepository,
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
-    private val navigationController: NavigationController
-) : BaseViewModel<StoreContract.State, StoreContract.Event, Nothing>(
+) : BaseViewModel<StoreReducer.State, StoreReducer.Event, Nothing>(
     reducer = StoreReducer(),
-    initialState = StoreContract.State()
+    initialState = StoreReducer.State()
 ) {
     private var searchJob: Job? = null
 
@@ -43,47 +41,40 @@ class StoreViewModel(
         searchStores("")
     }
 
-    override fun handleEvent(event: StoreContract.Event) {
+    override fun handleEvent(event: StoreReducer.Event) {
         when (event) {
-            is StoreContract.Event.SearchQueryChanged -> {
+            is StoreReducer.Event.SearchQueryChanged -> {
                 setState(event)
                 searchStores(event.query)
             }
 
-            is StoreContract.Event.SaveClicked -> saveStore()
-            is StoreContract.Event.DeleteConfirmed -> deleteStore()
-            is StoreContract.Event.BackClicked -> navigateBack()
+            is StoreReducer.Event.SaveClicked -> saveStore()
+            is StoreReducer.Event.DeleteConfirmed -> deleteStore()
             else -> setState(event)
         }
     }
 
-    private fun navigateBack() {
-        viewModelScope.launch {
-            navigationController.navigateBack()
-            setState(StoreContract.Event.LoadingFinished)
-        }
-    }
 
     private fun loadUsers() {
         viewModelScope.launch {
             val currentUser = userRepository.getCurrentUser()
             val employee = userRepository.getEmployeesFlow().first()
-            setState(StoreContract.Event.UserLoaded(currentUser, employee))
+            setState(StoreReducer.Event.UserLoaded(currentUser, employee))
         }
     }
 
     @OptIn(FlowPreview::class)
     private fun searchStores(query: String) {
         searchJob?.cancel()
-        setState(StoreContract.Event.LoadingStarted)
+        setState(StoreReducer.Event.LoadingStarted)
         searchJob = storeRepository.getStores(query)
             .catch {
-                setState(StoreContract.Event.LoadingFinished)
+                setState(StoreReducer.Event.LoadingFinished)
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stores)))
             }
             .debounce(300L)
             .onEach { stores ->
-                setState(StoreContract.Event.StoresLoaded(stores))
+                setState(StoreReducer.Event.StoresLoaded(stores))
             }
             .launchIn(viewModelScope)
     }
@@ -95,7 +86,7 @@ class StoreViewModel(
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
                 return@launch
             }
-            setState(StoreContract.Event.LoadingStarted)
+            setState(StoreReducer.Event.LoadingStarted)
             viewModelScope.launch {
                 val storeToSave = Store(
                     id = currentState.selectedStore?.id ?: "",
@@ -113,28 +104,28 @@ class StoreViewModel(
 
                 result.onSuccess {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.store_saved_successfully)))
-                    setState(StoreContract.Event.SaveSucceeded)
+                    setState(StoreReducer.Event.SaveSucceeded)
                     searchStores("")
                 }.onFailure {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_store)))
-                    setState(StoreContract.Event.LoadingFinished)
+                    setState(StoreReducer.Event.LoadingFinished)
                 }
             }
         }
     }
 
     private fun deleteStore() {
-        setState(StoreContract.Event.DeleteConfirmed)
+        setState(StoreReducer.Event.DeleteConfirmed)
         val storeToDelete = state.value.selectedStore ?: return
-        setState(StoreContract.Event.LoadingStarted)
+        setState(StoreReducer.Event.LoadingStarted)
         viewModelScope.launch {
             storeRepository.deleteStore(storeToDelete).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.store_deleted_successfully)))
-                setState(StoreContract.Event.DeleteSucceeded)
+                setState(StoreReducer.Event.DeleteSucceeded)
                 searchStores("")
             }.onFailure {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_delete_store)))
-                setState(StoreContract.Event.LoadingFinished)
+                setState(StoreReducer.Event.LoadingFinished)
             }
         }
     }

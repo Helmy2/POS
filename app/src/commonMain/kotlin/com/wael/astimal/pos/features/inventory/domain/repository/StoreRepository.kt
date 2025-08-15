@@ -7,9 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface StoreRepository {
     fun getStores(query: String = ""): Flow<List<Store>>
-    suspend fun getStoreByLocalId(id: String): Result<Store>
-    suspend fun getStoreBySeverId(id: String): Result<Store>
-    suspend fun saveStore(store: Store): Result<Long>
+    suspend fun getStoreById(id: String): Result<Store>
+    suspend fun saveStore(store: Store): Result<Unit>
     suspend fun deleteStore(store: Store): Result<Unit>
     suspend fun syncWithServer(stores: List<StoreEntity>): Result<Unit>
     fun getStoresForUser(user: User): Flow<List<Store>>

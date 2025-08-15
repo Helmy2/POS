@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface StoreDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdate(store: StoreEntity): Long
+    suspend fun upsert(store: StoreEntity)
 
     @Transaction
-    @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND localId = :localId LIMIT 1")
-    suspend fun getStoreByLocalId(localId: String): StoreWithDetails?
+    @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND localId = :id LIMIT 1")
+    suspend fun getStoreById(id: String): StoreWithDetails?
 
     @Transaction
     @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND (arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%') ORDER BY arName ASC, enName ASC")
@@ -35,8 +35,4 @@ interface StoreDao {
     @Transaction
     @Query("SELECT * FROM stores WHERE NOT isDeletedLocally AND employeeId = :local LIMIT 1")
     fun getStoreByUserId(local: String): Flow<StoreWithDetails?>
-
-    @Query("UPDATE stores SET isDeletedLocally = 1")
-    suspend fun deleteAll()
-
 }

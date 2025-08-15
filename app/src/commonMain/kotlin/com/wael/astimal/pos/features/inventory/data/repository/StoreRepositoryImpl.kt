@@ -29,24 +29,17 @@ class StoreRepositoryImpl(
         }
     }
 
-    override suspend fun getStoreByLocalId(id: String): Result<Store> {
+    override suspend fun getStoreById(id: String): Result<Store> {
         return runCatching {
-            val entity = storeDao.getStoreByLocalId(id)
+            val entity = storeDao.getStoreById(id)
             if (entity?.store?.isDeletedLocally == true) throw IllegalStateException("Store with localId $id is marked as deleted locally.")
             entity?.toDomain() ?: throw NoSuchElementException("No store found with localId ${id}.")
         }
     }
 
-    override suspend fun getStoreBySeverId(id: String): Result<Store> {
-        return runCatching {
-            val entity = storeDao.getStoreByServerId(id)
-            if (entity?.store?.isDeletedLocally == true) throw IllegalStateException("Store with server id $id is marked as deleted locally.")
-            entity?.toDomain() ?: throw NoSuchElementException("No store found with server id $id.")
-        }
-    }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun saveStore(store: Store): Result<Long> {
+    override suspend fun saveStore(store: Store): Result<Unit> {
         return try {
             val entity = store.toDto()
 
@@ -65,7 +58,7 @@ class StoreRepositoryImpl(
                 }.decodeSingle<StoreDto>()
             }
 
-            val localId = storeDao.insertOrUpdate(result.toEntity())
+            val localId = storeDao.upsert(result.toEntity())
 
             Result.success(localId)
         } catch (e: Exception) {
