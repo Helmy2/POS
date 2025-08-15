@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.reports.presentation.stock_transfer
 
-import StockTransfer
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone

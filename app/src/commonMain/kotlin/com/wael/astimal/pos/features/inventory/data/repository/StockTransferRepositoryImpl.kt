@@ -1,8 +1,5 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
-import StockTransfer
-import StockTransferItem
-import StockTransferStatus
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.core.util.toDateString
@@ -16,6 +13,9 @@ import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferStatus
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
@@ -160,7 +160,7 @@ class StockTransferRepositoryImpl(
         receivingUser: User,
         notes: String,
         status: StockTransferStatus,
-        createdat: Long
+        createdAt: Long
     ): Result<Unit> {
         return try {
             if (status == StockTransferStatus.APPROVED) {
@@ -177,7 +177,7 @@ class StockTransferRepositoryImpl(
                 receivingUserId = receivingUser.id,
                 notes = notes,
                 status = "pending",
-                createdAt = createdat.toDateString(),
+                createdAt = createdAt.toDateString(),
                 updatedAt = Clock.now().toDateString()
             )
 

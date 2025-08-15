@@ -1,7 +1,7 @@
+package com.wael.astimal.pos.features.inventory.domain.entity
+
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
-import com.wael.astimal.pos.features.inventory.domain.entity.Product
-import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res

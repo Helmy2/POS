@@ -1,8 +1,8 @@
 package com.wael.astimal.pos.core.util
 
 
-import StockTransfer
 import com.wael.astimal.pos.core.domain.entity.Language
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo

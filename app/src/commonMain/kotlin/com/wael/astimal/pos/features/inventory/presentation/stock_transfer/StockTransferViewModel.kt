@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
-import StockTransferItem
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
@@ -8,6 +7,7 @@ import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
@@ -45,9 +45,9 @@ class StockTransferViewModel(
     private val stockRepository: StockRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController,
-) : BaseViewModel<StockTransferContract.State, StockTransferContract.Event, Nothing>(
-    reducer = StockTransferReducer(), initialState = StockTransferContract.State(
-        currentTransferInput = StockTransferContract.EditableStockTransfer()
+) : BaseViewModel<StockTransferReducer.State, StockTransferReducer.Event, Nothing>(
+    reducer = StockTransferReducer(), initialState = StockTransferReducer.State(
+        currentTransferInput = StockTransferReducer.EditableStockTransfer()
     )
 ) {
     private var searchJob: Job? = null
@@ -59,61 +59,61 @@ class StockTransferViewModel(
         searchTransfers("")
     }
 
-    override fun handleEvent(event: StockTransferContract.Event) {
+    override fun handleEvent(event: StockTransferReducer.Event) {
         when (event) {
-            is StockTransferContract.Event.SearchQueryChanged -> {
+            is StockTransferReducer.Event.SearchQueryChanged -> {
                 setState(event)
                 searchTransfers(event.query)
             }
 
-            is StockTransferContract.Event.TransferSelected -> {
+            is StockTransferReducer.Event.TransferSelected -> {
                 setState(event)
                 resubscribeAllStockObservers()
             }
 
-            is StockTransferContract.Event.SaveClicked -> saveTransfer()
-            is StockTransferContract.Event.DeleteClicked -> deleteTransfer()
-            is StockTransferContract.Event.BackClicked -> navigateBack()
-            is StockTransferContract.Event.FromStoreChanged -> {
+            is StockTransferReducer.Event.SaveClicked -> saveTransfer()
+            is StockTransferReducer.Event.DeleteClicked -> deleteTransfer()
+            is StockTransferReducer.Event.BackClicked -> navigateBack()
+            is StockTransferReducer.Event.FromStoreChanged -> {
                 setState(event)
                 resubscribeAllStockObservers()
             }
 
-            is StockTransferContract.Event.ItemProductChanged -> {
+            is StockTransferReducer.Event.ItemProductChanged -> {
                 setState(event)
                 event.product?.let { observeStockForItem(event.editorId, it.id) }
             }
 
-            is StockTransferContract.Event.RemoveItem -> {
+            is StockTransferReducer.Event.RemoveItem -> {
                 stockObservationJobs[event.editorId]?.cancel()
                 stockObservationJobs.remove(event.editorId)
                 setState(event)
             }
 
-            is StockTransferContract.Event.ApprovedClicked -> {
+            is StockTransferReducer.Event.ApprovedClicked -> {
                 viewModelScope.launch {
                     stockTransferRepository.setTransferApprovalStatus(
                         state.value.selectedTransfer!!.id, true
                     ).onSuccess {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
-                        setState(StockTransferContract.Event.SaveSucceeded)
+                        setState(StockTransferReducer.Event.SaveSucceeded)
                     }.onFailure {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
-                        setState(StockTransferContract.Event.LoadingFinished)
+                        setState(StockTransferReducer.Event.LoadingFinished)
                     }
                 }
             }
 
-            is StockTransferContract.Event.RejectedClicked -> {
+            is StockTransferReducer.Event.RejectedClicked -> {
                 viewModelScope.launch {
                     stockTransferRepository.setTransferApprovalStatus(
                         state.value.selectedTransfer!!.id, false
                     ).onSuccess {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
-                        setState(StockTransferContract.Event.SaveSucceeded)
+                        setState(StockTransferReducer.Event.SaveSucceeded)
                     }.onFailure {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
-                        setState(StockTransferContract.Event.LoadingFinished)
+                        setState(StockTransferReducer.Event.LoadingFinished)
                     }
                 }
             }
@@ -124,11 +124,7 @@ class StockTransferViewModel(
 
     private fun loadCurrentUser() = viewModelScope.launch {
         val currentUser = userRepository.getCurrentUser() ?: return@launch
-
-        val fromStore = if (!currentUser.isAdmin) {
-            storeRepository.getStoreById(currentUser.id).getOrNull()
-        } else null
-        setState(StockTransferContract.Event.UserLoaded(currentUser, fromStore))
+        setState(StockTransferReducer.Event.UserLoaded(currentUser))
     }
 
     private fun loadDropdownData() = viewModelScope.launch {
@@ -136,25 +132,25 @@ class StockTransferViewModel(
 
         combine(storeRepository.getStores("").catch {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stores)))
-            setState(StockTransferContract.Event.LoadingFinished)
+            setState(StockTransferReducer.Event.LoadingFinished)
         }, productRepository.getProducts("").catch {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_products)))
-            setState(StockTransferContract.Event.LoadingFinished)
+            setState(StockTransferReducer.Event.LoadingFinished)
         }) { stores, products ->
-            StockTransferContract.DropdownData(
+            StockTransferReducer.DropdownData(
                 stores.filter { it.employee.id == currentUser.id },
                 stores.filter { it.employee.id != currentUser.id },
                 products
             )
         }.collect { dropdownData ->
-            setState(StockTransferContract.Event.DropdownDataLoaded(dropdownData))
+            setState(StockTransferReducer.Event.DropdownDataLoaded(dropdownData))
         }
     }
 
     @OptIn(FlowPreview::class)
     private fun searchTransfers(query: String) {
         searchJob?.cancel()
-        setState(StockTransferContract.Event.LoadingStarted)
+        setState(StockTransferReducer.Event.LoadingStarted)
         searchJob = stockTransferRepository.getStockTransfersWithDetails().debounce(300L)
             .onEach { transfers ->
                 val filtered = if (query.isBlank()) {
@@ -166,7 +162,7 @@ class StockTransferViewModel(
                         )
                     }
                 }
-                setState(StockTransferContract.Event.TransfersLoaded(filtered))
+                setState(StockTransferReducer.Event.TransfersLoaded(filtered))
             }.launchIn(viewModelScope)
     }
 
@@ -178,7 +174,7 @@ class StockTransferViewModel(
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_load_stock)))
             }.onEach { stock ->
                 setState(
-                    StockTransferContract.Event.StockForItemSelected(
+                    StockTransferReducer.Event.StockForItemSelected(
                         editorId, stock
                     )
                 )
@@ -230,7 +226,7 @@ class StockTransferViewModel(
             }
         }
 
-        setState(StockTransferContract.Event.LoadingStarted)
+        setState(StockTransferReducer.Event.LoadingStarted)
 
         val transferItems = currentInput.items.mapNotNull {
             val quantity = it.maxUnitQuantity.toDoubleOrNull()
@@ -252,7 +248,7 @@ class StockTransferViewModel(
                 transferDate = Clock.now(),
                 notes = currentInput.notes,
                 status = state.value.selectedTransfer!!.status,
-                createdat = state.value.selectedTransfer!!.createdAt
+                createdAt = state.value.selectedTransfer!!.createdAt
             )
         } else {
             stockTransferRepository.addStockTransfer(
@@ -268,24 +264,24 @@ class StockTransferViewModel(
 
         result.onSuccess {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
-            setState(StockTransferContract.Event.SaveSucceeded)
+            setState(StockTransferReducer.Event.SaveSucceeded)
             searchTransfers("")
         }.onFailure {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
-            setState(StockTransferContract.Event.LoadingFinished)
+            setState(StockTransferReducer.Event.LoadingFinished)
         }
     }
 
     private fun deleteTransfer() = viewModelScope.launch {
         val transferToDelete = state.value.selectedTransfer ?: return@launch
-        setState(StockTransferContract.Event.LoadingStarted)
+        setState(StockTransferReducer.Event.LoadingStarted)
         stockTransferRepository.deleteStockTransfer(transferToDelete).onSuccess {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_deleted_successfully)))
-            setState(StockTransferContract.Event.DeleteSucceeded)
+            setState(StockTransferReducer.Event.DeleteSucceeded)
             searchTransfers("")
         }.onFailure {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_delete_transfer)))
-            setState(StockTransferContract.Event.LoadingFinished)
+            setState(StockTransferReducer.Event.LoadingFinished)
         }
     }
 

@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.inventory.data.remote.dto
 
-import StockTransferStatus
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.parseIsoTimestamp
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferStatus
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

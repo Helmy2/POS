@@ -2,7 +2,6 @@ package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.DatePicker
@@ -59,7 +58,6 @@ fun DataPicker(
                 }
             },
             label = stringResource(Res.string.select_date),
-            modifier = Modifier.fillMaxWidth(),
             enabled = enabled
         )
 

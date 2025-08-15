@@ -1,9 +1,9 @@
 package com.wael.astimal.pos.features.reports.data.repository
 
 
-import StockTransfer
 import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.reports.domain.repository.StockTransferReportRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

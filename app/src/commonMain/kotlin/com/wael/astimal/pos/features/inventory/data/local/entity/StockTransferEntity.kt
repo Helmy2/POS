@@ -1,8 +1,5 @@
 package com.wael.astimal.pos.features.inventory.data.local.entity
 
-import StockTransfer
-import StockTransferItem
-import StockTransferStatus
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -11,6 +8,9 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferStatus
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
 import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 

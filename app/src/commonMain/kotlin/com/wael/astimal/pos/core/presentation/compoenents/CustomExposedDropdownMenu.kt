@@ -145,9 +145,9 @@ fun ExposedDropdownMenuPrev() {
 fun ExposedDropdownMenu(
     options: List<String>,
     onItemSelected: (Int?) -> Unit,
-    noSelectionText: String = stringResource(Res.string.no_selection),
     label: String,
     modifier: Modifier = Modifier,
+    noSelectionText: String = stringResource(Res.string.no_selection),
     initialText: String = "",
     enabled: Boolean = true,
     imeAction: ImeAction = ImeAction.Next,
@@ -223,7 +223,7 @@ fun ExposedDropdownMenu(
         ExposedDropdownMenu(
             modifier = Modifier
                 .heightIn(max = dropDownMaxHeight),
-            expanded = expanded,
+            expanded = expanded && enabled,
             onDismissRequest = { setExpanded(false) },
         ) {
             sortedOptions.forEach { option ->

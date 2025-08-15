@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.reports.domain.repository
 
-import StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 

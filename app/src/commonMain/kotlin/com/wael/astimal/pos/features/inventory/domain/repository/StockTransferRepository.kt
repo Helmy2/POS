@@ -1,10 +1,10 @@
 package com.wael.astimal.pos.features.inventory.domain.repository
 
-import StockTransfer
-import StockTransferItem
-import StockTransferStatus
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
+import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferStatus
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +29,7 @@ interface StockTransferRepository {
         receivingUser: User,
         notes: String,
         status: StockTransferStatus,
-        createdat: Long
+        createdAt: Long
     ): Result<Unit>
 
     suspend fun addStockTransfer(
