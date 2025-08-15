@@ -26,8 +26,8 @@ fun InventoryRoute(
 
 @Composable
 fun InventoryScreen(
-    state: InventoryContract.State,
-    onEvent: (InventoryContract.Event) -> Unit,
+    state: InventoryReducer.State,
+    onEvent: (InventoryReducer.Event) -> Unit,
 ) {
     Screen(
         modifier = Modifier.padding(16.dp),
@@ -35,7 +35,7 @@ fun InventoryScreen(
         ItemGrid(
             list = state.items,
             onItemClick = { inventoryItem ->
-                onEvent(InventoryContract.Event.ItemClicked(inventoryItem.destination))
+                onEvent(InventoryReducer.Event.ItemClicked(inventoryItem.destination))
             },
             label = { inventoryItem ->
                 Label(text = stringResource(inventoryItem.label))

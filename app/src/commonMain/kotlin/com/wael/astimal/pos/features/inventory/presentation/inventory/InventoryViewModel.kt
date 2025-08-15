@@ -7,18 +7,18 @@ import kotlinx.coroutines.launch
 
 class InventoryViewModel(
     private val navigationController: NavigationController
-) : BaseViewModel<InventoryContract.State, InventoryContract.Event, Nothing>(
+) : BaseViewModel<InventoryReducer.State, InventoryReducer.Event, Nothing>(
     reducer = InventoryReducer(),
-    initialState = InventoryContract.State()
+    initialState = InventoryReducer.State()
 ) {
     init {
-        processEvent(InventoryContract.Event.LoadInventoryItems)
+        processEvent(InventoryReducer.Event.LoadInventoryItems)
     }
 
-    override fun handleEvent(event: InventoryContract.Event) {
+    override fun handleEvent(event: InventoryReducer.Event) {
         viewModelScope.launch {
             when (event) {
-                is InventoryContract.Event.ItemClicked -> {
+                is InventoryReducer.Event.ItemClicked -> {
                     navigationController.navigate(event.destination)
                 }
 
