@@ -48,7 +48,7 @@ class UnitRepositoryImpl(
                 }.decodeSingle<UnitDto>()
             }
 
-            val localId = unitDao.insertOrUpdate(result.toEntity())
+            val localId = unitDao.upsert(result.toEntity())
 
             Result.success(localId)
         } catch (e: Exception) {
@@ -72,14 +72,6 @@ class UnitRepositoryImpl(
     override suspend fun syncWithServer(units: List<UnitEntity>): Result<Unit> {
         return runCatching {
             unitDao.upsertAll(units)
-        }
-    }
-
-    override suspend fun getUnitByServerId(
-        id: String
-    ): Result<ProductUnit> {
-        return runCatching {
-            unitDao.getUnitByServerId(id)?.toDomain() ?: throw Exception("Unit not found")
         }
     }
 

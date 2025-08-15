@@ -102,7 +102,13 @@ fun AppNavHost(
                     }
                 )
             }
-            composable<Destination.Units> { UnitRoute() }
+            composable<Destination.Units> {
+                UnitRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
             composable<Destination.StockManagement> { StockManagementRoute() }
             composable<Destination.StockTransfer> {
 

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UnitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdate(entity: UnitEntity): Long
+    suspend fun upsert(entity: UnitEntity): Long
 
     @Query("SELECT * FROM units WHERE NOT isDeletedLocally AND arName LIKE '%' || :query || '%' OR enName LIKE '%' || :query || '%'")
     fun getAll(query: String): Flow<List<UnitEntity>>
@@ -18,12 +18,6 @@ interface UnitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(units: List<UnitEntity>)
 
-    @Query("SELECT * FROM units WHERE NOT isDeletedLocally AND localId = :serverId LIMIT 1")
-    suspend fun getUnitByServerId(serverId: String): UnitEntity?
-
     @Query("DELETE FROM units WHERE localId = :id")
     suspend fun hardDelete(id: String)
-
-    @Query("UPDATE units SET isDeletedLocally = 1")
-    suspend fun deleteAll()
 }
