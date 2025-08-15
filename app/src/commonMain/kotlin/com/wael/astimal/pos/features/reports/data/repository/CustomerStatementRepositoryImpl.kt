@@ -6,7 +6,6 @@ import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import com.wael.astimal.pos.features.reports.domain.repository.CustomerStatementRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -14,6 +13,7 @@ import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 class CustomerStatementRepositoryImpl(

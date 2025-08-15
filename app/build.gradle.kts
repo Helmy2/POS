@@ -30,13 +30,6 @@ kotlin {
 
     jvm("desktop")
 
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-        vendor.set(JvmVendorSpec.JETBRAINS)
-    }
-
-
-
     sourceSets {
         val desktopMain by getting
 

@@ -14,7 +14,6 @@ import com.wael.astimal.pos.features.reports.domain.model.ProductMovementGroup
 import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.first
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -51,6 +50,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 /**

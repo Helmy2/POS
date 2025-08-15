@@ -6,7 +6,6 @@ import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
 import com.wael.astimal.pos.features.reports.domain.repository.EmployeeLedgerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -15,6 +14,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.math.abs
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 @OptIn(ExperimentalTime::class)

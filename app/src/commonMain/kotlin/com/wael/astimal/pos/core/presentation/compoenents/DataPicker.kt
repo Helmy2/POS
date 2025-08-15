@@ -20,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.wael.astimal.pos.core.util.convertToString
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -30,6 +29,7 @@ import pos.app.generated.resources.cancel
 import pos.app.generated.resources.ok
 import pos.app.generated.resources.select_date
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 
 @OptIn(ExperimentalMaterial3Api::class)
