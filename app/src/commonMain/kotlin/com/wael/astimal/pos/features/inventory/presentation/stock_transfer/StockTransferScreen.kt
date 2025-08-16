@@ -104,8 +104,10 @@ fun StockTransferScreen(
         onCreate = { onEvent(StockTransferReducer.Event.SaveClicked) },
         onUpdate = { onEvent(StockTransferReducer.Event.SaveClicked) },
         onNew = { onEvent(StockTransferReducer.Event.NewTransferClicked) },
-        canEdit = state.canUserEdit,
-        canSave = state.canSave,
+        enableFab = state.isFabEnable,
+        canUpdate = state.canUpdate,
+        canCreate = state.canCreate,
+        canDelete = state.canDelete,
         searchResults = {
             ItemGrid(
                 list = state.transfers,

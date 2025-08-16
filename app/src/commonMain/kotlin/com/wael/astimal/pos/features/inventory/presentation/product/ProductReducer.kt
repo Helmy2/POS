@@ -45,8 +45,6 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean
             get() = inputArName.isNotBlank() &&
-                    inputPurchasePrice.isNotBlank() &&
-                    inputSellingPrice.isNotBlank() &&
                     selectedCategory != null &&
                     selectedMainUnit != null
     }

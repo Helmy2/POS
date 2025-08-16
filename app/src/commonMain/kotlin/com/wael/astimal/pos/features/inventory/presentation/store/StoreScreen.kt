@@ -62,8 +62,7 @@ fun StoreScreen(
         onCreate = { onEvent(StoreReducer.Event.SaveClicked) },
         onUpdate = { onEvent(StoreReducer.Event.SaveClicked) },
         onNew = { onEvent(StoreReducer.Event.NewStoreClicked) },
-        canEdit = state.canUserEdit,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.stores,

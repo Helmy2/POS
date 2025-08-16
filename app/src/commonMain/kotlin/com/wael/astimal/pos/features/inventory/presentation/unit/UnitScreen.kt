@@ -56,8 +56,7 @@ fun UnitScreen(
         onCreate = { onEvent(UnitReducer.Event.SaveClicked) },
         onUpdate = { onEvent(UnitReducer.Event.SaveClicked) },
         onNew = { onEvent(UnitReducer.Event.NewUnitClicked) },
-        canEdit = state.canUserEdit,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.units,

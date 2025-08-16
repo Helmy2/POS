@@ -84,7 +84,8 @@ fun SearchScreen2(
                         FabAction(
                             icon = Icons.Default.FileCopy,
                             label = openNewString,
-                            onClick = onNew
+                            onClick = onNew,
+                            enable = canSave
                         )
                     )
                     if (canEdit) {
@@ -92,7 +93,8 @@ fun SearchScreen2(
                             FabAction(
                                 icon = Icons.Default.Delete,
                                 label = deleteString,
-                                onClick = onDelete
+                                onClick = onDelete,
+                                enable = canSave
                             )
                         )
                     }
@@ -102,154 +104,8 @@ fun SearchScreen2(
                         FabAction(
                             icon = Icons.Default.Check,
                             label = if (isNew) createString else updateString,
-                            onClick = if (isNew) onCreate else onUpdate
-                        )
-                    )
-                }
-            }
-        }
-
-    BackHandler {
-        if (isSearchActive) onSearchActiveChange(false)
-        else onBack()
-    }
-
-    Screen(
-        topBar = {
-            DockedSearchBar(
-                modifier = modifier
-                    .statusBarsPadding()
-                    .padding(top = 16.dp, end = 16.dp, start = 16.dp)
-                    .fillMaxWidth()
-                    .semantics { traversalIndex = 0f },
-                inputField = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        BackButton(
-                            onClick = {
-                                if (isSearchActive) onSearchActiveChange(false)
-                                else onBack()
-                            },
-                        )
-                        SearchBarDefaults.InputField(
-                            query = query,
-                            onQueryChange = onQueryChange,
-                            onSearch = onSearch,
-                            expanded = isSearchActive,
-                            onExpandedChange = onSearchActiveChange,
-                            placeholder = { Text(stringResource(Res.string.search)) },
-                            trailingIcon = {
-                                IconButton(onClick = { onSearch(query) }) {
-                                    Icon(Icons.Default.Search, contentDescription = null)
-                                }
-                            },
-                            modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight)
-                                .weight(1f),
-                        )
-                    }
-                },
-                expanded = isSearchActive,
-                onExpandedChange = onSearchActiveChange,
-            ) {
-                Box(Modifier.padding(8.dp)) {
-                    searchResults()
-                }
-            }
-        },
-        floatingActionButton = {
-            MultiActionFab(
-                actions = fabActions, enabled = canEdit && canSave
-            )
-        },
-    ) {
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Adaptive(minSize = 300.dp),
-            contentPadding = PaddingValues(8.dp),
-        ) {
-            mainContent()
-            item(
-                span = StaggeredGridItemSpan.FullLine,
-            ) {
-                AnimatedVisibility(
-                    visible = !isNew,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(8.dp),
-                    ) {
-                        Spacer(Modifier.weight(1f))
-                        Text(
-                            text = stringResource(Res.string.update_at),
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text(
-                            text = lastModifiedDate?.convertToString()
-                                ?: stringResource(Res.string.last_modified_date_not_available),
-                        )
-                    }
-                }
-            }
-            item { Box(Modifier.padding(FloatingActionButtonDefaults.LargeIconSize)) }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchScreen(
-    query: String,
-    isSearchActive: Boolean,
-    isNew: Boolean,
-    lastModifiedDate: Long?,
-    onQueryChange: (String) -> Unit,
-    onSearch: (String) -> Unit,
-    onSearchActiveChange: (Boolean) -> Unit,
-    onBack: () -> Unit,
-    onDelete: () -> Unit,
-    onCreate: () -> Unit,
-    onUpdate: () -> Unit,
-    onNew: () -> Unit,
-    modifier: Modifier = Modifier,
-    canEdit: Boolean = true,
-    canSave: Boolean = true,
-    searchResults: @Composable () -> Unit,
-    mainContent: @Composable FlowRowScope.() -> Unit,
-) {
-    val openNewString = stringResource(Res.string.open_new)
-    val deleteString = stringResource(Res.string.delete)
-    val createString = stringResource(Res.string.create)
-    val updateString = stringResource(Res.string.update)
-
-    val fabActions =
-        remember(isNew, canEdit, openNewString, deleteString, createString, updateString) {
-            buildList {
-                if (isNew.not()) {
-                    add(
-                        FabAction(
-                            icon = Icons.Default.FileCopy,
-                            label = openNewString,
-                            onClick = onNew
-                        )
-                    )
-                    if (canEdit) {
-                        add(
-                            FabAction(
-                                icon = Icons.Default.Delete,
-                                label = deleteString,
-                                onClick = onDelete
-                            )
-                        )
-                    }
-                }
-                if (canEdit) {
-                    add(
-                        FabAction(
-                            icon = Icons.Default.Check,
-                            label = if (isNew) createString else updateString,
-                            onClick = if (isNew) onCreate else onUpdate
+                            onClick = if (isNew) onCreate else onUpdate,
+                            enable = canSave
                         )
                     )
                 }
@@ -307,7 +163,155 @@ fun SearchScreen(
         floatingActionButton = {
             MultiActionFab(
                 actions = fabActions,
-                enabled = canEdit && canSave,
+            )
+        },
+    ) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Adaptive(minSize = 300.dp),
+            contentPadding = PaddingValues(8.dp),
+        ) {
+            mainContent()
+            item(
+                span = StaggeredGridItemSpan.FullLine,
+            ) {
+                AnimatedVisibility(
+                    visible = !isNew,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            text = stringResource(Res.string.update_at),
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = lastModifiedDate?.convertToString()
+                                ?: stringResource(Res.string.last_modified_date_not_available),
+                        )
+                    }
+                }
+            }
+            item { Box(Modifier.padding(FloatingActionButtonDefaults.LargeIconSize)) }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(
+    query: String,
+    isSearchActive: Boolean,
+    isNew: Boolean,
+    lastModifiedDate: Long?,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onSearchActiveChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
+    onDelete: () -> Unit,
+    onCreate: () -> Unit,
+    onUpdate: () -> Unit,
+    onNew: () -> Unit,
+    modifier: Modifier = Modifier,
+    enableFab: Boolean = true,
+    canUpdate: Boolean = true,
+    canCreate: Boolean = true,
+    canDelete: Boolean = true,
+    searchResults: @Composable () -> Unit,
+    mainContent: @Composable FlowRowScope.() -> Unit,
+) {
+    val openNewString = stringResource(Res.string.open_new)
+    val deleteString = stringResource(Res.string.delete)
+    val createString = stringResource(Res.string.create)
+    val updateString = stringResource(Res.string.update)
+
+    val fabActions =
+        remember(isNew, enableFab, openNewString, deleteString, createString, updateString) {
+            buildList {
+                if (isNew.not()) {
+                    add(
+                        FabAction(
+                            icon = Icons.Default.FileCopy,
+                            label = openNewString,
+                            onClick = onNew,
+                            enable = canCreate
+                        )
+                    )
+                    add(
+                        FabAction(
+                            icon = Icons.Default.Delete,
+                            label = deleteString,
+                            onClick = onDelete,
+                            enable = canDelete
+                        )
+                    )
+                }
+                add(
+                    FabAction(
+                        icon = Icons.Default.Check,
+                        label = if (isNew) createString else updateString,
+                        onClick = if (isNew) onCreate else onUpdate,
+                        enable = if (isNew) canCreate else canUpdate
+                    )
+                )
+            }
+        }
+
+    BackHandler {
+        if (isSearchActive) onSearchActiveChange(false)
+        else onBack()
+    }
+
+    Screen(
+        topBar = {
+            DockedSearchBar(
+                modifier = modifier
+                    .statusBarsPadding()
+                    .padding(top = 16.dp, end = 16.dp, start = 16.dp)
+                    .fillMaxWidth()
+                    .semantics { traversalIndex = 0f },
+                inputField = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BackButton(
+                            onClick = {
+                                if (isSearchActive) onSearchActiveChange(false)
+                                else onBack()
+                            },
+                        )
+                        SearchBarDefaults.InputField(
+                            query = query,
+                            onQueryChange = onQueryChange,
+                            onSearch = onSearch,
+                            expanded = isSearchActive,
+                            onExpandedChange = onSearchActiveChange,
+                            placeholder = { Text(stringResource(Res.string.search)) },
+                            trailingIcon = {
+                                IconButton(onClick = { onSearch(query) }) {
+                                    Icon(Icons.Default.Search, contentDescription = null)
+                                }
+                            },
+                            modifier = Modifier.height(OutlinedTextFieldDefaults.MinHeight)
+                                .weight(1f),
+                        )
+                    }
+                },
+                expanded = isSearchActive,
+                onExpandedChange = onSearchActiveChange,
+            ) {
+                Box(Modifier.padding(8.dp)) {
+                    searchResults()
+                }
+            }
+        },
+        floatingActionButton = {
+            MultiActionFab(
+                actions = fabActions,
+                enabled = enableFab,
                 modifier = Modifier.imePadding()
             )
         },

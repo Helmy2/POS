@@ -52,14 +52,7 @@ class StockTransferReducer() :
         val canUserEdit: Boolean
             get() = selectedTransfer?.status != StockTransferStatus.APPROVED &&
                     selectedTransfer?.status != StockTransferStatus.REJECTED &&
-                    selectedTransfer?.initiatingUser?.id == currentUser?.id
-
-        val canSave: Boolean
-            get() = canUserEdit &&
-                    currentTransferInput.fromStore != null &&
-                    currentTransferInput.toStore != null &&
-                    currentTransferInput.items.isNotEmpty() &&
-                    currentTransferInput.items.all { it.product != null }
+                    (selectedTransfer?.initiatingUser?.id == currentUser?.id || selectedTransfer == null)
 
         val canUpdateStatus: Boolean
             get() = selectedTransfer?.status ==
@@ -70,6 +63,24 @@ class StockTransferReducer() :
                 it.status == StockTransferStatus.PENDING &&
                         it.receivingUser == currentUser
             }
+
+        val isFabEnable: Boolean
+            get() = currentTransferInput.fromStore != null &&
+                    currentTransferInput.toStore != null &&
+                    currentTransferInput.items.isNotEmpty() &&
+                    currentTransferInput.items.all { it.product != null }
+
+        val canCreate: Boolean
+            get() = isFabEnable
+
+        val canUpdate: Boolean
+            get() = selectedTransfer?.initiatingUser?.id == currentUser?.id &&
+                    selectedTransfer?.status == StockTransferStatus.PENDING &&
+                    isFabEnable
+
+        val canDelete: Boolean
+            get() = selectedTransfer?.initiatingUser?.id == currentUser?.id &&
+                    selectedTransfer?.status != StockTransferStatus.APPROVED
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -105,7 +116,7 @@ class StockTransferReducer() :
         data object LoadingStarted : Event
         data object LoadingFinished : Event
     }
-    
+
     override fun reduce(
         previousState: State,
         event: Event

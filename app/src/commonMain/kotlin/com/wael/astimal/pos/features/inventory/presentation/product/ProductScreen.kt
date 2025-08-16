@@ -69,8 +69,7 @@ fun ProductScreen(
         onCreate = { onEvent(ProductReducer.Event.SaveClicked) },
         onUpdate = { onEvent(ProductReducer.Event.SaveClicked) },
         onNew = { onEvent(ProductReducer.Event.NewProductClicked) },
-        canEdit = state.canUserEdit,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.products,

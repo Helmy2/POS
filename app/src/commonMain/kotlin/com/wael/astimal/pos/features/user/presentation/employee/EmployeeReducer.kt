@@ -41,7 +41,7 @@ class EmployeeReducer :
                         password.length >= 6
             } else {
                 email.isNotBlank() && enName.isNotBlank() && (password.isEmpty() || (password.length >= 6 && password == confirmPassword))
-            }
+            } && canEdit
         val canEdit: Boolean get() = currentUser?.isAdmin == true
     }
 

@@ -461,7 +461,7 @@
     <string name="owns_you">عليه</string>
     <string name="no_selection">غير محدد</string>
     <string name="is_private">خاص</string>
-    <string name="can_handle_private_partners">يمكن التعامل مع الشريكات الخاصة</string>
+    <string name="can_handle_private_partners">يمكن التعامل مع العملاء الخاصة</string>
 
     <string name="invoice_no_label">رقم الفاتورة:</string>
     <string name="date_label">التاريخ:</string>

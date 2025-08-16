@@ -134,14 +134,14 @@ class ProductViewModel(
                     id = currentState.selectedProduct?.product?.id ?: "",
                     name = LocalizedString(currentState.inputArName, currentState.inputEnName),
                     averagePrice = currentState.selectedProduct?.product?.averagePrice ?: 0.0,
-                    sellingPrice = currentState.inputSellingPrice.toDouble(),
+                    sellingPrice = currentState.inputSellingPrice.toDoubleOrNull() ?: 0.0,
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
                     category = currentState.dropdownData.categories.find { it.id == currentState.selectedCategory?.id }!!,
                     mainProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedMainUnit?.id }!!,
                     subProductUnit = currentState.dropdownData.units.find { it.id == currentState.selectedSubUnit?.id },
                     createdAt = currentState.selectedProduct?.product?.createdAt ?: Clock.now(),
-                    purchasePrice = currentState.inputPurchasePrice.toDouble(),
+                    purchasePrice = currentState.inputPurchasePrice.toDoubleOrNull() ?: 0.0,
                     barcode = "",
                 )
 

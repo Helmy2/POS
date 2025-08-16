@@ -59,8 +59,7 @@ fun CategoryScreen(
         onCreate = { onEvent(CategoryReducer.Event.SaveClicked) },
         onUpdate = { onEvent(CategoryReducer.Event.SaveClicked) },
         onNew = { onEvent(CategoryReducer.Event.NewCategoryClicked) },
-        canEdit = state.canUserEdit,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.categories,

@@ -58,8 +58,7 @@ fun StockManagementScreen(
         onCreate = { onEvent(StockManagementReducer.Event.SaveClicked) },
         onUpdate = { onEvent(StockManagementReducer.Event.SaveClicked) },
         onNew = { onEvent(StockManagementReducer.Event.NewStockAdjustmentClicked) },
-        canEdit = state.canUserEdit,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         searchResults = {
             ItemGrid(
                 list = state.stockAdjustments,

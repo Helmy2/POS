@@ -35,7 +35,8 @@ import androidx.compose.ui.unit.dp
 data class FabAction(
     val icon: ImageVector,
     val label: String,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
+    val enable: Boolean
 )
 
 /**
@@ -43,7 +44,6 @@ data class FabAction(
  *
  * @param modifier The modifier to be applied to the component.
  * @param actions A list of [FabAction]s to be displayed when the FAB is expanded.
- * @param enabled Whether the androidMain FAB can be interacted with.
  */
 @Composable
 fun MultiActionFab(
@@ -88,11 +88,13 @@ fun MultiActionFab(
                         }
                         SmallFloatingActionButton(
                             onClick = {
-                                action.onClick()
-                                isExpanded = false
+                                if (action.enable) {
+                                    action.onClick()
+                                    isExpanded = false
+                                }
                             },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.primary
+                            containerColor = if (action.enable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (action.enable) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                         ) {
                             Icon(imageVector = action.icon, contentDescription = action.label)
                         }
@@ -104,10 +106,10 @@ fun MultiActionFab(
         if (actions.size == 1) {
             FloatingActionButton(
                 onClick = {
-                    if (enabled) actions.first().onClick()
+                    if (enabled && actions.first().enable) actions.first().onClick()
                 },
-                containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                containerColor = if (enabled && actions.first().enable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (enabled && actions.first().enable) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             ) {
                 Icon(
                     imageVector = actions.first().icon,

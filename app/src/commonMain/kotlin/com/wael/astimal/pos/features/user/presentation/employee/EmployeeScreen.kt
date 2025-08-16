@@ -38,8 +38,7 @@ import pos.app.generated.resources.password
 
 @Composable
 fun EmployeeRoute(
-    onBack: () -> Unit,
-    viewModel: EmployeeViewModel = koinViewModel()
+    onBack: () -> Unit, viewModel: EmployeeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredEmployees by viewModel.filteredEmployeesState.collectAsStateWithLifecycle()
@@ -74,7 +73,7 @@ fun EmployeeScreen(
         onCreate = { onEvent(EmployeeReducer.Event.SaveClicked) },
         onUpdate = { onEvent(EmployeeReducer.Event.SaveClicked) },
         onNew = { onEvent(EmployeeReducer.Event.NewEmployeeClicked) },
-        canEdit = state.canEdit,
+        enableFab = state.canSave,
         searchResults = {
             ItemGrid(
                 list = filteredEmployees,
@@ -82,41 +81,18 @@ fun EmployeeScreen(
                 label = { Label(it.localizedName.displayName(language)) },
                 isSelected = { it.id == state.selectedEmployee?.id },
             )
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .height(OutlinedTextFieldDefaults.MinHeight)
-                .width(320.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.can_handle_private_partners),
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = state.canHandlePrivatePartner,
-                onCheckedChange = {
-                    onEvent(
-                        EmployeeReducer.Event.CanHandlePrivatePartnerChanged(
-                            it
-                        )
-                    )
-                },
-            )
-        }
+        }) {
+        LabeledTextField(
+            value = state.arName,
+            onValueChange = { onEvent(EmployeeReducer.Event.ArNameChanged(it)) },
+            label = stringResource(Res.string.ar_name),
+            enabled = state.canEdit,
+        )
 
         LabeledTextField(
             value = state.enName,
             onValueChange = { onEvent(EmployeeReducer.Event.EnNameChanged(it)) },
             label = stringResource(Res.string.en_name),
-            enabled = state.canEdit,
-        )
-
-        LabeledTextField(
-            value = state.arName,
-            onValueChange = { onEvent(EmployeeReducer.Event.ArNameChanged(it)) },
-            label = stringResource(Res.string.ar_name),
             enabled = state.canEdit,
         )
 
@@ -154,11 +130,30 @@ fun EmployeeScreen(
             enabled = state.canEdit
         )
 
+        Row(
+            modifier = Modifier.padding(top = 32.dp).height(OutlinedTextFieldDefaults.MinHeight)
+                .width(320.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.can_handle_private_partners),
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = state.canHandlePrivatePartner,
+                onCheckedChange = {
+                    onEvent(
+                        EmployeeReducer.Event.CanHandlePrivatePartnerChanged(
+                            it
+                        )
+                    )
+                },
+            )
+        }
+
         if (state.isLoading) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
