@@ -80,7 +80,6 @@ class StockTransferReducer() :
         data object NewTransferClicked : Event
         data object SaveClicked : Event
         data object DeleteClicked : Event
-        data object BackClicked : Event
         data object ApprovedClicked : Event
         data object RejectedClicked : Event
 
@@ -301,7 +300,6 @@ class StockTransferReducer() :
                 ) to null
             }
 
-            is Event.BackClicked,
             is Event.SaveClicked,
             is Event.DeleteClicked,
             is Event.ApprovedClicked,

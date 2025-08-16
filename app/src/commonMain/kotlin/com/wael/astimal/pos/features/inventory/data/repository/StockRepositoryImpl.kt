@@ -98,15 +98,6 @@ class StockRepositoryImpl(
         }
     }
 
-    override suspend fun getAllDeleted(): Result<List<StockAdjustment>> {
-        return try {
-            Result.success(stockAdjustmentDao.getAllDeleted().map { it.toDomain() })
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Result.failure(e)
-        }
-    }
-
     override suspend fun deleteAll(ids: List<String>): Result<Unit> {
         return try {
             ids.forEach { stockAdjustmentDao.hardDelete(it) }

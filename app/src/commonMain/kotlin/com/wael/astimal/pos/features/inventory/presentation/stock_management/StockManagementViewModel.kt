@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import androidx.lifecycle.viewModelScope
-import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
@@ -36,73 +35,66 @@ class StockManagementViewModel(
     private val productRepository: ProductRepository,
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
-    private val navigationController: NavigationController
-) : BaseViewModel<StockManagementContract.State, StockManagementContract.Event, Nothing>(
-    reducer = StockManagementReducer(), initialState = StockManagementContract.State()
+) : BaseViewModel<StockManagementReducer.State, StockManagementReducer.Event, Nothing>(
+    reducer = StockManagementReducer(), initialState = StockManagementReducer.State()
 ) {
     private var stockJob: Job? = null
 
     init {
-        handleEvent(StockManagementContract.Event.LoadInitialData)
+        handleEvent(StockManagementReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: StockManagementContract.Event) {
+    override fun handleEvent(event: StockManagementReducer.Event) {
         when (event) {
-            is StockManagementContract.Event.LoadInitialData -> loadInitialData()
-            is StockManagementContract.Event.SearchQueryChanged -> {
+            is StockManagementReducer.Event.LoadInitialData -> loadInitialData()
+            is StockManagementReducer.Event.SearchQueryChanged -> {
                 setState(event)
                 loadStocks()
             }
 
-            is StockManagementContract.Event.SaveClicked -> saveStockAdjustment()
+            is StockManagementReducer.Event.SaveClicked -> saveStockAdjustment()
 
-            is StockManagementContract.Event.NavigateBack -> {
-                viewModelScope.launch {
-                    navigationController.navigateBack()
-                }
-            }
-
-            is StockManagementContract.Event.DeleteConfirmed -> deleteStockAdjustment()
+            is StockManagementReducer.Event.DeleteConfirmed -> deleteStockAdjustment()
 
             else -> setState(event)
         }
     }
 
     private fun deleteStockAdjustment() {
-        setState(StockManagementContract.Event.DeleteConfirmed)
+        setState(StockManagementReducer.Event.DeleteConfirmed)
         val adjustmentToRemove = state.value.selectedAdjustment ?: return
-        setState(StockManagementContract.Event.LoadingStarted)
+        setState(StockManagementReducer.Event.LoadingStarted)
         viewModelScope.launch {
             stockRepository.deleteStockAdjustment(adjustmentToRemove).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.store_deleted_successfully)))
-                setState(StockManagementContract.Event.DeleteSucceeded)
+                setState(StockManagementReducer.Event.DeleteSucceeded)
                 loadStocks()
             }.onFailure {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_delete_store)))
-                setState(StockManagementContract.Event.LoadingFinished)
+                setState(StockManagementReducer.Event.LoadingFinished)
             }
         }
     }
 
     private fun loadInitialData() {
-        setState(StockManagementContract.Event.LoadInitialData)
+        setState(StockManagementReducer.Event.LoadInitialData)
         viewModelScope.launch {
-            setState(StockManagementContract.Event.UserLoaded(userRepository.getCurrentUser()))
+            setState(StockManagementReducer.Event.UserLoaded(userRepository.getCurrentUser()))
         }
         viewModelScope.launch {
             storeRepository.getStores("").catch {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_loading_stores)))
-                setState(StockManagementContract.Event.StoresLoaded(emptyList()))
+                setState(StockManagementReducer.Event.StoresLoaded(emptyList()))
             }.collect { stores ->
-                setState(StockManagementContract.Event.StoresLoaded(stores))
+                setState(StockManagementReducer.Event.StoresLoaded(stores))
             }
         }
         viewModelScope.launch {
             productRepository.getProducts().catch {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_loading_products)))
-                setState(StockManagementContract.Event.ProductsLoaded(emptyList()))
+                setState(StockManagementReducer.Event.ProductsLoaded(emptyList()))
             }.collect { it ->
-                setState(StockManagementContract.Event.ProductsLoaded(it))
+                setState(StockManagementReducer.Event.ProductsLoaded(it))
             }
         }
         loadStocks()
@@ -114,9 +106,9 @@ class StockManagementViewModel(
             query = state.value.query, selectedStoreId = null
         ).catch {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_loading_stock)))
-            setState(StockManagementContract.Event.StocksAdjustmentLoaded(emptyList())) // Clear list on error
+            setState(StockManagementReducer.Event.StocksAdjustmentLoaded(emptyList())) // Clear list on error
         }.onEach {
-            setState(StockManagementContract.Event.StocksAdjustmentLoaded(it))
+            setState(StockManagementReducer.Event.StocksAdjustmentLoaded(it))
         }.launchIn(viewModelScope)
     }
 
@@ -163,11 +155,11 @@ class StockManagementViewModel(
             stockRepository.addStockAdjustment(adjustment).fold(
                 onSuccess = {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.stock_saved_successfully)))
-                    setState(StockManagementContract.Event.AdjustmentSucceeded)
+                    setState(StockManagementReducer.Event.AdjustmentSucceeded)
                 },
                 onFailure = {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_updating_stock)))
-                    setState(StockManagementContract.Event.AdjustmentFailed)
+                    setState(StockManagementReducer.Event.AdjustmentFailed)
                 }
             )
         }

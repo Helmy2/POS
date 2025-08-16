@@ -1,29 +1,89 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
+import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.entity.User
 
 class StockManagementReducer :
-    Reducer<StockManagementContract.State, StockManagementContract.Event, Nothing> {
+    Reducer<StockManagementReducer.State, StockManagementReducer.Event, Nothing> {
+
+    data class State(
+        val isLoading: Boolean = true,
+        val stores: List<Store> = emptyList(),
+        val products: List<Product> = emptyList(),
+        val stockAdjustments: List<StockAdjustment> = emptyList(),
+        val query: String = "",
+        val currentUser: User? = null,
+
+        val isSearchActive: Boolean = SHOULD_SHOW_SHEATH_ON_START,
+
+        val selectedAdjustment: StockAdjustment? = null,
+        val adjustmentStore: Store? = null,
+        val adjustmentProduct: Product? = null,
+        val adjustmentQuantityChange: String = "",
+        val adjustmentReason: StockAdjustmentReason = StockAdjustmentReason.RECOUNT,
+        val adjustmentNotes: String = "",
+        val showDeleteDialog: Boolean = false
+    ) : Reducer.ViewState {
+        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val canSave: Boolean get() = adjustmentStore != null && adjustmentProduct != null && adjustmentQuantityChange.isNotBlank()
+    }
+
+    sealed interface Event : Reducer.ViewEvent {
+        // UI Actions
+        data object LoadInitialData : Event
+        data class SearchQueryChanged(val query: String) : Event
+
+        // Dialog Input Changes
+        data class AdjustmentQuantityChanged(val quantity: String) : Event
+        data class AdjustmentReasonChanged(val reason: StockAdjustmentReason) : Event
+        data class AdjustmentNotesChanged(val notes: String) : Event
+        data class AdjustmentStoreChanged(val store: Store?) : Event
+        data class AdjustmentProductChanged(val product: Product?) : Event
+        data class SelectedAdjustmentChanged(val adjustment: StockAdjustment?) : Event
+        data class SearchActiveChanged(val isActive: Boolean) : Event
+
+        // Data results from ViewModel
+        data class UserLoaded(val user: User?) : Event
+        data class StoresLoaded(val stores: List<Store>) : Event
+        data class StocksAdjustmentLoaded(val stockAdjustments: List<StockAdjustment>) : Event
+        data class ProductsLoaded(val products: List<Product>) : Event
+
+        data object AdjustmentSucceeded : Event
+        data object AdjustmentFailed : Event
+        data object DeleteSucceeded : Event
+
+        data object DeleteClicked : Event
+        data object DeleteCanceled : Event
+        data object DeleteConfirmed : Event
+        data object SaveClicked : Event
+        data object NewStockAdjustmentClicked : Event
+        data object LoadingStarted : Event
+        data object LoadingFinished : Event
+    }
     override fun reduce(
-        previousState: StockManagementContract.State, event: StockManagementContract.Event
-    ): Pair<StockManagementContract.State, Nothing?> {
+        previousState: State, event: Event
+    ): Pair<State, Nothing?> {
         return when (event) {
-            is StockManagementContract.Event.LoadInitialData -> previousState.copy(isLoading = true) to null
+            is Event.LoadInitialData -> previousState.copy(isLoading = true) to null
 
-            is StockManagementContract.Event.SearchQueryChanged -> previousState.copy(query = event.query) to null
+            is Event.SearchQueryChanged -> previousState.copy(query = event.query) to null
 
-            is StockManagementContract.Event.UserLoaded -> previousState.copy(currentUser = event.user) to null
+            is Event.UserLoaded -> previousState.copy(currentUser = event.user) to null
 
-            is StockManagementContract.Event.StoresLoaded -> previousState.copy(stores = event.stores) to null
+            is Event.StoresLoaded -> previousState.copy(stores = event.stores) to null
 
-            is StockManagementContract.Event.StocksAdjustmentLoaded -> previousState.copy(
+            is Event.StocksAdjustmentLoaded -> previousState.copy(
                 isLoading = false, stockAdjustments = event.stockAdjustments
             ) to null
 
-            is StockManagementContract.Event.ProductsLoaded -> previousState.copy(products = event.products) to null
+            is Event.ProductsLoaded -> previousState.copy(products = event.products) to null
 
-            is StockManagementContract.Event.SelectedAdjustmentChanged -> previousState.copy(
+            is Event.SelectedAdjustmentChanged -> previousState.copy(
                 isSearchActive = false,
                 selectedAdjustment = event.adjustment,
                 adjustmentStore = event.adjustment?.store,
@@ -34,33 +94,33 @@ class StockManagementReducer :
                 isLoading = false
             ) to null
 
-            is StockManagementContract.Event.AdjustmentQuantityChanged -> previousState.copy(
+            is Event.AdjustmentQuantityChanged -> previousState.copy(
                 adjustmentQuantityChange = event.quantity
             ) to null
 
-            is StockManagementContract.Event.AdjustmentReasonChanged -> previousState.copy(
+            is Event.AdjustmentReasonChanged -> previousState.copy(
                 adjustmentReason = event.reason
             ) to null
 
-            is StockManagementContract.Event.AdjustmentNotesChanged -> previousState.copy(
+            is Event.AdjustmentNotesChanged -> previousState.copy(
                 adjustmentNotes = event.notes
             ) to null
 
-            is StockManagementContract.Event.AdjustmentProductChanged -> previousState.copy(
+            is Event.AdjustmentProductChanged -> previousState.copy(
                 adjustmentProduct = event.product
             ) to null
 
-            is StockManagementContract.Event.AdjustmentStoreChanged -> previousState.copy(
+            is Event.AdjustmentStoreChanged -> previousState.copy(
                 adjustmentStore = event.store
             ) to null
 
-            is StockManagementContract.Event.SearchActiveChanged -> previousState.copy(
+            is Event.SearchActiveChanged -> previousState.copy(
                 isSearchActive = event.isActive
             ) to null
 
-            is StockManagementContract.Event.NewStockAdjustmentClicked,
-            is StockManagementContract.Event.AdjustmentSucceeded,
-            is StockManagementContract.Event.DeleteSucceeded -> previousState.copy(
+            is Event.NewStockAdjustmentClicked,
+            is Event.AdjustmentSucceeded,
+            is Event.DeleteSucceeded -> previousState.copy(
                 isSearchActive = false,
                 adjustmentQuantityChange = "",
                 adjustmentReason = StockAdjustmentReason.RECOUNT,
@@ -70,19 +130,19 @@ class StockManagementReducer :
                 selectedAdjustment = null
             ) to null
 
-            is StockManagementContract.Event.DeleteClicked -> previousState.copy(
+            is Event.DeleteClicked -> previousState.copy(
                 showDeleteDialog = true
             ) to null
 
-            is StockManagementContract.Event.DeleteCanceled, is StockManagementContract.Event.DeleteConfirmed -> previousState.copy(
+            is Event.DeleteCanceled, is Event.DeleteConfirmed -> previousState.copy(
                 showDeleteDialog = false
             ) to null
 
-            is StockManagementContract.Event.LoadingStarted -> previousState.copy(isLoading = true) to null
+            is Event.LoadingStarted -> previousState.copy(isLoading = true) to null
 
-            is StockManagementContract.Event.LoadingFinished -> previousState.copy(isLoading = false) to null
+            is Event.LoadingFinished -> previousState.copy(isLoading = false) to null
 
-            is StockManagementContract.Event.SaveClicked, is StockManagementContract.Event.NavigateBack, is StockManagementContract.Event.AdjustmentFailed -> previousState to null
+            is Event.SaveClicked, is Event.AdjustmentFailed -> previousState to null
         }
     }
 }

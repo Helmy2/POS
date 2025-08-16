@@ -1,19 +1,19 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import org.jetbrains.compose.resources.stringResource
@@ -26,33 +26,38 @@ import pos.app.generated.resources.reason
 import pos.app.generated.resources.store
 
 @Composable
-fun StockManagementRoute(viewModel: StockManagementViewModel = koinViewModel()) {
+fun StockManagementRoute(
+    onBack: () -> Unit,
+    viewModel: StockManagementViewModel = koinViewModel()
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     StockManagementScreen(
+        onBack = onBack,
         state = state, onEvent = viewModel::processEvent
     )
 }
 
 @Composable
 fun StockManagementScreen(
-    state: StockManagementContract.State,
-    onEvent: (StockManagementContract.Event) -> Unit,
+    state: StockManagementReducer.State,
+    onEvent: (StockManagementReducer.Event) -> Unit,
+    onBack: () -> Unit,
 ) {
 
     val language = LocalAppLocale.current
-    SearchScreen2(
+    SearchScreen(
         query = state.query,
         isSearchActive = state.isSearchActive,
-        onQueryChange = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
-        onSearch = { onEvent(StockManagementContract.Event.SearchQueryChanged(it)) },
-        onSearchActiveChange = { onEvent(StockManagementContract.Event.SearchActiveChanged(it)) },
-        onBack = { onEvent(StockManagementContract.Event.NavigateBack) },
+        onQueryChange = { onEvent(StockManagementReducer.Event.SearchQueryChanged(it)) },
+        onSearch = { onEvent(StockManagementReducer.Event.SearchQueryChanged(it)) },
+        onSearchActiveChange = { onEvent(StockManagementReducer.Event.SearchActiveChanged(it)) },
+        onBack = onBack,
         lastModifiedDate = state.selectedAdjustment?.updatedAt,
-        onDelete = { onEvent(StockManagementContract.Event.DeleteClicked) },
-        onCreate = { onEvent(StockManagementContract.Event.SaveClicked) },
-        onUpdate = { onEvent(StockManagementContract.Event.SaveClicked) },
-        onNew = { onEvent(StockManagementContract.Event.NewStockAdjustmentClicked) },
+        onDelete = { onEvent(StockManagementReducer.Event.DeleteClicked) },
+        onCreate = { onEvent(StockManagementReducer.Event.SaveClicked) },
+        onUpdate = { onEvent(StockManagementReducer.Event.SaveClicked) },
+        onNew = { onEvent(StockManagementReducer.Event.NewStockAdjustmentClicked) },
         canEdit = state.canUserEdit,
         canSave = state.canSave,
         searchResults = {
@@ -60,7 +65,7 @@ fun StockManagementScreen(
                 list = state.stockAdjustments,
                 onItemClick = { stock ->
                     onEvent(
-                        StockManagementContract.Event.SelectedAdjustmentChanged(
+                        StockManagementReducer.Event.SelectedAdjustmentChanged(
                             stock
                         )
                     )
@@ -78,97 +83,77 @@ fun StockManagementScreen(
         },
         isNew = state.selectedAdjustment == null,
     ) {
-        item {
-            CustomExposedDropdownMenu(
+        ExposedDropdownMenu(
                 label = stringResource(Res.string.store),
-                items = state.stores,
-                currentSelection = state.adjustmentStore?.name?.displayName(
-                    LocalAppLocale.current
-                ) ?: "",
+            options = state.stores.map { it.name.displayName(language) },
+            initialText = state.adjustmentStore?.name.displayName(language),
                 onItemSelected = {
                     onEvent(
-                        StockManagementContract.Event.AdjustmentStoreChanged(it)
+                        StockManagementReducer.Event.AdjustmentStoreChanged(
+                            it?.let { state.stores.getOrNull(it) }
+                        )
                     )
                 },
-                itemToDisplayString = { it.name.displayName(language) },
                 enabled = state.canUserEdit,
-                modifier = Modifier.padding(8.dp)
             )
-        }
-        item {
-            CustomExposedDropdownMenu(
+        ExposedDropdownMenu(
                 label = stringResource(Res.string.product),
-                items = state.products,
-                currentSelection = state.adjustmentProduct?.name?.displayName(
+            options = state.products.map { it.name.displayName(language) },
+            initialText = state.adjustmentProduct?.name?.displayName(
                     LocalAppLocale.current
                 ) ?: "",
                 onItemSelected = {
                     onEvent(
-                        StockManagementContract.Event.AdjustmentProductChanged(it)
+                        StockManagementReducer.Event.AdjustmentProductChanged(
+                            it?.let { state.products.getOrNull(it) }
+                        )
                     )
                 },
-                itemToDisplayString = { it.name.displayName(language) },
                 enabled = state.canUserEdit,
-                modifier = Modifier.padding(8.dp)
             )
-        }
-
-        item {
             LabeledTextField(
                 value = state.adjustmentQuantityChange,
                 onValueChange = {
                     onEvent(
-                        StockManagementContract.Event.AdjustmentQuantityChanged(
+                        StockManagementReducer.Event.AdjustmentQuantityChanged(
                             it
                         )
                     )
                 },
                 label = stringResource(Res.string.quantity_change_by),
                 enabled = state.canUserEdit,
-                modifier = Modifier.padding(8.dp)
             )
-        }
-
-        item {
             CustomExposedDropdownMenu(
                 label = stringResource(Res.string.reason),
                 items = StockAdjustmentReason.entries,
                 currentSelection = stringResource(state.adjustmentReason.getStringResource()),
                 onItemSelected = {
                     onEvent(
-                        StockManagementContract.Event.AdjustmentReasonChanged(
+                        StockManagementReducer.Event.AdjustmentReasonChanged(
                             it
                         )
                     )
                 },
                 itemToDisplayString = { stringResource(it.getStringResource()) },
                 enabled = state.canUserEdit,
-                modifier = Modifier.padding(8.dp)
             )
-        }
-
-        item {
             LabeledTextField(
                 value = state.adjustmentNotes,
                 onValueChange = {
                     onEvent(
-                        StockManagementContract.Event.AdjustmentNotesChanged(
+                        StockManagementReducer.Event.AdjustmentNotesChanged(
                             it
                         )
                     )
                 },
                 label = stringResource(Res.string.notes),
                 enabled = state.canUserEdit,
-                modifier = Modifier.padding(8.dp)
             )
-        }
 
-        item {
             ConfirmDeleteDialog(
-                onConfirm = { onEvent(StockManagementContract.Event.DeleteConfirmed) },
-                onDismiss = { onEvent(StockManagementContract.Event.DeleteCanceled) },
+                onConfirm = { onEvent(StockManagementReducer.Event.DeleteConfirmed) },
+                onDismiss = { onEvent(StockManagementReducer.Event.DeleteCanceled) },
                 show = state.showDeleteDialog
             )
-        }
     }
 }

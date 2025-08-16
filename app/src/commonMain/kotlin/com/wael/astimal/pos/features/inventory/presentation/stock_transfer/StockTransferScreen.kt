@@ -63,6 +63,7 @@ fun StockTransferRoute(
     modifier: Modifier = Modifier,
     viewModel: StockTransferViewModel = koinViewModel(),
     openSearch: Boolean,
+    onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -74,6 +75,7 @@ fun StockTransferRoute(
     }
 
     StockTransferScreen(
+        onBack = onBack,
         state = state, onEvent = viewModel::processEvent, modifier = modifier
     )
 }
@@ -84,6 +86,7 @@ fun StockTransferScreen(
     state: StockTransferReducer.State,
     onEvent: (StockTransferReducer.Event) -> Unit,
     modifier: Modifier = Modifier,
+    onBack: () -> Unit,
 ) {
     val language = LocalAppLocale.current
 
@@ -95,7 +98,7 @@ fun StockTransferScreen(
         onQueryChange = { onEvent(StockTransferReducer.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(StockTransferReducer.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(StockTransferReducer.Event.SearchActiveChanged(it)) },
-        onBack = { onEvent(StockTransferReducer.Event.BackClicked) },
+        onBack = onBack,
         lastModifiedDate = state.selectedTransfer?.updatedAt,
         onDelete = { onEvent(StockTransferReducer.Event.DeleteClicked) },
         onCreate = { onEvent(StockTransferReducer.Event.SaveClicked) },

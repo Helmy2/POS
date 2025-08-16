@@ -1,7 +1,6 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
 import androidx.lifecycle.viewModelScope
-import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
@@ -44,7 +43,6 @@ class StockTransferViewModel(
     private val userRepository: UserRepository,
     private val stockRepository: StockRepository,
     private val snackbarController: SnackbarController,
-    private val navigationController: NavigationController,
 ) : BaseViewModel<StockTransferReducer.State, StockTransferReducer.Event, Nothing>(
     reducer = StockTransferReducer(), initialState = StockTransferReducer.State(
         currentTransferInput = StockTransferReducer.EditableStockTransfer()
@@ -73,7 +71,6 @@ class StockTransferViewModel(
 
             is StockTransferReducer.Event.SaveClicked -> saveTransfer()
             is StockTransferReducer.Event.DeleteClicked -> deleteTransfer()
-            is StockTransferReducer.Event.BackClicked -> navigateBack()
             is StockTransferReducer.Event.FromStoreChanged -> {
                 setState(event)
                 resubscribeAllStockObservers()
@@ -282,12 +279,6 @@ class StockTransferViewModel(
         }.onFailure {
             snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_delete_transfer)))
             setState(StockTransferReducer.Event.LoadingFinished)
-        }
-    }
-
-    private fun navigateBack() {
-        viewModelScope.launch {
-            navigationController.navigateBack()
         }
     }
 }

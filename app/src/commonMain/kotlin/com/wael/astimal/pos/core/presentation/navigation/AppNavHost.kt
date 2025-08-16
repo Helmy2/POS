@@ -109,10 +109,19 @@ fun AppNavHost(
                     },
                 )
             }
-            composable<Destination.StockManagement> { StockManagementRoute() }
+            composable<Destination.StockManagement> {
+                StockManagementRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
             composable<Destination.StockTransfer> {
 
                 StockTransferRoute(
+                    onBack = {
+                        navController.popBackStack()
+                    },
                     openSearch = it.toRoute<Destination.StockTransfer>().openSearch
                 )
             }
