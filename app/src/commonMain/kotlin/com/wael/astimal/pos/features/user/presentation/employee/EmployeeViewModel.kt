@@ -26,9 +26,9 @@ import pos.app.generated.resources.error_some_field_are_required
 class EmployeeViewModel(
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
-) : BaseViewModel<EmployeeContract.State, EmployeeContract.Event, EmployeeContract.Effect>(
+) : BaseViewModel<EmployeeReducer.State, EmployeeReducer.Event, Nothing>(
     reducer = EmployeeReducer(),
-    initialState = EmployeeContract.State()
+    initialState = EmployeeReducer.State()
 ) {
 
     val filteredEmployeesState: StateFlow<List<User>> =
@@ -49,24 +49,24 @@ class EmployeeViewModel(
         loadAllEmployees()
     }
 
-    override fun handleEvent(event: EmployeeContract.Event) {
+    override fun handleEvent(event: EmployeeReducer.Event) {
         when (event) {
-            is EmployeeContract.Event.SaveClicked -> saveUser()
-            is EmployeeContract.Event.DeleteClicked -> deleteUser()
+            is EmployeeReducer.Event.SaveClicked -> saveUser()
+            is EmployeeReducer.Event.DeleteClicked -> deleteUser()
             else -> setState(event)
         }
     }
 
     private fun loadCurrentUser() {
         viewModelScope.launch {
-            setState(EmployeeContract.Event.CurrentUserLoaded(userRepository.getCurrentUser()))
+            setState(EmployeeReducer.Event.CurrentUserLoaded(userRepository.getCurrentUser()))
         }
     }
 
     private fun loadAllEmployees() {
         viewModelScope.launch {
             userRepository.getEmployeesFlow().collectLatest {
-                setState(EmployeeContract.Event.AllEmployeesLoaded(it))
+                setState(EmployeeReducer.Event.AllEmployeesLoaded(it))
             }
         }
     }
@@ -90,7 +90,7 @@ class EmployeeViewModel(
                 return@launch
             }
 
-            setState(EmployeeContract.Event.SaveClicked)
+            setState(EmployeeReducer.Event.SaveClicked)
             val result = if (currentState.isNewEmployee) {
                 userRepository.createUser(
                     email = currentState.email,
@@ -112,7 +112,7 @@ class EmployeeViewModel(
 
             result.onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.employee_saved_successfully)))
-                setState(EmployeeContract.Event.SaveSucceeded)
+                setState(EmployeeReducer.Event.SaveSucceeded)
             }.onFailure {
                 snackbarController.sendEvent(
                     SnackbarEvent(
@@ -122,7 +122,7 @@ class EmployeeViewModel(
                         )
                     )
                 )
-                setState(EmployeeContract.Event.SaveFailed)
+                setState(EmployeeReducer.Event.SaveFailed)
             }
         }
     }
@@ -130,10 +130,10 @@ class EmployeeViewModel(
     private fun deleteUser() {
         viewModelScope.launch {
             val employeeIdToDelete = state.value.selectedEmployee?.id ?: return@launch
-            setState(EmployeeContract.Event.DeleteClicked)
+            setState(EmployeeReducer.Event.DeleteClicked)
             userRepository.deleteUser(employeeIdToDelete).onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.employee_deleted_successfully)))
-                setState(EmployeeContract.Event.DeleteSucceeded)
+                setState(EmployeeReducer.Event.DeleteSucceeded)
             }.onFailure {
                 snackbarController.sendEvent(
                     SnackbarEvent(
@@ -143,7 +143,7 @@ class EmployeeViewModel(
                         )
                     )
                 )
-                setState(EmployeeContract.Event.DeleteFailed)
+                setState(EmployeeReducer.Event.DeleteFailed)
             }
         }
     }

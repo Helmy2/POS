@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -23,6 +24,7 @@ fun TextInputField(
     label: String? = null,
     enabled: Boolean = true,
     trailingIcon: @Composable (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Companion.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Companion.Default,
 ) {
@@ -36,6 +38,7 @@ fun TextInputField(
         maxLines = numberOfLines,
         singleLine = numberOfLines == 1,
         readOnly = readOnly,
+        visualTransformation = visualTransformation,
         label = label?.let { { Text(text = it) } },
         trailingIcon = trailingIcon,
         keyboardOptions = keyboardOptions,

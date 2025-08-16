@@ -27,6 +27,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.email
 import pos.app.generated.resources.login
 import pos.app.generated.resources.login_to_your_account
+import pos.app.generated.resources.password
 import pos.app.generated.resources.welcome_back
 
 
@@ -69,6 +70,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
                 .fillMaxWidth()
         )
         PasswordTextField(
+            label = stringResource(Res.string.password),
             value = state.password,
             isVisible = state.isPasswordVisible,
             keyboardOptions = KeyboardOptions(

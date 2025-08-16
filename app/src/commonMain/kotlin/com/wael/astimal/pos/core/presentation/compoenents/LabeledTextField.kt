@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -21,6 +22,7 @@ fun LabeledTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean,
     readOnly: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     Column(
@@ -35,6 +37,7 @@ fun LabeledTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             enabled = enabled,
+            visualTransformation = visualTransformation,
             trailingIcon = trailingIcon,
             readOnly = readOnly
         )

@@ -10,38 +10,36 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.hide_password
-import pos.app.generated.resources.password
 import pos.app.generated.resources.show_password
 
 
 @Composable
 fun PasswordTextField(
+    label: String,
     value: String,
     isVisible: Boolean,
     keyboardOptions: KeyboardOptions,
     onValueChange: (String) -> Unit,
     onVisibilityToggle: () -> Unit,
-    onDone: () -> Unit,
     modifier: Modifier = Modifier,
+    onDone: () -> Unit = {},
     enabled: Boolean = true
 ) {
-    OutlinedTextField(
+    LabeledTextField(
+        label = label,
         enabled = enabled,
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(stringResource(Res.string.password)) },
         keyboardOptions = keyboardOptions,
         keyboardActions = KeyboardActions(
             onDone = {
@@ -50,12 +48,7 @@ fun PasswordTextField(
         ),
         visualTransformation = if (isVisible) VisualTransformation.None
         else PasswordVisualTransformation(),
-        singleLine = true,
         modifier = modifier,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
-        ),
         trailingIcon = {
             PasswordVisibilityToggle(
                 isVisible = isVisible, onToggle = onVisibilityToggle

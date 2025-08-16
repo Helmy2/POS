@@ -20,6 +20,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -106,6 +108,7 @@ class UserRepositoryImpl(
             supabaseClient.auth.signOut()
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -154,6 +157,7 @@ class UserRepositoryImpl(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -190,15 +194,20 @@ class UserRepositoryImpl(
             }
 
             // Update profile data in Postgrest
-            val updates = mapOf(
-                "ar_name" to arName,
-                "en_name" to enName,
-                "username" to enName,
-                "email" to email,
-                "can_handle_private_partner" to canHandlePrivatePartner,
-                "updated_at" to Clock.now().toDateString()
+            val profileUpdates = JsonObject(
+                mapOf(
+                    "ar_name" to JsonPrimitive(arName),
+                    "en_name" to JsonPrimitive(enName),
+                    "username" to JsonPrimitive(enName),
+                    "email" to JsonPrimitive(email),
+                    "can_handle_private_partner" to JsonPrimitive(canHandlePrivatePartner),
+                    "updated_at" to JsonPrimitive(Clock.now().toDateString())
+                )
             )
-            supabaseClient.postgrest["profiles"].update(updates) { filter { eq("id", id) } }
+
+            supabaseClient.postgrest["profiles"].update(
+                profileUpdates
+            ) { filter { eq("id", id) } }
 
             // Update local database
             val localUser = userDao.getUserBySupabaseId(id).first()
@@ -208,6 +217,7 @@ class UserRepositoryImpl(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -236,6 +246,7 @@ class UserRepositoryImpl(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

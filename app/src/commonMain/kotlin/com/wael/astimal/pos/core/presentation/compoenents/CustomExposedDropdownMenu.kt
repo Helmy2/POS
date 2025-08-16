@@ -202,18 +202,6 @@ fun ExposedDropdownMenu(
                     imeAction = imeAction,
                     keyboardType = KeyboardType.Text,
                 ),
-                onKeyboardAction = {
-                    sortedOptions.firstOrNull()?.let {
-                        textFieldState.setTextAndPlaceCursorAtEnd(it)
-                        onItemSelected(sortedOptions.indexOf(it))
-                        setExpanded(false)
-                    } ?: {
-                        textFieldState.setTextAndPlaceCursorAtEnd(noSelectionText)
-                        onItemSelected(null)
-                        setExpanded(false)
-                    }
-                    true
-                },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
                     unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = .2f),
