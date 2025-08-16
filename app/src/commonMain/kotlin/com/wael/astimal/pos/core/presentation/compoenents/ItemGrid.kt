@@ -3,12 +3,13 @@ package com.wael.astimal.pos.core.presentation.compoenents
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -17,20 +18,22 @@ import androidx.compose.ui.unit.dp
 fun <T> ItemGrid(
     list: List<T>,
     onItemClick: (T) -> Unit,
-    label:@Composable (T) -> Unit,
+    label: @Composable (T) -> Unit,
     isSelected: (T) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         list.isNotEmpty(), modifier = modifier
     ) {
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(150.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            list.forEach {
+            items(list) {
                 Card(
-                    onClick = { onItemClick(it) }, colors = CardDefaults.cardColors(
+                    onClick = { onItemClick(it) },
+                    colors = CardDefaults.cardColors(
                         containerColor = if (isSelected(it)) MaterialTheme.colorScheme.primaryContainer
                         else CardDefaults.cardColors().containerColor
                     )

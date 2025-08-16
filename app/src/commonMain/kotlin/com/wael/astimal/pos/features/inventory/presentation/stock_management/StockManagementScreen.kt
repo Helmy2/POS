@@ -1,10 +1,7 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
@@ -77,7 +74,6 @@ fun StockManagementScreen(
                     )
                 },
                 isSelected = { it.id == state.selectedAdjustment?.id },
-                modifier = Modifier.verticalScroll(rememberScrollState())
             )
         },
         isNew = state.selectedAdjustment == null,
