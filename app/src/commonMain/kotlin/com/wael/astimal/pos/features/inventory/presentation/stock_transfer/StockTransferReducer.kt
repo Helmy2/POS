@@ -93,6 +93,8 @@ class StockTransferReducer() :
         data object DeleteClicked : Event
         data object ApprovedClicked : Event
         data object RejectedClicked : Event
+        data object ApprovedSucceeded : Event
+        data object ApprovedFauild : Event
 
         // Form Input Changes
         data class FromStoreChanged(val store: Store?) : Event
@@ -240,7 +242,8 @@ class StockTransferReducer() :
 
             is Event.NewTransferClicked,
             is Event.SaveSucceeded,
-            is Event.DeleteSucceeded ->
+            is Event.DeleteSucceeded,
+            is Event.ApprovedSucceeded ->
                 previousState.copy(
                     isLoading = false,
                     selectedTransfer = null,
@@ -314,7 +317,8 @@ class StockTransferReducer() :
             is Event.SaveClicked,
             is Event.DeleteClicked,
             is Event.ApprovedClicked,
-            is Event.RejectedClicked -> previousState to null
+            is Event.RejectedClicked,
+            is Event.ApprovedFauild -> previousState to null
         }
     }
 }

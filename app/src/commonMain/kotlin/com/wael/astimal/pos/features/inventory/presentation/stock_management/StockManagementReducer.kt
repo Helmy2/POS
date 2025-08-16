@@ -29,6 +29,10 @@ class StockManagementReducer :
         val adjustmentNotes: String = "",
         val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
+        val filterStockAdjustments
+            get() = stockAdjustments.filter {
+                it.product.name.contains(query) || it.store.name.contains(query)
+            }
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean get() = adjustmentStore != null && adjustmentProduct != null && adjustmentQuantityChange.isNotBlank()
     }

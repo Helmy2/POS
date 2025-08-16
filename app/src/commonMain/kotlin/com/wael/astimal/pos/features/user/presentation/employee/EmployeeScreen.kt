@@ -24,7 +24,6 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
-import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.presentation.components.PasswordTextField
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -41,11 +40,9 @@ fun EmployeeRoute(
     onBack: () -> Unit, viewModel: EmployeeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val filteredEmployees by viewModel.filteredEmployeesState.collectAsStateWithLifecycle()
 
     EmployeeScreen(
         state = state,
-        filteredEmployees = filteredEmployees,
         onEvent = viewModel::processEvent,
         onBack = onBack
     )
@@ -54,7 +51,6 @@ fun EmployeeRoute(
 @Composable
 fun EmployeeScreen(
     state: EmployeeReducer.State,
-    filteredEmployees: List<User>,
     onEvent: (EmployeeReducer.Event) -> Unit,
     onBack: () -> Unit
 ) {
@@ -76,7 +72,7 @@ fun EmployeeScreen(
         enableFab = state.canSave,
         searchResults = {
             ItemGrid(
-                list = filteredEmployees,
+                list = state.filteredEmployees,
                 onItemClick = { onEvent(EmployeeReducer.Event.EmployeeSelected(it)) },
                 label = { Label(it.localizedName.displayName(language)) },
                 isSelected = { it.id == state.selectedEmployee?.id },

@@ -282,9 +282,6 @@ class StockTransferRepositoryImpl(
         if (transferToDelete.status == StockTransferStatus.APPROVED) {
             return Result.failure(Exception("Cannot delete an approved transfer"))
         }
-        if (transferToDelete.status == StockTransferStatus.REJECTED) {
-            return Result.failure(Exception("Cannot delete a rejected transfer"))
-        }
         return try {
             stockTransferDao.getItemsForTransfer(transferToDelete.id).forEach {
                 supabaseClient.deleteRecordAndLog(
@@ -304,6 +301,7 @@ class StockTransferRepositoryImpl(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

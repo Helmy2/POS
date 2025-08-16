@@ -93,10 +93,10 @@ class StockTransferViewModel(
                         state.value.selectedTransfer!!.id, true
                     ).onSuccess {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
-                        setState(StockTransferReducer.Event.SaveSucceeded)
+                        setState(StockTransferReducer.Event.ApprovedSucceeded)
                     }.onFailure {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
-                        setState(StockTransferReducer.Event.LoadingFinished)
+                        setState(StockTransferReducer.Event.ApprovedFauild)
                     }
                 }
             }

@@ -5,14 +5,8 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.employee_deleted_successfully
@@ -30,19 +24,6 @@ class EmployeeViewModel(
     reducer = EmployeeReducer(),
     initialState = EmployeeReducer.State()
 ) {
-
-    val filteredEmployeesState: StateFlow<List<User>> =
-        combine(state, state.map { it.searchQuery }) { state, query ->
-            if (query.isBlank()) {
-                state.allEmployees
-            } else {
-                state.allEmployees.filter {
-                    it.localizedName.enName!!.contains(query, ignoreCase = true) ||
-                            it.localizedName.arName!!.contains(query, ignoreCase = true) ||
-                            it.email!!.contains(query, ignoreCase = true)
-                }
-            }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         loadCurrentUser()

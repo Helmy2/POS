@@ -66,8 +66,6 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
             ),
             onValueChange = { processEvent(LoginContract.Event.EmailChanged(it)) },
             modifier = Modifier
-                .sizeIn(maxWidth = 600.dp)
-                .fillMaxWidth()
         )
         PasswordTextField(
             label = stringResource(Res.string.password),
@@ -83,9 +81,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
                 focus.clearFocus()
                 processEvent(LoginContract.Event.LoginClicked)
             },
-            modifier = Modifier
-                .sizeIn(maxWidth = 600.dp)
-                .fillMaxWidth(),
+            modifier = Modifier,
         )
         Spacer(modifier = Modifier.height(8.dp))
 

@@ -30,6 +30,12 @@ class EmployeeReducer :
         val allEmployees: List<User> = emptyList()
 
     ) : Reducer.ViewState {
+        val filteredEmployees
+            get() = allEmployees.filter {
+                it.localizedName.contains(searchQuery) ||
+                        it.localizedName.contains(searchQuery) ||
+                        it.email.orEmpty().contains(searchQuery, ignoreCase = true)
+            }
         val isNewEmployee: Boolean get() = selectedEmployee == null
         val canSave: Boolean
             get() = if (isNewEmployee) {

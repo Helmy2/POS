@@ -121,15 +121,16 @@ fun StockTransferScreen(
                 label = {
                     val fromStoreName = it.fromStore.name.displayName(language)
                     val toStoreName = it.toStore.name.displayName(language)
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Label("$fromStoreName -> $toStoreName")
                         if (it.status == StockTransferStatus.PENDING && it.receivingUser == state.currentUser) {
-                            Column(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Pending,
@@ -141,7 +142,6 @@ fun StockTransferScreen(
                                 )
                             }
                         }
-                        Label("$fromStoreName -> $toStoreName")
                     }
                 },
                 isSelected = { transfer -> transfer.id == state.selectedTransfer?.id },
