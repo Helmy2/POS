@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,15 +9,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,7 +23,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +50,7 @@ import com.patrykandpatrick.vico.multiplatform.common.fill
 import com.patrykandpatrick.vico.multiplatform.common.vicoTheme
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.dashboard.domain.entity.TimePeriod
 import com.wael.astimal.pos.features.user.presentation.setting.SettingsRoute
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -63,7 +59,6 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.dashboard
 import pos.app.generated.resources.sales_analytics
 import pos.app.generated.resources.settings
-import pos.app.generated.resources.sync
 import pos.app.generated.resources.total_revenue
 import pos.app.generated.resources.total_sales
 import pos.app.generated.resources.you_have_pending_transfer
@@ -89,8 +84,8 @@ fun DashboardRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    state: DashboardContract.State,
-    onEvent: (DashboardContract.Event) -> Unit,
+    state: DashboardReducer.State,
+    onEvent: (DashboardReducer.Event) -> Unit,
     onNavigateToStockTransfer: () -> Unit,
 ) {
     var showSetting by rememberSaveable {
@@ -104,36 +99,6 @@ fun DashboardScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         topBar = {
             TopAppBar(title = { Text(stringResource(Res.string.dashboard)) }, actions = {
-                TextButton(
-                    onClick = {
-                        onEvent(DashboardContract.Event.PreformSync)
-                    },
-                    enabled = !state.isLoadingSync,
-                ) {
-                    AnimatedContent(state.isLoadingSync) {
-                        if (it) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Sync,
-                                    contentDescription = stringResource(Res.string.sync)
-                                )
-                                Text(
-                                    text = stringResource(Res.string.sync),
-                                    modifier = Modifier.padding(4.dp),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
                 IconButton(onClick = { showSetting = true }) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -144,7 +109,7 @@ fun DashboardScreen(
         }
     ) {
 
-    AnimatedVisibility(state.havePendingTransfer) {
+        AnimatedVisibility(state.havePendingTransfer) {
             Text(
                 text = stringResource(Res.string.you_have_pending_transfer),
                 modifier = Modifier
@@ -157,7 +122,7 @@ fun DashboardScreen(
         }
         TimePeriodSelector(
             selectedPeriod = state.selectedTimePeriod,
-            onPeriodSelected = { onEvent(DashboardContract.Event.TimePeriodSelected(it)) },
+            onPeriodSelected = { onEvent(DashboardReducer.Event.TimePeriodSelected(it)) },
             modifier = Modifier.fillMaxWidth()
         )
         KpiCards(kpiData = state.kpiData)
@@ -174,7 +139,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun KpiCards(kpiData: DashboardContract.KpiData) {
+fun KpiCards(kpiData: DashboardReducer.KpiData) {
     val language = LocalAppLocale.current
     val numberFormat =
         remember { NumberFormat.getCurrencyInstance(Locale(language.code, language.country)) }
@@ -209,7 +174,7 @@ fun KpiCard(title: String, value: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun SalesAnalyticsChart(
-    state: DashboardContract.State,
+    state: DashboardReducer.State,
 ) {
     val chartModelProducer = remember { CartesianChartModelProducer() }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("MMM dd") }

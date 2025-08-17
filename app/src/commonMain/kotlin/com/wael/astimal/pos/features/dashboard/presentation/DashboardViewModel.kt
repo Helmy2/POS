@@ -5,7 +5,7 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.data.SyncService
+import com.wael.astimal.pos.features.dashboard.domain.entity.TimePeriod
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import kotlinx.coroutines.flow.catch
@@ -14,8 +14,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.error_loading_dashboard_data
-import pos.app.generated.resources.sync_error
-import pos.app.generated.resources.sync_success
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -23,53 +21,24 @@ class DashboardViewModel(
     private val invoiceRepository: InvoiceRepository,
     private val snackbarController: SnackbarController,
     private val stockTransferRepository: StockTransferRepository,
-    private val syncService: SyncService
-) : BaseViewModel<DashboardContract.State, DashboardContract.Event, Nothing>(
+) : BaseViewModel<DashboardReducer.State, DashboardReducer.Event, Nothing>(
     reducer = DashboardReducer(),
-    initialState = DashboardContract.State()
+    initialState = DashboardReducer.State()
 ) {
 
     init {
         loadDashboardData()
     }
 
-    override fun handleEvent(event: DashboardContract.Event) {
+    override fun handleEvent(event: DashboardReducer.Event) {
         when (event) {
-            is DashboardContract.Event.TimePeriodSelected -> {
+            is DashboardReducer.Event.TimePeriodSelected -> {
                 setState(event)
                 loadDashboardData()
             }
 
-            is DashboardContract.Event.RefreshDataClicked -> {
+            is DashboardReducer.Event.RefreshDataClicked -> {
                 loadDashboardData()
-            }
-
-            is DashboardContract.Event.PreformSync -> {
-                setState(DashboardContract.Event.LoadingSyncChange(true))
-                viewModelScope.launch {
-                    syncService.performFullSync().fold(
-                        onSuccess = {
-                            snackbarController.sendEvent(
-                                SnackbarEvent(
-                                    StringResource.FromResource(
-                                        Res.string.sync_success
-                                    )
-                                )
-                            )
-                            setState(DashboardContract.Event.LoadingSyncChange(false))
-                        },
-                        onFailure = {
-                            snackbarController.sendEvent(
-                                SnackbarEvent(
-                                    StringResource.FromResource(
-                                        Res.string.sync_error
-                                    )
-                                )
-                            )
-                            setState(DashboardContract.Event.LoadingSyncChange(false))
-                        }
-                    )
-                }
             }
             // All other events are for synchronous state updates only
             else -> setState(event)
@@ -77,12 +46,12 @@ class DashboardViewModel(
     }
 
     private fun loadDashboardData() {
-        setState(DashboardContract.Event.LoadingData)
+        setState(DashboardReducer.Event.LoadingData)
 
         viewModelScope.launch {
             stockTransferRepository.getPendingTransfersForApproval().collect { pendingTransfers ->
                 setState(
-                    DashboardContract.Event.HavePendingTransferChanged(
+                    DashboardReducer.Event.HavePendingTransferChanged(
                         pendingTransfers.isNotEmpty()
                     )
                 )
@@ -101,13 +70,13 @@ class DashboardViewModel(
 
         invoiceRepository.getDailySales(startMillis, endMillis)
             .onEach { dailySales ->
-                setState(DashboardContract.Event.DataLoaded(dailySales))
+                setState(DashboardReducer.Event.DataLoaded(dailySales))
             }
             .catch {
                 snackbarController.sendEvent(
                     SnackbarEvent(StringResource.FromResource(Res.string.error_loading_dashboard_data))
                 )
-                setState(DashboardContract.Event.DataLoaded(emptyList()))
+                setState(DashboardReducer.Event.DataLoaded(emptyList()))
             }
             .launchIn(viewModelScope)
     }

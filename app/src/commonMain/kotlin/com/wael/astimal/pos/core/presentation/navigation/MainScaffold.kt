@@ -18,8 +18,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -35,8 +37,10 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.getString
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.isTopLevelRoute
+import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.features.user.domain.repository.NotificationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +48,9 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.back_online
+import pos.app.generated.resources.no_internet
 
 
 @Composable
@@ -68,6 +75,35 @@ fun MainScaffold(
     val scope = rememberCoroutineScope()
 
     val snackbarController: SnackbarController = koinInject()
+
+
+    val syncManager: SyncManager = koinInject()
+    val connectivity: Connectivity = koinInject()
+    val state by connectivity.statusUpdates.collectAsStateWithLifecycle(
+        Connectivity.Status.Connected(
+            connectionType = Connectivity.ConnectionType.Unknown
+        )
+    )
+
+    var isReconnected by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state) {
+        if (state.isDisconnected) {
+            snackbarController.sendEvent(
+                SnackbarEvent(message = StringResource.FromResource(Res.string.no_internet))
+            )
+            isReconnected = true
+        }
+
+        if (isReconnected && state.isConnected) {
+            snackbarController.sendEvent(
+                SnackbarEvent(message = StringResource.FromResource(Res.string.back_online))
+            )
+            syncManager.requestSync()
+        }
+    }
+
+
     ObserveEffect(snackbarController.events, snackbarHostState) { event ->
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
