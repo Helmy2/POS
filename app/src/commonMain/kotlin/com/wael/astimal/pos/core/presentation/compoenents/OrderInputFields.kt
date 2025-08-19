@@ -99,22 +99,21 @@ fun OrderItemRow(
 
         AnimatedVisibility(item.product?.subProductUnit != null) {
             Column {
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.unit),
-                    items = listOfNotNull(
+                    options = listOfNotNull(
                         item.product?.subProductUnit, item.product?.mainProductUnit
-                    ),
-                    currentSelection = if (item.isSelectedUnitIsMax) {
+                    ).map { it.name.displayName(language) },
+                    initialText = if (item.isSelectedUnitIsMax) {
                         item.product?.mainProductUnit?.name?.displayName(language).orEmpty()
                     } else {
                         item.product?.subProductUnit?.name?.displayName(language).orEmpty()
                     },
-                    onItemSelected = { unit ->
+                    onItemSelected = {
                         onUpdateItemUnit(
-                            item.tempEditorId, unit.id == item.product?.mainProductUnit?.id
+                            item.tempEditorId, it == 0
                         )
                     },
-                    itemToDisplayString = { it.name.displayName(language) },
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

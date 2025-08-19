@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
@@ -118,18 +117,18 @@ fun StockManagementScreen(
                 label = stringResource(Res.string.quantity_change_by),
                 enabled = state.canUserEdit,
             )
-            CustomExposedDropdownMenu(
+        ExposedDropdownMenu(
                 label = stringResource(Res.string.reason),
-                items = StockAdjustmentReason.entries,
-                currentSelection = stringResource(state.adjustmentReason.getStringResource()),
+            options = StockAdjustmentReason.entries.map { stringResource(it.getStringResource()) },
+            initialText = state.adjustmentReason?.getStringResource()?.let { stringResource(it) }
+                ?: "",
                 onItemSelected = {
                     onEvent(
                         StockManagementReducer.Event.AdjustmentReasonChanged(
-                            it
+                            it?.let { StockAdjustmentReason.entries.getOrNull(it) }
                         )
                     )
                 },
-                itemToDisplayString = { stringResource(it.getStringResource()) },
                 enabled = state.canUserEdit,
             )
             LabeledTextField(

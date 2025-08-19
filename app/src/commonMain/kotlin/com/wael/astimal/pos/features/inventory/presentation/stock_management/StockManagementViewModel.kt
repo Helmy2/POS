@@ -7,6 +7,7 @@ import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -144,7 +145,7 @@ class StockManagementViewModel(
                 store = adjustmentStore,
                 product = adjustmentProduct,
                 user = currentUser,
-                reason = state.value.adjustmentReason,
+                reason = state.value.adjustmentReason ?: StockAdjustmentReason.RECOUNT,
                 notes = state.value.adjustmentNotes.takeIf { it.isNotBlank() },
                 quantityChange = quantityChange,
                 createdAt = Clock.now(),

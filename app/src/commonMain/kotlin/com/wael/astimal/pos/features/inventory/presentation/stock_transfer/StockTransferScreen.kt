@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.presentation.compoenents.AppButton
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
@@ -284,21 +283,21 @@ fun StockTransferItem(
         )
 
         if (product != null) {
-            // Show unit selection only if a minimum unit exists
             AnimatedVisibility(visible = product.subProductUnit != null) {
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.unit),
-                    items = listOfNotNull(product.mainProductUnit, product.subProductUnit),
-                    selectedItemId = if (item.isSelectedUnitMax) product.mainProductUnit.id else product.subProductUnit?.id,
-                    onItemSelected = { unit ->
+                    options = listOfNotNull(
+                        product.mainProductUnit,
+                        product.subProductUnit
+                    ).map { it.name.displayName(language) },
+                    initialText = if (item.isSelectedUnitMax) product.mainProductUnit.name.displayName(
+                        language
+                    ) else product.subProductUnit?.name.displayName(language),
+                    onItemSelected = {
                         onEvent(
-                            StockTransferReducer.Event.ItemUnitChanged(
-                                item.editorId, unit.id == product.mainProductUnit.id
-                            )
+                            StockTransferReducer.Event.ItemUnitChanged(item.editorId, it == 0)
                         )
                     },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id },
                     enabled = enabled,
                 )
             }

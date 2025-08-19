@@ -25,7 +25,7 @@ class StockManagementReducer :
         val adjustmentStore: Store? = null,
         val adjustmentProduct: Product? = null,
         val adjustmentQuantityChange: String = "",
-        val adjustmentReason: StockAdjustmentReason = StockAdjustmentReason.RECOUNT,
+        val adjustmentReason: StockAdjustmentReason? = StockAdjustmentReason.RECOUNT,
         val adjustmentNotes: String = "",
         val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
@@ -44,7 +44,7 @@ class StockManagementReducer :
 
         // Dialog Input Changes
         data class AdjustmentQuantityChanged(val quantity: String) : Event
-        data class AdjustmentReasonChanged(val reason: StockAdjustmentReason) : Event
+        data class AdjustmentReasonChanged(val reason: StockAdjustmentReason?) : Event
         data class AdjustmentNotesChanged(val notes: String) : Event
         data class AdjustmentStoreChanged(val store: Store?) : Event
         data class AdjustmentProductChanged(val product: Product?) : Event
