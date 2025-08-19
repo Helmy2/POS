@@ -18,7 +18,7 @@ object PurchaseContract {
     )
 
     data class EditableOrder(
-        val paymentType: PaymentMethod = PaymentMethod.CASH,
+        val paymentType: PaymentMethod? = PaymentMethod.CASH,
         val selectedPartner: BusinessPartner? = null,
         val selectedStore: Store? = null,
         val date: Long,
@@ -64,7 +64,7 @@ object PurchaseContract {
         data class PartnerSelected(val partner: BusinessPartner?) : Event
         data class StoreChanged(val store: Store?) : Event
         data class DateChanged(val date: Long) : Event
-        data class PaymentMethodChanged(val type: PaymentMethod) : Event
+        data class PaymentMethodChanged(val type: PaymentMethod?) : Event
         data class AmountPaidChanged(val amount: String) : Event
         data object AddItem : Event
         data class RemoveItem(val editorId: String) : Event

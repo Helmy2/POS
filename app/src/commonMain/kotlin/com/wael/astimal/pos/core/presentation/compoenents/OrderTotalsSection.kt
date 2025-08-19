@@ -6,20 +6,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.presentation.theme.CreditColor
@@ -46,119 +40,104 @@ fun OrderTotalsSection(
     totalAmount: Double,
     amountPaid: Double,
     amountRemaining: Double,
-    modifier: Modifier = Modifier,
     partnerBalance: Double,
     partnerBalanceAfterThisOrder: Double
 ) {
-    Column {
-        Card(
-            modifier = modifier.fillMaxWidth(),
+    Card(
+        modifier = Modifier.width(320.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Spacer(modifier = Modifier.padding(vertical = 4.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        stringResource(Res.string.total_amount),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        "%.2f".format(totalAmount),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        stringResource(Res.string.paid),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        "%.2f".format(amountPaid),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-
-                HorizontalDivider()
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        stringResource(Res.string.remaining),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        "%.2f".format(amountRemaining),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-            }
-        }
-        Card(
-            modifier = modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Row(Modifier.fillMaxWidth()) {
-                    Text(
-                        stringResource(Res.string.partner_previous_balance),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        if (partnerBalance > 0.0)
-                            stringResource(Res.string.owns_you)
-                        else if (partnerBalance < 0.0) stringResource(Res.string.you_owns)
-                        else stringResource(Res.string.balance_summary_settled),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.weight(.5f))
-                    Text(
-                        "%.0f".format(abs(partnerBalance)),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                HorizontalDivider()
-
-                Row(Modifier.fillMaxWidth()) {
-                    Text(
-                        stringResource(Res.string.partner_current_balance),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        if (partnerBalanceAfterThisOrder > 0.0) stringResource(Res.string.owns_you)
-                        else if (partnerBalanceAfterThisOrder < 0.0) stringResource(Res.string.you_owns)
-                        else stringResource(Res.string.balance_summary_settled),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.weight(.5f))
-                    Text(
-                        "%.0f".format(abs(partnerBalanceAfterThisOrder)),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-
-
-            }
-        }
-        StatementFooter(
-            partnerBalanceAfterThisOrder,
-            modifier = Modifier
-                .padding(8.dp)
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = 10.dp,
-                        bottomEnd = 10.dp
-                    )
+            Spacer(modifier = Modifier.padding(vertical = 4.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    stringResource(Res.string.total_amount),
+                    style = MaterialTheme.typography.titleMedium
                 )
-        )
+                Text(
+                    "%.2f".format(totalAmount),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    stringResource(Res.string.paid),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    "%.2f".format(amountPaid),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            HorizontalDivider()
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    stringResource(Res.string.remaining),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    "%.2f".format(amountRemaining),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        }
+    }
+    Card(
+        modifier = Modifier.padding(8.dp).width(320.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    stringResource(Res.string.partner_previous_balance),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    if (partnerBalance > 0.0)
+                        stringResource(Res.string.owns_you)
+                    else if (partnerBalance < 0.0) stringResource(Res.string.you_owns)
+                    else stringResource(Res.string.balance_summary_settled),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.weight(.5f))
+                Text(
+                    "%.0f".format(abs(partnerBalance)),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            HorizontalDivider()
+
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    stringResource(Res.string.partner_current_balance),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    if (partnerBalanceAfterThisOrder > 0.0) stringResource(Res.string.owns_you)
+                    else if (partnerBalanceAfterThisOrder < 0.0) stringResource(Res.string.you_owns)
+                    else stringResource(Res.string.balance_summary_settled),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.weight(.5f))
+                Text(
+                    "%.0f".format(abs(partnerBalanceAfterThisOrder)),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            StatementFooter(partnerBalanceAfterThisOrder)
+        }
     }
 }
 
 
 @Composable
-fun StatementFooter(finalBalance: Double, modifier: Modifier = Modifier) {
+fun StatementFooter(finalBalance: Double) {
     val language = LocalAppLocale.current
 
     val numberFormat =
@@ -177,21 +156,10 @@ fun StatementFooter(finalBalance: Double, modifier: Modifier = Modifier) {
         else -> stringResource(Res.string.balance_summary_settled) to MaterialTheme.colorScheme.onSurface
     }
 
-    Surface(modifier = modifier.fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 4.dp) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info, contentDescription = "Info", tint = summaryColor
-            )
-            Text(
-                text = summaryText,
-                style = MaterialTheme.typography.labelLarge,
-                color = summaryColor,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
+    Text(
+        text = summaryText,
+        style = MaterialTheme.typography.labelLarge,
+        color = summaryColor,
+        fontWeight = FontWeight.Bold
+    )
 }

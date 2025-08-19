@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.purchase
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -9,12 +9,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.domain.entity.displayName
+import com.wael.astimal.pos.core.presentation.compoenents.AppButton
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.EditableOrderItems
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
-import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
@@ -60,11 +62,11 @@ fun PurchaseScreen(
     val language = LocalAppLocale.current
     val orderInput = state.currentOrderInput
 
-    SearchScreen2(
+    SearchScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         onQueryChange = { onEvent(PurchaseContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(PurchaseContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(PurchaseContract.Event.SearchActiveChanged(it)) },
@@ -92,49 +94,46 @@ fun PurchaseScreen(
         },
         mainContent = {
             if (state.selectedOrder != null) {
-                item {
-                    Button(
-                        {
-                            onEvent(PurchaseContract.Event.GeneratePdf(state.selectedOrder))
-                        }
-                    ) {
-                        Text(text = stringResource(Res.string.generate_pdf))
-                    }
+                AppButton(
+                    {
+                        onEvent(PurchaseContract.Event.GeneratePdf(state.selectedOrder))
+                    },
+                    modifier = Modifier.width(320.dp)
+                        .padding(top = 32.dp)
+                ) {
+                    Text(text = stringResource(Res.string.generate_pdf))
                 }
             }
-            item {
-                DataPicker(
-                    selectedDateMillis = orderInput.date,
-                    onDateSelected = { onEvent(PurchaseContract.Event.DateChanged(it)) },
-                    modifier = Modifier.padding(8.dp),
-                )
-            }
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.client),
-                    items = state.dropdownData.partners,
-                    currentSelection = state.currentOrderInput.selectedPartner?.name?.displayName(
-                        language
-                    ) ?: "",
-                    onItemSelected = { onEvent(PurchaseContract.Event.PartnerSelected(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    modifier = Modifier.padding(8.dp),
-                )
-            }
-            item {
-                CustomExposedDropdownMenu(
-                    label = stringResource(Res.string.stores),
-                    items = state.dropdownData.stores,
-                    currentSelection = orderInput.selectedStore?.name?.displayName(
-                        language
-                    ) ?: "",
-                    onItemSelected = { onEvent(PurchaseContract.Event.StoreChanged(it)) },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    enabled = state.currentUser?.isAdmin == true,
-                    modifier = Modifier.padding(8.dp),
-                )
-            }
-            editableOrderItems(
+            DataPicker(
+                selectedDateMillis = orderInput.date,
+                onDateSelected = { onEvent(PurchaseContract.Event.DateChanged(it)) },
+            )
+            ExposedDropdownMenu(
+                label = stringResource(Res.string.client),
+                options = state.dropdownData.partners.map { it.name.displayName(language) },
+                initialText = state.currentOrderInput.selectedPartner?.name.displayName(language),
+                onItemSelected = {
+                    onEvent(PurchaseContract.Event.PartnerSelected(it?.let {
+                        state.dropdownData.partners.getOrNull(
+                            it
+                        )
+                    }))
+                },
+            )
+            ExposedDropdownMenu(
+                label = stringResource(Res.string.stores),
+                options = state.dropdownData.stores.map { it.name.displayName(language) },
+                initialText = orderInput.selectedStore?.name.displayName(language),
+                onItemSelected = {
+                    onEvent(PurchaseContract.Event.StoreChanged(it?.let {
+                        state.dropdownData.stores.getOrNull(
+                            it
+                        )
+                    }))
+                },
+                enabled = state.currentUser?.isAdmin == true,
+            )
+            EditableOrderItems(
                 itemList = orderInput.items,
                 availableProducts = state.dropdownData.products,
                 onRemoveItemFromOrder = { editorId ->

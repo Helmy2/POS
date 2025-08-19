@@ -1,13 +1,15 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -20,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
@@ -51,28 +54,25 @@ fun OrderItemRow(
 ) {
     val language = LocalAppLocale.current
     Column(
-        modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier.width(320.dp).clip(RoundedCornerShape(16.dp)).background(
+            MaterialTheme.colorScheme.primary.copy(alpha = .1f)
+        ).padding(8.dp)
     ) {
         Row(
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Box(modifier = Modifier.weight(1f)) {
-                ExposedDropdownMenu(
-                    options = availableProducts.map { it.name.displayName(language) },
-                    onItemSelected = {
-                        onUpdateSelectedItem(
-                            item.tempEditorId,
-                            it?.let { availableProducts[it] }
-                        )
-                    },
-                    label = stringResource(Res.string.product),
-                    noSelectionText = stringResource(Res.string.no_selection),
-                    initialText = item.product?.name?.displayName(language) ?: "",
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            ExposedDropdownMenu(
+                options = availableProducts.map { it.name.displayName(language) },
+                onItemSelected = {
+                    onUpdateSelectedItem(
+                        item.tempEditorId, it?.let { availableProducts[it] })
+                },
+                label = stringResource(Res.string.product),
+                noSelectionText = stringResource(Res.string.no_selection),
+                initialText = item.product?.name?.displayName(language) ?: "",
+                modifier = Modifier.width(250.dp)
+            )
             IconButton(
                 onClick = { onRemoveItemFromOrder(item.tempEditorId) },
                 modifier = Modifier.padding(vertical = OutlinedTextFieldDefaults.MinHeight / 6)
@@ -111,8 +111,7 @@ fun OrderItemRow(
                     },
                     onItemSelected = { unit ->
                         onUpdateItemUnit(
-                            item.tempEditorId,
-                            unit.id == item.product?.mainProductUnit?.id
+                            item.tempEditorId, unit.id == item.product?.mainProductUnit?.id
                         )
                     },
                     itemToDisplayString = { it.name.displayName(language) },
@@ -182,9 +181,7 @@ fun OrderItemRow(
                 }
 
                 Card(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxWidth()
+                    modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth()
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,

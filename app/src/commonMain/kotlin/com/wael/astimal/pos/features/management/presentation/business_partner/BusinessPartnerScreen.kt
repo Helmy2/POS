@@ -3,12 +3,11 @@ package com.wael.astimal.pos.features.management.presentation.business_partner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
@@ -50,8 +49,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
@@ -132,7 +132,6 @@ fun BusinessPartnerScreen(
         BusinessPartnerList(
             partners = state.filteredPartners,
             onPartnerClick = { onEvent(BusinessPartnerContract.Event.PartnerClicked(it)) },
-            modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 
@@ -206,7 +205,7 @@ fun BusinessPartnerDetailView(
 
         AnimatedVisibility(visible = isAdmin) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                modifier = Modifier.padding(top = 16.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 IconButton(onClick = { showDeleteConfirmDialog = true }) {
@@ -239,23 +238,24 @@ fun BusinessPartnerList(
 ) {
     val language = LocalAppLocale.current
     LazyVerticalGrid(
-        modifier = modifier.padding(top = 16.dp), columns = GridCells.Adaptive(250.dp)
+        modifier = modifier,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        columns = GridCells.Adaptive(320.dp),
     ) {
         items(partners, key = { it.id }) { partner ->
-            Box(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Card(modifier = Modifier.clickable { onPartnerClick(partner) }.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp)
-                    ) {
-                        Text(
-                            partner.name.displayName(language),
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-                        PartnerTypeChip(partnerType = partner.type)
-                    }
+            Card(modifier = Modifier.clickable { onPartnerClick(partner) }) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        partner.name.displayName(language),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                    PartnerTypeChip(partnerType = partner.type)
                 }
             }
         }
@@ -272,14 +272,15 @@ fun BusinessPartnerEditDialog(
     onCreate: (BusinessPartner, amount: Double) -> Unit,
     onUpdate: (BusinessPartner) -> Unit
 ) {
+    val language = LocalAppLocale.current
     var enName by remember(partner.name.enName) { mutableStateOf(partner.name.enName ?: "") }
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
     var address by remember(partner.address) { mutableStateOf(partner.address) }
-    var user by remember(partner.responsibleEmployee) { mutableStateOf(partner.responsibleEmployee) }
+    var user by remember(partner.responsibleEmployee) { mutableStateOf<User?>(partner.responsibleEmployee) }
     var isReceiveMoney by remember { mutableStateOf(false) }
     var amount by remember { mutableStateOf("") }
     val isNewPartner = partner.id == ""
-    var type by remember { mutableStateOf(partner.type) }
+    var type by remember { mutableStateOf<PartnerType?>(partner.type) }
     var isPrivate by remember { mutableStateOf(partner.isPrivate) }
 
 
@@ -297,7 +298,9 @@ fun BusinessPartnerEditDialog(
     val imePadding = WindowInsets.ime.getBottom(LocalDensity.current).dp
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = imePadding)
         ) {
             Column(
@@ -370,34 +373,30 @@ fun BusinessPartnerEditDialog(
                 )
             }
 
-            CustomExposedDropdownMenu(
+            ExposedDropdownMenu(
                 label = stringResource(Res.string.responsible_employee),
-                items = users,
-                currentSelection = user.localizedName.displayName(
-                    LocalAppLocale.current
-                ),
+                options = users.map { it.localizedName.displayName(language) },
+                initialText = user?.localizedName.displayName(language),
                 enabled = canEdit,
-                itemToDisplayString = { it.name },
                 onItemSelected = {
-                    user = it
+                    user = it?.let { users.getOrNull(it) }
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            CustomExposedDropdownMenu(
+            ExposedDropdownMenu(
                 label = stringResource(Res.string.partner_type),
-                items = PartnerType.entries,
-                currentSelection = stringResource(type.getStringRes()),
+                options = PartnerType.entries.map { stringResource(it.getStringRes()) },
+                initialText = type?.let { stringResource(it.getStringRes()) } ?: "",
                 enabled = canEdit,
-                itemToDisplayString = { stringResource(it.getStringRes()) },
                 onItemSelected = {
-                    type = it
+                    type = it?.let { PartnerType.entries.getOrNull(it) }
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp).width(320.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(stringResource(Res.string.is_private), modifier = Modifier.weight(1f))
@@ -414,30 +413,32 @@ fun BusinessPartnerEditDialog(
                     onValueChange = { amount = it },
                     label = stringResource(Res.string.amount),
                     enabled = true,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     )
                 )
 
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.type),
-                    items = listOf(true, false),
-                    selectedItemId = isReceiveMoney.toString(),
+                    options = listOf(
+                        stringResource(Res.string.partner_owns),
+                        stringResource(Res.string.owns_partner)
+                    ),
+                    initialText = if (isReceiveMoney) stringResource(Res.string.partner_owns) else stringResource(
+                        Res.string.owns_partner
+                    ),
                     onItemSelected = {
-                        isReceiveMoney = it
+                        isReceiveMoney = it == 0
                     },
-                    itemToDisplayString = {
-                        if (it) stringResource(Res.string.partner_owns) else stringResource(Res.string.owns_partner)
-                    },
-                    itemToId = { it.toString() },
                     enabled = true,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
@@ -446,24 +447,27 @@ fun BusinessPartnerEditDialog(
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        val updatedPartner = partner.copy(
-                            name = partner.name.copy(enName = enName, arName = arName),
-                            address = address,
-                            phone = "$phone1,$phone2,$phone3",
-                            type = type,
-                            responsibleEmployee = user,
-                            isPrivate = isPrivate
-                        )
-                        if (isNewPartner) {
-                            onCreate(
-                                updatedPartner,
-                                if (isReceiveMoney) -(amount.toDoubleOrNull()
-                                    ?: 0.0) else amount.toDoubleOrNull() ?: 0.0
+                        if (type != null && user != null) {
+                            val updatedPartner = partner.copy(
+                                name = partner.name.copy(enName = enName, arName = arName),
+                                address = address,
+                                phone = "$phone1,$phone2,$phone3",
+                                type = type!!,
+                                responsibleEmployee = user!!,
+                                isPrivate = isPrivate
                             )
-                        } else {
-                            onUpdate(updatedPartner)
+                            if (isNewPartner) {
+                                onCreate(
+                                    updatedPartner,
+                                    if (isReceiveMoney) -(amount.toDoubleOrNull()
+                                        ?: 0.0) else amount.toDoubleOrNull() ?: 0.0
+                                )
+                            } else {
+                                onUpdate(updatedPartner)
+                            }
                         }
-                    }, enabled = !isSaving && (enName.isNotBlank() || arName.isNotBlank())
+                    },
+                    enabled = !isSaving && (enName.isNotBlank() || arName.isNotBlank()) && type != null && user != null
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(

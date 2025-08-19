@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -99,14 +100,9 @@ fun EmployeeAccountScreen(
             )
         }
     }) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            TransactionList(
-                transactions = filteredTransactions, canEdit = state.canUserEdit, onEvent = onEvent
-            )
-        }
+        TransactionList(
+            transactions = filteredTransactions, canEdit = state.canUserEdit, onEvent = onEvent
+        )
     }
 }
 
@@ -191,9 +187,11 @@ fun TransactionList(
     canEdit: Boolean,
     onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
-    LazyColumn(
+    LazyVerticalGrid(
+        contentPadding = PaddingValues(16.dp),
+        columns = GridCells.Adaptive(320.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(top = 16.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(transactions, key = { it.id }) { transaction ->
             TransactionItem(

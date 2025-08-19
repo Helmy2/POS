@@ -2,10 +2,9 @@ package com.wael.astimal.pos.features.user.presentation.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -89,8 +88,7 @@ fun LoginScreen(state: LoginContract.State, processEvent: (LoginContract.Event) 
             text = stringResource(Res.string.login),
             onClick = { processEvent(LoginContract.Event.LoginClicked) },
             isLoading = state.loading,
-            modifier = Modifier.sizeIn(maxWidth = 600.dp)
-                .fillMaxWidth()
+            modifier = Modifier.width(320.dp)
         )
         Spacer(modifier = Modifier.weight(2f))
     }

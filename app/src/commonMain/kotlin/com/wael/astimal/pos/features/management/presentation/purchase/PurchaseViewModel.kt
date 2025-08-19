@@ -12,6 +12,7 @@ import com.wael.astimal.pos.features.inventory.domain.repository.ProductReposito
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
+import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import com.wael.astimal.pos.features.management.domain.entity.InvoiceItem
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
@@ -223,7 +224,7 @@ class PurchaseViewModel(
                 id = currentState.selectedOrder?.id ?: "",
                 orderDate = currentState.currentOrderInput.date,
                 invoiceType = InvoiceType.PURCHASE,
-                paymentMethod = currentState.currentOrderInput.paymentType,
+                paymentMethod = currentState.currentOrderInput.paymentType ?: PaymentMethod.CASH,
                 store = currentState.currentOrderInput.selectedStore
             )
 

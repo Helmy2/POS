@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.management.presentation.sales_return
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,10 +12,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.EditableOrderItems
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
 import com.wael.astimal.pos.core.presentation.compoenents.Label
-import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen2
-import com.wael.astimal.pos.core.presentation.compoenents.editableOrderItems
+import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
@@ -60,11 +61,11 @@ fun SalesReturnScreen(
     val language = LocalAppLocale.current
     val orderInput = state.currentOrderInput
 
-    SearchScreen2(
+    SearchScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        canSave = state.canSave,
+        enableFab = state.canSave,
         onQueryChange = { onEvent(SalesReturnContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(SalesReturnContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(SalesReturnContract.Event.SearchActiveChanged(it)) },
@@ -92,24 +93,18 @@ fun SalesReturnScreen(
         },
         mainContent = {
             if (state.selectedOrder != null) {
-                item {
                     Button(
                         {
                             onEvent(SalesReturnContract.Event.GeneratePdf(state.selectedOrder))
-                        }
+                        }, modifier = Modifier.width(320.dp).padding(top = 32.dp)
                     ) {
                         Text(text = stringResource(Res.string.generate_pdf))
                     }
-                }
             }
-            item {
                 DataPicker(
                     selectedDateMillis = orderInput.date,
                     onDateSelected = { onEvent(SalesReturnContract.Event.DateChanged(it)) },
-                    modifier = Modifier.padding(8.dp),
                 )
-            }
-            item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.client),
                     items = state.dropdownData.partners,
@@ -118,10 +113,7 @@ fun SalesReturnScreen(
                     ) ?: "",
                     onItemSelected = { onEvent(SalesReturnContract.Event.PartnerSelected(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
-                    modifier = Modifier.padding(8.dp),
                 )
-            }
-            item {
                 CustomExposedDropdownMenu(
                     label = stringResource(Res.string.stores),
                     items = state.dropdownData.stores,
@@ -131,10 +123,8 @@ fun SalesReturnScreen(
                     onItemSelected = { onEvent(SalesReturnContract.Event.StoreChanged(it)) },
                     itemToDisplayString = { it.name.displayName(language) },
                     enabled = state.currentUser?.isAdmin == true,
-                    modifier = Modifier.padding(8.dp),
                 )
-            }
-            editableOrderItems(
+            EditableOrderItems(
                 itemList = orderInput.items,
                 availableProducts = state.dropdownData.products,
                 onRemoveItemFromOrder = { editorId ->
