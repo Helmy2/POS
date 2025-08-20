@@ -21,14 +21,14 @@ class CustomerStatementViewModel(
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
-) : BaseViewModel<CustomerStatementContract.State, CustomerStatementContract.Event, CustomerStatementContract.Effect>(
-    CustomerStatementReducer(), CustomerStatementContract.State()
+) : BaseViewModel<CustomerStatementReducer.State, CustomerStatementReducer.Event, CustomerStatementReducer.Effect>(
+    CustomerStatementReducer(), CustomerStatementReducer.State()
 ) {
     private var transactionJob: Job? = null
 
     init {
         // Start the initial data load when the ViewModel is created
-        processEvent(CustomerStatementContract.Event.LoadInitialData)
+        processEvent(CustomerStatementReducer.Event.LoadInitialData)
     }
 
     /**
@@ -36,20 +36,20 @@ class CustomerStatementViewModel(
      * For complex events with side effects (like data loading), it launches coroutines.
      * For simple state changes, it calls setState to update the state via the reducer.
      */
-    override fun handleEvent(event: CustomerStatementContract.Event) {
+    override fun handleEvent(event: CustomerStatementReducer.Event) {
         when (event) {
-            is CustomerStatementContract.Event.LoadInitialData -> loadPartners()
-            is CustomerStatementContract.Event.ApplyFilters -> {
+            is CustomerStatementReducer.Event.LoadInitialData -> loadPartners()
+            is CustomerStatementReducer.Event.ApplyFilters -> {
                 setState(event) // Update state to show loading indicator
                 loadTransactions()
             }
 
-            is CustomerStatementContract.Event.TransactionClicked -> navigateToTransaction(event.transaction)
-            is CustomerStatementContract.Event.GeneratePdf -> generatePdf()
+            is CustomerStatementReducer.Event.TransactionClicked -> navigateToTransaction(event.transaction)
+            is CustomerStatementReducer.Event.GeneratePdf -> generatePdf()
             // For all other events, the change is purely a state mutation,
             // so we just pass them to the reducer.
 
-            is CustomerStatementContract.Event.PdfGenerationFinished -> {
+            is CustomerStatementReducer.Event.PdfGenerationFinished -> {
                 viewModelScope.launch {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.Dynamic(event.message)))
                 }
@@ -63,7 +63,7 @@ class CustomerStatementViewModel(
     private fun loadPartners() {
         viewModelScope.launch {
             val partners = partnerRepository.getBusinessPartners().first()
-            setState(CustomerStatementContract.Event.ShowInitialData(partners))
+            setState(CustomerStatementReducer.Event.ShowInitialData(partners))
         }
     }
 
@@ -79,7 +79,7 @@ class CustomerStatementViewModel(
                 currentState.endDate
             ).collect { transactions ->
                 // As new data arrives, send it to the reducer
-                setState(CustomerStatementContract.Event.ShowTransactions(transactions))
+                setState(CustomerStatementReducer.Event.ShowTransactions(transactions))
             }
         }
     }
@@ -95,7 +95,7 @@ class CustomerStatementViewModel(
                     endDate = currentState.endDate
                 )
 
-                setState(CustomerStatementContract.Event.PdfGenerationSuccessful(html = html))
+                setState(CustomerStatementReducer.Event.PdfGenerationSuccessful(html = html))
             }
         }
     }

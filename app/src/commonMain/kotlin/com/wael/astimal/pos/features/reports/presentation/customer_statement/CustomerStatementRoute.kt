@@ -4,19 +4,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,8 +24,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -38,9 +35,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.domain.entity.get
+import com.wael.astimal.pos.core.presentation.compoenents.AppButton
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
-import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.format
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
@@ -69,10 +69,10 @@ fun CustomerStatementRoute(
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
         baseFileName = "customer_statement_${state.selectedPartner?.name?.enName ?: "report"}",
-        onFinish = { viewModel.processEvent(CustomerStatementContract.Event.PdfGenerationFinished(it)) }
+        onFinish = { viewModel.processEvent(CustomerStatementReducer.Event.PdfGenerationFinished(it)) }
     )
 
-    Scaffold(
+    Screen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.customer_statement)) },
@@ -83,7 +83,7 @@ fun CustomerStatementRoute(
                 },
                 actions = {
                     IconButton(
-                        onClick = { viewModel.processEvent(CustomerStatementContract.Event.GeneratePdf) },
+                        onClick = { viewModel.processEvent(CustomerStatementReducer.Event.GeneratePdf) },
                         enabled = state.transactions.isNotEmpty()
                     ) {
                         Icon(Icons.Default.PictureAsPdf, "Generate PDF")
@@ -91,107 +91,95 @@ fun CustomerStatementRoute(
                 }
             )
         }
-    ) { paddingValues ->
+    ) {
         CustomerStatementScreen(
             state = state,
             processEvent = viewModel::processEvent,
-            modifier = Modifier.padding(paddingValues)
         )
     }
 }
 
 @Composable
 fun CustomerStatementScreen(
-    state: CustomerStatementContract.State,
-    processEvent: (CustomerStatementContract.Event) -> Unit,
-    modifier: Modifier = Modifier
+    state: CustomerStatementReducer.State,
+    processEvent: (CustomerStatementReducer.Event) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
     if (showStartDatePicker) {
         DataPicker(
-            onDateSelected = { processEvent(CustomerStatementContract.Event.SetStartDate(it)) },
+            onDateSelected = { processEvent(CustomerStatementReducer.Event.SetStartDate(it)) },
             onDismiss = { showStartDatePicker = false }
         )
     }
     if (showEndDatePicker) {
         DataPicker(
-            onDateSelected = { processEvent(CustomerStatementContract.Event.SetEndDate(it)) },
+            onDateSelected = { processEvent(CustomerStatementReducer.Event.SetEndDate(it)) },
             onDismiss = { showEndDatePicker = false }
         )
     }
 
-    val language = LocalAppLocale.current
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
-
-        CustomExposedDropdownMenu(
-            label = stringResource(Res.string.select_customer),
-            items = state.partners,
-            currentSelection = state.selectedPartner?.name?.displayName(
-                language
-            ) ?: "",
-            onItemSelected = { processEvent(CustomerStatementContract.Event.SelectPartner(it)) },
-            itemToDisplayString = { it.name.displayName(language) },
-            modifier = Modifier.padding(8.dp),
-        )
-
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = state.startDate.format(),
-            onValueChange = {},
-            readOnly = true,
-            label = {
-                Text(
-                    stringResource(Res.string.start_date),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            },
-            trailingIcon = {
-                IconButton(onClick = { showStartDatePicker = true }) {
-                    Icon(Icons.Default.DateRange, "Select Start Date")
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.endDate.format(),
-            onValueChange = {},
-            readOnly = true,
-            label = {
-                Text(
-                    stringResource(Res.string.end_date),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            },
-            trailingIcon = {
-                IconButton(onClick = { showEndDatePicker = true }) {
-                    Icon(Icons.Default.DateRange, "Select End Date")
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = { processEvent(CustomerStatementContract.Event.ApplyFilters) },
-            enabled = state.selectedPartner != null,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(Res.string.apply_filters))
-        }
-        Spacer(Modifier.height(16.dp))
-        HorizontalDivider()
-
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        itemVerticalAlignment = Alignment.Bottom
+                    ) {
+                        ExposedDropdownMenu(
+                            label = stringResource(Res.string.select_customer),
+                            options = state.partners.map { it.name.get() },
+                            initialText = state.selectedPartner?.name.get(),
+                            onItemSelected = {
+                                processEvent(
+                                    CustomerStatementReducer.Event.SelectPartner(
+                                        it?.let { state.partners.getOrNull(it) })
+                                )
+                            },
+                        )
+                        LabeledTextField(
+                            value = state.startDate.format(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(Res.string.start_date),
+                            trailingIcon = {
+                                IconButton(onClick = { showStartDatePicker = true }) {
+                                    Icon(Icons.Default.DateRange, "Select Start Date")
+                                }
+                            },
+                            enabled = true
+                        )
+                        LabeledTextField(
+                            value = state.endDate.format(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(Res.string.end_date),
+                            trailingIcon = {
+                                IconButton(onClick = { showEndDatePicker = true }) {
+                                    Icon(Icons.Default.DateRange, "Select End Date")
+                                }
+                            },
+                            enabled = true
+                        )
+
+                        AppButton(
+                            onClick = { processEvent(CustomerStatementReducer.Event.ApplyFilters) },
+                            enabled = state.selectedPartner != null,
+                            modifier = Modifier.width(320.dp)
+                        ) {
+                            Text(stringResource(Res.string.apply_filters))
+                        }
+                        HorizontalDivider()
+                    }
+                }
                 item {
                     Row(
                         Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp),
@@ -217,7 +205,7 @@ fun CustomerStatementScreen(
                 }
                 items(state.transactions) { transaction ->
                     TransactionRow(transaction) {
-                        processEvent(CustomerStatementContract.Event.TransactionClicked(transaction))
+                        processEvent(CustomerStatementReducer.Event.TransactionClicked(transaction))
                     }
                 }
                 if (state.transactions.isNotEmpty()) {
