@@ -3,19 +3,18 @@ package com.wael.astimal.pos.features.reports.presentation.employee_report
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -24,7 +23,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,9 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wael.astimal.pos.core.domain.entity.get
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.AppButton
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
+import com.wael.astimal.pos.core.util.format
+import com.wael.astimal.pos.core.util.formate
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -72,7 +74,7 @@ fun EmployeeReportRoute(
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
         baseFileName = "employee_activity_report_${state.selectedEmployee?.name ?: "report"}",
-        onFinish = { viewModel.processEvent(EmployeeReportContract.Event.PdfGenerationFinished(it)) }
+        onFinish = { viewModel.processEvent(EmployeeReportReducer.Event.PdfGenerationFinished(it)) }
     )
 
     Scaffold(
@@ -89,7 +91,7 @@ fun EmployeeReportRoute(
                 },
                 actions = {
                     IconButton(
-                        onClick = { viewModel.processEvent(EmployeeReportContract.Event.GeneratePdf) },
+                        onClick = { viewModel.processEvent(EmployeeReportReducer.Event.GeneratePdf) },
                         enabled = state.activities.isNotEmpty()
                     ) { Icon(Icons.Default.PictureAsPdf, "Generate PDF") }
                 }
@@ -106,8 +108,8 @@ fun EmployeeReportRoute(
 
 @Composable
 fun EmployeeReportScreen(
-    state: EmployeeReportContract.State,
-    processEvent: (EmployeeReportContract.Event) -> Unit,
+    state: EmployeeReportReducer.State,
+    processEvent: (EmployeeReportReducer.Event) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -115,64 +117,18 @@ fun EmployeeReportScreen(
 
     if (showStartDatePicker) {
         DataPicker(
-            onDateSelected = { processEvent(EmployeeReportContract.Event.SetStartDate(it)) },
+            onDateSelected = { processEvent(EmployeeReportReducer.Event.SetStartDate(it)) },
             onDismiss = { showStartDatePicker = false }
         )
     }
     if (showEndDatePicker) {
         DataPicker(
-            onDateSelected = { processEvent(EmployeeReportContract.Event.SetEndDate(it)) },
+            onDateSelected = { processEvent(EmployeeReportReducer.Event.SetEndDate(it)) },
             onDismiss = { showEndDatePicker = false }
         )
     }
 
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
-
-        CustomExposedDropdownMenu(
-            label = stringResource(Res.string.select_employee),
-            currentSelection = state.selectedEmployee?.name ?: "",
-            items = state.employees,
-            onItemSelected = { processEvent(EmployeeReportContract.Event.SelectEmployee(it.id)) },
-            itemToDisplayString = { it.name },
-            modifier = Modifier.padding(8.dp)
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = state.startDate.toString(),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(Res.string.start_date)) },
-            trailingIcon = {
-                IconButton(onClick = {
-                    showStartDatePicker = true
-                }) { Icon(Icons.Default.DateRange, null) }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.endDate.toString(),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(Res.string.end_date)) },
-            trailingIcon = {
-                IconButton(onClick = {
-                    showEndDatePicker = true
-                }) { Icon(Icons.Default.DateRange, null) }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = { processEvent(EmployeeReportContract.Event.ApplyFilters) },
-            enabled = state.selectedEmployeeId != null,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(Res.string.apply_filters)) }
-        Spacer(Modifier.height(16.dp))
-        HorizontalDivider()
-
         // --- Report Data ---
         if (state.isLoading) {
             Box(
@@ -181,6 +137,59 @@ fun EmployeeReportScreen(
             ) { CircularProgressIndicator() }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        itemVerticalAlignment = Alignment.Bottom
+                    ) {
+                        ExposedDropdownMenu(
+                            label = stringResource(Res.string.select_employee),
+                            initialText = state.selectedEmployee?.localizedName.get(),
+                            options = state.employees.map { it.localizedName.get() },
+                            onItemSelected = {
+                                processEvent(EmployeeReportReducer.Event.SelectEmployee(it?.let {
+                                    state.employees.getOrNull(
+                                        it
+                                    )
+                                }))
+                            },
+                        )
+
+                        LabeledTextField(
+                            value = state.startDate.format(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(Res.string.start_date),
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    showStartDatePicker = true
+                                }) { Icon(Icons.Default.DateRange, null) }
+                            },
+                            enabled = true
+                        )
+
+                        LabeledTextField(
+                            value = state.endDate.format(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(Res.string.end_date),
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    showEndDatePicker = true
+                                }) { Icon(Icons.Default.DateRange, null) }
+                            },
+                            enabled = true
+                        )
+                        AppButton(
+                            onClick = { processEvent(EmployeeReportReducer.Event.ApplyFilters) },
+                            enabled = state.selectedEmployee != null,
+                            modifier = Modifier.width(320.dp)
+                        ) { Text(stringResource(Res.string.apply_filters)) }
+                        HorizontalDivider()
+                    }
+                }
+
                 if (state.activities.isNotEmpty()) {
                     item {
                         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 4.dp)) {
@@ -205,7 +214,7 @@ fun EmployeeReportScreen(
                 }
                 items(state.activities) { activity ->
                     ActivityRow(activity) {
-                        processEvent(EmployeeReportContract.Event.SelectActivity(activity))
+                        processEvent(EmployeeReportReducer.Event.SelectActivity(activity))
                     }
                 }
             }
@@ -280,7 +289,7 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 }
             }
             Text(
-                String.format("%.2f", amount),
+                amount.formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End

@@ -21,34 +21,34 @@ class EmployeeReportViewModel(
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
-) : BaseViewModel<EmployeeReportContract.State, EmployeeReportContract.Event, EmployeeReportContract.Effect>(
+) : BaseViewModel<EmployeeReportReducer.State, EmployeeReportReducer.Event, EmployeeReportReducer.Effect>(
     EmployeeReportReducer(),
-    EmployeeReportContract.State()
+    EmployeeReportReducer.State()
 ) {
     private var activityJob: Job? = null
 
     init {
-        processEvent(EmployeeReportContract.Event.LoadInitialData)
+        processEvent(EmployeeReportReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: EmployeeReportContract.Event) {
+    override fun handleEvent(event: EmployeeReportReducer.Event) {
         when (event) {
-            is EmployeeReportContract.Event.LoadInitialData -> loadEmployees()
-            is EmployeeReportContract.Event.ApplyFilters -> {
+            is EmployeeReportReducer.Event.LoadInitialData -> loadEmployees()
+            is EmployeeReportReducer.Event.ApplyFilters -> {
                 setState(event)
                 loadActivities()
             }
 
-            is EmployeeReportContract.Event.GeneratePdf -> generatePdf()
+            is EmployeeReportReducer.Event.GeneratePdf -> generatePdf()
 
-            is EmployeeReportContract.Event.PdfGenerationFinished -> {
+            is EmployeeReportReducer.Event.PdfGenerationFinished -> {
                 viewModelScope.launch {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.Dynamic(event.message)))
                 }
                 setState(event)
             }
 
-            is EmployeeReportContract.Event.SelectActivity -> navigateToTransaction(event.activity)
+            is EmployeeReportReducer.Event.SelectActivity -> navigateToTransaction(event.activity)
 
             else -> setState(event)
         }
@@ -57,14 +57,14 @@ class EmployeeReportViewModel(
     private fun loadEmployees() {
         viewModelScope.launch {
             val employees = userRepository.getEmployeesFlow().first()
-            setState(EmployeeReportContract.Event.ShowInitialData(employees))
+            setState(EmployeeReportReducer.Event.ShowInitialData(employees))
         }
     }
 
     private fun loadActivities() {
         activityJob?.cancel()
         val currentState = state.value
-        val employeeId = currentState.selectedEmployeeId ?: return
+        val employeeId = currentState.selectedEmployee?.id ?: return
         activityJob = viewModelScope.launch {
             reportRepository.getEmployeeActivityForDateRange(
                 employeeId,
@@ -72,7 +72,7 @@ class EmployeeReportViewModel(
                 currentState.endDate
             )
                 .collect { activities ->
-                    setState(EmployeeReportContract.Event.ShowActivities(activities))
+                    setState(EmployeeReportReducer.Event.ShowActivities(activities))
                 }
         }
     }
@@ -87,7 +87,7 @@ class EmployeeReportViewModel(
                     startDate = currentState.startDate,
                     endDate = currentState.endDate
                 )
-                setState(EmployeeReportContract.Event.PdfGenerationSuccess(html))
+                setState(EmployeeReportReducer.Event.PdfGenerationSuccess(html))
             }
         }
     }
