@@ -15,25 +15,25 @@ class ProductMovementViewModel(
     private val storeRepository: StoreRepository,
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
-) : BaseViewModel<ProductMovementContract.State, ProductMovementContract.Event, ProductMovementContract.Effect>(
+) : BaseViewModel<ProductMovementReducer.State, ProductMovementReducer.Event, ProductMovementReducer.Effect>(
     ProductMovementReducer(),
-    ProductMovementContract.State()
+    ProductMovementReducer.State()
 ) {
     private var job: Job? = null
 
     init {
-        processEvent(ProductMovementContract.Event.LoadInitialData)
+        processEvent(ProductMovementReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: ProductMovementContract.Event) {
+    override fun handleEvent(event: ProductMovementReducer.Event) {
         when (event) {
-            is ProductMovementContract.Event.LoadInitialData -> loadFilters()
-            is ProductMovementContract.Event.ApplyFilters -> {
+            is ProductMovementReducer.Event.LoadInitialData -> loadFilters()
+            is ProductMovementReducer.Event.ApplyFilters -> {
                 setState(event)
                 loadMovement()
             }
 
-            is ProductMovementContract.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
+            is ProductMovementReducer.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
             else -> setState(event)
         }
     }
@@ -42,7 +42,7 @@ class ProductMovementViewModel(
         viewModelScope.launch {
             val products = productRepository.getProducts().first()
             val stores = storeRepository.getStores().first()
-            setState(ProductMovementContract.Event.ShowInitialData(products, stores))
+            setState(ProductMovementReducer.Event.ShowInitialData(products, stores))
         }
     }
 
@@ -53,10 +53,10 @@ class ProductMovementViewModel(
             reportRepository.getProductMovement(
                 startDate = currentState.startDate,
                 endDate = currentState.endDate,
-                productId = currentState.selectedProductId,
-                storeId = currentState.selectedStoreId
+                productId = currentState.selectedProduct?.id,
+                storeId = currentState.selectedStore?.id
             ).collect { groups ->
-                setState(ProductMovementContract.Event.ShowMovement(groups))
+                setState(ProductMovementReducer.Event.ShowMovement(groups))
             }
         }
     }
@@ -69,6 +69,6 @@ class ProductMovementViewModel(
             endDate = currentState.endDate
         )
 
-        setState(ProductMovementContract.Event.PdfGenerationSuccess(html))
+        setState(ProductMovementReducer.Event.PdfGenerationSuccess(html))
     }
 }
