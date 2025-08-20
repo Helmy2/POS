@@ -18,27 +18,27 @@ class EmployeeLedgerViewModel(
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
-) : BaseViewModel<EmployeeLedgerContract.State, EmployeeLedgerContract.Event, EmployeeLedgerContract.Effect>(
+) : BaseViewModel<EmployeeLedgerReducer.State, EmployeeLedgerReducer.Event, EmployeeLedgerReducer.Effect>(
     EmployeeLedgerReducer(),
-    EmployeeLedgerContract.State()
+    EmployeeLedgerReducer.State()
 ) {
     private var job: Job? = null
 
     init {
-        processEvent(EmployeeLedgerContract.Event.LoadInitialData)
+        processEvent(EmployeeLedgerReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: EmployeeLedgerContract.Event) {
+    override fun handleEvent(event: EmployeeLedgerReducer.Event) {
         when (event) {
-            is EmployeeLedgerContract.Event.LoadInitialData -> loadEmployees()
-            is EmployeeLedgerContract.Event.ApplyFilters -> {
+            is EmployeeLedgerReducer.Event.LoadInitialData -> loadEmployees()
+            is EmployeeLedgerReducer.Event.ApplyFilters -> {
                 setState(event)
                 loadLedger()
             }
 
-            is EmployeeLedgerContract.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
+            is EmployeeLedgerReducer.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
 
-            is EmployeeLedgerContract.Event.SelectEntry -> navigateToTransaction(event.activity)
+            is EmployeeLedgerReducer.Event.SelectEntry -> navigateToTransaction(event.activity)
             else -> setState(event)
         }
     }
@@ -46,14 +46,14 @@ class EmployeeLedgerViewModel(
     private fun loadEmployees() {
         viewModelScope.launch {
             val employees = userRepository.getEmployeesFlow().first()
-            setState(EmployeeLedgerContract.Event.ShowInitialData(employees))
+            setState(EmployeeLedgerReducer.Event.ShowInitialData(employees))
         }
     }
 
     private fun loadLedger() {
         job?.cancel()
         val currentState = state.value
-        val employeeId = currentState.selectedEmployeeId ?: return
+        val employeeId = currentState.selectedEmployee?.id ?: return
         job = viewModelScope.launch {
             reportRepository.getEmployeeLedger(
                 employeeId,
@@ -61,7 +61,7 @@ class EmployeeLedgerViewModel(
                 currentState.endDate
             )
                 .collect { entries ->
-                    setState(EmployeeLedgerContract.Event.ShowLedger(entries))
+                    setState(EmployeeLedgerReducer.Event.ShowLedger(entries))
                 }
         }
     }
@@ -75,7 +75,7 @@ class EmployeeLedgerViewModel(
                 startDate = currentState.startDate,
                 endDate = currentState.endDate
             )
-            setState(EmployeeLedgerContract.Event.PdfGenerationSuccess(html))
+            setState(EmployeeLedgerReducer.Event.PdfGenerationSuccess(html))
         }
     }
 
