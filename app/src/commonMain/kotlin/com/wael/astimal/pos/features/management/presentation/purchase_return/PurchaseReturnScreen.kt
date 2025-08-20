@@ -130,31 +130,26 @@ fun PurchaseReturnScreen(
                 enabled = state.currentUser?.isAdmin == true,
             )
             EditableOrderItems(
+                totalAmount = orderInput.totalAmount,
+                amountRemaining = orderInput.amountRemaining,
+                partnerBalance = orderInput.partnerBalance,
+                partnerBalanceAfterThisOrder = orderInput.partnerBalanceAfterThisOrder,
+                amountPaid = orderInput.amountPaid,
                 itemList = orderInput.items,
+                selectedPaymentType = orderInput.paymentType,
+                onUpdateAmountPaid = {
+                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
+                },
+                onAddNewItemToOrder = {
+                    onEvent(PurchaseReturnContract.Event.AddItem)
+                },
                 availableProducts = state.dropdownData.products,
+                onSelectPaymentType = { onEvent(PurchaseReturnContract.Event.PaymentMethodChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
+                },
                 onRemoveItemFromOrder = { editorId ->
                     onEvent(PurchaseReturnContract.Event.RemoveItem(editorId))
-                },
-                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemUnitChanged(
-                            editorId, isMaxUnitSelected
-                        )
-                    )
-                },
-                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemMaxPriceChanged(
-                            editorId, maxUnitPrice
-                        )
-                    )
-                },
-                onUpdateItemMinUnitPrice = { editorId, minUnitPrice ->
-                    onEvent(
-                        PurchaseReturnContract.Event.ItemMinPriceChanged(
-                            editorId, minUnitPrice
-                        )
-                    )
                 },
                 onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
                     onEvent(
@@ -170,23 +165,27 @@ fun PurchaseReturnScreen(
                         )
                     )
                 },
-                onUpdateAmountPaid = {
-                    onEvent(PurchaseReturnContract.Event.AmountPaidChanged(it))
+                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemUnitChanged(
+                            editorId, isMaxUnitSelected
+                        )
+                    )
                 },
-                selectedPaymentType = orderInput.paymentType,
-                onSelectPaymentType = { onEvent(PurchaseReturnContract.Event.PaymentMethodChanged(it)) },
-                onItemProductChanged = { editorId, product ->
-                    onEvent(PurchaseReturnContract.Event.ItemProductChanged(editorId, product))
+                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
+                    onEvent(
+                        PurchaseReturnContract.Event.ItemMaxPriceChanged(
+                            editorId, maxUnitPrice
+                        )
+                    )
                 },
-                totalAmount = orderInput.totalAmount,
-                amountRemaining = orderInput.amountRemaining,
-                amountPaid = orderInput.amountPaid,
-                partnerBalance = orderInput.partnerBalance,
-                partnerBalanceAfterThisOrder = orderInput.partnerBalanceAfterThisOrder,
-                onAddNewItemToOrder = {
-                    onEvent(PurchaseReturnContract.Event.AddItem)
-                },
-            )
+            ) { editorId, minUnitPrice ->
+                onEvent(
+                    PurchaseReturnContract.Event.ItemMinPriceChanged(
+                        editorId, minUnitPrice
+                    )
+                )
+            }
         },
     )
 }

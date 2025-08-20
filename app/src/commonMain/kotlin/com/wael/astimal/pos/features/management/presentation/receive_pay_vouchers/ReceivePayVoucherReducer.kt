@@ -31,7 +31,7 @@ class ReceivePayVoucherReducer() :
                     dialogState = ReceivePayVoucherContract.DialogState(
                         show = true,
                         voucherToEdit = event.voucher,
-                        selectedPartnerId = event.voucher.partner.id,
+                        selectedPartner = event.voucher.partner,
                         amount = abs(event.voucher.amount).toString(),
                         notes = event.voucher.notes,
                         date = event.voucher.createdAt,
@@ -52,7 +52,7 @@ class ReceivePayVoucherReducer() :
             // Dialog state updates
 
             is ReceivePayVoucherContract.Event.DialogPartnerSelected ->
-                previousState.copy(dialogState = previousState.dialogState.copy(selectedPartnerId = event.partnerId)) to null
+                previousState.copy(dialogState = previousState.dialogState.copy(selectedPartner = event.partner)) to null
 
             is ReceivePayVoucherContract.Event.DialogAmountChanged ->
                 previousState.copy(dialogState = previousState.dialogState.copy(amount = event.amount)) to null

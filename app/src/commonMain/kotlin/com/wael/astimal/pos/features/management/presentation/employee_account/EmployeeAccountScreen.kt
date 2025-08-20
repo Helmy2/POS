@@ -34,8 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.domain.entity.get
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
@@ -110,8 +111,6 @@ fun EmployeeAccountScreen(
 fun EditTransactionDialog(
     state: EmployeeAccountContract.State, onEvent: (EmployeeAccountContract.Event) -> Unit
 ) {
-    val language = LocalAppLocale.current
-
     AlertDialog(
         onDismissRequest = { onEvent(EmployeeAccountContract.Event.DismissDialog) },
         title = {
@@ -121,35 +120,37 @@ fun EditTransactionDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.employee),
-                    items = state.employeesForDropdown,
-                    selectedItemId = state.dialogState.selectedEmployee?.id,
+                    options = state.employeesForDropdown.map { it.localizedName.get() },
+                    initialText = state.dialogState.selectedEmployee?.localizedName.get(),
                     onItemSelected = {
                         onEvent(
                             EmployeeAccountContract.Event.DialogEmployeeSelected(
-                                it
+                                it?.let {
+                                    state.employeesForDropdown.getOrNull(it)
+                                }
                             )
                         )
                     },
-                    itemToDisplayString = { it.localizedName.displayName(language) },
-                    itemToId = { it.id },
                     enabled = state.canUserEdit
                 )
 
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.transaction_type),
-                    items = EmployeeTransactionType.getSelectedList(),
-                    selectedItemId = state.dialogState.transactionType.ordinal.toString(),
+                    options = EmployeeTransactionType.getSelectedList()
+                        .map { stringResource(it.getStringResId()) },
+                    initialText = state.dialogState.transactionType?.getStringResId()
+                        ?.let { stringResource(it) } ?: "",
                     onItemSelected = {
                         onEvent(
                             EmployeeAccountContract.Event.DialogTransactionTypeSelected(
-                                it
+                                it?.let {
+                                    EmployeeTransactionType.getSelectedList().getOrNull(it)
+                                }
                             )
                         )
                     },
-                    itemToDisplayString = { stringResource(it.getStringResId()) },
-                    itemToId = { it.ordinal.toString() },
                     enabled = state.canUserEdit
                 )
                 LabeledTextField(

@@ -37,8 +37,8 @@ fun ReportsRoute(
 
 @Composable
 fun ReportsScreen(
-    state: ReportsContract.State,
-    onEvent: (ReportsContract.Event) -> Unit,
+    state: ReportsReducer.State,
+    onEvent: (ReportsReducer.Event) -> Unit,
 ) {
     Screen {
         LazyVerticalGrid(
@@ -50,7 +50,7 @@ fun ReportsScreen(
             items(state.items) {
                 Card(
                     onClick = {
-                        onEvent(ReportsContract.Event.ReportClicked(it.destination))
+                        onEvent(ReportsReducer.Event.ReportClicked(it.destination))
                     },
                 ) {
                     Box(

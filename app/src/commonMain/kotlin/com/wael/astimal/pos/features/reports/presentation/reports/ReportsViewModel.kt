@@ -7,19 +7,19 @@ import kotlinx.coroutines.launch
 
 class ReportsViewModel(
     private val navigationController: NavigationController
-) : BaseViewModel<ReportsContract.State, ReportsContract.Event, Nothing>(
+) : BaseViewModel<ReportsReducer.State, ReportsReducer.Event, Nothing>(
     reducer = ReportsReducer(),
-    initialState = ReportsContract.State()
+    initialState = ReportsReducer.State()
 ) {
 
     init {
-        processEvent(ReportsContract.Event.LoadReports)
+        processEvent(ReportsReducer.Event.LoadReports)
     }
 
-    override fun handleEvent(event: ReportsContract.Event) {
+    override fun handleEvent(event: ReportsReducer.Event) {
         viewModelScope.launch {
             when (event) {
-                is ReportsContract.Event.ReportClicked -> {
+                is ReportsReducer.Event.ReportClicked -> {
                     navigationController.navigate(event.destination)
                 }
 

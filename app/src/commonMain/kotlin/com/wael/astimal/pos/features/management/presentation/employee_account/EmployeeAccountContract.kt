@@ -12,7 +12,7 @@ object EmployeeAccountContract {
         val selectedTransaction: EmployeeTransaction? = null,
         val selectedEmployee: User? = null,
         val amount: String = "",
-        val transactionType: EmployeeTransactionType = EmployeeTransactionType.SALARY,
+        val transactionType: EmployeeTransactionType? = EmployeeTransactionType.SALARY,
         val notes: String = ""
     )
 
@@ -39,7 +39,7 @@ object EmployeeAccountContract {
 
         // Dialog Input Changes
         data class DialogEmployeeSelected(val employee: User?) : Event
-        data class DialogTransactionTypeSelected(val type: EmployeeTransactionType) : Event
+        data class DialogTransactionTypeSelected(val type: EmployeeTransactionType?) : Event
         data class DialogAmountChanged(val amount: String) : Event
         data class DialogNotesChanged(val notes: String) : Event
 

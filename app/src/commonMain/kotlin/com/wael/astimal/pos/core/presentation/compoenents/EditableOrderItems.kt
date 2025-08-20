@@ -2,7 +2,6 @@ package com.wael.astimal.pos.core.presentation.compoenents
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,7 +27,7 @@ import pos.app.generated.resources.amount_paid
 import pos.app.generated.resources.payment_type
 
 @Composable
-fun FlowRowScope.EditableOrderItems(
+fun EditableOrderItems(
     totalAmount: Double,
     amountRemaining: Double,
     partnerBalance: Double,

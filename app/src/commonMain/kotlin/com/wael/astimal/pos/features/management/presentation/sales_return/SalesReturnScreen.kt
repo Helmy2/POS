@@ -132,19 +132,26 @@ fun SalesReturnScreen(
                 enabled = state.currentUser?.isAdmin == true,
             )
             EditableOrderItems(
+                totalAmount = orderInput.totalAmount,
+                amountRemaining = orderInput.amountRemaining,
+                partnerBalance = orderInput.partnerBalance,
+                partnerBalanceAfterThisOrder = orderInput.partnerBalanceAfterThisOrder,
+                amountPaid = orderInput.amountPaid,
                 itemList = orderInput.items,
+                selectedPaymentType = orderInput.paymentType,
+                onUpdateAmountPaid = {
+                    onEvent(SalesReturnContract.Event.AmountPaidChanged(it))
+                },
+                onAddNewItemToOrder = {
+                    onEvent(SalesReturnContract.Event.AddItem)
+                },
                 availableProducts = state.dropdownData.products,
+                onSelectPaymentType = { onEvent(SalesReturnContract.Event.PaymentMethodChanged(it)) },
+                onItemProductChanged = { editorId, product ->
+                    onEvent(SalesReturnContract.Event.ItemProductChanged(editorId, product))
+                },
                 onRemoveItemFromOrder = { editorId ->
                     onEvent(SalesReturnContract.Event.RemoveItem(editorId))
-                },
-                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
-                    onEvent(SalesReturnContract.Event.ItemUnitChanged(editorId, isMaxUnitSelected))
-                },
-                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
-                    onEvent(SalesReturnContract.Event.ItemMaxPriceChanged(editorId, maxUnitPrice))
-                },
-                onUpdateItemMinUnitPrice = { editorId, minUnitPrice ->
-                    onEvent(SalesReturnContract.Event.ItemMinPriceChanged(editorId, minUnitPrice))
                 },
                 onUpdateItemMaxUnitQuantity = { editorId, maxUnitQuantity ->
                     onEvent(
@@ -160,23 +167,15 @@ fun SalesReturnScreen(
                         )
                     )
                 },
-                onUpdateAmountPaid = {
-                    onEvent(SalesReturnContract.Event.AmountPaidChanged(it))
+                onUpdateItemUnit = { editorId, isMaxUnitSelected ->
+                    onEvent(SalesReturnContract.Event.ItemUnitChanged(editorId, isMaxUnitSelected))
                 },
-                selectedPaymentType = orderInput.paymentType,
-                onSelectPaymentType = { onEvent(SalesReturnContract.Event.PaymentMethodChanged(it)) },
-                onItemProductChanged = { editorId, product ->
-                    onEvent(SalesReturnContract.Event.ItemProductChanged(editorId, product))
+                onUpdateItemMaxUnitPrice = { editorId, maxUnitPrice ->
+                    onEvent(SalesReturnContract.Event.ItemMaxPriceChanged(editorId, maxUnitPrice))
                 },
-                totalAmount = orderInput.totalAmount,
-                amountRemaining = orderInput.amountRemaining,
-                amountPaid = orderInput.amountPaid,
-                partnerBalance = orderInput.partnerBalance,
-                partnerBalanceAfterThisOrder = orderInput.partnerBalanceAfterThisOrder,
-                onAddNewItemToOrder = {
-                    onEvent(SalesReturnContract.Event.AddItem)
-                },
-            )
+            ) { editorId, minUnitPrice ->
+                onEvent(SalesReturnContract.Event.ItemMinPriceChanged(editorId, minUnitPrice))
+            }
         },
     )
 }

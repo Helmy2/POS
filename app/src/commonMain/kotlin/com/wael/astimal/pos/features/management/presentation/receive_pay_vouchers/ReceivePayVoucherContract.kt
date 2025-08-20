@@ -11,8 +11,8 @@ object ReceivePayVoucherContract {
     data class DialogState(
         val show: Boolean = false,
         val voucherToEdit: ReceivePayVoucher? = null,
-        val selectedPartnerId: String? = null,
-        val transactionType: TransactionType = TransactionType.PAYMENT,
+        val selectedPartner: BusinessPartner? = null,
+        val transactionType: TransactionType? = TransactionType.PAYMENT,
         val amount: String = "",
         val notes: String = "",
         val isReceiveMoney: Boolean = true,
@@ -42,11 +42,11 @@ object ReceivePayVoucherContract {
         data object BackClicked : Event
 
         // Dialog Input Changes
-        data class DialogPartnerSelected(val partnerId: String?) : Event
+        data class DialogPartnerSelected(val partner: BusinessPartner?) : Event
         data class DialogAmountChanged(val amount: String) : Event
         data class DialogNotesChanged(val notes: String) : Event
         data class DialogDateChanged(val date: Long) : Event
-        data class DialogTransactionTypeSelected(val type: TransactionType) : Event
+        data class DialogTransactionTypeSelected(val type: TransactionType?) : Event
         data class DialogIsReceiveMoneyChanged(val isReceiveMoney: Boolean) : Event
 
         // Data results from ViewModel

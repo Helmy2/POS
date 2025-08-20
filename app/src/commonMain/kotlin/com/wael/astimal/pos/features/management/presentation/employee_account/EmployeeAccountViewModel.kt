@@ -101,7 +101,7 @@ class EmployeeAccountViewModel(
                     EmployeeTransactionType.BONUS -> amount
                     else -> -amount
                 },
-                type = dialogState.transactionType,
+                type = dialogState.transactionType ?: EmployeeTransactionType.BONUS,
                 notes = dialogState.notes,
                 createdAt = dialogState.selectedTransaction?.createdAt ?: Clock.now(),
                 invoiceId = null

@@ -34,9 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.domain.entity.get
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
-import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
+import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.FAB
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
@@ -143,7 +144,6 @@ fun VoucherEditDialog(
     state: ReceivePayVoucherContract.State, onEvent: (ReceivePayVoucherContract.Event) -> Unit
 ) {
     val dialogState = state.dialogState
-    val language = LocalAppLocale.current
 
     AlertDialog(
         onDismissRequest = { onEvent(ReceivePayVoucherContract.Event.DismissDialog) },
@@ -157,65 +157,61 @@ fun VoucherEditDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.transaction_type),
-                    items = TransactionType.getTypesForDropdown(),
-                    selectedItemId = dialogState.transactionType.ordinal.toString(),
+                    options = TransactionType.getTypesForDropdown()
+                        .map { stringResource(it.getStringRes()) },
+                    initialText = dialogState.transactionType?.getStringRes()
+                        ?.let { stringResource(it) } ?: "",
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogTransactionTypeSelected(
-                                it
+                                it?.let { TransactionType.getTypesForDropdown().getOrNull(it) }
                             )
                         )
                     },
-                    itemToDisplayString = { stringResource(it.getStringRes()) },
-                    itemToId = { it.ordinal.toString() },
                     enabled = state.canUserEdit
                 )
 
 
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.business_partner),
-                    items = state.partyDropdownData,
-                    selectedItemId = dialogState.selectedPartnerId,
+                    options = state.partyDropdownData.map { it.name.get() },
+                    initialText = dialogState.selectedPartner?.name.get(),
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                it.id
-                            )
-                        )
-                    },
-                    itemToDisplayString = { it.name.displayName(language) },
-                    itemToId = { it.id },
-                    onClearItem = {
-                        onEvent(
-                            ReceivePayVoucherContract.Event.DialogPartnerSelected(
-                                null
+                                it?.let {
+                                    state.partyDropdownData.getOrNull(it)
+                                }
                             )
                         )
                     },
                     enabled = state.canUserEdit && dialogState.voucherToEdit == null
                 )
 
-                CustomExposedDropdownMenu(
+                ExposedDropdownMenu(
                     label = stringResource(Res.string.type),
-                    items = listOf(true, false),
-                    selectedItemId = dialogState.isReceiveMoney.toString(),
+                    options = listOf(
+                        stringResource(Res.string.partner_owns),
+                        stringResource(Res.string.owns_partner)
+                    ),
+                    initialText = if (dialogState.transactionType == TransactionType.OPENING_BALANCE) {
+                        if (dialogState.isReceiveMoney) stringResource(Res.string.partner_owns) else stringResource(
+                            Res.string.owns_partner
+                        )
+                    } else {
+                        if (dialogState.isReceiveMoney) stringResource(Res.string.receive_money) else stringResource(
+                            Res.string.pay_money
+                        )
+                    },
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogIsReceiveMoneyChanged(
-                                it
+                                it == 0
                             )
                         )
                     },
-                    itemToDisplayString = {
-                        if (dialogState.transactionType == TransactionType.OPENING_BALANCE) {
-                            if (it) stringResource(Res.string.partner_owns) else stringResource(Res.string.owns_partner)
-                        } else {
-                            if (it) stringResource(Res.string.receive_money) else stringResource(Res.string.pay_money)
-                        }
-                    },
-                    itemToId = { it.toString() },
                     enabled = state.canUserEdit
                 )
 

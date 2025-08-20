@@ -96,13 +96,13 @@ class ReceivePayVoucherViewModel(
             val currentUser = state.value.currentUser
             val amount = dialogState.amount.toDoubleOrNull()
 
-            if (currentUser == null || amount == null || amount <= 0 || dialogState.selectedPartnerId == null) {
+            if (currentUser == null || amount == null || amount <= 0 || dialogState.selectedPartner?.id == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
                 return@launch
             }
 
             val partner =
-                state.value.partyDropdownData.find { it.id == dialogState.selectedPartnerId }
+                state.value.partyDropdownData.find { it.id == dialogState.selectedPartner.id }
 
             if (partner == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_party_not_found)))
@@ -117,7 +117,7 @@ class ReceivePayVoucherViewModel(
                 notes = dialogState.notes,
                 createdAt = dialogState.date,
                 invoiceId = null,
-                transactionType = dialogState.transactionType
+                transactionType = dialogState.transactionType ?: TransactionType.PAYMENT
             )
 
             val result = voucherRepository.saveVoucher(voucherToSave)
