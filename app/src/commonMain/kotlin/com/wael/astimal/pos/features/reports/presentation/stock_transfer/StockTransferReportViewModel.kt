@@ -13,25 +13,25 @@ class StockTransferReportViewModel(
     private val storeRepository: StoreRepository,
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator
-) : BaseViewModel<StockTransferReportContract.State, StockTransferReportContract.Event, StockTransferReportContract.Effect>(
+) : BaseViewModel<StockTransferReportReducer.State, StockTransferReportReducer.Event, StockTransferReportReducer.Effect>(
     StockTransferReportReducer(),
-    StockTransferReportContract.State()
+    StockTransferReportReducer.State()
 ) {
     private var job: Job? = null
 
     init {
-        processEvent(StockTransferReportContract.Event.LoadInitialData)
+        processEvent(StockTransferReportReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: StockTransferReportContract.Event) {
+    override fun handleEvent(event: StockTransferReportReducer.Event) {
         when (event) {
-            is StockTransferReportContract.Event.LoadInitialData -> loadStores()
-            is StockTransferReportContract.Event.ApplyFilters -> {
+            is StockTransferReportReducer.Event.LoadInitialData -> loadStores()
+            is StockTransferReportReducer.Event.ApplyFilters -> {
                 setState(event)
                 loadTransfers()
             }
 
-            is StockTransferReportContract.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
+            is StockTransferReportReducer.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
             else -> setState(event)
         }
     }
@@ -39,7 +39,7 @@ class StockTransferReportViewModel(
     private fun loadStores() {
         viewModelScope.launch {
             val stores = storeRepository.getStores().first()
-            setState(StockTransferReportContract.Event.ShowInitialData(stores))
+            setState(StockTransferReportReducer.Event.ShowInitialData(stores))
         }
     }
 
@@ -50,10 +50,10 @@ class StockTransferReportViewModel(
             reportRepository.getStockTransfers(
                 startDate = currentState.startDate,
                 endDate = currentState.endDate,
-                fromStoreId = currentState.selectedFromStoreId,
-                toStoreId = currentState.selectedToStoreId
+                fromStoreId = currentState.selectedFromStore?.id,
+                toStoreId = currentState.selectedToStore?.id
             ).collect { transfers ->
-                setState(StockTransferReportContract.Event.ShowTransfers(transfers))
+                setState(StockTransferReportReducer.Event.ShowTransfers(transfers))
             }
         }
     }
@@ -66,6 +66,6 @@ class StockTransferReportViewModel(
             endDate = currentState.endDate
         )
 
-        setState(StockTransferReportContract.Event.PdfGenerationSuccess(html))
+        setState(StockTransferReportReducer.Event.PdfGenerationSuccess(html))
     }
 }
