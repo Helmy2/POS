@@ -14,11 +14,8 @@ import com.wael.astimal.pos.features.reports.domain.model.ProductMovementGroup
 import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.first
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
 import pos.app.generated.resources.Res
@@ -46,12 +43,8 @@ import pos.app.generated.resources.subtotal
 import pos.app.generated.resources.total
 import pos.app.generated.resources.type
 import pos.app.generated.resources.unit_price
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
 
 /**
  * Generates a self-contained HTML string for reports.
@@ -83,28 +76,17 @@ class HtmlReportGenerator(
         val balance: String,
     )
 
-
-    private fun formatDate(date: LocalDate, lang: Language = Language.English): String {
-        val sdf = SimpleDateFormat(
-            "dd MMM yyyy",
-            if (lang == Language.Arabic) Locale.forLanguageTag("ar") else Locale.US
-        )
-        // Convert LocalDate to a format SimpleDateFormat can use
-        val dateInMillis = date.atStartOfDayIn(TimeZone.UTC).toJavaInstant().toEpochMilli()
-        return sdf.format(Date(dateInMillis))
-    }
-
     suspend fun createStockTransferReportHtml(
         transfers: List<StockTransfer>,
-        startDate: LocalDate,
-        endDate: LocalDate
+        startDate: LocalDateTime,
+        endDate: LocalDateTime
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
 
         val transferRows = transfers.joinToString("") { transfer ->
-            val date =
-                Instant.fromEpochMilliseconds(transfer.createdAt).toLocalDateTime(TimeZone.UTC).date
+            val date = Instant.fromEpochMilliseconds(transfer.createdAt)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
 
             // --- NEW: Build the nested table for transfer items ---
             val itemHeaders = if (isRtl) {
@@ -130,7 +112,7 @@ class HtmlReportGenerator(
 
             """
             <tr class="main-row">
-                <td>${formatDate(date, lang)}</td>
+                <td>${date.format()}</td>
                 <td>${if (isRtl) transfer.fromStore.name.arName else transfer.fromStore.name.enName}</td>
                 <td>${if (isRtl) transfer.toStore.name.arName else transfer.toStore.name.enName}</td>
                 <td>${transfer.status.name}</td>
@@ -138,30 +120,21 @@ class HtmlReportGenerator(
             </tr>
             <tr class="details-row">
                 <td colspan="5">
-                    ${itemsTable}
+                    $itemsTable
                 </td>
             </tr>
             """.trimIndent()
         }
 
-        val dateRangeText = if (formatDate(startDate, lang) == formatDate(endDate, lang)) {
+        val dateRangeText = if (startDate.format() == endDate.format()) {
             if (isRtl) "تقرير لتاريخ: ${
-                formatDate(
-                    startDate,
-                    lang
-                )
-            }" else "Report for date: ${formatDate(startDate, lang)}"
+                startDate.format()
+            }" else "Report for date: ${startDate.format()}"
         } else {
-            if (isRtl) "تقرير للفترة: ${formatDate(startDate, lang)} إلى ${
-                formatDate(
-                    endDate,
-                    lang
-                )
-            }" else "Report for period: ${formatDate(startDate, lang)} to ${
-                formatDate(
-                    endDate,
-                    lang
-                )
+            if (isRtl) "تقرير للفترة: ${startDate.format()} إلى ${
+                endDate.format()
+            }" else "Report for period: ${startDate.format()} to ${
+                endDate.format()
             }"
         }
 
@@ -267,8 +240,8 @@ class HtmlReportGenerator(
         <tr>
             <td>${if (isRtl) item.product.name.arName else item.product.name.enName}</td>
             <td class="num">${item.quantity}</td>
-            <td class="num">${String.format("%.2f", item.unitPrice)}</td>
-            <td class="num">${String.format("%.2f", itemTotal)}</td>
+            <td class="num">${item.unitPrice.formate()}</td>
+            <td class="num">${itemTotal.formate()}</td>
         </tr>
         """.trimIndent()
         }
@@ -297,12 +270,9 @@ class HtmlReportGenerator(
 
         val amountDue = invoice.totalAmount - invoice.paidAmount
 
-        val format = LocalDateTime.Format {
-            byUnicodePattern("yyyy-MM-dd HH:MM")
-        }
         val date = Instant.fromEpochMilliseconds(invoice.orderDate)
-            .toLocalDateTime(TimeZone.UTC)
-        val orderDate = format.format(date)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+        val orderDate = date.format()
 
         return """
     <!DOCTYPE html>
@@ -346,7 +316,7 @@ class HtmlReportGenerator(
                 <div>
                     <b>${labels["bill_to"]}</b><br>
                     ${if (isRtl) invoice.partner.name.arName else invoice.partner.name.enName}<br>
-                    ${invoice.partner.phone ?: ""}
+                    ${invoice.partner.phone}
                 </div>
                 <div>
                     <b>${labels["employee"]}</b><br>
@@ -369,15 +339,15 @@ class HtmlReportGenerator(
                 <table>
                     <tr>
                         <td class="label">${labels["subtotal"]}:</td>
-                        <td class="value">${String.format("%.2f", invoice.totalAmount)}</td>
+                        <td class="value">${invoice.totalAmount.formate()}</td>
                     </tr>
                     <tr>
                         <td class="label">${labels["paid"]}:</td>
-                        <td class="value">${String.format("%.2f", invoice.paidAmount)}</td>
+                        <td class="value">${invoice.paidAmount.formate()}</td>
                     </tr>
                     <tr>
                         <td class="label">${labels["due"]}:</td>
-                        <td class="value">${String.format("%.2f", amountDue)}</td>
+                        <td class="value">${amountDue.formate()}</td>
                     </tr>
                 </table>
             </div>
@@ -400,9 +370,9 @@ class HtmlReportGenerator(
             """
         <tr>
             <td>${if (isRtl) info.client.name.arName else info.client.name.enName}</td>
-            <td>${info.client.phone ?: ""}</td>
+            <td>${info.client.phone}</td>
             <td>${if (isRtl) info.client.responsibleEmployee.localizedName.arName else info.client.responsibleEmployee.localizedName.enName}</td>
-            <td class="num">${String.format("%.2f", info.debitAmount)}</td>
+            <td class="num">${info.debitAmount.formate()}</td>
         </tr>
         """.trimIndent()
         }
@@ -420,7 +390,7 @@ class HtmlReportGenerator(
         <tfoot>
             <tr class="total-row">
                 <td colspan="3" style="text-align: ${if (isRtl) "left" else "right"};">$totalLabel</td>
-                <td class="num">${String.format("%.2f", totalDebit)}</td>
+                <td class="num">${totalDebit.formate()}</td>
             </tr>
         </tfoot>
     """.trimIndent()
@@ -451,7 +421,7 @@ class HtmlReportGenerator(
         <tr>
             <td>${if (isRtl) info.product.name.arName else info.product.name.enName}</td>
             <td>${if (isRtl) info.store.name.arName else info.store.name.enName}</td>
-            <td class="num">${String.format("%.2f", info.quantity)}</td>
+            <td class="num">${info.quantity.formate()}</td>
         </tr>
         """.trimIndent()
         }
@@ -478,8 +448,8 @@ class HtmlReportGenerator(
 
     suspend fun createProductMovementReportHtml(
         groups: List<ProductMovementGroup>,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime,
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
@@ -495,21 +465,19 @@ class HtmlReportGenerator(
 
                 """
             <tr>
-                <td>${formatDate(entry.date, lang)}</td>
+                <td>${entry.date}</td>
                 <td>$description</td>
                 <td class="num">${
-                    if (entry.quantityIn > 0) String.format(
-                        "%.2f",
-                        entry.quantityIn
-                    ) else ""
+                    if (entry.quantityIn > 0)
+                        entry.quantityIn.formate()
+                    else ""
                 }</td>
                 <td class="num">${
-                    if (entry.quantityOut > 0) String.format(
-                        "%.2f",
-                        entry.quantityOut
-                    ) else ""
+                    if (entry.quantityOut > 0)
+                        entry.quantityOut.formate()
+                    else ""
                 }</td>
-                <td class="num">${String.format("%.2f", entry.balance)}</td>
+                <td class="num">${entry.balance.formate()}</td>
             </tr>
             """.trimIndent()
             }
@@ -534,13 +502,13 @@ class HtmlReportGenerator(
                 <tfoot>
                     <tr class="total-row">
                         <td colspan="2">$totalsLabel</td>
-                        <td class="num">${String.format("%.2f", group.totalIn)}</td>
-                        <td class="num">${String.format("%.2f", group.totalOut)}</td>
+                        <td class="num">${group.totalIn.formate()}</td>
+                        <td class="num">${group.totalOut.formate()}</td>
                         <td></td>
                     </tr>
                     <tr class="total-row">
                         <td colspan="4" style="text-align: ${if (isRtl) "left" else "right"};">$closingBalanceLabel</td>
-                        <td class="num">${String.format("%.2f", group.closingBalance)}</td>
+                        <td class="num">${group.closingBalance.formate()}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -548,24 +516,15 @@ class HtmlReportGenerator(
         """.trimIndent()
         }
 
-        val dateRangeText = if (formatDate(startDate, lang) == formatDate(endDate, lang)) {
+        val dateRangeText = if (startDate == endDate) {
             if (isRtl) "تقرير لتاريخ: ${
-                formatDate(
-                    startDate,
-                    lang
-                )
-            }" else "Report for date: ${formatDate(startDate, lang)}"
+                startDate.format()
+            }" else "Report for date: ${startDate.format()}"
         } else {
-            if (isRtl) "تقرير للفترة: ${formatDate(startDate, lang)} إلى ${
-                formatDate(
-                    endDate,
-                    lang
-                )
-            }" else "Report for period: ${formatDate(startDate, lang)} to ${
-                formatDate(
-                    endDate,
-                    lang
-                )
+            if (isRtl) "تقرير للفترة: ${startDate.format()} إلى ${
+                endDate.format()
+            }" else "Report for period: ${startDate.format()} to ${
+                endDate.format()
             }"
         }
 
@@ -585,21 +544,20 @@ class HtmlReportGenerator(
     suspend fun createCustomerStatementHtml(
         partner: BusinessPartner,
         transactions: List<DetailedTransaction>,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime,
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
 
         val processedRows = transactions.map { trx ->
             CustomerStatementRowData(
-                date = formatDate(trx.date, lang),
+                date = trx.date.format(),
                 description = getString(trx.transactionType.getStringRes()) + " " + getString(
                     Res.string.invoice_details_format,
-                    trx.id,
                     if (isRtl) partner.name.arName ?: "" else partner.name.enName ?: ""
                 ),
-                balance = String.format("%.2f", trx.totalAmount)
+                balance = trx.totalAmount.formate()
             )
         }
 
@@ -613,8 +571,8 @@ class HtmlReportGenerator(
             """.trimIndent()
         }
 
-        val formattedStartDate = formatDate(startDate, lang)
-        val formattedEndDate = formatDate(endDate, lang)
+        val formattedStartDate = startDate
+        val formattedEndDate = endDate
         val dateRangeText = if (formattedStartDate == formattedEndDate) {
             if (isRtl) "تقرير لتاريخ: $formattedStartDate" else "Report for date: $formattedStartDate"
         } else {
@@ -637,7 +595,7 @@ class HtmlReportGenerator(
             """
             <tr>
                 <td colspan="2">${getString(Res.string.total)}</td>
-                <td class="num">${String.format("%.2f", transactions.sumOf { it.totalAmount })}</td>
+                <td class="num">${transactions.sumOf { it.totalAmount }.formate()}</td>
             </tr>
             """.trimIndent()
 
@@ -658,14 +616,14 @@ class HtmlReportGenerator(
     suspend fun createEmployeeActivityReportHtml(
         employee: User,
         activities: List<EmployeeActivity>,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime,
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
 
         val processedDataJobs = activities.map { activity ->
-            val date = activity.timestamp.toLocalDateTime(TimeZone.UTC).date
+            val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
             val typeString: String
             val detailsString: String
             val amount: Double
@@ -677,7 +635,6 @@ class HtmlReportGenerator(
                         if (isRtl) activity.invoice.partner.name.arName else activity.invoice.partner.name.enName
                     detailsString = getString(
                         Res.string.invoice_details_format,
-                        activity.invoice.id,
                         partnerName ?: ""
                     )
                     amount = activity.invoice.totalAmount
@@ -703,10 +660,10 @@ class HtmlReportGenerator(
             }
 
             ReportRowData(
-                date = formatDate(date, lang),
+                date = date.format(),
                 type = typeString,
                 details = detailsString,
-                amount = String.format("%.2f", amount)
+                amount = amount.formate()
             )
         }
 
@@ -721,8 +678,8 @@ class HtmlReportGenerator(
             """.trimIndent()
         }
 
-        val formattedStartDate = formatDate(startDate, lang)
-        val formattedEndDate = formatDate(endDate, lang)
+        val formattedStartDate = startDate
+        val formattedEndDate = endDate
         val dateRangeText = if (formattedStartDate == formattedEndDate) {
             if (isRtl) "تقرير لتاريخ: $formattedStartDate" else "Report for date: $formattedStartDate"
         } else {
@@ -757,8 +714,8 @@ class HtmlReportGenerator(
     suspend fun createEmployeeLedgerHtml(
         employee: User,
         entries: List<EmployeeLedgerEntry>,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime,
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
@@ -766,11 +723,11 @@ class HtmlReportGenerator(
         val processedDataJobs = entries.map { entry ->
             val description = getString(entry.transactionType.getStringResId())
             LedgerReportRowData(
-                date = formatDate(entry.date, lang),
+                date = entry.date.format(),
                 description = description,
-                debit = if (entry.debit > 0) String.format("%.2f", entry.debit) else "",
-                credit = if (entry.credit > 0) String.format("%.2f", entry.credit) else "",
-                balance = String.format("%.2f", entry.balance)
+                debit = if (entry.debit > 0) entry.debit.formate() else "",
+                credit = if (entry.credit > 0) entry.credit.formate() else "",
+                balance = entry.balance.formate()
             )
         }
 
@@ -791,12 +748,12 @@ class HtmlReportGenerator(
         val totalCredit = entries.sumOf { it.credit }
         val closingBalance = entries.lastOrNull()?.balance ?: 0.0
 
-        val formattedStartDate = formatDate(startDate, lang)
-        val formattedEndDate = formatDate(endDate, lang)
+        val formattedStartDate = startDate
+        val formattedEndDate = endDate
         val dateRangeText = if (formattedStartDate == formattedEndDate) {
-            if (isRtl) "تقرير لتاريخ: ${formattedStartDate}" else "Report for date: ${formattedStartDate}"
+            if (isRtl) "تقرير لتاريخ: ${formattedStartDate.format()}" else "Report for date: ${formattedStartDate.format()}"
         } else {
-            if (isRtl) "تقرير للفترة: ${formattedStartDate} إلى ${formattedEndDate}" else "Report for period: ${formattedStartDate} to ${formattedEndDate}"
+            if (isRtl) "تقرير للفترة: ${formattedStartDate.format()} إلى ${formattedEndDate.format()}" else "Report for period: ${formattedStartDate.format()} to ${formattedEndDate.format()}"
         }
 
         val title = if (isRtl) "كشف حساب الموظف" else "Employee Ledger"
@@ -815,13 +772,13 @@ class HtmlReportGenerator(
     <tfoot>
         <tr class="total-row">
             <td colspan="2">$totalsLabel</td>
-            <td class="num">${String.format("%.2f", totalDebit)}</td>
-            <td class="num">${String.format("%.2f", totalCredit)}</td>
+            <td class="num">${totalDebit.formate()}</td>
+            <td class="num">${totalCredit.formate()}</td>
             <td></td>
         </tr>
         <tr class="total-row">
             <td colspan="4" style="text-align: ${if (isRtl) "left" else "right"};">$closingBalanceLabel</td>
-            <td class="num">${String.format("%.2f", closingBalance)}</td>
+            <td class="num">${closingBalance.formate()}</td>
         </tr>
     </tfoot>
     """.trimIndent()

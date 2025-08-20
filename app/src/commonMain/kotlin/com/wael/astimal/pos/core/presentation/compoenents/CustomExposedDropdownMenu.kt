@@ -165,7 +165,9 @@ fun ExposedDropdownMenu(
     }
 
     LaunchedEffect(textFieldState.text) {
-        if (textFieldState.text.isNotEmpty() && !expanded && !options.any { textFieldState.text == it }) {
+        if (initialText != textFieldState.text && textFieldState.text.isNotEmpty()
+            && !expanded && !options.any { textFieldState.text == it }
+        ) {
             setExpanded(true)
         }
     }

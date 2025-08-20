@@ -1,67 +1,61 @@
 package com.wael.astimal.pos.core.util
 
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 
+@OptIn(ExperimentalTime::class)
 object Clock {
     fun now(): Long {
-        return Instant.now().toEpochMilli()
+        return Clock.System.now().toEpochMilliseconds()
     }
 
-    fun getCurrentDateTime(): String {
-        val instant = Instant.now()
-        val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
-        return formatter.format(instant.atZone(ZoneId.systemDefault()))
+    fun currentLocalDateTime(): LocalDateTime {
+        return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     }
 }
 
-/**
- * Parses a timestamp string in ISO 8601 format (e.g., "2024-11-16T19:44:34.000000Z")
- * and converts it to a Long representing milliseconds since the Unix epoch.
- *
- * This approach uses the KMP-compatible kotlinx-datetime library, making it safe for
- * future migration.
- *
- * @receiver The nullable String to parse.
- * @return The time in milliseconds as a Long, or null if the string is null, blank, or invalid.
- */
+@OptIn(ExperimentalTime::class)
 fun String?.parseIsoTimestamp(): Long? {
     if (this.isNullOrBlank()) {
         return null
     }
     return try {
-        Instant.parse(this).toEpochMilli()
+        Instant.parse(this).toEpochMilliseconds()
     } catch (e: Exception) {
-        // Log the exception or handle it as needed
         e.printStackTrace()
         null
     }
 }
 
-fun Long.convertToString(): String {
-    val formatter = SimpleDateFormat("hh:mma ddMMM", Locale.getDefault())
-    return formatter.format(Date(this))
-}
-
-fun Long.convertToDateString(): String {
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    return formatter.format(Date(this))
-}
-
-fun Long.toLocalDateTime(): LocalDateTime {
-    val instant = Instant.ofEpochMilli(this)
-    val zoneId = ZoneId.systemDefault()
-    return LocalDateTime.ofInstant(instant, zoneId)
-}
-
+@OptIn(ExperimentalTime::class)
 fun Long.toDateString(): String {
-    val instant = Instant.ofEpochMilli(this)
-    val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
-    return formatter.format(instant.atZone(ZoneId.systemDefault()))
+    val customFormat = LocalDateTime.Format {
+        day(); char('/'); monthNumber(); char('/'); year(); char(' ')
+        hour(); char(':'); minute()
+    }
+    val instant = Instant.fromEpochMilliseconds(this)
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+    return instant.format(customFormat)
+}
+
+@OptIn(ExperimentalTime::class)
+fun LocalDateTime.format(): String {
+    val customFormat = LocalDateTime.Format {
+        day(); char('/'); monthNumber(); char('/'); year(); char(' ')
+        hour(); char(':'); minute()
+    }
+    return this.format(customFormat)
+}
+
+@OptIn(ExperimentalTime::class)
+fun LocalDateTime.toEpochMillis(): Long {
+    return this.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 }

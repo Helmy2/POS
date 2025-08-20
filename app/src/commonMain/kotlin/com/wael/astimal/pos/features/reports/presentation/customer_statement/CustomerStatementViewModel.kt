@@ -11,14 +11,14 @@ import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
-import com.wael.astimal.pos.features.reports.domain.repository.CustomerStatementRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class CustomerStatementViewModel(
     private val partnerRepository: BusinessPartnerRepository,
-    private val statementRepository: CustomerStatementRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
 ) : BaseViewModel<CustomerStatementContract.State, CustomerStatementContract.Event, CustomerStatementContract.Effect>(
@@ -73,7 +73,7 @@ class CustomerStatementViewModel(
         val partnerId = currentState.selectedPartner?.id ?: return
 
         transactionJob = viewModelScope.launch {
-            statementRepository.getTransactionsForPartner(
+            reportRepository.getTransactionsForPartner(
                 partnerId,
                 currentState.startDate,
                 currentState.endDate

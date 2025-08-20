@@ -10,7 +10,7 @@ import com.wael.astimal.pos.core.presentation.navigation.AppKoinComponent.snackb
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
-import com.wael.astimal.pos.features.reports.domain.repository.EmployeeReportRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 class EmployeeReportViewModel(
     private val userRepository: UserRepository,
-    private val reportRepository: EmployeeReportRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
 ) : BaseViewModel<EmployeeReportContract.State, EmployeeReportContract.Event, EmployeeReportContract.Effect>(

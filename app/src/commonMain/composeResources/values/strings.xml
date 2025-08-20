@@ -416,7 +416,7 @@
     <string name="error_loading_employee">Error loading employee</string>
     <string name="error_saving_employee">Error saving employee</string>
     <string name="partner_payment">Partner Payment</string>
-    <string name="invoice_details_format">Invoice #%1$s to %2$s</string>
+    <string name="invoice_details_format">Invoice to %1$s</string>
     <string name="partner_payment_details_format">Payment from/to %1$s</string>
 
     <string name="employee_ledger_report">Employee Ledger</string>

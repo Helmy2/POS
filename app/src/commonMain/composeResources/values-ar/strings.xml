@@ -426,7 +426,7 @@
     <string name="error_saving_employee">خطأ في حفظ بيانات الموظف</string>
 
     <string name="partner_payment">دفعة شريك</string>
-    <string name="invoice_details_format">فاتورة #%1$s إلى %2$s</string>
+    <string name="invoice_details_format">فاتورةإلى %1$s</string>
     <string name="partner_payment_details_format">دفعة من/إلى %1$s</string>
 
     <string name="employee_ledger_report">تقرير ارباح</string>

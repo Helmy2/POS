@@ -42,6 +42,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.CustomExposedDropdownM
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
+import com.wael.astimal.pos.core.util.format
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import org.jetbrains.compose.resources.stringResource
@@ -137,7 +138,7 @@ fun CustomerStatementScreen(
 
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
-            value = state.startDate.toString(),
+            value = state.startDate.format(),
             onValueChange = {},
             readOnly = true,
             label = {
@@ -157,7 +158,7 @@ fun CustomerStatementScreen(
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = state.endDate.toString(),
+            value = state.endDate.format(),
             onValueChange = {},
             readOnly = true,
             label = {

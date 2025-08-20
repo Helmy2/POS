@@ -4,14 +4,14 @@ import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.reports.domain.repository.StockTransferReportRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class StockTransferReportViewModel(
     private val storeRepository: StoreRepository,
-    private val reportRepository: StockTransferReportRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator
 ) : BaseViewModel<StockTransferReportContract.State, StockTransferReportContract.Event, StockTransferReportContract.Effect>(
     StockTransferReportReducer(),

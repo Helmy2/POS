@@ -5,7 +5,7 @@ import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.reports.domain.repository.ProductMovementRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class ProductMovementViewModel(
     private val productRepository: ProductRepository,
     private val storeRepository: StoreRepository,
-    private val movementRepository: ProductMovementRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
 ) : BaseViewModel<ProductMovementContract.State, ProductMovementContract.Event, ProductMovementContract.Effect>(
     ProductMovementReducer(),
@@ -50,7 +50,7 @@ class ProductMovementViewModel(
         job?.cancel()
         val currentState = state.value
         job = viewModelScope.launch {
-            movementRepository.getProductMovement(
+            reportRepository.getProductMovement(
                 startDate = currentState.startDate,
                 endDate = currentState.endDate,
                 productId = currentState.selectedProductId,

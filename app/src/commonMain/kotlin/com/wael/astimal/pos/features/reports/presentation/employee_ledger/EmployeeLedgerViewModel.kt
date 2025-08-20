@@ -7,7 +7,7 @@ import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
-import com.wael.astimal.pos.features.reports.domain.repository.EmployeeLedgerRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class EmployeeLedgerViewModel(
     private val userRepository: UserRepository,
-    private val reportRepository: EmployeeLedgerRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
 ) : BaseViewModel<EmployeeLedgerContract.State, EmployeeLedgerContract.Event, EmployeeLedgerContract.Effect>(

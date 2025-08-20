@@ -5,7 +5,7 @@ import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
-import com.wael.astimal.pos.features.reports.domain.repository.CurrentStockRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class CurrentStockViewModel(
     private val productRepository: ProductRepository,
     private val storeRepository: StoreRepository,
-    private val currentStockRepository: CurrentStockRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator
 ) : BaseViewModel<CurrentStockContract.State, CurrentStockContract.Event, CurrentStockContract.Effect>(
     CurrentStockReducer(),
@@ -50,7 +50,7 @@ class CurrentStockViewModel(
         job?.cancel()
         val currentState = state.value
         job = viewModelScope.launch {
-            currentStockRepository.getCurrentStock(
+            reportRepository.getCurrentStock(
                 productId = currentState.selectedProductId,
                 storeId = currentState.selectedStoreId
             ).collect { stockList ->

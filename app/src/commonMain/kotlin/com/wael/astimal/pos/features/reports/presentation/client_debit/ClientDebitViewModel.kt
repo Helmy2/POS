@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.reports.presentation.client_debit
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
-import com.wael.astimal.pos.features.reports.domain.repository.ClientDebitRepository
+import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class ClientDebitViewModel(
     private val userRepository: UserRepository,
-    private val clientDebitRepository: ClientDebitRepository,
+    private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator
 ) : BaseViewModel<ClientDebitContract.State, ClientDebitContract.Event, ClientDebitContract.Effect>(
     ClientDebitReducer(),
@@ -50,7 +50,7 @@ class ClientDebitViewModel(
     private fun loadDebitList() {
         job?.cancel()
         job = viewModelScope.launch {
-            clientDebitRepository.getClientsWithDebit(state.value.selectedEmployeeId)
+            reportRepository.getClientsWithDebit(state.value.selectedEmployeeId)
                 .collect { debitList ->
                     setState(ClientDebitContract.Event.ShowDebitList(debitList))
                 }
