@@ -30,12 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.wael.astimal.pos.core.domain.entity.displayName
 import com.wael.astimal.pos.core.domain.entity.get
 import com.wael.astimal.pos.core.presentation.compoenents.AppButton
 import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
-import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.formate
 import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
@@ -95,7 +93,6 @@ fun ClientDebitScreen(
     processEvent: (ClientDebitReducer.Event) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val language = LocalAppLocale.current
     Column(modifier = modifier.padding(16.dp)) {
         if (state.isLoading) {
             Box(
@@ -107,16 +104,15 @@ fun ClientDebitScreen(
             ) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    itemVerticalAlignment = Alignment.Bottom
                 ) {
                     ExposedDropdownMenu(
                         label = stringResource(Res.string.select_employee),
                         options = state.employees.map {
-                            it.localizedName.displayName(
-                                language
-                            )
+                            it.localizedName.get()
                         },
-                        initialText = state.selectedEmployee?.localizedName.displayName(language),
+                        initialText = state.selectedEmployee?.localizedName.get(),
                         onItemSelected = { index ->
                             val employee =
                                 if (index == null) null else state.employees.getOrNull(index)
@@ -127,10 +123,12 @@ fun ClientDebitScreen(
                     )
                     AppButton(
                         onClick = { processEvent(ClientDebitReducer.Event.ApplyFilters) },
-                        modifier = Modifier.width(320.dp).padding(top = 32.dp),
+                        modifier = Modifier.width(320.dp),
                     ) { Text(stringResource(Res.string.apply_filters)) }
+
+                    HorizontalDivider()
                 }
-                HorizontalDivider()
+
             }
         }
     }

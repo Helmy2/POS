@@ -42,11 +42,13 @@ fun LocalizedString?.displayName(
 }
 
 @Composable
-fun LocalizedString.get(): String {
-    val isRtl = LocalAppLocale.current == Language.Arabic
-    return if (isRtl) {
-        arName ?: enName ?: ""
-    } else {
-        enName ?: arName ?: ""
+fun LocalizedString?.get(language: Language = LocalAppLocale.current): String {
+    if (this == null) return ""
+    return when (language) {
+        Language.Arabic -> if (arName != null && arName.isNotBlank()) arName
+        else if (enName != null && enName.isNotBlank()) enName else "N/A"
+
+        Language.English -> if (enName != null && enName.isNotBlank()) enName
+        else if (arName != null && arName.isNotBlank()) arName else "N/A"
     }
 }

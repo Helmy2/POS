@@ -15,25 +15,25 @@ class CurrentStockViewModel(
     private val storeRepository: StoreRepository,
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator
-) : BaseViewModel<CurrentStockContract.State, CurrentStockContract.Event, CurrentStockContract.Effect>(
+) : BaseViewModel<CurrentStockReducer.State, CurrentStockReducer.Event, CurrentStockReducer.Effect>(
     CurrentStockReducer(),
-    CurrentStockContract.State()
+    CurrentStockReducer.State()
 ) {
     private var job: Job? = null
 
     init {
-        processEvent(CurrentStockContract.Event.LoadInitialData)
+        processEvent(CurrentStockReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: CurrentStockContract.Event) {
+    override fun handleEvent(event: CurrentStockReducer.Event) {
         when (event) {
-            is CurrentStockContract.Event.LoadInitialData -> loadFilters()
-            is CurrentStockContract.Event.ApplyFilters -> {
+            is CurrentStockReducer.Event.LoadInitialData -> loadFilters()
+            is CurrentStockReducer.Event.ApplyFilters -> {
                 setState(event)
                 loadCurrentStock()
             }
 
-            is CurrentStockContract.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
+            is CurrentStockReducer.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
             else -> setState(event)
         }
     }
@@ -42,7 +42,7 @@ class CurrentStockViewModel(
         viewModelScope.launch {
             val products = productRepository.getProducts().first()
             val stores = storeRepository.getStores().first()
-            setState(CurrentStockContract.Event.ShowInitialData(products, stores))
+            setState(CurrentStockReducer.Event.ShowInitialData(products, stores))
         }
     }
 
@@ -51,10 +51,10 @@ class CurrentStockViewModel(
         val currentState = state.value
         job = viewModelScope.launch {
             reportRepository.getCurrentStock(
-                productId = currentState.selectedProductId,
-                storeId = currentState.selectedStoreId
+                productId = currentState.selectedProduct?.id,
+                storeId = currentState.selectedStore?.id
             ).collect { stockList ->
-                setState(CurrentStockContract.Event.ShowStockList(stockList))
+                setState(CurrentStockReducer.Event.ShowStockList(stockList))
             }
         }
     }
@@ -65,6 +65,6 @@ class CurrentStockViewModel(
             stockList = currentState.stockList
         )
 
-        setState(CurrentStockContract.Event.PdfGenerationSuccess(html))
+        setState(CurrentStockReducer.Event.PdfGenerationSuccess(html))
     }
 }
