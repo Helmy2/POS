@@ -13,29 +13,29 @@ class ClientDebitViewModel(
     private val userRepository: UserRepository,
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator
-) : BaseViewModel<ClientDebitContract.State, ClientDebitContract.Event, ClientDebitContract.Effect>(
+) : BaseViewModel<ClientDebitReducer.State, ClientDebitReducer.Event, ClientDebitReducer.Effect>(
     ClientDebitReducer(),
-    ClientDebitContract.State()
+    ClientDebitReducer.State()
 ) {
     private var job: Job? = null
 
     init {
-        processEvent(ClientDebitContract.Event.LoadInitialData)
+        processEvent(ClientDebitReducer.Event.LoadInitialData)
     }
 
-    override fun handleEvent(event: ClientDebitContract.Event) {
+    override fun handleEvent(event: ClientDebitReducer.Event) {
         when (event) {
-            is ClientDebitContract.Event.LoadInitialData -> loadEmployees()
-            is ClientDebitContract.Event.SelectEmployee -> {
+            is ClientDebitReducer.Event.LoadInitialData -> loadEmployees()
+            is ClientDebitReducer.Event.SelectEmployee -> {
                 setState(event)
             }
 
-            is ClientDebitContract.Event.ApplyFilters -> {
+            is ClientDebitReducer.Event.ApplyFilters -> {
                 setState(event)
                 loadDebitList()
             }
 
-            is ClientDebitContract.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
+            is ClientDebitReducer.Event.GeneratePdf -> viewModelScope.launch { generatePdf() }
             else -> setState(event)
         }
     }
@@ -43,16 +43,16 @@ class ClientDebitViewModel(
     private fun loadEmployees() {
         viewModelScope.launch {
             val employees = userRepository.getEmployeesFlow().first()
-            setState(ClientDebitContract.Event.EmployeesInitialData(employees))
+            setState(ClientDebitReducer.Event.EmployeesInitialData(employees))
         }
     }
 
     private fun loadDebitList() {
         job?.cancel()
         job = viewModelScope.launch {
-            reportRepository.getClientsWithDebit(state.value.selectedEmployeeId)
+            reportRepository.getClientsWithDebit(state.value.selectedEmployee?.id)
                 .collect { debitList ->
-                    setState(ClientDebitContract.Event.ShowDebitList(debitList))
+                    setState(ClientDebitReducer.Event.ShowDebitList(debitList))
                 }
         }
     }
@@ -62,6 +62,6 @@ class ClientDebitViewModel(
         val html = htmlReportGenerator.createClientDebitReportHtml(
             debitList = currentState.debitList
         )
-        setState(ClientDebitContract.Event.PdfGenerationSuccess(html))
+        setState(ClientDebitReducer.Event.PdfGenerationSuccess(html))
     }
 }
