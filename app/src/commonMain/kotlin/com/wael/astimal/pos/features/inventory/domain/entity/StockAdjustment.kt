@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
 import com.wael.astimal.pos.features.user.domain.entity.User
@@ -70,7 +70,7 @@ fun StockAdjustment.toDto(updatedAt: String): StockAdjustmentDto {
         reason = reason.name.lowercase(),
         notes = notes,
         quantity = quantityChange,
-        createdAt = createdAt.toDateString(),
+        createdAt = createdAt.toISOString(),
         updatedAt = updatedAt,
         invoiceId = invoiceId,
         transactionId = transactionId

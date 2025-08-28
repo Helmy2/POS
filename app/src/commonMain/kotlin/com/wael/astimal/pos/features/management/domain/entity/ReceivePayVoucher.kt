@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.management.data.local.entity.PartnerTransactionEntity
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.remote.dto.PartnerTransactionDto
@@ -50,7 +50,7 @@ fun ReceivePayVoucher.toDto(updatedAt: String): PartnerTransactionDto {
         transactionType = transactionType.name.lowercase(),
         balance = amount,
         notes = notes,
-        createdAt = createdAt.toDateString(),
+        createdAt = createdAt.toISOString(),
         updatedAt = updatedAt,
         createdByUserId = createdBy.id,
         invoiceId = invoiceId.takeIf { it?.isNotBlank() == true },

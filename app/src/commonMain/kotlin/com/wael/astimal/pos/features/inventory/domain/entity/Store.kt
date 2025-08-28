@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreType
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StoreDto
@@ -40,8 +40,8 @@ fun Store.toDto(): StoreDto {
         enName = name.enName ?: "",
         address = address,
         type = type.name.lowercase(),
-        createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString(),
+        createdAt = createdAt.toISOString(),
+        updatedAt = updatedAt.toISOString(),
         employeeId = employee.id
     )
 }

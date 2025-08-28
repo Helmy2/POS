@@ -422,11 +422,11 @@ fun BusinessPartnerEditDialog(
                 ExposedDropdownMenu(
                     label = stringResource(Res.string.type),
                     options = listOf(
+                        stringResource(Res.string.owns_partner),
                         stringResource(Res.string.partner_owns),
-                        stringResource(Res.string.owns_partner)
                     ),
-                    initialText = if (isReceiveMoney) stringResource(Res.string.partner_owns) else stringResource(
-                        Res.string.owns_partner
+                    initialText = if (isReceiveMoney) stringResource(Res.string.owns_partner) else stringResource(
+                        Res.string.partner_owns
                     ),
                     onItemSelected = {
                         isReceiveMoney = it == 0

@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.data.repository
 
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
@@ -177,8 +177,8 @@ class StockTransferRepositoryImpl(
                 receivingUserId = receivingUser.id,
                 notes = notes,
                 status = "pending",
-                createdAt = createdAt.toDateString(),
-                updatedAt = Clock.now().toDateString()
+                createdAt = createdAt.toISOString(),
+                updatedAt = Clock.now().toISOString()
             )
 
             supabaseClient.postgrest["stock_transfers"]
@@ -238,8 +238,8 @@ class StockTransferRepositoryImpl(
                 receivingUserId = receivingUser.id,
                 notes = notes,
                 status = "pending",
-                createdAt = Clock.now().toDateString(),
-                updatedAt = Clock.now().toDateString()
+                createdAt = Clock.now().toISOString(),
+                updatedAt = Clock.now().toISOString()
             )
             supabaseClient.postgrest["stock_transfers"]
                 .insert(transferDto)

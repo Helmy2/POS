@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceEntity
@@ -97,7 +97,7 @@ fun InvoiceItem.toDto(
 fun Invoice.toDto(updatedAt: String): InvoiceDto {
     return InvoiceDto(
         id = id,
-        createdAt = createdAt.toDateString(),
+        createdAt = createdAt.toISOString(),
         updatedAt = updatedAt,
         partnerId = partner.id,
         employeeId = employee.id,
@@ -106,6 +106,6 @@ fun Invoice.toDto(updatedAt: String): InvoiceDto {
         paymentMethod = paymentMethod.name.lowercase(),
         invoiceType = invoiceType.name.lowercase(),
         storeId = store.id,
-        invoiceDate = orderDate.toDateString(),
+        invoiceDate = orderDate.toISOString(),
     )
 }

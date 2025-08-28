@@ -3,7 +3,7 @@ package com.wael.astimal.pos.features.user.data.repository
 import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.user.data.local.SettingsManager
 import com.wael.astimal.pos.features.user.data.local.UserDao
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
@@ -143,7 +143,7 @@ class UserRepositoryImpl(
                 arName = arName,
                 enName = enName,
                 isAdmin = false,
-                updatedAt = Clock.now().toDateString(),
+                updatedAt = Clock.now().toISOString(),
                 avatarUrl = "https://ofzbmodzxgbpvybfhofr.supabase.co/storage/v1/object/public/bucket//avatar_profile.png",
                 fcmToken = null,
                 email = email,
@@ -201,7 +201,7 @@ class UserRepositoryImpl(
                     "username" to JsonPrimitive(enName),
                     "email" to JsonPrimitive(email),
                     "can_handle_private_partner" to JsonPrimitive(canHandlePrivatePartner),
-                    "updated_at" to JsonPrimitive(Clock.now().toDateString())
+                    "updated_at" to JsonPrimitive(Clock.now().toISOString())
                 )
             )
 

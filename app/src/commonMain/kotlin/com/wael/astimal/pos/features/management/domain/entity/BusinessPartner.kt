@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.management.data.local.entity.BusinessPartnerEntity
 import com.wael.astimal.pos.features.management.data.remote.dto.BusinessPartnerDto
 import com.wael.astimal.pos.features.user.domain.entity.User
@@ -58,7 +58,7 @@ fun BusinessPartner.toDto(updatedAt: String) = BusinessPartnerDto(
     address = address,
     phone = phone,
     partnerType = type.name.lowercase(),
-    createdAt = createdAt.toDateString(),
+    createdAt = createdAt.toISOString(),
     updatedAt = updatedAt,
     responsibleId = responsibleEmployee.id,
     isPrivate = isPrivate

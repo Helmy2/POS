@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.entity.UnitEntity
 import com.wael.astimal.pos.features.inventory.data.remote.dto.UnitDto
 
@@ -36,7 +36,7 @@ fun ProductUnit.toDto(): UnitDto {
         enName = name.enName ?: "",
         arAbbreviation = abbreviation.arName,
         enAbbreviation = abbreviation.enName,
-        createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString()
+        createdAt = createdAt.toISOString(),
+        updatedAt = updatedAt.toISOString()
     )
 }

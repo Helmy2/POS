@@ -6,6 +6,8 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -44,6 +46,12 @@ fun Long.toDateString(): String {
     val instant = Instant.fromEpochMilliseconds(this)
         .toLocalDateTime(TimeZone.currentSystemDefault())
     return instant.format(customFormat)
+}
+
+fun Long.toISOString(): String {
+    val instant = java.time.Instant.ofEpochMilli(this)
+    val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+    return formatter.format(instant.atZone(ZoneId.systemDefault()))
 }
 
 @OptIn(ExperimentalTime::class)

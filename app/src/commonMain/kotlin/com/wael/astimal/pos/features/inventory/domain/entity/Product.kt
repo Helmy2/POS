@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.remote.dto.ProductDto
 
@@ -52,8 +52,8 @@ fun Product.toDto(): ProductDto {
         sellingPrice = sellingPrice,
         subUnitId = subProductUnit?.id,
         subUnitsPerMainUnit = subUnitsPerMainUnit,
-        createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString(),
+        createdAt = createdAt.toISOString(),
+        updatedAt = updatedAt.toISOString(),
         barcode = barcode,
         purchasePrice = purchasePrice,
         mainUnitId = mainProductUnit.id

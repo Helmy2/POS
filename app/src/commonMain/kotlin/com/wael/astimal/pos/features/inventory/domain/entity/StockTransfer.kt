@@ -1,6 +1,6 @@
 package com.wael.astimal.pos.features.inventory.domain.entity
 
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
@@ -50,7 +50,7 @@ fun StockTransfer.toDto(): StockTransferDto {
         receivingUserId = receivingUser.id,
         status = status.name,
         notes = notes,
-        createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString()
+        createdAt = createdAt.toISOString(),
+        updatedAt = updatedAt.toISOString()
     )
 }

@@ -1,7 +1,7 @@
 package com.wael.astimal.pos.features.management.domain.entity
 
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.management.data.local.entity.EmployeeTransactionEntity
 import com.wael.astimal.pos.features.management.data.remote.dto.EmployeeTransactionDto
 import com.wael.astimal.pos.features.user.domain.entity.User
@@ -96,7 +96,7 @@ fun EmployeeTransaction.toDto(updatedAt: String): EmployeeTransactionDto {
         transactionType = type.name.lowercase(),
         balance = amount,
         notes = notes,
-        createdAt = createdAt.toDateString(),
+        createdAt = createdAt.toISOString(),
         updatedAt = updatedAt,
         creatorId = createdByEmployee.id,
         employeeId = employee.id,

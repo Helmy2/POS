@@ -2,7 +2,7 @@ package com.wael.astimal.pos.features.inventory.domain.entity
 
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
-import com.wael.astimal.pos.core.util.toDateString
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.entity.CategoryEntity
 import com.wael.astimal.pos.features.inventory.data.remote.dto.CategoryDto
 
@@ -30,8 +30,8 @@ fun Category.toDto(): CategoryDto {
         id = id,
         arName = name.arName,
         enName = name.enName ?: "",
-        createdAt = createdAt.toDateString(),
-        updatedAt = updatedAt.toDateString()
+        createdAt = createdAt.toISOString(),
+        updatedAt = updatedAt.toISOString()
     )
 }
 
