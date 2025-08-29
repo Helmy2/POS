@@ -73,10 +73,6 @@ fun SalesScreen(
     val language = LocalAppLocale.current
     val orderInput = state.currentOrderInput
 
-    LaunchedEffect(Unit) {
-        onEvent(SalesContract.Event.LoadInitialData)
-    }
-
     SearchScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,

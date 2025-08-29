@@ -137,9 +137,6 @@ class SalesViewModel(
 
             is SalesContract.Event.LoadInitialInvoice -> {
                 loadInitialInvoice(event.id)
-            }
-
-            is SalesContract.Event.LoadInitialData -> {
                 loadInitialData()
             }
 
@@ -177,8 +174,6 @@ class SalesViewModel(
                 SalesContract.DropdownData(clients, products, stores)
             }.collect {
                 handleEvent(SalesContract.Event.DropdownDataLoaded(it))
-                handleEvent(SalesContract.Event.PartnerSelected(it.partners.firstOrNull()))
-                handleEvent(SalesContract.Event.StoreChanged(it.stores.firstOrNull()))
             }
         }
     }

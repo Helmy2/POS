@@ -53,7 +53,6 @@ object SalesContract {
 
     sealed interface Event : Reducer.ViewEvent {
         // UI Actions
-        data object LoadInitialData : Event
         data class SearchQueryChanged(val query: String) : Event
         data class SearchActiveChanged(val isActive: Boolean) : Event
         data class OrderSelected(val order: Invoice) : Event

@@ -137,6 +137,7 @@ class PurchaseViewModel(
 
             is PurchaseContract.Event.LoadInitialInvoice -> {
                 loadInitialInvoice(event.id)
+                loadInitialData()
             }
 
             is PurchaseContract.Event.GeneratePdf -> {
@@ -147,10 +148,6 @@ class PurchaseViewModel(
 
             else -> setState(event)
         }
-    }
-
-    init {
-        loadInitialData()
     }
 
     private fun loadInitialInvoice(id: String?) {
@@ -177,8 +174,6 @@ class PurchaseViewModel(
                 PurchaseContract.DropdownData(clients, products, stores)
             }.collect {
                 handleEvent(PurchaseContract.Event.DropdownDataLoaded(it))
-                handleEvent(PurchaseContract.Event.PartnerSelected(it.partners.firstOrNull()))
-                handleEvent(PurchaseContract.Event.StoreChanged(it.stores.firstOrNull()))
             }
         }
     }

@@ -139,6 +139,7 @@ class PurchaseReturnViewModel(
 
             is PurchaseReturnContract.Event.LoadInitialInvoice -> {
                 loadInitialInvoice(event.id)
+                loadInitialData()
             }
 
             is PurchaseReturnContract.Event.GeneratePdf -> {
@@ -149,10 +150,6 @@ class PurchaseReturnViewModel(
 
             else -> setState(event)
         }
-    }
-
-    init {
-        loadInitialData()
     }
 
     private fun loadInitialInvoice(id: String?) {
@@ -179,8 +176,6 @@ class PurchaseReturnViewModel(
                 PurchaseReturnContract.DropdownData(clients, products, stores)
             }.collect {
                 handleEvent(PurchaseReturnContract.Event.DropdownDataLoaded(it))
-                handleEvent(PurchaseReturnContract.Event.PartnerSelected(it.partners.firstOrNull()))
-                handleEvent(PurchaseReturnContract.Event.StoreChanged(it.stores.firstOrNull()))
             }
         }
     }
