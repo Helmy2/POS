@@ -25,6 +25,8 @@ import pos.app.generated.resources.average_cost_price
 import pos.app.generated.resources.category
 import pos.app.generated.resources.current_stock
 import pos.app.generated.resources.en_name
+import pos.app.generated.resources.initial_quantity
+import pos.app.generated.resources.initial_store
 import pos.app.generated.resources.main_unit
 import pos.app.generated.resources.purchase_price
 import pos.app.generated.resources.selling_price
@@ -122,14 +124,20 @@ fun ProductScreen(
                 value = state.inputPurchasePrice,
                 onValueChange = { onEvent(ProductReducer.Event.PurchasePriceChanged(it)) },
                 label = stringResource(Res.string.purchase_price),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
                 enabled = state.canUserEdit,
             )
             LabeledTextField(
                 value = state.inputSellingPrice,
                 onValueChange = { onEvent(ProductReducer.Event.SellingPriceChanged(it)) },
                 label = stringResource(Res.string.selling_price),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                ),
                 enabled = state.canUserEdit,
             )
             ExposedDropdownMenu(
@@ -181,6 +189,33 @@ fun ProductScreen(
                 ),
                 enabled = state.canUserEdit,
             )
+            if (!state.isEditing) {
+                ExposedDropdownMenu(
+                    label = stringResource(Res.string.initial_store),
+                    options = state.dropdownData.stores.map { it.name.displayName(language) },
+                    initialText = state.initialStore?.name.displayName(language),
+                    onItemSelected = {
+                        onEvent(
+                            ProductReducer.Event.InitialStoreChanged(
+                                it?.let { state.dropdownData.stores.getOrNull(it) }
+                            )
+                        )
+                    },
+                    enabled = state.canUserEdit,
+                )
+                LabeledTextField(
+                    value = state.initialQuantity,
+                    onValueChange = {
+                        onEvent(
+                            ProductReducer.Event.InitialQuantityChanged(it)
+                        )
+                    },
+                    label = stringResource(Res.string.initial_quantity),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    enabled = state.canUserEdit,
+                )
+            }
+
             ConfirmDeleteDialog(
                 onConfirm = { onEvent(ProductReducer.Event.DeleteConfirmed) },
                 onDismiss = { onEvent(ProductReducer.Event.DeleteCanceled) },

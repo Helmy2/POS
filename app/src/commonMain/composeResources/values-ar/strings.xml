@@ -476,4 +476,7 @@
     <string name="stock_transfer_report">تقرير المناقلات المخزنية</string>
     <string name="initiated_by">بواسطة</string>
     <string name="status">الحالة</string>
+
+    <string name="initial_quantity">الكمية المبدئية</string>
+    <string name="initial_store">المخزن المبدئي</string>
 </resources>

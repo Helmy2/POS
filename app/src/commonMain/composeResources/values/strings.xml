@@ -463,4 +463,7 @@
     <string name="stock_transfer_report">Stock Transfer Report</string>
     <string name="initiated_by">Initiated By</string>
     <string name="status">Status</string>
+
+    <string name="initial_quantity">Initial quantity</string>
+    <string name="initial_store">Initial store</string>
 </resources>
