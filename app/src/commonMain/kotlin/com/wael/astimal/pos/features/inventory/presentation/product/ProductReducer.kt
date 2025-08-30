@@ -38,15 +38,21 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         val selectedCategory: Category? = null,
         val selectedMainUnit: ProductUnit? = null,
         val selectedSubUnit: ProductUnit? = null,
-        val showDeleteDialog: Boolean = false
+        val showDeleteDialog: Boolean = false,
 
+        val initialQuantity: String = "",
+        val initialStore: Store? = null,
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedProduct != null
         val canUserEdit: Boolean get() = currentUser?.isAdmin == true
         val canSave: Boolean
             get() = inputArName.isNotBlank() &&
                     selectedCategory != null &&
-                    selectedMainUnit != null
+                    selectedMainUnit != null &&
+                    ((initialStore == null && initialQuantity == "") ||
+                            (initialStore != null && (initialQuantity.toDoubleOrNull()
+                                ?: 0.0) > 0.0))
+
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -70,6 +76,9 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         data class MainUnitIdChanged(val unit: ProductUnit?) : Event
         data class SubUnitIdChanged(val unit: ProductUnit?) : Event
 
+        data class InitialStoreChanged(val store: Store?) : Event
+        data class InitialQuantityChanged(val quantity: String) : Event
+
         // Data results from ViewModel
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val data: DropdownData) : Event
@@ -79,7 +88,7 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         data object LoadingStarted : Event
         data object LoadingFinished : Event
     }
-    
+
     override fun reduce(
         previousState: State,
         event: Event
@@ -136,7 +145,9 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
                     inputSubUnitsPerMainUnit = "1",
                     selectedCategory = null,
                     selectedMainUnit = null,
-                    selectedSubUnit = null
+                    selectedSubUnit = null,
+                    initialQuantity = "",
+                    initialStore = null,
                 ) to null
 
             // Form input updates
@@ -167,6 +178,14 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
 
             is Event.SaveClicked
                 -> previousState to null
+
+            is Event.InitialStoreChanged -> previousState.copy(
+                initialStore = event.store
+            ) to null
+
+            is Event.InitialQuantityChanged -> previousState.copy(
+                initialQuantity = event.quantity
+            ) to null
         }
     }
 }

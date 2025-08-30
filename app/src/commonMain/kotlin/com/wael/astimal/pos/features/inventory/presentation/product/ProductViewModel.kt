@@ -8,6 +8,8 @@ import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.repository.CategoryRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -149,6 +151,25 @@ class ProductViewModel(
 
                 result.onSuccess {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.product_saved_successfully)))
+                    if (!state.value.isEditing && state.value.initialStore != null && (state.value.initialQuantity.toDoubleOrNull()
+                            ?: 0.0) > 0.0
+                    ) {
+                        stockRepository.addStockAdjustment(
+                            StockAdjustment(
+                                store = state.value.initialStore!!,
+                                product = it,
+                                user = state.value.currentUser!!,
+                                reason = StockAdjustmentReason.OPENING_BALANCE,
+                                notes = null,
+                                quantityChange = state.value.initialQuantity.toDoubleOrNull()
+                                    ?: 0.0,
+                                createdAt = Clock.now(),
+                                invoiceId = null,
+                                transactionId = null,
+                                id = "",
+                            )
+                        )
+                    }
                     setState(ProductReducer.Event.SaveSucceeded)
                     searchProducts("")
                 }.onFailure {

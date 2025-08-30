@@ -38,4 +38,8 @@ interface ProductDao {
     @Transaction
     @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND isSynced = 0")
     suspend fun getUnsyncedProducts(): List<ProductWithDetails>
+
+    @Transaction
+    @Query("SELECT * FROM products WHERE localId = :id LIMIT 1")
+    suspend fun getProductById(id: String): ProductWithDetails?
 }

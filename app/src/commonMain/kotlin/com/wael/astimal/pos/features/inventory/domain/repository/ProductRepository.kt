@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
     fun getProducts(query: String = ""): Flow<List<Product>>
-    suspend fun saveProduct(product: Product): Result<Long>
+    suspend fun saveProduct(product: Product): Result<Product>
     suspend fun deleteProduct(product: Product): Result<Unit>
     suspend fun syncWithServer(productsDto: List<ProductEntity>): Result<Unit>
     suspend fun getUnsyncedProducts(): Result<List<Product>>

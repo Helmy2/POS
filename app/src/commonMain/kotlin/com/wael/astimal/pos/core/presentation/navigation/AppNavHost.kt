@@ -147,7 +147,12 @@ fun AppNavHost(
             composable<Destination.PurchaseOrders> {
                 val invoiceId = it.toRoute<Destination.PurchaseOrders>().invoiceId
 
-                PurchaseRoute(invoiceId = invoiceId)
+                PurchaseRoute(
+                    onNavigateToCreateBusinessPartner = {
+                        navController.navigate(Destination.BusinessPartners(true))
+                    },
+                    invoiceId = invoiceId
+                )
             }
             composable<Destination.PurchaseReturns> {
                 val invoiceId = it.toRoute<Destination.PurchaseReturns>().invoiceId

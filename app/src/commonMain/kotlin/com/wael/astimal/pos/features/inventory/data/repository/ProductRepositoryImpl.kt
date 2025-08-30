@@ -28,7 +28,7 @@ class ProductRepositoryImpl(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun saveProduct(product: Product): Result<Long> {
+    override suspend fun saveProduct(product: Product): Result<Product> {
         return try {
             val entity = product.toDto()
 
@@ -47,9 +47,12 @@ class ProductRepositoryImpl(
                 }.decodeSingle<ProductDto>()
             }
 
-            val localId = productDao.insertOrUpdate(result.toEntity())
+            productDao.insertOrUpdate(result.toEntity())
 
-            Result.success(localId)
+            val product = productDao.getProductById(result.id)?.toDomain()
+                ?: return Result.failure(Exception("Failed to retrieve saved product"))
+
+            Result.success(product)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
