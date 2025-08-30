@@ -1,11 +1,35 @@
 package com.wael.astimal.pos.features.user.presentation.employee
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
+import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.domain.entity.User
+import org.jetbrains.compose.resources.StringResource
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.categories
+import pos.app.generated.resources.products
+import pos.app.generated.resources.stock_management
+import pos.app.generated.resources.stock_transfer
+import pos.app.generated.resources.stores
+import pos.app.generated.resources.units
 
 class EmployeeReducer :
     Reducer<EmployeeReducer.State, EmployeeReducer.Event, Nothing> {
+
+    data class Item(val key: String, val label: StringResource)
+
+    companion object {
+        val screens = listOf(
+            Item(Destination.Stores.toString(), Res.string.stores),
+            Item(Destination.Units.toString(), Res.string.units),
+            Item(Destination.Categories.toString(), Res.string.categories),
+            Item(Destination.Products.toString(), Res.string.products),
+            Item(Destination.StockManagement.toString(), Res.string.stock_management),
+            Item(Destination.StockTransfer().toString(), Res.string.stock_transfer),
+        )
+    }
+
 
     data class State(
         val currentUser: User? = null,
@@ -20,6 +44,7 @@ class EmployeeReducer :
         val canHandlePrivatePartner: Boolean = false,
 
         // UI State
+        val permissions: Map<String, PermissionDetails> = emptyMap(),
         val isPasswordVisible: Boolean = false,
         val isConfirmPasswordVisible: Boolean = false,
         val isLoading: Boolean = false,
@@ -76,13 +101,16 @@ class EmployeeReducer :
         data class SearchActiveChanged(val isActive: Boolean) : Event
         data class EmployeeSelected(val employee: User) : Event
 
+        data class PermissionsChanged(val resourceKey: String, val details: PermissionDetails) :
+            Event
+
         // Async Operation Events
         data object SaveSucceeded : Event
         data object SaveFailed : Event
         data object DeleteSucceeded : Event
         data object DeleteFailed : Event
     }
-    
+
     override fun reduce(
         previousState: State,
         event: Event
@@ -122,7 +150,8 @@ class EmployeeReducer :
                 password = "",
                 confirmPassword = "",
                 isSearchActive = false,
-                canHandlePrivatePartner = event.employee.canHandlePrivatePartner
+                canHandlePrivatePartner = event.employee.canHandlePrivatePartner,
+                permissions = event.employee.permissions ?: emptyMap()
             ) to null
 
             // User Actions
@@ -133,8 +162,15 @@ class EmployeeReducer :
                 confirmPassword = "",
                 arName = "",
                 enName = "",
-                isLoading = false
+                isLoading = false,
+                permissions = emptyMap()
             ) to null
+
+            is Event.PermissionsChanged -> {
+                val newPermissions = previousState.permissions.toMutableMap()
+                newPermissions[event.resourceKey] = event.details
+                previousState.copy(permissions = newPermissions) to null
+            }
 
 
             // Async Operations

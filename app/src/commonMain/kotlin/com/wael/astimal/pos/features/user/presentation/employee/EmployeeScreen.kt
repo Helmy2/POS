@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -15,8 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.presentation.compoenents.ItemGrid
@@ -24,6 +28,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.presentation.components.PasswordTextField
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -31,9 +36,15 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.can_handle_private_partners
 import pos.app.generated.resources.confirm_password
+import pos.app.generated.resources.create
+import pos.app.generated.resources.delete
 import pos.app.generated.resources.email
 import pos.app.generated.resources.en_name
 import pos.app.generated.resources.password
+import pos.app.generated.resources.permissions
+import pos.app.generated.resources.resource
+import pos.app.generated.resources.update
+import pos.app.generated.resources.view
 
 @Composable
 fun EmployeeRoute(
@@ -127,7 +138,7 @@ fun EmployeeScreen(
         )
 
         Row(
-            modifier = Modifier.padding(top = 32.dp).height(OutlinedTextFieldDefaults.MinHeight)
+            modifier = Modifier.padding(top = 16.dp).height(OutlinedTextFieldDefaults.MinHeight)
                 .width(320.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -147,12 +158,135 @@ fun EmployeeScreen(
             )
         }
 
+        PermissionsEditor(
+            permissions = state.permissions,
+            onPermissionChange = { resourceKey, details ->
+                onEvent(EmployeeReducer.Event.PermissionsChanged(resourceKey, details))
+            },
+            enabled = state.canEdit
+        )
+
         if (state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionsEditor(
+    permissions: Map<String, PermissionDetails>,
+    onPermissionChange: (String, PermissionDetails) -> Unit,
+    enabled: Boolean
+) {
+    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+    Text(
+        text = stringResource(Res.string.permissions),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+
+    // Header Row for the permissions table
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            stringResource(Res.string.resource),
+            modifier = Modifier.weight(2f),
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            stringResource(Res.string.view),
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            stringResource(Res.string.create),
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            stringResource(Res.string.update),
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            stringResource(Res.string.delete),
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    HorizontalDivider()
+
+    EmployeeReducer.screens.forEach { resource ->
+        val currentPermissions = permissions[resource.key] ?: PermissionDetails()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Resource Name
+            Text(stringResource(resource.label), modifier = Modifier.weight(2f))
+
+            // View Switch
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Switch(
+                    checked = currentPermissions.canView,
+                    onCheckedChange = {
+                        onPermissionChange(
+                            resource.key,
+                            currentPermissions.copy(canView = it)
+                        )
+                    },
+                    enabled = enabled
+                )
+            }
+            // Create Switch
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Switch(
+                    checked = currentPermissions.canCreate,
+                    onCheckedChange = {
+                        onPermissionChange(
+                            resource.key,
+                            currentPermissions.copy(canCreate = it)
+                        )
+                    },
+                    enabled = enabled
+                )
+            }
+            // Update Switch
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Switch(
+                    checked = currentPermissions.canUpdate,
+                    onCheckedChange = {
+                        onPermissionChange(
+                            resource.key,
+                            currentPermissions.copy(canUpdate = it)
+                        )
+                    },
+                    enabled = enabled
+                )
+            }
+            // Delete Switch
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Switch(
+                    checked = currentPermissions.canDelete,
+                    onCheckedChange = {
+                        onPermissionChange(
+                            resource.key,
+                            currentPermissions.copy(canDelete = it)
+                        )
+                    },
+                    enabled = enabled
+                )
             }
         }
     }

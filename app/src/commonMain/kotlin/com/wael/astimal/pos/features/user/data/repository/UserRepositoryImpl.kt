@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 import com.wael.astimal.pos.features.user.data.remote.ProfileApiService
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
@@ -20,6 +21,7 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -119,7 +121,9 @@ class UserRepositoryImpl(
         enName: String,
         password: String,
         canHandlePrivatePartner: Boolean,
+        permissions: Map<String, PermissionDetails>
     ): Result<Unit> {
+
         return try {
             val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
 
@@ -137,6 +141,15 @@ class UserRepositoryImpl(
                 autoConfirm = true
             }
 
+            val permissionsJson = permissions.let {
+                try {
+                    Json.encodeToString(it)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
+            }
+
             val profileDto = ProfileDto(
                 id = userWithEmail.id,
                 username = enName,
@@ -147,7 +160,8 @@ class UserRepositoryImpl(
                 avatarUrl = "https://ofzbmodzxgbpvybfhofr.supabase.co/storage/v1/object/public/bucket//avatar_profile.png",
                 fcmToken = null,
                 email = email,
-                canHandlePrivatePartner = canHandlePrivatePartner
+                canHandlePrivatePartner = canHandlePrivatePartner,
+                permissions = permissionsJson
             )
 
             supabaseClient.postgrest["profiles"].upsert(profileDto)
@@ -168,7 +182,8 @@ class UserRepositoryImpl(
         enName: String,
         password: String?,
         email: String?,
-        canHandlePrivatePartner: Boolean
+        canHandlePrivatePartner: Boolean,
+        permissions: Map<String, PermissionDetails>
     ): Result<Unit> {
         return try {
             val currentUser = getCurrentUser() ?: return Result.failure(Exception("Not logged in."))
@@ -193,6 +208,15 @@ class UserRepositoryImpl(
                 }
             }
 
+            val permissionsJson = permissions.let {
+                try {
+                    Json.encodeToString(it)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
+            }
+
             // Update profile data in Postgrest
             val profileUpdates = JsonObject(
                 mapOf(
@@ -201,7 +225,10 @@ class UserRepositoryImpl(
                     "username" to JsonPrimitive(enName),
                     "email" to JsonPrimitive(email),
                     "can_handle_private_partner" to JsonPrimitive(canHandlePrivatePartner),
-                    "updated_at" to JsonPrimitive(Clock.now().toISOString())
+                    "updated_at" to JsonPrimitive(Clock.now().toISOString()),
+                    "permissions" to if (permissionsJson != null) JsonPrimitive(permissionsJson) else JsonPrimitive(
+                        ""
+                    ),
                 )
             )
 

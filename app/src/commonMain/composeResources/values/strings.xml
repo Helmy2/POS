@@ -466,4 +466,8 @@
 
     <string name="initial_quantity">Initial quantity</string>
     <string name="initial_store">Initial store</string>
+
+    <string name="permissions">Permissions</string>
+    <string name="resource">Resource</string>
+    <string name="view">View</string>
 </resources>

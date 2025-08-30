@@ -479,4 +479,7 @@
 
     <string name="initial_quantity">الكمية المبدئية</string>
     <string name="initial_store">المخزن المبدئي</string>
+    <string name="permissions">الصلاحيات</string>
+    <string name="resource">المورد</string>
+    <string name="view">عرض</string>
 </resources>

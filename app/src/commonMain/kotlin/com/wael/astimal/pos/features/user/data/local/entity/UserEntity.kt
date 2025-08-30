@@ -3,8 +3,10 @@ package com.wael.astimal.pos.features.user.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
+import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.entity.UserRole
+import kotlinx.serialization.json.Json
 
 
 /**
@@ -29,6 +31,7 @@ data class UserEntity(
     val isActive: Boolean,
     val fcmToken: String?,
     val canHandlePrivatePartner: Boolean?,
+    val permissions: String?
 )
 
 /**
@@ -36,6 +39,14 @@ data class UserEntity(
  * used throughout the application's business logic.
  */
 fun UserEntity.toDomain(): User {
+    val permissionsMap = permissions?.let {
+        try {
+            Json.decodeFromString<Map<String, PermissionDetails>>(it)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null // Return null if decoding fails
+        }
+    }
     return User(
         id = id,
         name = username,
@@ -49,7 +60,8 @@ fun UserEntity.toDomain(): User {
         updatedAt = updatedAt,
         createdAt = createdAt,
         fcmToken = fcmToken,
-        canHandlePrivatePartner = canHandlePrivatePartner == true
+        canHandlePrivatePartner = canHandlePrivatePartner == true,
+        permissions = permissionsMap
     )
 }
 
@@ -57,6 +69,14 @@ fun UserEntity.toDomain(): User {
  * Maps a User domain model back to a UserEntity for saving to the database.
  */
 fun User.toEntity(): UserEntity {
+    val permissionsJson = permissions?.let {
+        try {
+            Json.encodeToString(it)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
     return UserEntity(
         id = id,
         isSynced = isSynced,
@@ -71,6 +91,7 @@ fun User.toEntity(): UserEntity {
         role = if (isAdmin) UserRole.ADMIN else UserRole.EMPLOYEE,
         isActive = true,
         fcmToken = fcmToken,
-        canHandlePrivatePartner = canHandlePrivatePartner
+        canHandlePrivatePartner = canHandlePrivatePartner,
+        permissions = permissionsJson
     )
 }

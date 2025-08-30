@@ -19,6 +19,7 @@ data class User(
     val isSynced: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
-    val canHandlePrivatePartner: Boolean
+    val canHandlePrivatePartner: Boolean,
+    val permissions: Map<String, PermissionDetails>? = null
 )
 

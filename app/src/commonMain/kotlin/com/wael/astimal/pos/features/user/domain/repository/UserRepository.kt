@@ -1,6 +1,7 @@
 package com.wael.astimal.pos.features.user.domain.repository
 
 import com.wael.astimal.pos.features.user.data.local.entity.UserEntity
+import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.domain.entity.User
 import kotlinx.coroutines.flow.Flow
 
@@ -17,7 +18,8 @@ interface UserRepository {
         arName: String,
         enName: String,
         password: String,
-        canHandlePrivatePartner: Boolean
+        canHandlePrivatePartner: Boolean,
+        permissions: Map<String, PermissionDetails>
     ): Result<Unit>
 
     suspend fun deleteUser(id: String): Result<Unit>
@@ -27,7 +29,8 @@ interface UserRepository {
         enName: String,
         password: String?,
         email: String?,
-        canHandlePrivatePartner: Boolean
+        canHandlePrivatePartner: Boolean,
+        permissions: Map<String, PermissionDetails>
     ): Result<Unit>
 
     suspend fun getAdmin(): User?

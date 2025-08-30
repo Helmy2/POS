@@ -28,6 +28,8 @@ data class ProfileDto(
     @SerialName("can_handle_private_partner")
     val canHandlePrivatePartner: Boolean?,
     val email: String?,
+    @SerialName("permissions")
+    val permissions: String? = null
 )
 
 /**
@@ -53,5 +55,6 @@ fun ProfileDto.toEntity(): UserEntity {
         isActive = true,
         canHandlePrivatePartner = canHandlePrivatePartner,
         fcmToken = fcmToken,
+        permissions = permissions
     )
 }

@@ -78,7 +78,8 @@ class EmployeeViewModel(
                     arName = currentState.arName,
                     enName = currentState.enName,
                     password = currentState.password,
-                    canHandlePrivatePartner = currentState.canHandlePrivatePartner
+                    canHandlePrivatePartner = currentState.canHandlePrivatePartner,
+                    permissions = currentState.permissions
                 )
             } else {
                 userRepository.updateUser(
@@ -87,7 +88,8 @@ class EmployeeViewModel(
                     enName = currentState.enName,
                     password = currentState.password.takeIf { it.isNotEmpty() },
                     email = currentState.email,
-                    canHandlePrivatePartner = currentState.canHandlePrivatePartner
+                    canHandlePrivatePartner = currentState.canHandlePrivatePartner,
+                    permissions = currentState.permissions
                 )
             }
 
