@@ -15,7 +15,7 @@ object PermissionManager {
     }
 
     // A helper function to get the permission key from a Destination
-    private fun getKey(destination: Destination): String = destination.toString()
+    private fun getKey(destination: Destination): String = destination.key
 
     // Simple, readable functions for the UI to use
     fun canView(destination: Destination): Boolean {

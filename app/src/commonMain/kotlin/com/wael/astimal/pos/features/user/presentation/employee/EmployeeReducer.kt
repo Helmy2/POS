@@ -24,23 +24,26 @@ import pos.app.generated.resources.units
 class EmployeeReducer :
     Reducer<EmployeeReducer.State, EmployeeReducer.Event, Nothing> {
 
-    data class Item(val key: String, val label: StringResource)
+    sealed class Item(val key: String, val label: StringResource) {
+        class CRUD(key: String, label: StringResource) : Item(key, label)
+        class View(key: String, label: StringResource) : Item(key, label)
+    }
 
     companion object {
         val screens = listOf(
-            Item(Destination.Stores.toString(), Res.string.stores),
-            Item(Destination.Units.toString(), Res.string.units),
-            Item(Destination.Categories.toString(), Res.string.categories),
-            Item(Destination.Products.toString(), Res.string.products),
-            Item(Destination.StockManagement.toString(), Res.string.stock_management),
-            Item(Destination.StockTransfer().toString(), Res.string.stock_transfer),
-            Item(Destination.EmployeeAccounts.toString(), Res.string.employee_account),
-            Item(Destination.BusinessPartners().toString(), Res.string.business_partner),
-            Item(Destination.Vouchers.toString(), Res.string.receive_pay_voucher),
-            Item(Destination.SalesOrders(null).toString(), Res.string.sales),
-            Item(Destination.PurchaseOrders(null).toString(), Res.string.purchase),
-            Item(Destination.SalesReturns(null).toString(), Res.string.sales_return),
-            Item(Destination.PurchaseReturns(null).toString(), Res.string.purchase_return),
+            Item.CRUD(Destination.Stores.key, Res.string.stores),
+            Item.CRUD(Destination.Units.key, Res.string.units),
+            Item.CRUD(Destination.Categories.key, Res.string.categories),
+            Item.CRUD(Destination.Products.key, Res.string.products),
+            Item.CRUD(Destination.StockManagement.key, Res.string.stock_management),
+            Item.CRUD(Destination.StockTransfer().key, Res.string.stock_transfer),
+            Item.CRUD(Destination.EmployeeAccounts.key, Res.string.employee_account),
+            Item.CRUD(Destination.BusinessPartners().key, Res.string.business_partner),
+            Item.CRUD(Destination.Vouchers.key, Res.string.receive_pay_voucher),
+            Item.CRUD(Destination.SalesOrders(null).key, Res.string.sales),
+            Item.CRUD(Destination.PurchaseOrders(null).key, Res.string.purchase),
+            Item.CRUD(Destination.SalesReturns(null).key, Res.string.sales_return),
+            Item.CRUD(Destination.PurchaseReturns(null).key, Res.string.purchase_return),
         )
     }
 

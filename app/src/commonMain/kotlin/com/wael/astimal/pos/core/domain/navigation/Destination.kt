@@ -7,94 +7,98 @@ import kotlinx.serialization.Serializable
  * This sealed class hierarchy defines the entire navigation graph.
  */
 @Serializable
-sealed class Destination {
+sealed class Destination(
+    val key: String
+) {
     // Auth Graph
     @Serializable
-    data object Auth : Destination()
+    data object Auth : Destination("Auth")
 
     @Serializable
-    data object Login : Destination()
+    data object Login : Destination("Login")
 
     // Main Graph
     @Serializable
-    data object Main : Destination()
+    data object Main : Destination("Main")
 
     @Serializable
-    data object Dashboard : Destination()
+    data object Dashboard : Destination("Dashboard")
 
     // Inventory Feature Graph
     @Serializable
-    data object Inventory : Destination() // The androidMain landing/hub screen for inventory
+    data object Inventory :
+        Destination("Inventory") // The androidMain landing/hub screen for inventory
 
     @Serializable
-    data object Categories : Destination()
+    data object Categories : Destination("Categories")
 
     @Serializable
-    data object Products : Destination()
+    data object Products : Destination("Products")
 
     @Serializable
-    data object Stores : Destination()
+    data object Stores : Destination("Stores")
 
     @Serializable
-    data object Units : Destination()
+    data object Units : Destination("Units")
 
     @Serializable
-    data object StockManagement : Destination()
+    data object StockManagement : Destination("StockManagement")
 
     @Serializable
-    data class StockTransfer(val openSearch: Boolean = false) : Destination()
+    data class StockTransfer(val openSearch: Boolean = false) : Destination("StockTransfer")
 
 
     // Management Feature Graph
     @Serializable
-    data object Management : Destination() // The androidMain landing/hub screen for management
+    data object Management :
+        Destination("Management") // The androidMain landing/hub screen for management
 
     @Serializable
-    data class BusinessPartners(val openNew: Boolean = false) : Destination()
+    data class BusinessPartners(val openNew: Boolean = false) : Destination("BusinessPartners")
 
     @Serializable
-    data class SalesOrders(val invoiceId: String? = null) : Destination()
+    data class SalesOrders(val invoiceId: String? = null) : Destination("SalesOrders")
 
     @Serializable
-    data class SalesReturns(val invoiceId: String? = null) : Destination()
+    data class SalesReturns(val invoiceId: String? = null) : Destination("SalesReturns")
 
     @Serializable
-    data class PurchaseOrders(val invoiceId: String? = null) : Destination()
+    data class PurchaseOrders(val invoiceId: String? = null) : Destination("PurchaseOrders")
 
     @Serializable
-    data class PurchaseReturns(val invoiceId: String? = null) : Destination()
+    data class PurchaseReturns(val invoiceId: String? = null) : Destination("PurchaseReturns")
 
     @Serializable
-    data object EmployeeAccounts : Destination()
+    data object EmployeeAccounts : Destination("EmployeeAccounts")
 
     @Serializable
-    data object Vouchers : Destination()
+    data object Vouchers : Destination("Vouchers")
 
     // Reports Feature Graph
     @Serializable
-    data object Reports : Destination()
+    data object Reports : Destination("Reports") // The androidMain landing/hub screen for reports
 
     @Serializable
-    data object CustomerStatement : Destination()
+    data object CustomerStatement : Destination("CustomerStatement")
 
     @Serializable
-    data object EmployeeReport : Destination()
+    data object EmployeeReport : Destination("EmployeeReport")
 
     @Serializable
-    data object EmployeeLedger : Destination()
+    data object EmployeeLedger : Destination("EmployeeLedger")
 
     @Serializable
-    data object ProductMovement : Destination()
+    data object ProductMovement : Destination("ProductMovement")
 
     @Serializable
-    data object CurrentStock : Destination()
+    data object CurrentStock : Destination("CurrentStock")
 
     @Serializable
-    data object ClientDebit : Destination()
+    data object ClientDebit : Destination("ClientDebit")
 
     @Serializable
-    data object StockTransferReport : Destination()
+    data object StockTransferReport : Destination("StockTransferReport")
 
     @Serializable
-    data object Employee : Destination()
+    data object Employee : Destination("Employee")
 }
