@@ -251,42 +251,45 @@ private fun PermissionsEditor(
             }
             // Create Switch
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Switch(
-                    checked = currentPermissions.canCreate,
-                    onCheckedChange = {
-                        onPermissionChange(
-                            resource.key,
-                            currentPermissions.copy(canCreate = it, canView = true)
-                        )
-                    },
-                    enabled = enabled
-                )
+                if (resource !is EmployeeReducer.Item.ViewOnly)
+                    Switch(
+                        checked = currentPermissions.canCreate,
+                        onCheckedChange = {
+                            onPermissionChange(
+                                resource.key,
+                                currentPermissions.copy(canCreate = it, canView = true)
+                            )
+                        },
+                        enabled = enabled
+                    )
             }
             // Update Switch
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Switch(
-                    checked = currentPermissions.canUpdate,
-                    onCheckedChange = {
-                        onPermissionChange(
-                            resource.key,
-                            currentPermissions.copy(canUpdate = it, canView = true)
-                        )
-                    },
-                    enabled = enabled
-                )
+                if (resource !is EmployeeReducer.Item.ViewOnly)
+                    Switch(
+                        checked = currentPermissions.canUpdate,
+                        onCheckedChange = {
+                            onPermissionChange(
+                                resource.key,
+                                currentPermissions.copy(canUpdate = it, canView = true)
+                            )
+                        },
+                        enabled = enabled
+                    )
             }
             // Delete Switch
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Switch(
-                    checked = currentPermissions.canDelete,
-                    onCheckedChange = {
-                        onPermissionChange(
-                            resource.key,
-                            currentPermissions.copy(canDelete = it, canView = true)
-                        )
-                    },
-                    enabled = enabled
-                )
+                if (resource !is EmployeeReducer.Item.ViewOnly)
+                    Switch(
+                        checked = currentPermissions.canDelete,
+                        onCheckedChange = {
+                            onPermissionChange(
+                                resource.key,
+                                currentPermissions.copy(canDelete = it, canView = true)
+                            )
+                        },
+                        enabled = enabled
+                    )
             }
         }
     }

@@ -9,7 +9,13 @@ import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.categories
+import pos.app.generated.resources.client_debit_report
+import pos.app.generated.resources.current_stock_report
+import pos.app.generated.resources.customer_statement
 import pos.app.generated.resources.employee_account
+import pos.app.generated.resources.employee_daily_report
+import pos.app.generated.resources.employee_ledger_report
+import pos.app.generated.resources.product_movement_report
 import pos.app.generated.resources.products
 import pos.app.generated.resources.purchase
 import pos.app.generated.resources.purchase_return
@@ -18,15 +24,15 @@ import pos.app.generated.resources.sales
 import pos.app.generated.resources.sales_return
 import pos.app.generated.resources.stock_management
 import pos.app.generated.resources.stock_transfer
+import pos.app.generated.resources.stock_transfer_report
 import pos.app.generated.resources.stores
 import pos.app.generated.resources.units
 
-class EmployeeReducer :
-    Reducer<EmployeeReducer.State, EmployeeReducer.Event, Nothing> {
+class EmployeeReducer : Reducer<EmployeeReducer.State, EmployeeReducer.Event, Nothing> {
 
     sealed class Item(val key: String, val label: StringResource) {
         class CRUD(key: String, label: StringResource) : Item(key, label)
-        class View(key: String, label: StringResource) : Item(key, label)
+        class ViewOnly(key: String, label: StringResource) : Item(key, label)
     }
 
     companion object {
@@ -44,6 +50,13 @@ class EmployeeReducer :
             Item.CRUD(Destination.PurchaseOrders(null).key, Res.string.purchase),
             Item.CRUD(Destination.SalesReturns(null).key, Res.string.sales_return),
             Item.CRUD(Destination.PurchaseReturns(null).key, Res.string.purchase_return),
+            Item.ViewOnly(Destination.ClientDebit.key, Res.string.client_debit_report),
+            Item.ViewOnly(Destination.CurrentStock.key, Res.string.current_stock_report),
+            Item.ViewOnly(Destination.CustomerStatement.key, Res.string.customer_statement),
+            Item.ViewOnly(Destination.EmployeeLedger.key, Res.string.employee_ledger_report),
+            Item.ViewOnly(Destination.EmployeeReport.key, Res.string.employee_daily_report),
+            Item.ViewOnly(Destination.ProductMovement.key, Res.string.product_movement_report),
+            Item.ViewOnly(Destination.StockTransferReport.key, Res.string.stock_transfer_report),
         )
     }
 
@@ -74,19 +87,13 @@ class EmployeeReducer :
     ) : Reducer.ViewState {
         val filteredEmployees
             get() = allEmployees.filter {
-                it.localizedName.contains(searchQuery) ||
-                        it.localizedName.contains(searchQuery) ||
-                        it.email.orEmpty().contains(searchQuery, ignoreCase = true)
+                it.localizedName.contains(searchQuery) || it.localizedName.contains(searchQuery) || it.email.orEmpty()
+                    .contains(searchQuery, ignoreCase = true)
             }
         val isNewEmployee: Boolean get() = selectedEmployee == null
         val canSave: Boolean
             get() = if (isNewEmployee) {
-                email.isNotBlank() &&
-                        password.isNotBlank() &&
-                        confirmPassword.isNotBlank() &&
-                        enName.isNotBlank() &&
-                        password == confirmPassword &&
-                        password.length >= 6
+                email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && enName.isNotBlank() && password == confirmPassword && password.length >= 6
             } else {
                 email.isNotBlank() && enName.isNotBlank() && (password.isEmpty() || (password.length >= 6 && password == confirmPassword))
             } && canEdit
@@ -129,8 +136,7 @@ class EmployeeReducer :
     }
 
     override fun reduce(
-        previousState: State,
-        event: Event
+        previousState: State, event: Event
     ): Pair<State, Nothing?> {
         return when (event) {
             // Form Events
