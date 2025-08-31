@@ -58,7 +58,7 @@ fun main() {
 
             coroutineScope.launch {
                 userRepository.getCurrentUser().let {
-                    PermissionManager.initialize(it)
+                    PermissionManager.updatePermissions(it)
                     startDestination.value = if (it != null) {
                         Result.success(Destination.Main)
                     } else {

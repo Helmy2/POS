@@ -9,7 +9,7 @@ object PermissionManager {
     private var isAdmin: Boolean = false
 
     // This function should be called by your UserRepository after a user successfully logs in
-    fun initialize(user: User?) {
+    fun updatePermissions(user: User?) {
         permissions = user?.permissions ?: emptyMap()
         isAdmin = user?.isAdmin ?: false
     }

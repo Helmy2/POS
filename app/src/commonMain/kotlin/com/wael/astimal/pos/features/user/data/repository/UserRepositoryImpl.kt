@@ -11,6 +11,7 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
 import com.wael.astimal.pos.features.user.data.remote.ProfileApiService
 import com.wael.astimal.pos.features.user.data.remote.dto.ProfileDto
 import com.wael.astimal.pos.features.user.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -44,8 +45,9 @@ class UserRepositoryImpl(
 
     override suspend fun getCurrentUser(): User? {
         val id = settingsManager.getUserId() ?: return null
-        val user = userDao.getUserBySupabaseId(id).first()
-        return user?.toDomain()
+        val user = userDao.getUserBySupabaseId(id).first()?.toDomain()
+        PermissionManager.updatePermissions(user)
+        return user
     }
 
     override suspend fun isUserLoggedIn(): Boolean {
@@ -84,6 +86,8 @@ class UserRepositoryImpl(
                 return Result.failure(it)
             }
 
+            PermissionManager.updatePermissions(getCurrentUser())
+
             Result.failure(Exception("Unknown error during profile fetch."))
         } catch (e: Exception) {
             e.printStackTrace()
@@ -108,6 +112,7 @@ class UserRepositoryImpl(
             syncManager.restSyncDate()
             settingsManager.changeUserId("")
             supabaseClient.auth.signOut()
+            PermissionManager.updatePermissions(null)
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
