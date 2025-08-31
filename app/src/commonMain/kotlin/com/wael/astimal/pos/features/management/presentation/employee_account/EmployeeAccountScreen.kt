@@ -93,7 +93,7 @@ fun EmployeeAccountScreen(
         )
     }, floatingActionButton = {
         FAB(
-            enable = state.canUserEdit,
+            enable = state.canCreate,
             onClick = { onEvent(EmployeeAccountContract.Event.AddTransactionClicked) }) {
             Icon(
                 Icons.Default.Add,
@@ -102,7 +102,7 @@ fun EmployeeAccountScreen(
         }
     }) {
         TransactionList(
-            transactions = filteredTransactions, canEdit = state.canUserEdit, onEvent = onEvent
+            transactions = filteredTransactions, canEdit = state.canEdit, onEvent = onEvent
         )
     }
 }
@@ -133,7 +133,7 @@ fun EditTransactionDialog(
                             )
                         )
                     },
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
 
                 ExposedDropdownMenu(
@@ -151,26 +151,26 @@ fun EditTransactionDialog(
                             )
                         )
                     },
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
                 LabeledTextField(
                     value = state.dialogState.amount,
                     onValueChange = { onEvent(EmployeeAccountContract.Event.DialogAmountChanged(it)) },
                     label = stringResource(Res.string.amount),
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
                 LabeledTextField(
                     value = state.dialogState.notes,
                     onValueChange = { onEvent(EmployeeAccountContract.Event.DialogNotesChanged(it)) },
                     label = stringResource(Res.string.notes_optional),
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onEvent(EmployeeAccountContract.Event.SaveChangesClicked) },
-                enabled = state.canUserEdit
+                enabled = state.canEdit
             ) {
                 Text(stringResource(Res.string.save))
             }

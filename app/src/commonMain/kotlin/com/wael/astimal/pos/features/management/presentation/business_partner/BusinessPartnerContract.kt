@@ -1,7 +1,9 @@
 package com.wael.astimal.pos.features.management.presentation.business_partner
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object BusinessPartnerContract {
@@ -20,12 +22,16 @@ object BusinessPartnerContract {
         val searchQuery: String = "",
         val dialog: Dialog = Dialog.None
     ) : Reducer.ViewState {
-        val canUserEdit: Boolean get() = true
-        val isAdmin: Boolean get() = currentUser?.isAdmin == true
+        val isEditing: Boolean get() = dialog is Dialog.Edit
         val filteredPartners
             get() = partners.filter {
                 it.name.contains(searchQuery)
             }
+
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.BusinessPartners())
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.BusinessPartners())
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.BusinessPartners())
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

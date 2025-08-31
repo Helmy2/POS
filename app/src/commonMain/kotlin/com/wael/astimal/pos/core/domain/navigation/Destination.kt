@@ -53,16 +53,16 @@ sealed class Destination {
     data class BusinessPartners(val openNew: Boolean = false) : Destination()
 
     @Serializable
-    data class SalesOrders(val invoiceId: String?) : Destination()
+    data class SalesOrders(val invoiceId: String? = null) : Destination()
 
     @Serializable
-    data class SalesReturns(val invoiceId: String?) : Destination()
+    data class SalesReturns(val invoiceId: String? = null) : Destination()
 
     @Serializable
-    data class PurchaseOrders(val invoiceId: String?) : Destination()
+    data class PurchaseOrders(val invoiceId: String? = null) : Destination()
 
     @Serializable
-    data class PurchaseReturns(val invoiceId: String?) : Destination()
+    data class PurchaseReturns(val invoiceId: String? = null) : Destination()
 
     @Serializable
     data object EmployeeAccounts : Destination()

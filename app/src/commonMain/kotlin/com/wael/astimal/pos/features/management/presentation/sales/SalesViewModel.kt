@@ -181,7 +181,7 @@ class SalesViewModel(
     private fun saveOrder() {
         viewModelScope.launch(Dispatchers.IO) {
             val currentState = state.value
-            if (!currentState.canSave || currentState.currentOrderInput.selectedPartner == null || currentState.currentOrderInput.selectedStore == null) {
+            if (currentState.currentOrderInput.selectedPartner == null || currentState.currentOrderInput.selectedStore == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
                 return@launch
             }

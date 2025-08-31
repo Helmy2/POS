@@ -80,7 +80,7 @@ class EmployeeAccountViewModel(
             val dialogState = state.value.dialogState
             val currentUser = state.value.currentUser
 
-            if (currentUser == null || !state.value.canUserEdit) {
+            if (currentUser == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_cannot_edit)))
                 return@launch
             }

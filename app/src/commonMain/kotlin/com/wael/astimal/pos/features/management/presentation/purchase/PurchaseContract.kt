@@ -1,12 +1,14 @@
 package com.wael.astimal.pos.features.management.presentation.purchase
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
 import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object PurchaseContract {
@@ -43,11 +45,17 @@ object PurchaseContract {
         val pdfHtmlToGenerate: String? = null,
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
-        val canSave: Boolean
+
+        val enabledFab: Boolean
             get() = currentOrderInput.selectedPartner != null &&
                     currentOrderInput.selectedStore != null &&
                     currentOrderInput.items.isNotEmpty() &&
-                    currentOrderInput.items.all { it.product != null }
+                    currentOrderInput.items.all { it.product != null } &&
+                    currentOrderInput.paymentType != null
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.PurchaseOrders())
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseOrders())
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseOrders())
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

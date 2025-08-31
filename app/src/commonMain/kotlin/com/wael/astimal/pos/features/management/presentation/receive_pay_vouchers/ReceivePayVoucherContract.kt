@@ -1,10 +1,12 @@
 package com.wael.astimal.pos.features.management.presentation.receive_pay_vouchers
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object ReceivePayVoucherContract {
@@ -27,7 +29,13 @@ object ReceivePayVoucherContract {
         val dialogState: DialogState = DialogState(),
         val searchQuery: String = "",
     ) : Reducer.ViewState {
-        val canUserEdit: Boolean get() = true
+        val isEditing: Boolean get() = dialogState.voucherToEdit != null
+
+        val enabledFab: Boolean get() = !isLoading && (canCreate || canUpdate)
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.Vouchers)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.Vouchers)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.Vouchers)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

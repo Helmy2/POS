@@ -1,8 +1,10 @@
 package com.wael.astimal.pos.features.management.presentation.employee_account
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransaction
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object EmployeeAccountContract {
@@ -24,7 +26,12 @@ object EmployeeAccountContract {
         val searchQuery: String = "",
         val dialogState: DialogState = DialogState()
     ) : Reducer.ViewState {
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
+        val isEditing: Boolean get() = dialogState.selectedTransaction != null
+
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.EmployeeAccounts)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.EmployeeAccounts)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.EmployeeAccounts)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

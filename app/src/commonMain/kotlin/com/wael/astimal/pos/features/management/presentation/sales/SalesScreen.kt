@@ -77,7 +77,10 @@ fun SalesScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canCreate = state.canCreate,
+        canUpdate = state.canUpdate,
+        canDelete = state.canDelete,
         onQueryChange = { onEvent(SalesContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(SalesContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(SalesContract.Event.SearchActiveChanged(it)) },
@@ -133,6 +136,7 @@ fun SalesScreen(
                         }))
                     },
                     modifier = Modifier.width(250.dp),
+                    enabled = state.canEdit
                 )
                 IconButton(
                     onClick = { onNavigateToCreateBusinessPartner() },
@@ -155,7 +159,7 @@ fun SalesScreen(
                         )
                     )
                 },
-                enabled = state.currentUser?.isAdmin == true,
+                enabled = state.canEdit
             )
 
             EditableOrderItems(

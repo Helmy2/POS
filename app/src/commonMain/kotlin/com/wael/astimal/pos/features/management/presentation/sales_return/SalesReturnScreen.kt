@@ -66,7 +66,10 @@ fun SalesReturnScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canDelete = state.canDelete,
+        canUpdate = state.canUpdate,
+        canCreate = state.canCreate,
         onQueryChange = { onEvent(SalesReturnContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(SalesReturnContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(SalesReturnContract.Event.SearchActiveChanged(it)) },
@@ -117,6 +120,7 @@ fun SalesReturnScreen(
                         )
                     }))
                 },
+                enabled = state.canEdit,
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.stores),
@@ -129,7 +133,7 @@ fun SalesReturnScreen(
                         )
                     }))
                 },
-                enabled = state.currentUser?.isAdmin == true,
+                enabled = state.canEdit,
             )
             EditableOrderItems(
                 totalAmount = orderInput.totalAmount,

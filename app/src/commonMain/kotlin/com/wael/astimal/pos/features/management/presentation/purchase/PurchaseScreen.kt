@@ -77,7 +77,10 @@ fun PurchaseScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canCreate = state.canCreate,
+        canUpdate = state.canUpdate,
+        canDelete = state.canDelete,
         onQueryChange = { onEvent(PurchaseContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(PurchaseContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(PurchaseContract.Event.SearchActiveChanged(it)) },
@@ -135,6 +138,7 @@ fun PurchaseScreen(
                         }))
                     },
                     modifier = Modifier.width(250.dp),
+                    enabled = state.canEdit
                 )
                 IconButton(
                     onClick = { onNavigateToCreateBusinessPartner() },
@@ -157,7 +161,7 @@ fun PurchaseScreen(
                         )
                     }))
                 },
-                enabled = state.currentUser?.isAdmin == true,
+                enabled = state.canEdit
             )
             EditableOrderItems(
                 totalAmount = orderInput.totalAmount,

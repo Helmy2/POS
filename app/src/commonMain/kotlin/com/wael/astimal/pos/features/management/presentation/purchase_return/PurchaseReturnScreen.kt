@@ -64,7 +64,10 @@ fun PurchaseReturnScreen(
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canCreate = state.canCreate,
+        canUpdate = state.canUpdate,
+        canDelete = state.canDelete,
         onQueryChange = { onEvent(PurchaseReturnContract.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(PurchaseReturnContract.Event.SearchQueryChanged(it)) },
         onSearchActiveChange = { onEvent(PurchaseReturnContract.Event.SearchActiveChanged(it)) },
@@ -115,6 +118,7 @@ fun PurchaseReturnScreen(
                         )
                     }))
                 },
+                enabled = state.canEdit
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.stores),
@@ -127,7 +131,7 @@ fun PurchaseReturnScreen(
                         )
                     }))
                 },
-                enabled = state.currentUser?.isAdmin == true,
+                enabled = state.canEdit
             )
             EditableOrderItems(
                 totalAmount = orderInput.totalAmount,

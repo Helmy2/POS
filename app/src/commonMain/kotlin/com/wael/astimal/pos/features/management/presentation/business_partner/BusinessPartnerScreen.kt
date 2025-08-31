@@ -1,6 +1,5 @@
 package com.wael.astimal.pos.features.management.presentation.business_partner
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -120,7 +119,7 @@ fun BusinessPartnerScreen(
         },
         floatingActionButton = {
             FAB(
-                enable = state.canUserEdit,
+                enable = state.canCreate,
                 onClick = { onEvent(BusinessPartnerContract.Event.AddNewPartnerClicked) }) {
                 Icon(
                     Icons.Default.Add,
@@ -140,7 +139,10 @@ fun BusinessPartnerScreen(
             Dialog(onDismissRequest = { onEvent(BusinessPartnerContract.Event.DismissDialog) }) {
                 Card {
                     BusinessPartnerDetailView(
-                        partner = dialog.partner, isAdmin = state.canUserEdit, onEvent = onEvent
+                        partner = dialog.partner,
+                        canUpdate = state.canUpdate,
+                        canDelete = state.canDelete,
+                        onEvent = onEvent
                     )
                 }
             }
@@ -150,7 +152,7 @@ fun BusinessPartnerScreen(
             BusinessPartnerEditDialog(
                 partner = dialog.partner,
                 isSaving = state.isLoading,
-                canEdit = state.canUserEdit,
+                canEdit = state.canEdit,
                 users = state.userDropdownData,
                 onDismiss = { onEvent(BusinessPartnerContract.Event.DismissDialog) },
                 onCreate = { partner, amount ->
@@ -178,7 +180,10 @@ fun BusinessPartnerScreen(
 
 @Composable
 fun BusinessPartnerDetailView(
-    partner: BusinessPartner, isAdmin: Boolean, onEvent: (BusinessPartnerContract.Event) -> Unit
+    partner: BusinessPartner,
+    canDelete: Boolean,
+    canUpdate: Boolean,
+    onEvent: (BusinessPartnerContract.Event) -> Unit
 ) {
     val language = LocalAppLocale.current
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -203,28 +208,23 @@ fun BusinessPartnerDetailView(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        AnimatedVisibility(visible = isAdmin) {
-            Row(
-                modifier = Modifier.padding(top = 16.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = { showDeleteConfirmDialog = true }) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.delete),
-                        tint = MaterialTheme.colorScheme.error
+        Row(
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = { showDeleteConfirmDialog = true }, enabled = canDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(Res.string.delete),
+                )
+            }
+            IconButton(onClick = {
+                onEvent(
+                    BusinessPartnerContract.Event.EditPartnerClicked(
+                        partner
                     )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = {
-                    onEvent(
-                        BusinessPartnerContract.Event.EditPartnerClicked(
-                            partner
-                        )
-                    )
-                }) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.edit))
-                }
+                )
+            }, enabled = canUpdate) {
+                Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.edit))
             }
         }
     }

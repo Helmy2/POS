@@ -106,8 +106,8 @@ fun ReceivePayVoucherScreen(
         floatingActionButton = {
             FAB(
                 onClick = {
-                    if (state.canUserEdit) onEvent(ReceivePayVoucherContract.Event.AddVoucherClicked)
-                }, enable = state.canUserEdit
+                    if (state.canCreate) onEvent(ReceivePayVoucherContract.Event.AddVoucherClicked)
+                }, enable = state.canCreate
             ) {
                 Icon(
                     Icons.Default.Add,
@@ -125,7 +125,8 @@ fun ReceivePayVoucherScreen(
             items(filteredVouchers, key = { it.id }) { voucher ->
                 VoucherItem(
                     voucher = voucher,
-                    canEdit = state.canUserEdit && (voucher.transactionType == TransactionType.OPENING_BALANCE || voucher.transactionType == TransactionType.PAYMENT),
+                    canUpdate = state.canUpdate && (voucher.transactionType == TransactionType.OPENING_BALANCE || voucher.transactionType == TransactionType.PAYMENT),
+                    canDelete = state.canDelete,
                     onEdit = { onEvent(ReceivePayVoucherContract.Event.EditVoucherClicked(voucher)) },
                     onDelete = {
                         onEvent(
@@ -141,7 +142,8 @@ fun ReceivePayVoucherScreen(
 
 @Composable
 fun VoucherEditDialog(
-    state: ReceivePayVoucherContract.State, onEvent: (ReceivePayVoucherContract.Event) -> Unit
+    state: ReceivePayVoucherContract.State,
+    onEvent: (ReceivePayVoucherContract.Event) -> Unit
 ) {
     val dialogState = state.dialogState
 
@@ -170,7 +172,7 @@ fun VoucherEditDialog(
                             )
                         )
                     },
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
 
 
@@ -187,7 +189,7 @@ fun VoucherEditDialog(
                             )
                         )
                     },
-                    enabled = state.canUserEdit && dialogState.voucherToEdit == null
+                    enabled = state.canEdit && dialogState.voucherToEdit == null
                 )
 
                 ExposedDropdownMenu(
@@ -212,7 +214,7 @@ fun VoucherEditDialog(
                             )
                         )
                     },
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
 
                 LabeledTextField(
@@ -222,7 +224,7 @@ fun VoucherEditDialog(
                                 it
                             )
                         )
-                    }, label = stringResource(Res.string.amount), enabled = state.canUserEdit
+                    }, label = stringResource(Res.string.amount), enabled = state.canEdit
                 )
 
                 DataPicker(
@@ -232,7 +234,7 @@ fun VoucherEditDialog(
                                 it
                             )
                         )
-                    }, enabled = state.canUserEdit
+                    }, enabled = state.canEdit
                 )
 
                 LabeledTextField(
@@ -245,12 +247,15 @@ fun VoucherEditDialog(
                         )
                     },
                     label = stringResource(Res.string.notes_optional),
-                    enabled = state.canUserEdit
+                    enabled = state.canEdit
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { onEvent(ReceivePayVoucherContract.Event.SaveChangesClicked) }) {
+            Button(
+                onClick = { onEvent(ReceivePayVoucherContract.Event.SaveChangesClicked) },
+                enabled = state.canEdit
+            ) {
                 Text(stringResource(Res.string.save))
             }
         },
@@ -264,7 +269,11 @@ fun VoucherEditDialog(
 
 @Composable
 fun VoucherItem(
-    voucher: ReceivePayVoucher, canEdit: Boolean, onEdit: () -> Unit, onDelete: () -> Unit
+    voucher: ReceivePayVoucher,
+    canUpdate: Boolean,
+    canDelete: Boolean,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val date = remember(voucher.updatedAt) {
         SimpleDateFormat("yyyy - MM - dd", Locale.getDefault()).format(Date(voucher.updatedAt))
@@ -325,24 +334,23 @@ fun VoucherItem(
                 )
                 Text(text = date, style = MaterialTheme.typography.bodySmall)
             }
-            if (canEdit) {
-                Row(
-                    modifier = Modifier.padding(start = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier.padding(start = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onEdit, modifier = Modifier.size(24.dp), enabled = canUpdate) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
+                IconButton(
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier.size(24.dp),
+                    enabled = canDelete
                 ) {
-                    IconButton(onClick = onEdit, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                    IconButton(
-                        onClick = { showDeleteConfirm = true }, modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                    )
                 }
             }
         }
