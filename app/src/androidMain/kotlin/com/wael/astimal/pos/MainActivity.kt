@@ -18,6 +18,7 @@ import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -44,8 +45,9 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             syncManager.requestSync()
-            userRepository.isUserLoggedIn().let {
-                startDestination.value = if (it) {
+            userRepository.getCurrentUser().let {
+                PermissionManager.initialize(it)
+                startDestination.value = if (it != null) {
                     Result.success(Destination.Main)
                 } else {
                     Result.success(Destination.Auth)

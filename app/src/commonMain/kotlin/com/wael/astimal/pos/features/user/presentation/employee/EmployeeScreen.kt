@@ -256,7 +256,7 @@ private fun PermissionsEditor(
                     onCheckedChange = {
                         onPermissionChange(
                             resource.key,
-                            currentPermissions.copy(canCreate = it)
+                            currentPermissions.copy(canCreate = it, canView = true)
                         )
                     },
                     enabled = enabled
@@ -269,7 +269,7 @@ private fun PermissionsEditor(
                     onCheckedChange = {
                         onPermissionChange(
                             resource.key,
-                            currentPermissions.copy(canUpdate = it)
+                            currentPermissions.copy(canUpdate = it, canView = true)
                         )
                     },
                     enabled = enabled
@@ -282,7 +282,7 @@ private fun PermissionsEditor(
                     onCheckedChange = {
                         onPermissionChange(
                             resource.key,
-                            currentPermissions.copy(canDelete = it)
+                            currentPermissions.copy(canDelete = it, canView = true)
                         )
                     },
                     enabled = enabled
