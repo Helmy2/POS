@@ -62,7 +62,10 @@ fun StoreScreen(
         onCreate = { onEvent(StoreReducer.Event.SaveClicked) },
         onUpdate = { onEvent(StoreReducer.Event.SaveClicked) },
         onNew = { onEvent(StoreReducer.Event.NewStoreClicked) },
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canUpdate = state.canUpdate,
+        canCreate = state.canCreate,
+        canDelete = state.canDelete,
         searchResults = {
             ItemGrid(
                 list = state.stores,
@@ -78,19 +81,19 @@ fun StoreScreen(
                 value = state.inputArName,
                 onValueChange = { onEvent(StoreReducer.Event.ArNameChanged(it)) },
                 label = stringResource(Res.string.ar_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputEnName,
                 onValueChange = { onEvent(StoreReducer.Event.EnNameChanged(it)) },
                 label = stringResource(Res.string.en_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputAddress,
                 onValueChange = { onEvent(StoreReducer.Event.AddressChanged(it)) },
                 label = stringResource(Res.string.address),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.store_type),
@@ -102,7 +105,7 @@ fun StoreScreen(
                         )
                     }))
                 },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
                 initialText = state.inputType?.getStringResourceId()?.let {
                     stringResource(it)
                 } ?: "",
@@ -118,7 +121,7 @@ fun StoreScreen(
                     }))
                 },
                 initialText = state.selectedEmployee?.localizedName.displayName(language),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
                 imeAction = ImeAction.Done,
             )
             ConfirmDeleteDialog(

@@ -1,8 +1,10 @@
 package com.wael.astimal.pos.features.inventory.presentation.unit
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 class UnitReducer : Reducer<UnitReducer.State, UnitReducer.Event, Nothing> {
@@ -21,9 +23,11 @@ class UnitReducer : Reducer<UnitReducer.State, UnitReducer.Event, Nothing> {
         val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedUnit != null
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
-        val canSave: Boolean
-            get() = inputArName.isNotBlank()
+        val enabledFab: Boolean get() = inputArName.isNotBlank()
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.Units)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.Units)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.Units)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

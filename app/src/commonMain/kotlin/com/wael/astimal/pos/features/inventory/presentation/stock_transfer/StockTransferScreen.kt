@@ -103,7 +103,7 @@ fun StockTransferScreen(
         onCreate = { onEvent(StockTransferReducer.Event.SaveClicked) },
         onUpdate = { onEvent(StockTransferReducer.Event.SaveClicked) },
         onNew = { onEvent(StockTransferReducer.Event.NewTransferClicked) },
-        enableFab = state.isFabEnable,
+        enableFab = state.enabledFab,
         canUpdate = state.canUpdate,
         canCreate = state.canCreate,
         canDelete = state.canDelete,
@@ -194,7 +194,7 @@ fun StockTransferScreen(
             DataPicker(
                 selectedDateMillis = state.currentTransferInput.transferDate,
                 onDateSelected = { onEvent(StockTransferReducer.Event.DateChanged(it)) },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.from_store),
@@ -205,7 +205,7 @@ fun StockTransferScreen(
                         state.dropdownData.formStores.getOrNull(it)
                     }))
                 },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.to_store),
@@ -220,7 +220,7 @@ fun StockTransferScreen(
                         })
                     )
                 },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
 
             state.currentTransferInput.items.forEach { item ->
@@ -229,13 +229,13 @@ fun StockTransferScreen(
                     availableProducts = state.dropdownData.products,
                     onEvent = onEvent,
                     onRemoveItem = { onEvent(StockTransferReducer.Event.RemoveItem(item.editorId)) },
-                    enabled = state.canUserEdit,
+                    enabled = state.canEdit,
                 )
             }
 
             AppButton(
                 onClick = { onEvent(StockTransferReducer.Event.AddItem) },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
                 modifier = Modifier
                     .fillMaxWidth()
             ) {

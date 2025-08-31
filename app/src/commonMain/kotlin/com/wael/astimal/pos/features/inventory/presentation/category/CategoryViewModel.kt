@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.category_deleted_successfully
 import pos.app.generated.resources.category_saved_successfully
-import pos.app.generated.resources.error_some_field_are_required
 import pos.app.generated.resources.failed_to_delete_category
 import pos.app.generated.resources.failed_to_load_categories
 import pos.app.generated.resources.failed_to_save_category
@@ -78,10 +77,6 @@ class CategoryViewModel(
     private fun saveCategory() {
         viewModelScope.launch {
             val currentState = state.value
-            if (!currentState.canSave) {
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
-                return@launch
-            }
             setState(CategoryReducer.Event.LoadingStarted)
             viewModelScope.launch {
                 val categoryToSave = Category(

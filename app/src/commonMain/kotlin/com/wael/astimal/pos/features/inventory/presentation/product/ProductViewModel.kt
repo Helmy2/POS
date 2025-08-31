@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
-import pos.app.generated.resources.error_some_field_are_required
 import pos.app.generated.resources.failed_to_delete_product
 import pos.app.generated.resources.failed_to_load_categories
 import pos.app.generated.resources.failed_to_load_products
@@ -126,10 +125,6 @@ class ProductViewModel(
     private fun saveProduct() {
         viewModelScope.launch {
             val currentState = state.value
-            if (!currentState.canSave) {
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
-                return@launch
-            }
             setState(ProductReducer.Event.LoadingStarted)
             viewModelScope.launch {
                 val productToSave = Product(

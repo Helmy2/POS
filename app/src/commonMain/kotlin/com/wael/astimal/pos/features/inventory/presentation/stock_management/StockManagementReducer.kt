@@ -1,11 +1,13 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_management
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 class StockManagementReducer :
@@ -33,8 +35,13 @@ class StockManagementReducer :
             get() = stockAdjustments.filter {
                 it.product.name.contains(query) || it.store.name.contains(query)
             }
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
-        val canSave: Boolean get() = adjustmentStore != null && adjustmentProduct != null && adjustmentQuantityChange.isNotBlank()
+        val isEditing = selectedAdjustment != null
+
+        val enabledFab: Boolean get() = adjustmentStore != null && adjustmentProduct != null && adjustmentQuantityChange.isNotBlank()
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.StockManagement)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.StockManagement)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.StockManagement)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

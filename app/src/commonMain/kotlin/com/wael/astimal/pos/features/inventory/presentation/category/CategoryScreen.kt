@@ -59,7 +59,10 @@ fun CategoryScreen(
         onCreate = { onEvent(CategoryReducer.Event.SaveClicked) },
         onUpdate = { onEvent(CategoryReducer.Event.SaveClicked) },
         onNew = { onEvent(CategoryReducer.Event.NewCategoryClicked) },
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canDelete = state.canDelete,
+        canCreate = state.canCreate,
+        canUpdate = state.canUpdate,
         searchResults = {
             ItemGrid(
                 list = state.categories,
@@ -73,14 +76,14 @@ fun CategoryScreen(
                 value = state.inputEnName,
                 onValueChange = { onEvent(CategoryReducer.Event.EnNameChanged(it)) },
                 label = stringResource(Res.string.en_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputArName,
                 onValueChange = { onEvent(CategoryReducer.Event.ArNameChanged(it)) },
                 label = stringResource(Res.string.ar_name),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             ConfirmDeleteDialog(
                 onConfirm = { onEvent(CategoryReducer.Event.DeleteConfirmed) },

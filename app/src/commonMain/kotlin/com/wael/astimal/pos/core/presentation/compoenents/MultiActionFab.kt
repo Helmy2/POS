@@ -118,9 +118,9 @@ fun MultiActionFab(
             }
         } else {
             FloatingActionButton(
-                onClick = { if (enabled) isExpanded = !isExpanded },
-                containerColor = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                onClick = { if (enabled && actions.any { it.enable }) isExpanded = !isExpanded },
+                containerColor = if (enabled && actions.any { it.enable }) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (enabled && actions.any { it.enable }) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,

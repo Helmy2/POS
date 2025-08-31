@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.error_loading_units
-import pos.app.generated.resources.error_some_field_are_required
 import pos.app.generated.resources.failed_to_delete_unit
 import pos.app.generated.resources.failed_to_save_unit
 import pos.app.generated.resources.unit_deleted_successfully
@@ -78,10 +77,6 @@ class UnitViewModel(
     private fun saveUnit() {
         viewModelScope.launch {
             val currentState = state.value
-            if (!currentState.canSave) {
-                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
-                return@launch
-            }
             setState(UnitReducer.Event.LoadingStarted)
             viewModelScope.launch {
                 val unitToSave =

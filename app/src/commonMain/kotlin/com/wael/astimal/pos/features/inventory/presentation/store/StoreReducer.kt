@@ -1,9 +1,11 @@
 package com.wael.astimal.pos.features.inventory.presentation.store
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.data.local.entity.StoreType
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 class StoreReducer : Reducer<StoreReducer.State, StoreReducer.Event, Nothing> {
@@ -23,9 +25,11 @@ class StoreReducer : Reducer<StoreReducer.State, StoreReducer.Event, Nothing> {
         val employees: List<User> = emptyList(),
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedStore != null
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
-        val canSave: Boolean
-            get() = inputArName.isNotBlank() && selectedEmployee != null
+        val enabledFab: Boolean get() = inputArName.isNotBlank() && selectedEmployee != null
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.Stores)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.Stores)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.Stores)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {

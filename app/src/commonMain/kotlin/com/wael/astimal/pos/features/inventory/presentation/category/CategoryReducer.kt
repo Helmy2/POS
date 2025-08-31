@@ -1,8 +1,10 @@
 package com.wael.astimal.pos.features.inventory.presentation.category
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 object CategoryReducer : Reducer<CategoryReducer.State, CategoryReducer.Event, Nothing> {
@@ -18,8 +20,12 @@ object CategoryReducer : Reducer<CategoryReducer.State, CategoryReducer.Event, N
         val showDeleteDialog: Boolean = false
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedCategory != null
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
-        val canSave: Boolean get() = inputArName.isNotBlank()
+
+        val enabledFab: Boolean get() = inputArName.isNotBlank()
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.Categories)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.Categories)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.Categories)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -61,8 +67,7 @@ object CategoryReducer : Reducer<CategoryReducer.State, CategoryReducer.Event, N
             is Event.UserLoaded -> previousState.copy(currentUser = event.user) to null
 
             is Event.CategoriesLoaded -> previousState.copy(
-                isLoading = false,
-                categories = event.categories
+                isLoading = false, categories = event.categories
             ) to null
 
             is Event.CategorySelected -> previousState.copy(

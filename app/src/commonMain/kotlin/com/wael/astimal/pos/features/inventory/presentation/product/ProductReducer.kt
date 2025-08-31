@@ -1,12 +1,14 @@
 package com.wael.astimal.pos.features.inventory.presentation.product
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.core.util.formate
 import com.wael.astimal.pos.features.inventory.domain.entity.Category
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.ProductUnit
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
 class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothing> {
@@ -44,14 +46,18 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         val initialStore: Store? = null,
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedProduct != null
-        val canUserEdit: Boolean get() = currentUser?.isAdmin == true
-        val canSave: Boolean
+
+        val enabledFab: Boolean
             get() = inputArName.isNotBlank() &&
                     selectedCategory != null &&
                     selectedMainUnit != null &&
                     ((initialStore == null && initialQuantity == "") ||
                             (initialStore != null && (initialQuantity.toDoubleOrNull()
                                 ?: 0.0) > 0.0))
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.Products)
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.Products)
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.Products)
+        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
 
     }
 

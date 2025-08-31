@@ -71,14 +71,17 @@ fun ProductScreen(
         onCreate = { onEvent(ProductReducer.Event.SaveClicked) },
         onUpdate = { onEvent(ProductReducer.Event.SaveClicked) },
         onNew = { onEvent(ProductReducer.Event.NewProductClicked) },
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canDelete = state.canDelete,
+        canCreate = state.canCreate,
+        canUpdate = state.canUpdate,
         searchResults = {
             ItemGrid(
                 list = state.products,
                 onItemClick = { product -> onEvent(ProductReducer.Event.ProductSelected(product)) },
                 label = {
                     Label(
-                        it.product.name.displayName(language) + " : " + if (state.canUserEdit) {
+                        it.product.name.displayName(language) + " : " + if (state.canEdit) {
                             stringResource(Res.string.average_cost_price) + " : " +
                                     it.product.averagePrice.formate()
                         } else {
@@ -91,7 +94,7 @@ fun ProductScreen(
             )
         },
         mainContent = {
-            if (state.selectedProduct?.product?.averagePrice.takeIf { it != 0.0 } != null && state.canUserEdit) {
+            if (state.selectedProduct?.product?.averagePrice.takeIf { it != 0.0 } != null && state.canEdit) {
                 LabeledTextField(
                     value = state.selectedProduct?.product?.averagePrice.formate(),
                     onValueChange = { },
@@ -111,14 +114,14 @@ fun ProductScreen(
                 value = state.inputEnName,
                 onValueChange = { onEvent(ProductReducer.Event.EnNameChanged(it)) },
                 label = stringResource(Res.string.en_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
 
             LabeledTextField(
                 value = state.inputArName,
                 onValueChange = { onEvent(ProductReducer.Event.ArNameChanged(it)) },
                 label = stringResource(Res.string.ar_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputPurchasePrice,
@@ -128,7 +131,7 @@ fun ProductScreen(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
                 ),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputSellingPrice,
@@ -138,7 +141,7 @@ fun ProductScreen(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
                 ),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.category),
@@ -150,7 +153,7 @@ fun ProductScreen(
                         )
                     }))
                 },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
                 initialText = state.selectedCategory?.name.displayName(language)
             )
             ExposedDropdownMenu(
@@ -163,7 +166,7 @@ fun ProductScreen(
                         )
                     }))
                 },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
                 initialText = state.selectedMainUnit?.name.displayName(language)
             )
             ExposedDropdownMenu(
@@ -176,7 +179,7 @@ fun ProductScreen(
                         )
                     }))
                 },
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
                 initialText = state.selectedSubUnit?.name.displayName(language)
             )
             LabeledTextField(
@@ -187,7 +190,7 @@ fun ProductScreen(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done,
                 ),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             if (!state.isEditing) {
                 ExposedDropdownMenu(
@@ -201,7 +204,7 @@ fun ProductScreen(
                             )
                         )
                     },
-                    enabled = state.canUserEdit,
+                    enabled = state.canEdit,
                 )
                 LabeledTextField(
                     value = state.initialQuantity,
@@ -212,7 +215,7 @@ fun ProductScreen(
                     },
                     label = stringResource(Res.string.initial_quantity),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    enabled = state.canUserEdit,
+                    enabled = state.canEdit,
                 )
             }
 

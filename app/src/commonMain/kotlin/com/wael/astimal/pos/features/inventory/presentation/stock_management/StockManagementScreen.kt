@@ -54,7 +54,10 @@ fun StockManagementScreen(
         onCreate = { onEvent(StockManagementReducer.Event.SaveClicked) },
         onUpdate = { onEvent(StockManagementReducer.Event.SaveClicked) },
         onNew = { onEvent(StockManagementReducer.Event.NewStockAdjustmentClicked) },
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canDelete = state.canDelete,
+        canCreate = state.canCreate,
+        canUpdate = state.canUpdate,
         searchResults = {
             ItemGrid(
                 list = state.filterStockAdjustments,
@@ -88,7 +91,7 @@ fun StockManagementScreen(
                         )
                     )
                 },
-                enabled = state.canUserEdit,
+            enabled = state.canEdit,
             )
         ExposedDropdownMenu(
                 label = stringResource(Res.string.product),
@@ -103,7 +106,7 @@ fun StockManagementScreen(
                         )
                     )
                 },
-                enabled = state.canUserEdit,
+            enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.adjustmentQuantityChange,
@@ -115,7 +118,7 @@ fun StockManagementScreen(
                     )
                 },
                 label = stringResource(Res.string.quantity_change_by),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
         ExposedDropdownMenu(
                 label = stringResource(Res.string.reason),
@@ -129,7 +132,7 @@ fun StockManagementScreen(
                         )
                     )
                 },
-                enabled = state.canUserEdit,
+            enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.adjustmentNotes,
@@ -141,7 +144,7 @@ fun StockManagementScreen(
                     )
                 },
                 label = stringResource(Res.string.notes),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
 
             ConfirmDeleteDialog(

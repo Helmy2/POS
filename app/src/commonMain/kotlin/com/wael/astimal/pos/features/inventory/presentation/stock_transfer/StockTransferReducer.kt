@@ -1,12 +1,14 @@
 package com.wael.astimal.pos.features.inventory.presentation.stock_transfer
 
 import com.wael.astimal.pos.core.base.mvi.Reducer
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.SHOULD_SHOW_SHEATH_ON_START
 import com.wael.astimal.pos.features.inventory.domain.entity.Product
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferStatus
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 import java.util.UUID
 
@@ -49,38 +51,22 @@ class StockTransferReducer() :
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedTransfer != null
 
-        val canUserEdit: Boolean
-            get() = selectedTransfer?.status != StockTransferStatus.APPROVED &&
-                    selectedTransfer?.status != StockTransferStatus.REJECTED &&
-                    (selectedTransfer?.initiatingUser?.id == currentUser?.id || selectedTransfer == null)
-
         val canUpdateStatus: Boolean
-            get() = selectedTransfer?.status ==
-                    StockTransferStatus.PENDING && selectedTransfer.receivingUser == currentUser
+            get() = selectedTransfer?.status == StockTransferStatus.PENDING && selectedTransfer.receivingUser == currentUser
 
         val havePendingTransfer: Boolean
             get() = transfers.any {
-                it.status == StockTransferStatus.PENDING &&
-                        it.receivingUser == currentUser
+                it.status == StockTransferStatus.PENDING && it.receivingUser == currentUser
             }
 
-        val isFabEnable: Boolean
-            get() = currentTransferInput.fromStore != null &&
-                    currentTransferInput.toStore != null &&
-                    currentTransferInput.items.isNotEmpty() &&
-                    currentTransferInput.items.all { it.product != null }
-
-        val canCreate: Boolean
-            get() = isFabEnable
-
+        val enabledFab: Boolean
+            get() = currentTransferInput.fromStore != null && currentTransferInput.toStore != null && currentTransferInput.items.isNotEmpty() && currentTransferInput.items.all { it.product != null }
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.StockTransfer())
         val canUpdate: Boolean
-            get() = selectedTransfer?.initiatingUser?.id == currentUser?.id &&
-                    selectedTransfer?.status == StockTransferStatus.PENDING &&
-                    isFabEnable
-
+            get() = PermissionManager.canUpdate(Destination.StockTransfer()) && selectedTransfer?.initiatingUser?.id == currentUser?.id && selectedTransfer?.status == StockTransferStatus.PENDING && enabledFab
         val canDelete: Boolean
-            get() = selectedTransfer?.initiatingUser?.id == currentUser?.id &&
-                    selectedTransfer?.status != StockTransferStatus.APPROVED
+            get() = PermissionManager.canDelete(Destination.StockTransfer()) && selectedTransfer?.initiatingUser?.id == currentUser?.id && selectedTransfer?.status != StockTransferStatus.APPROVED
+        val canEdit: Boolean get() = (canCreate && !isEditing) || (canUpdate && isEditing) && selectedTransfer?.status != StockTransferStatus.APPROVED && selectedTransfer?.status != StockTransferStatus.REJECTED && (selectedTransfer?.initiatingUser?.id == currentUser?.id || selectedTransfer == null)
     }
 
     sealed interface Event : Reducer.ViewEvent {
@@ -120,8 +106,7 @@ class StockTransferReducer() :
     }
 
     override fun reduce(
-        previousState: State,
-        event: Event
+        previousState: State, event: Event
     ): Pair<State, Nothing?> {
         return when (event) {
             is Event.ItemProductChanged -> {
@@ -192,31 +177,27 @@ class StockTransferReducer() :
 
             // ... other reducer cases remain the same
 
-            is Event.LoadingStarted ->
-                previousState.copy(isLoading = true) to null
+            is Event.LoadingStarted -> previousState.copy(isLoading = true) to null
 
-            is Event.LoadingFinished ->
-                previousState.copy(isLoading = false) to null
+            is Event.LoadingFinished -> previousState.copy(isLoading = false) to null
 
-            is Event.SearchQueryChanged ->
-                previousState.copy(searchQuery = event.query) to null
+            is Event.SearchQueryChanged -> previousState.copy(searchQuery = event.query) to null
 
-            is Event.SearchActiveChanged ->
-                previousState.copy(isSearchActive = event.isActive) to null
+            is Event.SearchActiveChanged -> previousState.copy(isSearchActive = event.isActive) to null
 
-            is Event.UserLoaded ->
-                previousState.copy(
-                    currentUser = event.user,
-                    currentTransferInput = previousState.currentTransferInput.copy(
-                        selectedEmployee = event.user,
-                    )
-                ) to null
+            is Event.UserLoaded -> previousState.copy(
+                currentUser = event.user,
+                currentTransferInput = previousState.currentTransferInput.copy(
+                    selectedEmployee = event.user,
+                )
+            ) to null
 
-            is Event.DropdownDataLoaded ->
-                previousState.copy(dropdownData = event.data) to null
+            is Event.DropdownDataLoaded -> previousState.copy(dropdownData = event.data) to null
 
-            is Event.TransfersLoaded ->
-                previousState.copy(isLoading = false, transfers = event.transfers) to null
+            is Event.TransfersLoaded -> previousState.copy(
+                isLoading = false,
+                transfers = event.transfers
+            ) to null
 
             is Event.TransferSelected -> {
                 val editableItems = event.transfer.items.map {
@@ -228,60 +209,50 @@ class StockTransferReducer() :
                     )
                 }
                 previousState.copy(
-                    selectedTransfer = event.transfer,
-                    currentTransferInput = EditableStockTransfer(
+                    selectedTransfer = event.transfer, currentTransferInput = EditableStockTransfer(
                         fromStore = event.transfer.fromStore,
                         toStore = event.transfer.toStore,
                         selectedEmployee = event.transfer.initiatingUser,
                         transferDate = event.transfer.createdAt,
                         items = editableItems
-                    ),
-                    isSearchActive = false
+                    ), isSearchActive = false
                 ) to null
             }
 
-            is Event.NewTransferClicked,
-            is Event.SaveSucceeded,
-            is Event.DeleteSucceeded,
-            is Event.ApprovedSucceeded ->
-                previousState.copy(
-                    isLoading = false,
-                    selectedTransfer = null,
-                    currentTransferInput = EditableStockTransfer(
-                        transferDate = Clock.now(),
-                        selectedEmployee = previousState.currentUser,
-                        fromStore = if (previousState.currentUser?.isAdmin == false) previousState.currentTransferInput.fromStore else null
-                    )
-                ) to null
+            is Event.NewTransferClicked, is Event.SaveSucceeded, is Event.DeleteSucceeded, is Event.ApprovedSucceeded -> previousState.copy(
+                isLoading = false,
+                selectedTransfer = null,
+                currentTransferInput = EditableStockTransfer(
+                    transferDate = Clock.now(),
+                    selectedEmployee = previousState.currentUser,
+                    fromStore = if (previousState.currentUser?.isAdmin == false) previousState.currentTransferInput.fromStore else null
+                )
+            ) to null
 
             // Form input updates
-            is Event.FromStoreChanged ->
-                previousState.copy(
-                    currentTransferInput = previousState.currentTransferInput.copy(
-                        fromStore = event.store
-                    )
-                ) to null
+            is Event.FromStoreChanged -> previousState.copy(
+                currentTransferInput = previousState.currentTransferInput.copy(
+                    fromStore = event.store
+                )
+            ) to null
 
-            is Event.ToStoreChanged ->
-                previousState.copy(
-                    currentTransferInput = previousState.currentTransferInput.copy(
-                        toStore = event.store
-                    )
-                ) to null
+            is Event.ToStoreChanged -> previousState.copy(
+                currentTransferInput = previousState.currentTransferInput.copy(
+                    toStore = event.store
+                )
+            ) to null
 
-            is Event.EmployeeChanged ->
-                previousState.copy(
-                    currentTransferInput = previousState.currentTransferInput.copy(
-                        selectedEmployee = event.employee
-                    )
-                ) to null
+            is Event.EmployeeChanged -> previousState.copy(
+                currentTransferInput = previousState.currentTransferInput.copy(
+                    selectedEmployee = event.employee
+                )
+            ) to null
 
-            is Event.DateChanged ->
-                previousState.copy(
-                    currentTransferInput = previousState.currentTransferInput.copy(
-                        transferDate = event.date
-                    )
-                ) to null
+            is Event.DateChanged -> previousState.copy(
+                currentTransferInput = previousState.currentTransferInput.copy(
+                    transferDate = event.date
+                )
+            ) to null
 
             is Event.AddItem -> {
                 val newItems =
@@ -314,11 +285,7 @@ class StockTransferReducer() :
                 ) to null
             }
 
-            is Event.SaveClicked,
-            is Event.DeleteClicked,
-            is Event.ApprovedClicked,
-            is Event.RejectedClicked,
-            is Event.ApprovedFauild -> previousState to null
+            is Event.SaveClicked, is Event.DeleteClicked, is Event.ApprovedClicked, is Event.RejectedClicked, is Event.ApprovedFauild -> previousState to null
         }
     }
 }

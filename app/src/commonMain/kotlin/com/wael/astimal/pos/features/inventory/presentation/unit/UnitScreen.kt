@@ -56,7 +56,10 @@ fun UnitScreen(
         onCreate = { onEvent(UnitReducer.Event.SaveClicked) },
         onUpdate = { onEvent(UnitReducer.Event.SaveClicked) },
         onNew = { onEvent(UnitReducer.Event.NewUnitClicked) },
-        enableFab = state.canSave,
+        enableFab = state.enabledFab,
+        canDelete = state.canDelete,
+        canUpdate = state.canUpdate,
+        canCreate = state.canCreate,
         searchResults = {
             ItemGrid(
                 list = state.units,
@@ -70,26 +73,26 @@ fun UnitScreen(
                 value = state.inputEnName,
                 onValueChange = { onEvent(UnitReducer.Event.EnNameChanged(it)) },
                 label = stringResource(Res.string.en_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputEnAbbreviation,
                 onValueChange = { onEvent(UnitReducer.Event.EnAbbreviationChanged(it)) },
                 label = stringResource(Res.string.en_abbreviation),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputArName,
                 onValueChange = { onEvent(UnitReducer.Event.ArNameChanged(it)) },
                 label = stringResource(Res.string.ar_name),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             LabeledTextField(
                 value = state.inputArAbbreviation,
                 onValueChange = { onEvent(UnitReducer.Event.ArAbbreviationChanged(it)) },
                 label = stringResource(Res.string.ar_abbreviation),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                enabled = state.canUserEdit,
+                enabled = state.canEdit,
             )
             ConfirmDeleteDialog(
                 onConfirm = { onEvent(UnitReducer.Event.DeleteConfirmed) },
