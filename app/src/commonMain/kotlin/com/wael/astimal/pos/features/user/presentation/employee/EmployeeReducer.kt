@@ -7,8 +7,15 @@ import com.wael.astimal.pos.features.user.domain.entity.PermissionDetails
 import com.wael.astimal.pos.features.user.domain.entity.User
 import org.jetbrains.compose.resources.StringResource
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.categories
+import pos.app.generated.resources.employee_account
 import pos.app.generated.resources.products
+import pos.app.generated.resources.purchase
+import pos.app.generated.resources.purchase_return
+import pos.app.generated.resources.receive_pay_voucher
+import pos.app.generated.resources.sales
+import pos.app.generated.resources.sales_return
 import pos.app.generated.resources.stock_management
 import pos.app.generated.resources.stock_transfer
 import pos.app.generated.resources.stores
@@ -27,6 +34,13 @@ class EmployeeReducer :
             Item(Destination.Products.toString(), Res.string.products),
             Item(Destination.StockManagement.toString(), Res.string.stock_management),
             Item(Destination.StockTransfer().toString(), Res.string.stock_transfer),
+            Item(Destination.EmployeeAccounts.toString(), Res.string.employee_account),
+            Item(Destination.BusinessPartners().toString(), Res.string.business_partner),
+            Item(Destination.Vouchers.toString(), Res.string.receive_pay_voucher),
+            Item(Destination.SalesOrders(null).toString(), Res.string.sales),
+            Item(Destination.PurchaseOrders(null).toString(), Res.string.purchase),
+            Item(Destination.SalesReturns(null).toString(), Res.string.sales_return),
+            Item(Destination.PurchaseReturns(null).toString(), Res.string.purchase_return),
         )
     }
 
