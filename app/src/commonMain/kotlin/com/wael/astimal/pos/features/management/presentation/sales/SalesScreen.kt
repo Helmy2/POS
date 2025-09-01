@@ -155,7 +155,6 @@ fun SalesScreen(
                         )
                     )
                 },
-                enabled = state.currentUser?.isAdmin == true,
             )
 
             EditableOrderItems(

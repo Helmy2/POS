@@ -171,7 +171,12 @@ class PurchaseViewModel(
                 productRepository.getProducts(""),
                 storeRepository.getStoresForUser(user)
             ) { clients, products, stores ->
-                PurchaseContract.DropdownData(clients, products, stores)
+                PurchaseContract.DropdownData(
+                    clients, products,
+                    stores.filter {
+                        it.employee.id == user.id
+                    },
+                )
             }.collect {
                 handleEvent(PurchaseContract.Event.DropdownDataLoaded(it))
             }

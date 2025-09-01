@@ -129,7 +129,6 @@ fun SalesReturnScreen(
                         )
                     }))
                 },
-                enabled = state.currentUser?.isAdmin == true,
             )
             EditableOrderItems(
                 totalAmount = orderInput.totalAmount,
