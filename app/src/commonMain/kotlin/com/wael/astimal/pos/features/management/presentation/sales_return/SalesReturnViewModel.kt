@@ -171,7 +171,12 @@ class SalesReturnViewModel(
                 productRepository.getProducts(""),
                 storeRepository.getStoresForUser(user)
             ) { clients, products, stores ->
-                SalesReturnContract.DropdownData(clients, products, stores)
+                SalesReturnContract.DropdownData(
+                    clients, products,
+                    stores.filter {
+                        it.employee.id == user.id
+                    },
+                )
             }.collect {
                 handleEvent(SalesReturnContract.Event.DropdownDataLoaded(it))
             }

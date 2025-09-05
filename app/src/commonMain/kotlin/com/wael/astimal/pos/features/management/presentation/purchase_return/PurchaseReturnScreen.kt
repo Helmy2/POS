@@ -118,7 +118,6 @@ fun PurchaseReturnScreen(
                         )
                     }))
                 },
-                enabled = state.canEdit
             )
             ExposedDropdownMenu(
                 label = stringResource(Res.string.stores),
