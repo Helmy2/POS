@@ -28,6 +28,7 @@ import pos.app.generated.resources.payment_type
 
 @Composable
 fun EditableOrderItems(
+    isNew: Boolean,
     totalAmount: Double,
     amountRemaining: Double,
     partnerBalance: Double,
@@ -103,5 +104,6 @@ fun EditableOrderItems(
         amountRemaining = amountRemaining,
         partnerBalance = partnerBalance,
         partnerBalanceAfterThisOrder = partnerBalanceAfterThisOrder,
+        isNew = isNew
     )
 }

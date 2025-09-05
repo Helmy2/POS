@@ -130,6 +130,20 @@ class PurchaseReturnViewModel(
 
             is PurchaseReturnContract.Event.OrderSelected -> {
                 setState(event)
+                viewModelScope.launch(Dispatchers.IO) {
+                    event.order.partner.let {
+                        val balance = partnerRepository.getPartnerBalance(it).getOrDefault(0.0)
+                        setState(PurchaseReturnContract.Event.PartnerBalanceChanged(balance))
+                    }
+
+                    event.order.store.let {
+                        state.value.currentOrderInput.items.forEach { item ->
+                            item.product?.let { product ->
+                                observeStockForItem(item.tempEditorId, product.id)
+                            }
+                        }
+                    }
+                }
                 state.value.currentOrderInput.items.forEach { item ->
                     item.product?.let { product ->
                         observeStockForItem(item.tempEditorId, product.id)

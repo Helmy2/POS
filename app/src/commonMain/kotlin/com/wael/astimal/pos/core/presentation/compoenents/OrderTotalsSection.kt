@@ -41,7 +41,8 @@ fun OrderTotalsSection(
     amountPaid: Double,
     amountRemaining: Double,
     partnerBalance: Double,
-    partnerBalanceAfterThisOrder: Double
+    partnerBalanceAfterThisOrder: Double,
+    isNew: Boolean
 ) {
     Card(
         modifier = Modifier.width(320.dp),
@@ -84,6 +85,7 @@ fun OrderTotalsSection(
             }
         }
     }
+    if (isNew)
     Card(
         modifier = Modifier.padding(8.dp).width(320.dp),
     ) {

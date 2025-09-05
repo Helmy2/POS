@@ -133,6 +133,7 @@ fun PurchaseReturnScreen(
                 enabled = state.canEdit
             )
             EditableOrderItems(
+                isNew = !state.isEditing,
                 totalAmount = orderInput.totalAmount,
                 amountRemaining = orderInput.amountRemaining,
                 partnerBalance = orderInput.partnerBalance,

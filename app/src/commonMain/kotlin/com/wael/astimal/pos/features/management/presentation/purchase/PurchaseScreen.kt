@@ -1,11 +1,18 @@
 package com.wael.astimal.pos.features.management.presentation.purchase
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +34,7 @@ import pos.app.generated.resources.add_partner
 import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.order_to_with_args
 import pos.app.generated.resources.stores
+import pos.app.generated.resources.supplier
 
 @Composable
 fun PurchaseRoute(
@@ -156,6 +164,7 @@ fun PurchaseScreen(
                 enabled = state.currentUser?.isAdmin == true,
             )
             EditableOrderItems(
+                isNew = !state.isEditing,
                 totalAmount = orderInput.totalAmount,
                 amountRemaining = orderInput.amountRemaining,
                 partnerBalance = orderInput.partnerBalance,

@@ -163,6 +163,7 @@ fun SalesScreen(
             )
 
             EditableOrderItems(
+                isNew = !state.isEditing,
                 totalAmount = orderInput.totalAmount,
                 amountRemaining = orderInput.amountRemaining,
                 partnerBalance = orderInput.partnerBalance,
