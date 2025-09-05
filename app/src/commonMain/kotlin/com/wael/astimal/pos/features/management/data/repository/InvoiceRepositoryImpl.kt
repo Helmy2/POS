@@ -28,6 +28,7 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -48,7 +49,17 @@ class InvoiceRepositoryImpl(
 ) : InvoiceRepository {
 
     override fun getInvoices(): Flow<List<Invoice>> {
-        return invoiceDao.getAllInvoicesWithItems().map { items -> items.map { it.toDomain() } }
+        return flow {
+            val currentUser = userRepository.getCurrentUser()
+            invoiceDao.getAllInvoicesWithItems()
+                .map { items ->
+                    items.filter {
+                        it.employee.id == currentUser?.id || currentUser?.isAdmin == true
+                    }.map { it.toDomain() }
+                }.collect {
+                    emit(it)
+                }
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
