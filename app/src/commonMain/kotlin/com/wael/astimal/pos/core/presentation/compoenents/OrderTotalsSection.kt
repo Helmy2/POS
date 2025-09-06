@@ -85,9 +85,8 @@ fun OrderTotalsSection(
             }
         }
     }
-    if (isNew)
     Card(
-        modifier = Modifier.padding(8.dp).width(320.dp),
+        modifier = Modifier.width(320.dp),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -114,25 +113,27 @@ fun OrderTotalsSection(
             }
             HorizontalDivider()
 
-            Row(Modifier.fillMaxWidth()) {
-                Text(
-                    stringResource(Res.string.partner_current_balance),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    if (partnerBalanceAfterThisOrder > 0.0) stringResource(Res.string.owns_you)
-                    else if (partnerBalanceAfterThisOrder < 0.0) stringResource(Res.string.you_owns)
-                    else stringResource(Res.string.balance_summary_settled),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.weight(.5f))
-                Text(
-                    "%.0f".format(abs(partnerBalanceAfterThisOrder)),
-                    style = MaterialTheme.typography.titleMedium
-                )
+            if (isNew) {
+                Row(Modifier.fillMaxWidth()) {
+                    Text(
+                        stringResource(Res.string.partner_current_balance),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        if (partnerBalanceAfterThisOrder > 0.0) stringResource(Res.string.owns_you)
+                        else if (partnerBalanceAfterThisOrder < 0.0) stringResource(Res.string.you_owns)
+                        else stringResource(Res.string.balance_summary_settled),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.weight(.5f))
+                    Text(
+                        "%.0f".format(abs(partnerBalanceAfterThisOrder)),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                StatementFooter(partnerBalanceAfterThisOrder)
             }
-            StatementFooter(partnerBalanceAfterThisOrder)
         }
     }
 }
