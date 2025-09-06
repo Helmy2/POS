@@ -122,10 +122,6 @@ fun MainScaffold(
         }
     }
 
-    LaunchedEffect(Unit) {
-        initializeNotifications()
-    }
-
     val navigationController: NavigationController = koinInject()
     ObserveEffect(navigationController.events, navController) { event ->
         when (event) {
@@ -222,7 +218,6 @@ fun initializeNotifications() {
         object : Listener {
             override fun onNewToken(token: String) {
                 super.onNewToken(token)
-                println("New FCM token received: $token")
                 scope.launch {
                     AppKoinComponent.notificationRepository.saveFcmToken(token)
                         .onFailure {

@@ -12,11 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
+import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.permission.permissionUtil
 import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
+import com.wael.astimal.pos.core.presentation.navigation.initializeNotifications
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
 import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -34,6 +37,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        NotifierManager.onCreateOrOnNewIntent(intent)
         val splashScreen = installSplashScreen()
         val startDestination: MutableStateFlow<Result<Destination>?> = MutableStateFlow(null)
         val userRepository: UserRepository by inject()
@@ -58,6 +62,8 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition {
             startDestination.value == null
         }
+
+        initializeNotifications()
 
         setContent {
             POSTheme {

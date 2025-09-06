@@ -18,6 +18,7 @@ import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.MainScaffold
+import com.wael.astimal.pos.core.presentation.navigation.initializeNotifications
 import com.wael.astimal.pos.core.presentation.theme.POSTheme
 import com.wael.astimal.pos.di.initKoin
 import com.wael.astimal.pos.features.user.domain.PermissionManager
@@ -36,6 +37,7 @@ fun main() {
     val syncService: SyncService by inject(SyncService::class.java)
     val syncManger: SyncManager by inject(SyncManager::class.java)
     syncService.startRealtimeListener()
+    initializeNotifications()
 
     NotifierManager.initialize(
         NotificationPlatformConfiguration.Desktop(
