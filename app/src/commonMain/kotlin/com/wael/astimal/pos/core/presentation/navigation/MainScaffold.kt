@@ -11,6 +11,7 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -38,6 +39,7 @@ import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.getString
 import com.wael.astimal.pos.core.data.SyncManager
+import com.wael.astimal.pos.core.data.SyncService
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.domain.navigation.isTopLevelRoute
 import com.wael.astimal.pos.core.util.Connectivity
@@ -78,6 +80,7 @@ fun MainScaffold(
 
 
     val syncManager: SyncManager = koinInject()
+    val syncService: SyncService = koinInject()
     val connectivity: Connectivity = koinInject()
     val state by connectivity.statusUpdates.collectAsStateWithLifecycle(
         Connectivity.Status.Connected(
@@ -148,6 +151,7 @@ fun MainScaffold(
 
 
     val isOnTopLevelRoute = isTopLevelRoute(currentDestination)
+    var isRefreshing by remember { mutableStateOf(false) }
 
     NavigationSuiteScaffold(
         layoutType = if (isOnTopLevelRoute) {
@@ -172,15 +176,27 @@ fun MainScaffold(
             )
         },
     ) {
+
         Scaffold(
             contentWindowInsets = WindowInsets(0.dp),
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { it ->
-            AppNavHost(
-                startDestination = startDestination,
-                navController = navController,
-                modifier = Modifier.padding(it)
-            )
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    scope.launch {
+                        isRefreshing = true
+                        syncService.performSync()
+                        isRefreshing = false
+                    }
+                }
+            ) {
+                AppNavHost(
+                    startDestination = startDestination,
+                    navController = navController,
+                    modifier = Modifier.padding(it)
+                )
+            }
         }
     }
 }

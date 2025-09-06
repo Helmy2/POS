@@ -144,9 +144,8 @@ class SyncServiceImpl(
         }
     }
 
-    override suspend fun performFullSync(): Result<Unit> {
+    override suspend fun performSync(): Result<Unit> {
         return try {
-            syncManager.restSyncDate()
             syncAllDataWithServer()
             pullDeletedRecords()
             Result.success(Unit)
@@ -373,7 +372,7 @@ class SyncServiceImpl(
 }
 
 interface SyncService {
-    suspend fun performFullSync(): Result<Unit>
+    suspend fun performSync(): Result<Unit>
     fun startRealtimeListener()
     fun stopRealtimeListener()
 }
