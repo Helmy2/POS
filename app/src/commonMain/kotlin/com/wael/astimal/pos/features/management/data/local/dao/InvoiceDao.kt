@@ -27,7 +27,7 @@ interface InvoiceDao {
         invoice: InvoiceEntity, items: List<InvoiceItemEntity>
     ) {
         insertInvoice(invoice)
-        val itemsWithInvoiceId = items.map { it.copy(supabaseId = invoice.supabaseId) }
+        val itemsWithInvoiceId = items.map { it.copy(invoiceId = invoice.supabaseId) }
         insertInvoiceItems(itemsWithInvoiceId)
     }
 

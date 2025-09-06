@@ -47,4 +47,7 @@ interface StockAdjustmentDao {
     @Query("SELECT * FROM stock_adjustments WHERE invoiceId = :invoiceId")
     suspend fun getAdjustmentsByInvoiceId(invoiceId: String): List<StockAdjustmentEntity>
 
+    @Query("DELETE FROM stock_adjustments WHERE invoiceId = :id")
+    suspend fun deleteAdjustmentsByInvoiceId(id: String)
+
 }

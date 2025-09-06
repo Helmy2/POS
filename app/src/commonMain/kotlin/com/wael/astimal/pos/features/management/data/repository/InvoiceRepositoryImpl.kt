@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.management.data.repository
 
 import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.Clock
+import com.wael.astimal.pos.core.util.Connectivity
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.features.dashboard.domain.entity.DailySale
 import com.wael.astimal.pos.features.inventory.data.local.dao.ProductDao
@@ -28,6 +29,7 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -45,7 +47,8 @@ class InvoiceRepositoryImpl(
     private val employeeFinancesDao: EmployeeFinancesDao,
     private val userRepository: UserRepository,
     private val supabaseClient: SupabaseClient,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val connectivity: Connectivity
 ) : InvoiceRepository {
 
     override fun getInvoices(): Flow<List<Invoice>> {
@@ -66,12 +69,15 @@ class InvoiceRepositoryImpl(
     override suspend fun addSalesOrder(invoice: Invoice): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val newInvoice = invoice.copy(id = Uuid.random().toString())
+                val invoiceId = Uuid.random().toString()
+                val newInvoice = invoice.copy(
+                    id = invoiceId,
+                    items = invoice.items.map { it.copy(id = Uuid.random().toString()) })
                 val invoiceWithItems = newInvoice.toEntity()
 
                 invoiceDao.insertInvoiceWithItems(
                     invoiceWithItems.first,
-                    invoiceWithItems.second.map { it },
+                    invoiceWithItems.second,
                 )
 
                 updateProductsAveragePrice(invoice)
@@ -207,17 +213,53 @@ class InvoiceRepositoryImpl(
         employeeFinancesDao.insertOrUpdate(transaction3.toEntity())
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun updateOrder(invoice: Invoice): Result<Unit> {
-        return runCatching {
-            deleteSalesOrder(invoice.id)
-            addSalesOrder(invoice)
-            syncManager.requestSync()
+        return withContext(Dispatchers.IO) {
+            try {
+                if (!connectivity.statusUpdates.first().isConnected) throw Exception("No Internet")
+                deleteSalesOrder(invoice.id)
+
+                // 3. Delete old associated data
+                // Assuming DAOs have methods to delete by invoiceId
+                invoiceDao.deleteInvoiceItemsByInvoiceId(invoice.id)
+                stockAdjustmentDao.deleteAdjustmentsByInvoiceId(invoice.id)
+                partnerTransactionDao.deleteTransactionsByInvoiceId(invoice.id)
+                employeeFinancesDao.deleteTransactionsByInvoiceId(invoice.id)
+
+                // 4. Prepare updated invoice data
+                val updatedInvoice =
+                    invoice.copy(updatedAt = Clock.now()) // Keep original createdAt and Id
+                val (updatedInvoiceEntity, updatedItemEntities) = updatedInvoice.toEntity()
+
+
+                // 5. Update main invoice record & insert new items
+                invoiceDao.insertInvoiceWithItems(
+                    updatedInvoiceEntity,
+                    updatedItemEntities.map { it.copy(supabaseId = Uuid.random().toString()) },
+                )
+
+                // 6. Apply new financial calculations and create new associated data
+                updateProductsAveragePrice(updatedInvoice)
+                createAdjustStock(updatedInvoice)
+                adjustPartnerTransactions(updatedInvoice)
+                makeCommission(updatedInvoice)
+
+                // 7. Request sync
+                syncManager.requestSync()
+                Result.success(Unit)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Result.failure(e)
+            }
         }
     }
 
     override suspend fun deleteSalesOrder(orderId: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
+                if (!connectivity.statusUpdates.first().isConnected) throw Exception("No Internet")
+
                 val invoiceToDelete = invoiceDao.getInvoiceById(orderId).toDomain()
                 revertProductsAveragePrice(invoiceToDelete)
 
