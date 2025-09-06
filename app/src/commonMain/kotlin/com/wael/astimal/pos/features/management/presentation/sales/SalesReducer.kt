@@ -51,7 +51,6 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                         paymentType = event.order.paymentMethod,
                         date = event.order.createdAt,
                         items = event.order.items.map {
-                            println("item: $it")
                             EditableItem(
                                 product = it.product,
                                 mainUnitQuantity = it.quantity.toString(),

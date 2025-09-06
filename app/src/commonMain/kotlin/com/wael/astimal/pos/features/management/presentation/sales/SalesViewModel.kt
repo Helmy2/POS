@@ -228,9 +228,21 @@ class SalesViewModel(
 
             currentState.currentOrderInput.items.forEach { item ->
                 val validStock =
-                    if (item.isSelectedUnitIsMax)
-                        item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) > 0
-                    else item.currentStock - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
+                    if (!currentState.isEditing)
+                        if (item.isSelectedUnitIsMax)
+                            item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) > 0
+                        else item.currentStock - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
+                    else {
+                        val oldStock =
+                            currentState.selectedOrder?.items?.find { it.product.id == item.product?.id }?.quantity
+                                ?: 0.0
+
+                        if (item.isSelectedUnitIsMax)
+                            item.currentStock + oldStock - (item.mainUnitQuantity.toDoubleOrNull()
+                                ?: 0.0) >= 0
+                        else item.currentStock + oldStock * (item.product?.subUnitsPerMainUnit
+                            ?: 1.0) - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
+                    }
 
                 if (!validStock) {
                     snackbarController.sendEvent(
