@@ -68,6 +68,7 @@ fun EmployeeScreen(
     val language = LocalAppLocale.current
 
     SearchScreen(
+        loading = state.isLoading,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = state.isNewEmployee,

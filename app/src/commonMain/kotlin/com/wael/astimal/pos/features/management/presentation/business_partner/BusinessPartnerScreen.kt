@@ -108,6 +108,7 @@ fun BusinessPartnerScreen(
     onEvent: (BusinessPartnerContract.Event) -> Unit,
 ) {
     Screen(
+        loading = state.isLoading,
         topBar = {
             SearchBarWithBackButton(
                 query = state.searchQuery,

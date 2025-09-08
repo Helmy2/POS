@@ -45,6 +45,7 @@ fun UnitScreen(
     SearchScreen(
         modifier = modifier,
         query = state.searchQuery,
+        loading = state.isLoading,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
         onQueryChange = { onEvent(UnitReducer.Event.SearchQueryChanged(it)) },

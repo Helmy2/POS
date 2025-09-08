@@ -75,6 +75,7 @@ fun PurchaseScreen(
 
     SearchScreen(
         query = state.searchQuery,
+        loading = state.isLoading,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
         enableFab = state.enabledFab,

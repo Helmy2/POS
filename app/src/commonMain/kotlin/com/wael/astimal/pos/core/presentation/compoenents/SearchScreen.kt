@@ -48,6 +48,7 @@ import pos.app.generated.resources.update_at
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
+    loading: Boolean,
     query: String,
     isSearchActive: Boolean,
     isNew: Boolean,
@@ -111,6 +112,7 @@ fun SearchScreen(
     }
 
     Screen(
+        loading = loading,
         topBar = {
             DockedSearchBar(
                 modifier = modifier
@@ -156,7 +158,7 @@ fun SearchScreen(
         floatingActionButton = {
             MultiActionFab(
                 actions = fabActions,
-                enabled = enableFab,
+                enabled = enableFab && !loading,
                 modifier = Modifier.imePadding()
             )
         },

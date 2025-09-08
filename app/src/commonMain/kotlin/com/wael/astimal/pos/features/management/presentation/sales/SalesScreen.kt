@@ -74,6 +74,7 @@ fun SalesScreen(
     val orderInput = state.currentOrderInput
 
     SearchScreen(
+        loading = state.isLoading,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,

@@ -44,6 +44,7 @@ fun StockManagementScreen(
     val language = LocalAppLocale.current
     SearchScreen(
         query = state.query,
+        loading = state.isLoading,
         isSearchActive = state.isSearchActive,
         onQueryChange = { onEvent(StockManagementReducer.Event.SearchQueryChanged(it)) },
         onSearch = { onEvent(StockManagementReducer.Event.SearchQueryChanged(it)) },

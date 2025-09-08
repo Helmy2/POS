@@ -94,6 +94,7 @@ fun ReceivePayVoucherScreen(
     }
 
     Screen(
+        loading = state.isLoading,
         topBar = {
             SearchBarWithBackButton(
                 query = state.searchQuery,

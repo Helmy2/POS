@@ -83,7 +83,7 @@ fun EmployeeAccountScreen(
         EditTransactionDialog(state = state, onEvent = onEvent)
     }
 
-    Screen(topBar = {
+    Screen(loading = state.isLoading, topBar = {
         SearchBarWithBackButton(
             query = state.searchQuery,
             onBack = { onEvent(EmployeeAccountContract.Event.NavigateBack) },

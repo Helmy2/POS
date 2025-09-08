@@ -91,6 +91,7 @@ fun StockTransferScreen(
 
     SearchScreen(
         modifier = modifier,
+        loading = state.isLoading,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,
         isNew = !state.isEditing,
