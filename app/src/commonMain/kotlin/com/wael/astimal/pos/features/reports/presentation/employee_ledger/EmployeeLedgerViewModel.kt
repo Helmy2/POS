@@ -2,16 +2,22 @@ package com.wael.astimal.pos.features.reports.presentation.employee_ledger
 
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.NavigationController
+import com.wael.astimal.pos.core.base.SnackbarEvent
+import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
 import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.presentation.navigation.AppKoinComponent.snackbarController
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeLedgerEntry
 import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.no_permission
 
 class EmployeeLedgerViewModel(
     private val userRepository: UserRepository,
@@ -19,8 +25,7 @@ class EmployeeLedgerViewModel(
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
 ) : BaseViewModel<EmployeeLedgerReducer.State, EmployeeLedgerReducer.Event, EmployeeLedgerReducer.Effect>(
-    EmployeeLedgerReducer(),
-    EmployeeLedgerReducer.State()
+    EmployeeLedgerReducer(), EmployeeLedgerReducer.State()
 ) {
     private var job: Job? = null
 
@@ -56,13 +61,10 @@ class EmployeeLedgerViewModel(
         val employeeId = currentState.selectedEmployee?.id ?: return
         job = viewModelScope.launch {
             reportRepository.getEmployeeLedger(
-                employeeId,
-                currentState.startDate,
-                currentState.endDate
-            )
-                .collect { entries ->
-                    setState(EmployeeLedgerReducer.Event.ShowLedger(entries))
-                }
+                employeeId, currentState.startDate, currentState.endDate
+            ).collect { entries ->
+                setState(EmployeeLedgerReducer.Event.ShowLedger(entries))
+            }
         }
     }
 
@@ -80,23 +82,44 @@ class EmployeeLedgerViewModel(
     }
 
     private fun navigateToTransaction(transaction: EmployeeLedgerEntry) {
-
-        val destination = when (transaction.transactionType) {
-            EmployeeTransactionType.COMMISSION_FOR_ORDER,
-            EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_ORDER,
-            EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_ORDER -> Destination.SalesOrders(
-                transaction.invoiceId
-            )
-
-            EmployeeTransactionType.COMMISSION_FOR_RETURN_ORDER,
-            EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_RETURN_ORDER,
-            EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_RETURN_ORDER -> Destination.SalesReturns(
-                transaction.invoiceId
-            )
-
-            else -> null
-        }
         viewModelScope.launch {
+            val destination = when (transaction.transactionType) {
+                EmployeeTransactionType.COMMISSION_FOR_ORDER, EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_ORDER, EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_ORDER -> {
+                    if (PermissionManager.canView(Destination.SalesOrders())) Destination.SalesOrders(
+                        transaction.invoiceId
+                    ) else {
+                        snackbarController.sendEvent(
+                            SnackbarEvent(
+                                StringResource.FromResource(Res.string.no_permission)
+                            )
+                        )
+                        null
+                    }
+                }
+
+                EmployeeTransactionType.COMMISSION_FOR_RETURN_ORDER, EmployeeTransactionType.COMMISSION_FOR_RESPONSIBILITY_FOR_RETURN_ORDER, EmployeeTransactionType.COMMISSION_TO_ADMIN_FOR_RETURN_ORDER -> {
+                    if (PermissionManager.canView(Destination.SalesReturns())) Destination.SalesReturns(
+                        transaction.invoiceId
+                    ) else {
+                        snackbarController.sendEvent(
+                            SnackbarEvent(
+                                StringResource.FromResource(Res.string.no_permission)
+                            )
+                        )
+                        null
+                    }
+                }
+
+                else -> {
+                    snackbarController.sendEvent(
+                        SnackbarEvent(
+                            StringResource.FromResource(Res.string.no_permission)
+                        )
+                    )
+                    null
+                }
+            }
+
             destination?.let { navigationController.navigate(it) }
         }
     }

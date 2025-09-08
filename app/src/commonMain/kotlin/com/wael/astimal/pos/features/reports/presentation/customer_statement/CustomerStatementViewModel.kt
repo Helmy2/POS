@@ -12,9 +12,12 @@ import com.wael.astimal.pos.features.management.data.local.entity.TransactionTyp
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.no_permission
 
 class CustomerStatementViewModel(
     private val partnerRepository: BusinessPartnerRepository,
@@ -74,9 +77,7 @@ class CustomerStatementViewModel(
 
         transactionJob = viewModelScope.launch {
             reportRepository.getTransactionsForPartner(
-                partnerId,
-                currentState.startDate,
-                currentState.endDate
+                partnerId, currentState.startDate, currentState.endDate
             ).collect { transactions ->
                 // As new data arrives, send it to the reducer
                 setState(CustomerStatementReducer.Event.ShowTransactions(transactions))
@@ -101,14 +102,40 @@ class CustomerStatementViewModel(
     }
 
     private fun navigateToTransaction(transaction: DetailedTransaction) {
-        val destination = when (transaction.transactionType) {
-            TransactionType.SALE_INVOICE -> Destination.SalesOrders(transaction.invoiceId)
-            TransactionType.PURCHASE_INVOICE -> Destination.PurchaseOrders(transaction.invoiceId)
-            TransactionType.SALE_RETURN_INVOICE -> Destination.SalesReturns(transaction.invoiceId)
-            TransactionType.PURCHASE_RETURN_INVOICE -> Destination.PurchaseReturns(transaction.invoiceId)
-            else -> null
-        }
         viewModelScope.launch {
+            val destination = when {
+                transaction.transactionType == TransactionType.SALE_INVOICE &&
+                        PermissionManager.canView(Destination.SalesOrders()) -> {
+                    Destination.SalesOrders(
+                        transaction.invoiceId
+                    )
+                }
+
+                transaction.transactionType == TransactionType.PURCHASE_INVOICE &&
+                        PermissionManager.canView(Destination.PurchaseOrders()) -> Destination.PurchaseOrders(
+                    transaction.invoiceId
+                )
+
+                transaction.transactionType == TransactionType.SALE_RETURN_INVOICE &&
+                        PermissionManager.canView(Destination.SalesReturns()) -> Destination.SalesReturns(
+                    transaction.invoiceId
+                )
+
+                transaction.transactionType == TransactionType.PURCHASE_RETURN_INVOICE &&
+                        PermissionManager.canView(Destination.PurchaseReturns()) -> Destination.PurchaseReturns(
+                    transaction.invoiceId
+                )
+
+                else -> {
+                    snackbarController.sendEvent(
+                        SnackbarEvent(
+                            StringResource.FromResource(Res.string.no_permission)
+                        )
+                    )
+                    null
+                }
+            }
+
             destination?.let { navigationController.navigate(it) }
         }
     }

@@ -482,4 +482,5 @@
     <string name="permissions">الصلاحيات</string>
     <string name="resource">المورد</string>
     <string name="view">عرض</string>
+    <string name="no_permission">تم رفض الوصول. يرجى الاتصال بالمسؤول.</string>
 </resources>

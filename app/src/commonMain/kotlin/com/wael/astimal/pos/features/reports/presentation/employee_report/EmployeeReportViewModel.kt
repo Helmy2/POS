@@ -11,10 +11,13 @@ import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
+import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.no_permission
 
 class EmployeeReportViewModel(
     private val userRepository: UserRepository,
@@ -95,15 +98,38 @@ class EmployeeReportViewModel(
     private fun navigateToTransaction(transaction: EmployeeActivity) {
         if (transaction !is EmployeeActivity.InvoiceActivity)
             return
-
-        val destination = when (transaction.invoice.invoiceType) {
-            InvoiceType.SALES -> Destination.SalesOrders(transaction.id)
-            InvoiceType.PURCHASE -> Destination.PurchaseOrders(transaction.id)
-            InvoiceType.SALES_RETURN -> Destination.SalesReturns(transaction.id)
-            InvoiceType.PURCHASE_RETURN -> Destination.PurchaseReturns(transaction.id)
-        }
         viewModelScope.launch {
-            destination.let { navigationController.navigate(it) }
+            val destination = when {
+                transaction.invoice.invoiceType == InvoiceType.SALES &&
+                        PermissionManager.canView(Destination.SalesOrders()) -> Destination.SalesOrders(
+                    transaction.id
+                )
+
+                transaction.invoice.invoiceType == InvoiceType.PURCHASE &&
+                        PermissionManager.canView(Destination.PurchaseOrders()) -> Destination.PurchaseOrders(
+                    transaction.id
+                )
+
+                transaction.invoice.invoiceType == InvoiceType.SALES_RETURN &&
+                        PermissionManager.canView(Destination.SalesReturns()) -> Destination.SalesReturns(
+                    transaction.id
+                )
+
+                transaction.invoice.invoiceType == InvoiceType.PURCHASE_RETURN &&
+                        PermissionManager.canView(Destination.PurchaseReturns()) -> Destination.PurchaseReturns(
+                    transaction.id
+                )
+
+                else -> {
+                    snackbarController.sendEvent(
+                        SnackbarEvent(
+                            StringResource.FromResource(Res.string.no_permission)
+                        )
+                    )
+                    null
+                }
+            }
+            destination?.let { navigationController.navigate(it) }
         }
     }
 }
