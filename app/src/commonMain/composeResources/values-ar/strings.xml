@@ -483,4 +483,6 @@
     <string name="resource">المورد</string>
     <string name="view">عرض</string>
     <string name="no_permission">تم رفض الوصول. يرجى الاتصال بالمسؤول.</string>
+    <string name="transfer_approved_successfully">تم قبول التحويل بنجاح.</string>
+    <string name="transfer_rejected_successfully">تم رفض التحويل بنجاح.</string>
 </resources>

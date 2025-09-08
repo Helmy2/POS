@@ -471,4 +471,6 @@
     <string name="resource">Resource</string>
     <string name="view">View</string>
     <string name="no_permission">You don't have permission</string>
+    <string name="transfer_approved_successfully">Transfer approved successfully.</string>
+    <string name="transfer_rejected_successfully">Transfer rejected successfully.</string>
 </resources>

@@ -29,8 +29,10 @@ import pos.app.generated.resources.failed_to_save_transfer
 import pos.app.generated.resources.from_and_to_stores_cannot_be_the_same
 import pos.app.generated.resources.from_and_to_stores_must_be_selected
 import pos.app.generated.resources.not_enough_stock_for
+import pos.app.generated.resources.transfer_approved_successfully
 import pos.app.generated.resources.transfer_deleted_successfully
 import pos.app.generated.resources.transfer_must_have_at_least_one_valid_item
+import pos.app.generated.resources.transfer_rejected_successfully
 import pos.app.generated.resources.transfer_saved_successfully
 import pos.app.generated.resources.user_not_identified_cannot_save_transfer
 import kotlin.uuid.ExperimentalUuidApi
@@ -92,7 +94,7 @@ class StockTransferViewModel(
                     stockTransferRepository.setTransferApprovalStatus(
                         state.value.selectedTransfer!!.id, true
                     ).onSuccess {
-                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_approved_successfully)))
                         setState(StockTransferReducer.Event.ApprovedSucceeded)
                     }.onFailure {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
@@ -106,7 +108,7 @@ class StockTransferViewModel(
                     stockTransferRepository.setTransferApprovalStatus(
                         state.value.selectedTransfer!!.id, false
                     ).onSuccess {
-                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_saved_successfully)))
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.transfer_rejected_successfully)))
                         setState(StockTransferReducer.Event.SaveSucceeded)
                     }.onFailure {
                         snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.failed_to_save_transfer)))
