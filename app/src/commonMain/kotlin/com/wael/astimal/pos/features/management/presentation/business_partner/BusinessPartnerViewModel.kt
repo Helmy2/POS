@@ -58,22 +58,27 @@ class BusinessPartnerViewModel(
     ) {
         viewModelScope.launch {
             businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
-                val voucherToSave = ReceivePayVoucher(
-                    id = "",
-                    partner = partner.copy(id = it),
-                    createdBy = state.value.currentUser!!,
-                    amount = amount,
-                    notes = "",
-                    createdAt = Clock.now(),
-                    invoiceId = null,
-                    transactionType = TransactionType.OPENING_BALANCE
-                )
+                if (amount != 0.0) {
+                    val voucherToSave = ReceivePayVoucher(
+                        id = "",
+                        partner = partner.copy(id = it),
+                        createdBy = state.value.currentUser!!,
+                        amount = amount,
+                        notes = "",
+                        createdAt = Clock.now(),
+                        invoiceId = null,
+                        transactionType = TransactionType.OPENING_BALANCE
+                    )
 
-                voucherRepository.saveVoucher(voucherToSave).onSuccess {
+                    voucherRepository.saveVoucher(voucherToSave).onSuccess {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.partner_saved_successfully)))
+                        setState(BusinessPartnerContract.Event.SaveSucceeded)
+                    }.onFailure {
+                        snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_saving_partner)))
+                    }
+                } else {
                     snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.partner_saved_successfully)))
                     setState(BusinessPartnerContract.Event.SaveSucceeded)
-                }.onFailure {
-                    snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_saving_partner)))
                 }
             }.onFailure {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_saving_partner)))
