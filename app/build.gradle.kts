@@ -41,7 +41,6 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
             implementation(libs.ktor.android)
@@ -139,6 +138,8 @@ dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspDesktop", libs.androidx.room.compiler)
     debugImplementation(compose.uiTooling)
+
+    windowsAmd64(compose.desktop.windows_x64)
 }
 
 room {
