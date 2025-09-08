@@ -5,18 +5,19 @@ import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockTransferDao
-import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.StockTransferItemDto
 import com.wael.astimal.pos.features.inventory.data.remote.dto.toEntity
+import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferStatus
 import com.wael.astimal.pos.features.inventory.domain.entity.Store
+import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.user.domain.entity.User
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
@@ -40,6 +41,7 @@ class StockTransferRepositoryImpl(
     val stockTransferDao: StockTransferDao,
     val userRepository: UserRepository,
     val stockAdjustmentDao: StockAdjustmentDao,
+    val stockRepository: StockRepository
 ) : StockTransferRepository {
 
     @OptIn(SupabaseExperimental::class)
@@ -61,6 +63,7 @@ class StockTransferRepositoryImpl(
                 supabaseClient.postgrest["stock_transfers"].update(
                     buildJsonObject {
                         put("status", status)
+                        put("updated_at", Clock.now().toISOString())
                     }
                 ) {
                     filter {
@@ -109,38 +112,38 @@ class StockTransferRepositoryImpl(
         transfer: StockTransfer
     ) {
         for (item in transfer.items) {
-            stockAdjustmentDao.insert(
-                StockAdjustmentEntity(
-                    localId = Uuid.random().toString(),
-                    productId = item.product.id,
+
+            val list = listOf(
+                StockAdjustment(
+                    id = Uuid.random().toString(),
+                    product = item.product,
                     quantityChange = -item.quantity,
                     createdAt = Clock.now(),
                     updatedAt = Clock.now(),
-                    userId = transfer.initiatingUser.id,
+                    user = transfer.initiatingUser,
                     reason = StockAdjustmentReason.INVOICE,
-                    storeId = transfer.fromStore.id,
+                    store = transfer.fromStore,
                     invoiceId = null,
                     transactionId = transfer.id,
-                    isSynced = false,
                     notes = null,
-                )
-            )
-            stockAdjustmentDao.insert(
-                StockAdjustmentEntity(
-                    localId = Uuid.random().toString(),
-                    productId = item.product.id,
+                ),
+                StockAdjustment(
+                    id = Uuid.random().toString(),
+                    product = item.product,
                     quantityChange = item.quantity,
                     createdAt = Clock.now(),
                     updatedAt = Clock.now(),
-                    userId = transfer.initiatingUser.id,
+                    user = transfer.initiatingUser,
                     reason = StockAdjustmentReason.INVOICE,
-                    storeId = transfer.toStore.id,
+                    store = transfer.toStore,
                     invoiceId = null,
                     transactionId = transfer.id,
-                    isSynced = false,
                     notes = null,
                 )
             )
+            list.forEach {
+                stockRepository.addStockAdjustment(it)
+            }
         }
     }
 

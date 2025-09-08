@@ -1,11 +1,17 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.data.SyncManager
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
+import com.wael.astimal.pos.core.util.pushAll
+import com.wael.astimal.pos.core.util.toISOString
 import com.wael.astimal.pos.features.inventory.data.local.dao.StockAdjustmentDao
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockAdjustmentEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
+import com.wael.astimal.pos.features.inventory.data.remote.dto.StockAdjustmentDto
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustment
 import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReason
+import com.wael.astimal.pos.features.inventory.domain.entity.toDto
 import com.wael.astimal.pos.features.inventory.domain.entity.toEntity
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StoreRepository
@@ -24,7 +30,8 @@ class StockRepositoryImpl(
     private val stockAdjustmentDao: StockAdjustmentDao,
     private val supabaseClient: SupabaseClient,
     private val userRepository: UserRepository,
-    private val storeRepository: StoreRepository
+    private val storeRepository: StoreRepository,
+    private val syncManager: SyncManager
 ) : StockRepository {
 
     override fun getStoreStocks(
@@ -59,11 +66,17 @@ class StockRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun addStockAdjustment(adjustment: StockAdjustment): Result<Unit> {
         return try {
-            val adjustmentToInsert = if (adjustment.id == "") adjustment.toEntity()
-                .copy(localId = Uuid.random().toString())
-            else adjustment.toEntity()
 
-            stockAdjustmentDao.insert(adjustmentToInsert)
+            val adjustmentToInsert = if (adjustment.id == "") adjustment
+                .copy(id = Uuid.random().toString())
+            else adjustment
+
+            supabaseClient.pushAll<StockAdjustmentDto>("stock_adjustments") {
+                listOf(adjustmentToInsert.toDto(Clock.now().toISOString()))
+            }
+
+            stockAdjustmentDao.insert(adjustmentToInsert.toEntity())
+            syncManager.restSyncDate()
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -76,7 +89,9 @@ class StockRepositoryImpl(
             supabaseClient.deleteRecordAndLog(
                 targetTableName = "stock_adjustments",
                 targetRecordId = adjustment.id
-            )
+            ).onSuccess {
+                syncManager.restSyncDate()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
