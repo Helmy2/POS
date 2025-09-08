@@ -161,7 +161,7 @@ fun PurchaseScreen(
                         )
                     }))
                 },
-                enabled = state.currentUser?.isAdmin == true,
+                enabled = state.canEdit
             )
             EditableOrderItems(
                 isNew = !state.isEditing,

@@ -81,7 +81,7 @@ fun ProductScreen(
                 onItemClick = { product -> onEvent(ProductReducer.Event.ProductSelected(product)) },
                 label = {
                     Label(
-                        it.product.name.displayName(language) + " : " + if (state.canEdit) {
+                        it.product.name.displayName(language) + " : " + if (state.currentUser?.isAdmin == true) {
                             stringResource(Res.string.average_cost_price) + " : " +
                                     it.product.averagePrice.formate()
                         } else {

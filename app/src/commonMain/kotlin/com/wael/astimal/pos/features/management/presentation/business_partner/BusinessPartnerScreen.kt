@@ -425,9 +425,7 @@ fun BusinessPartnerEditDialog(
                         stringResource(Res.string.owns_partner),
                         stringResource(Res.string.partner_owns),
                     ),
-                    initialText = if (isReceiveMoney) stringResource(Res.string.owns_partner) else stringResource(
-                        Res.string.partner_owns
-                    ),
+                    initialText = "",
                     onItemSelected = {
                         isReceiveMoney = it == 0
                     },
