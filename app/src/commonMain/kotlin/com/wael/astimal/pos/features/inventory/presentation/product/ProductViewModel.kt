@@ -130,7 +130,8 @@ class ProductViewModel(
                 val productToSave = Product(
                     id = currentState.selectedProduct?.product?.id ?: "",
                     name = LocalizedString(currentState.inputArName, currentState.inputEnName),
-                    averagePrice = currentState.selectedProduct?.product?.averagePrice ?: 0.0,
+                    averagePrice = currentState.selectedProduct?.product?.averagePrice.takeIf { it != 0.0 }
+                        ?: currentState.inputPurchasePrice.toDoubleOrNull() ?: 0.0,
                     sellingPrice = currentState.inputSellingPrice.toDoubleOrNull() ?: 0.0,
                     subUnitsPerMainUnit = currentState.inputSubUnitsPerMainUnit.toDoubleOrNull()
                         ?: 1.0,
