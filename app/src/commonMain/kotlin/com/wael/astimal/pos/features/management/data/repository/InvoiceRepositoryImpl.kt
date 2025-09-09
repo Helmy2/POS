@@ -430,8 +430,8 @@ class InvoiceRepositoryImpl(
 
     override suspend fun deleteAll(invoiceIds: List<String>, itemsIds: List<String>): Result<Unit> {
         return try {
-            invoiceIds.forEach { invoiceDao.hardDeleteInvoiceById(it) }
             itemsIds.forEach { invoiceDao.hardDeleteInvoiceItemsById(it) }
+            invoiceIds.forEach { invoiceDao.hardDeleteInvoiceById(it) }
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
