@@ -458,7 +458,7 @@ fun BusinessPartnerEditDialog(
                             if (isNewPartner) {
                                 onCreate(
                                     updatedPartner,
-                                    if (isReceiveMoney) -(amount.toDoubleOrNull()
+                                    if (!isReceiveMoney) -(amount.toDoubleOrNull()
                                         ?: 0.0) else amount.toDoubleOrNull() ?: 0.0
                                 )
                             } else {
