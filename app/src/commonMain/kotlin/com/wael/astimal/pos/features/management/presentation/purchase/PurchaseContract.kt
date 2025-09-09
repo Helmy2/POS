@@ -46,15 +46,18 @@ object PurchaseContract {
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
 
+        val isOwnerOrUnassigned =
+            currentUser?.id == selectedOrder?.employee?.id || selectedOrder == null
+
         val enabledFab: Boolean
             get() = currentOrderInput.selectedPartner != null &&
                     currentOrderInput.selectedStore != null &&
                     currentOrderInput.items.isNotEmpty() &&
                     currentOrderInput.items.all { it.product != null } &&
                     currentOrderInput.paymentType != null
-        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.PurchaseOrders())
-        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseOrders())
-        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseOrders())
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.PurchaseOrders()) && isOwnerOrUnassigned
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseOrders()) && isOwnerOrUnassigned
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseOrders()) && isOwnerOrUnassigned
         val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 

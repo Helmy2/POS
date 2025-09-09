@@ -45,6 +45,8 @@ object PurchaseReturnContract {
         val pdfHtmlToGenerate: String? = null,
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
+        val isOwnerOrUnassigned =
+            currentUser?.id == selectedOrder?.employee?.id || selectedOrder == null
 
         val enabledFab: Boolean
             get() = currentOrderInput.selectedPartner != null &&
@@ -52,9 +54,9 @@ object PurchaseReturnContract {
                     currentOrderInput.items.isNotEmpty() &&
                     currentOrderInput.items.all { it.product != null } &&
                     currentOrderInput.paymentType != null
-        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.PurchaseReturns())
-        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseReturns())
-        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseReturns())
+        val canCreate: Boolean get() = PermissionManager.canCreate(Destination.PurchaseReturns()) && isOwnerOrUnassigned
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseReturns()) && isOwnerOrUnassigned
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseReturns()) && isOwnerOrUnassigned
         val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 

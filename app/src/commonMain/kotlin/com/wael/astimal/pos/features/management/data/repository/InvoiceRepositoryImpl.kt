@@ -53,12 +53,9 @@ class InvoiceRepositoryImpl(
 
     override fun getInvoices(): Flow<List<Invoice>> {
         return flow {
-            val currentUser = userRepository.getCurrentUser()
             invoiceDao.getAllInvoicesWithItems()
                 .map { items ->
-                    items.filter {
-                        it.employee.id == currentUser?.id || currentUser?.isAdmin == true
-                    }.map { it.toDomain() }
+                    items.map { it.toDomain() }
                 }.collect {
                     emit(it)
                 }
