@@ -40,7 +40,7 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                 ) to null
 
             is PurchaseContract.Event.OrdersLoaded ->
-                previousState.copy(isLoading = false, orders = event.orders) to null
+                previousState.copy(orders = event.orders) to null
 
             is PurchaseContract.Event.OrderSelected -> {
                 previousState.copy(

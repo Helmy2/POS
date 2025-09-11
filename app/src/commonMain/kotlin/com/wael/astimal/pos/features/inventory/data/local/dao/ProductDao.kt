@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.ProductWithDetails
 import kotlinx.coroutines.flow.Flow
@@ -32,8 +33,8 @@ interface ProductDao {
     @Query("DELETE FROM products WHERE localId = :id")
     suspend fun hardDelete(id: String)
 
-    @Query("UPDATE products SET  isSynced = 0, averagePurchasePrice = :newCost WHERE localId = :id")
-    suspend fun updateAverageCost(id: String, newCost: Double)
+    @Query("UPDATE products SET  isSynced = 0, averagePurchasePrice = :newCost, updatedAt = :timeStamp WHERE localId = :id")
+    suspend fun updateAverageCost(id: String, newCost: Double, timeStamp: Long = Clock.now())
 
     @Transaction
     @Query("SELECT * FROM products WHERE NOT isDeletedLocally AND isSynced = 0")

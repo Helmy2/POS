@@ -40,7 +40,7 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
                 ) to null
 
             is SalesContract.Event.OrdersLoaded ->
-                previousState.copy(isLoading = false, orders = event.orders) to null
+                previousState.copy(orders = event.orders) to null
 
             is SalesContract.Event.OrderSelected -> {
                 previousState.copy(

@@ -41,7 +41,7 @@ class PurchaseReturnReducer() :
                 ) to null
 
             is PurchaseReturnContract.Event.OrdersLoaded ->
-                previousState.copy(isLoading = false, orders = event.orders) to null
+                previousState.copy(orders = event.orders) to null
 
             is PurchaseReturnContract.Event.OrderSelected -> {
                 previousState.copy(

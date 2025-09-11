@@ -149,6 +149,7 @@ class InvoiceRepositoryImpl(
                     }
                 }
             productDao.updateAverageCost(item.product.id, revertedCost)
+            syncManager.requestSync()
         }
     }
 
