@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -30,33 +29,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.no_selection
 
-
-@Preview
-@Composable
-fun ExposedDropdownMenuPrev() {
-    ExposedDropdownMenu(
-        listOf(
-            "Option 1",
-            "Option 2",
-            "Option 3",
-            "Option 4",
-            "Option 5",
-            "Option 6",
-            "Option 7",
-            "Option 8",
-            "Option 9",
-        ),
-        onItemSelected = {},
-        noSelectionText = "No Selection",
-        label = "",
-        modifier = Modifier
-            .padding(16.dp)
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,10 +46,10 @@ fun ExposedDropdownMenu(
     imeAction: ImeAction = ImeAction.Next,
     dropDownMaxHeight: Dp = 200.dp
 ) {
-    val textFieldState = rememberTextFieldState(initialText = initialText)
+    val textFieldState = rememberTextFieldState(initialText)
 
-    val sortedOptions =
-        options.sortedByDescending { it.contains(textFieldState.text, ignoreCase = true) }
+    val sortedOptions = options.sortedByDescending { it.contains(initialText, ignoreCase = true) }
+
 
     val (expanded, setExpanded) = remember { mutableStateOf(false) }
 
@@ -140,8 +115,7 @@ fun ExposedDropdownMenu(
                 DropdownMenuItem(
                     text = { Text(option, style = MaterialTheme.typography.bodyLarge) },
                     onClick = {
-                        textFieldState.setTextAndPlaceCursorAtEnd(option)
-                        onItemSelected(sortedOptions.indexOf(option))
+                        onItemSelected(options.indexOf(option))
                         setExpanded(false)
                     },
                     enabled = enabled,

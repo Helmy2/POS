@@ -195,9 +195,12 @@ fun VoucherEditDialog(
 
                 ExposedDropdownMenu(
                     label = stringResource(Res.string.type),
-                    options = listOf(
+                    options = if (dialogState.transactionType == TransactionType.OPENING_BALANCE) listOf(
                         stringResource(Res.string.partner_owns),
                         stringResource(Res.string.owns_partner)
+                    ) else listOf(
+                        stringResource(Res.string.receive_money),
+                        stringResource(Res.string.pay_money)
                     ),
                     initialText = if (dialogState.transactionType == TransactionType.OPENING_BALANCE) {
                         if (dialogState.isReceiveMoney) stringResource(Res.string.partner_owns) else stringResource(

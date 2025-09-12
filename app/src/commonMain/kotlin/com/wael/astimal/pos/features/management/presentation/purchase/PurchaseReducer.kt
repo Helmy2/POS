@@ -49,7 +49,7 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                         selectedPartner = event.order.partner,
                         selectedStore = event.order.store,
                         paymentType = event.order.paymentMethod,
-                        date = event.order.createdAt,
+                        date = event.order.orderDate,
                         items = event.order.items.map {
                             EditableItem(
                                 product = it.product,

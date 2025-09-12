@@ -26,6 +26,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.Label
 import com.wael.astimal.pos.core.presentation.compoenents.SearchScreen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -100,7 +101,7 @@ fun PurchaseScreen(
                         stringResource(
                             Res.string.order_to_with_args,
                             it.partner.name.displayName(language),
-                            it.id
+                            it.orderDate.toDateString()
                         )
                     )
                 },
