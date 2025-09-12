@@ -53,6 +53,7 @@ import pos.app.generated.resources.pending
 import pos.app.generated.resources.product
 import pos.app.generated.resources.rejected
 import pos.app.generated.resources.remove_item
+import pos.app.generated.resources.stock_transfer
 import pos.app.generated.resources.to_store
 import pos.app.generated.resources.unit
 import pos.app.generated.resources.you_have_pending_transfer
@@ -90,6 +91,7 @@ fun StockTransferScreen(
     val language = LocalAppLocale.current
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.stock_transfer),
         modifier = modifier,
         loading = state.isLoading,
         query = state.searchQuery,

@@ -24,6 +24,7 @@ import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.en_name
 import pos.app.generated.resources.responsible_employee
 import pos.app.generated.resources.store_type
+import pos.app.generated.resources.stores
 
 @Composable
 fun StoreRoute(
@@ -49,6 +50,7 @@ fun StoreScreen(
 ) {
     val language = LocalAppLocale.current
     SearchScreen(
+        screenTitle = stringResource(Res.string.stores),
         modifier = modifier,
         loading = state.isLoading,
         query = state.searchQuery,

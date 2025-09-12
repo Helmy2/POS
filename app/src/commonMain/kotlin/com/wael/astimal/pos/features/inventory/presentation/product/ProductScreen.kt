@@ -28,6 +28,7 @@ import pos.app.generated.resources.en_name
 import pos.app.generated.resources.initial_quantity
 import pos.app.generated.resources.initial_store
 import pos.app.generated.resources.main_unit
+import pos.app.generated.resources.product
 import pos.app.generated.resources.purchase_price
 import pos.app.generated.resources.selling_price
 import pos.app.generated.resources.sub_unit
@@ -58,6 +59,7 @@ fun ProductScreen(
     val language = LocalAppLocale.current
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.product),
         modifier = modifier,
         loading = state.isLoading,
         query = state.searchQuery,

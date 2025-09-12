@@ -17,6 +17,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.ar_name
+import pos.app.generated.resources.categories
 import pos.app.generated.resources.en_name
 
 @Composable
@@ -46,6 +47,7 @@ fun CategoryScreen(
     val language = LocalAppLocale.current
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.categories),
         modifier = modifier,
         loading = state.isLoading,
         query = state.searchQuery,

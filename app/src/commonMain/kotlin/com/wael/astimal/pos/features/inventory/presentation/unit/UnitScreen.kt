@@ -19,6 +19,7 @@ import pos.app.generated.resources.ar_abbreviation
 import pos.app.generated.resources.ar_name
 import pos.app.generated.resources.en_abbreviation
 import pos.app.generated.resources.en_name
+import pos.app.generated.resources.units
 
 @Composable
 fun UnitRoute(
@@ -43,6 +44,7 @@ fun UnitScreen(
     val language = LocalAppLocale.current
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.units),
         modifier = modifier,
         query = state.searchQuery,
         loading = state.isLoading,

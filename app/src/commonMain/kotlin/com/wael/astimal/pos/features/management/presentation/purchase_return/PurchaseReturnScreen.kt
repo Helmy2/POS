@@ -27,6 +27,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.client
 import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.order_to_with_args
+import pos.app.generated.resources.purchase_return
 import pos.app.generated.resources.stores
 
 @Composable
@@ -62,6 +63,7 @@ fun PurchaseReturnScreen(
     val orderInput = state.currentOrderInput
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.purchase_return),
         loading = state.isLoading,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,

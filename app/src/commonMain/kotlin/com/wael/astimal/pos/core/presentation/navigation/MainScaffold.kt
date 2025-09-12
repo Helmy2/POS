@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -174,7 +173,7 @@ fun MainScaffold(
     ) {
 
         Scaffold(
-            contentWindowInsets = WindowInsets(0.dp),
+            contentWindowInsets = WindowInsets(),
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { it ->
             PullToRefreshBox(
@@ -185,12 +184,12 @@ fun MainScaffold(
                         syncService.performSync()
                         isRefreshing = false
                     }
-                }
+                },
+                modifier = Modifier.padding(it)
             ) {
                 AppNavHost(
                     startDestination = startDestination,
                     navController = navController,
-                    modifier = Modifier.padding(it)
                 )
             }
         }

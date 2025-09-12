@@ -52,6 +52,7 @@ import pos.app.generated.resources.amount
 import pos.app.generated.resources.cancel
 import pos.app.generated.resources.edit_transaction
 import pos.app.generated.resources.employee
+import pos.app.generated.resources.employee_account
 import pos.app.generated.resources.new_transaction
 import pos.app.generated.resources.notes_optional
 import pos.app.generated.resources.save
@@ -85,6 +86,7 @@ fun EmployeeAccountScreen(
 
     Screen(loading = state.isLoading, topBar = {
         SearchBarWithBackButton(
+            screenTitle = stringResource(Res.string.employee_account),
             query = state.searchQuery,
             onBack = { onEvent(EmployeeAccountContract.Event.NavigateBack) },
             onQueryChange = { onEvent(EmployeeAccountContract.Event.SearchQueryChanged(it)) },

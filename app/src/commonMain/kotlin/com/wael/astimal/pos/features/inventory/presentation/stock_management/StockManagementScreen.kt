@@ -15,6 +15,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockAdjustmentReas
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.management
 import pos.app.generated.resources.notes
 import pos.app.generated.resources.product
 import pos.app.generated.resources.quantity_change_by
@@ -43,6 +44,7 @@ fun StockManagementScreen(
 
     val language = LocalAppLocale.current
     SearchScreen(
+        screenTitle = stringResource(Res.string.management),
         query = state.query,
         loading = state.isLoading,
         isSearchActive = state.isSearchActive,

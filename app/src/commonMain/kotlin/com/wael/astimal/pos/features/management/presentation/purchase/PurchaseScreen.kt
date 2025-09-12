@@ -34,6 +34,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.add_partner
 import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.order_to_with_args
+import pos.app.generated.resources.purchase
 import pos.app.generated.resources.stores
 import pos.app.generated.resources.supplier
 
@@ -75,6 +76,7 @@ fun PurchaseScreen(
     val orderInput = state.currentOrderInput
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.purchase),
         query = state.searchQuery,
         loading = state.isLoading,
         isSearchActive = state.isSearchActive,

@@ -67,6 +67,7 @@ import pos.app.generated.resources.address
 import pos.app.generated.resources.address_with_args
 import pos.app.generated.resources.amount
 import pos.app.generated.resources.ar_name
+import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.cancel
 import pos.app.generated.resources.create
 import pos.app.generated.resources.delete
@@ -111,6 +112,7 @@ fun BusinessPartnerScreen(
         loading = state.isLoading,
         topBar = {
             SearchBarWithBackButton(
+                screenTitle = stringResource(Res.string.business_partner),
                 query = state.searchQuery,
                 onBack = { onEvent(BusinessPartnerContract.Event.BackClicked) },
                 onQueryChange = { onEvent(BusinessPartnerContract.Event.SearchQueryChanged(it)) },

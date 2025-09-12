@@ -48,6 +48,7 @@ import pos.app.generated.resources.update_at
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
+    screenTitle: String,
     loading: Boolean,
     query: String,
     isSearchActive: Boolean,
@@ -136,7 +137,16 @@ fun SearchScreen(
                             onSearch = onSearch,
                             expanded = isSearchActive,
                             onExpandedChange = onSearchActiveChange,
-                            placeholder = { Text(stringResource(Res.string.search)) },
+                            placeholder = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(stringResource(Res.string.search))
+                                    Text(screenTitle)
+                                }
+                            },
                             trailingIcon = {
                                 IconButton(onClick = { onSearch(query) }) {
                                     Icon(Icons.Default.Search, contentDescription = null)

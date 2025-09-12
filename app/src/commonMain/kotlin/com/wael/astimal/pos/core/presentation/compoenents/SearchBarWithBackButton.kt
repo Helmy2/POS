@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.core.presentation.compoenents
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import pos.app.generated.resources.search
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBarWithBackButton(
+    screenTitle: String,
     query: String,
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
@@ -56,7 +58,16 @@ fun SearchBarWithBackButton(
                     onSearch = onSearch,
                     expanded = true,
                     onExpandedChange = {},
-                    placeholder = { Text(stringResource(Res.string.search)) },
+                    placeholder = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(Res.string.search))
+                            Text(screenTitle)
+                        }
+                    },
                     trailingIcon = {
                         IconButton(onClick = { onQueryChange(query) }) {
                             Icon(Icons.Default.Search, contentDescription = null)

@@ -39,6 +39,7 @@ import pos.app.generated.resources.confirm_password
 import pos.app.generated.resources.create
 import pos.app.generated.resources.delete
 import pos.app.generated.resources.email
+import pos.app.generated.resources.employee
 import pos.app.generated.resources.en_name
 import pos.app.generated.resources.password
 import pos.app.generated.resources.permissions
@@ -68,6 +69,7 @@ fun EmployeeScreen(
     val language = LocalAppLocale.current
 
     SearchScreen(
+        screenTitle = stringResource(Res.string.employee),
         loading = state.isLoading,
         query = state.searchQuery,
         isSearchActive = state.isSearchActive,

@@ -59,6 +59,7 @@ import pos.app.generated.resources.owns_partner
 import pos.app.generated.resources.partner_owns
 import pos.app.generated.resources.pay_money
 import pos.app.generated.resources.receive_money
+import pos.app.generated.resources.receive_pay_voucher
 import pos.app.generated.resources.save
 import pos.app.generated.resources.transaction_type
 import pos.app.generated.resources.type
@@ -97,6 +98,7 @@ fun ReceivePayVoucherScreen(
         loading = state.isLoading,
         topBar = {
             SearchBarWithBackButton(
+                screenTitle = stringResource(Res.string.receive_pay_voucher),
                 query = state.searchQuery,
                 onBack = onBack,
                 onQueryChange = { onEvent(ReceivePayVoucherContract.Event.SearchQueryChanged(it)) },
