@@ -43,7 +43,6 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.format
-import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -111,13 +110,15 @@ fun CustomerStatementScreen(
     if (showStartDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(CustomerStatementReducer.Event.SetStartDate(it)) },
-            onDismiss = { showStartDatePicker = false }
+            onDismiss = { showStartDatePicker = false },
+            isStartOfDay = true
         )
     }
     if (showEndDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(CustomerStatementReducer.Event.SetEndDate(it)) },
-            onDismiss = { showEndDatePicker = false }
+            onDismiss = { showEndDatePicker = false },
+            isStartOfDay = false
         )
     }
 
@@ -246,8 +247,6 @@ private fun TransactionRow(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(
-            enabled = transaction.transactionType != TransactionType.OPENING_BALANCE
-                    && transaction.transactionType != TransactionType.PAYMENT,
             onClick = onClick
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

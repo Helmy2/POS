@@ -116,13 +116,16 @@ fun StockTransferReportScreen(
     if (showStartDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(StockTransferReportReducer.Event.SetStartDate(it)) },
-            onDismiss = { showStartDatePicker = false }
+            onDismiss = { showStartDatePicker = false },
+            isStartOfDay = true,
+
         )
     }
     if (showEndDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(StockTransferReportReducer.Event.SetEndDate(it)) },
-            onDismiss = { showEndDatePicker = false }
+            onDismiss = { showEndDatePicker = false },
+            isStartOfDay = false,
         )
     }
 
@@ -166,7 +169,7 @@ fun StockTransferReportScreen(
                             }
                         )
                         LabeledTextField(
-                            value = state.startDate.toString(),
+                            value = state.startDate.format(),
                             onValueChange = {},
                             readOnly = true,
                             enabled = true,

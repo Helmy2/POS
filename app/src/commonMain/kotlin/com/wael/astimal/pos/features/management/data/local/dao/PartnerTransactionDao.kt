@@ -33,6 +33,11 @@ interface PartnerTransactionDao {
     @Query("SELECT * FROM partner_transactions WHERE NOT isDeletedLocally")
     fun getAll(): Flow<List<PartnerTransactionWithDetails>>
 
+
+    @Transaction
+    @Query("SELECT * FROM partner_transactions WHERE localId = :id")
+    suspend fun getById(id: String): PartnerTransactionWithDetails?
+
     @Transaction
     @Query("SELECT * FROM partner_transactions WHERE partnerLocalId = :id AND NOT isDeletedLocally")
     fun getTransactionsByPartnerId(id: String): Flow<List<PartnerTransactionWithDetails>>

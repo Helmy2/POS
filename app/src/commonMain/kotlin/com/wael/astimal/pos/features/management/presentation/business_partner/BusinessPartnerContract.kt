@@ -31,7 +31,7 @@ object BusinessPartnerContract {
         val canCreate: Boolean get() = PermissionManager.canCreate(Destination.BusinessPartners())
         val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.BusinessPartners())
         val canDelete: Boolean get() = PermissionManager.canDelete(Destination.BusinessPartners())
-        val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
+        val canEdit: Boolean get() = canCreate || canUpdate
     }
 
     sealed interface Event : Reducer.ViewEvent {

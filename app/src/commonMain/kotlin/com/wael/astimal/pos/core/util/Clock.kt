@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.char
+import kotlinx.datetime.number
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import java.time.ZoneId
@@ -19,8 +20,20 @@ object Clock {
         return Clock.System.now().toEpochMilliseconds()
     }
 
-    fun currentLocalDateTime(): LocalDateTime {
+    private fun currentLocalDateTime(): LocalDateTime {
         return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    }
+
+    fun getStartOfToday(): LocalDateTime {
+        return currentLocalDateTime().date.run {
+            LocalDateTime(year, month.number, day, 0, 0, 0)
+        }
+    }
+
+    fun getEndOfToday(): LocalDateTime {
+        return currentLocalDateTime().date.run {
+            LocalDateTime(year, month.number, day, 23, 59, 59)
+        }
     }
 }
 
@@ -40,8 +53,7 @@ fun String?.parseIsoTimestamp(): Long? {
 @OptIn(ExperimentalTime::class)
 fun Long.toDateString(): String {
     val customFormat = LocalDateTime.Format {
-        day(); char('/'); monthNumber(); char('/'); year(); char(' ')
-        hour(); char(':'); minute()
+        day(); char('/'); monthNumber(); char('/'); year()
     }
     val instant = Instant.fromEpochMilliseconds(this)
         .toLocalDateTime(TimeZone.currentSystemDefault())
@@ -57,8 +69,7 @@ fun Long.toISOString(): String {
 @OptIn(ExperimentalTime::class)
 fun LocalDateTime.format(): String {
     val customFormat = LocalDateTime.Format {
-        day(); char('/'); monthNumber(); char('/'); year(); char(' ')
-        hour(); char(':'); minute()
+        day(); char('/'); monthNumber(); char('/'); year()
     }
     return this.format(customFormat)
 }

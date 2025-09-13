@@ -29,6 +29,13 @@ class PartnerTransactionRepositoryImpl(
         }
     }
 
+    override suspend fun getVoucher(id: String): Result<ReceivePayVoucher> {
+        return runCatching {
+            transactionDao.getById(id)?.toDomain()
+                ?: throw NoSuchElementException("No transaction found with id: $id")
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveVoucher(voucher: ReceivePayVoucher): Result<Unit> {
         return runCatching {

@@ -115,13 +115,15 @@ fun EmployeeLedgerScreen(
     if (showStartDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(EmployeeLedgerReducer.Event.SetStartDate(it)) },
-            onDismiss = { showStartDatePicker = false }
+            onDismiss = { showStartDatePicker = false },
+            isStartOfDay = true
         )
     }
     if (showEndDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(EmployeeLedgerReducer.Event.SetEndDate(it)) },
-            onDismiss = { showEndDatePicker = false }
+            onDismiss = { showEndDatePicker = false },
+            isStartOfDay = false
         )
     }
 

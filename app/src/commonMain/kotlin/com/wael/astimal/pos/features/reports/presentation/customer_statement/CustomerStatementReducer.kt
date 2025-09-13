@@ -13,8 +13,8 @@ class CustomerStatementReducer :
         val partners: List<BusinessPartner> = emptyList(),
         val transactions: List<DetailedTransaction> = emptyList(),
         val selectedPartner: BusinessPartner? = null,
-        val startDate: LocalDateTime = Clock.currentLocalDateTime(),
-        val endDate: LocalDateTime = Clock.currentLocalDateTime(),
+        val startDate: LocalDateTime = Clock.getStartOfToday(),
+        val endDate: LocalDateTime = Clock.getEndOfToday(),
         val isLoading: Boolean = false,
         val pdfHtmlToGenerate: String? = null,
         val pdfGenerationTrigger: Int = 0

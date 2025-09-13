@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,9 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -121,19 +118,14 @@ fun DataPicker(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 @Composable
 fun DataPicker(
-    initialDateTime: LocalDateTime = Clock.currentLocalDateTime(),
     onDateSelected: (LocalDateTime) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isStartOfDay: Boolean,
+    initialDateTime: LocalDateTime = if (isStartOfDay) Clock.getStartOfToday() else Clock.getEndOfToday(),
 ) {
     // State for the date picker
     val datePickerState = rememberDatePickerState(
         initialSelectedDate = initialDateTime.date.toJavaLocalDate()
-    )
-
-    // State for the time picker
-    val timePickerState = rememberTimePickerState(
-        initialHour = initialDateTime.hour,
-        initialMinute = initialDateTime.minute,
     )
 
     Dialog(onDismissRequest = onDismiss) {
@@ -148,8 +140,6 @@ fun DataPicker(
             ) {
                 // The actual time picker
                 DatePicker(state = datePickerState, modifier = Modifier)
-                Spacer(modifier = Modifier.size(16.dp))
-                TimePicker(state = timePickerState, modifier = Modifier)
 
                 // Buttons row
                 Row(
@@ -178,7 +168,10 @@ fun DataPicker(
                             // Create the final LocalDateTime object by combining the date and time
                             val selectedDateTime = LocalDateTime(
                                 date = selectedDate,
-                                time = LocalTime(timePickerState.hour, timePickerState.minute)
+                                time = if (isStartOfDay)
+                                    LocalTime(0, 0)
+                                else
+                                    LocalTime(23, 59)
                             )
 
                             // Invoke the callbacks

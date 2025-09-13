@@ -118,13 +118,16 @@ fun EmployeeReportScreen(
     if (showStartDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(EmployeeReportReducer.Event.SetStartDate(it)) },
-            onDismiss = { showStartDatePicker = false }
+            onDismiss = { showStartDatePicker = false },
+            isStartOfDay = true,
+
         )
     }
     if (showEndDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(EmployeeReportReducer.Event.SetEndDate(it)) },
-            onDismiss = { showEndDatePicker = false }
+            onDismiss = { showEndDatePicker = false },
+            isStartOfDay = false,
         )
     }
 

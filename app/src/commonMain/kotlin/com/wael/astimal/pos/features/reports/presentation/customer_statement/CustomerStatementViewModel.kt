@@ -10,6 +10,7 @@ import com.wael.astimal.pos.core.presentation.navigation.AppKoinComponent.snackb
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import com.wael.astimal.pos.features.user.domain.PermissionManager
@@ -24,6 +25,7 @@ class CustomerStatementViewModel(
     private val reportRepository: ReportRepository,
     private val htmlReportGenerator: HtmlReportGenerator,
     private val navigationController: NavigationController,
+    private val partnerTransactionRepository: PartnerTransactionRepository
 ) : BaseViewModel<CustomerStatementReducer.State, CustomerStatementReducer.Event, CustomerStatementReducer.Effect>(
     CustomerStatementReducer(), CustomerStatementReducer.State()
 ) {
@@ -47,7 +49,17 @@ class CustomerStatementViewModel(
                 loadTransactions()
             }
 
-            is CustomerStatementReducer.Event.TransactionClicked -> navigateToTransaction(event.transaction)
+            is CustomerStatementReducer.Event.TransactionClicked -> {
+                if (event.transaction.transactionType == TransactionType.OPENING_BALANCE
+                    || event.transaction.transactionType == TransactionType.PAYMENT
+                ) {
+                    printTransaction(event.transaction)
+                    event.transaction.id
+                } else {
+                    navigateToTransaction(event.transaction)
+                }
+            }
+
             is CustomerStatementReducer.Event.GeneratePdf -> generatePdf()
             // For all other events, the change is purely a state mutation,
             // so we just pass them to the reducer.
@@ -60,6 +72,15 @@ class CustomerStatementViewModel(
             }
 
             else -> setState(event)
+        }
+    }
+
+    private fun printTransaction(transaction: DetailedTransaction) {
+        viewModelScope.launch {
+            partnerTransactionRepository.getVoucher(transaction.id).getOrNull()?.let {
+                val html = htmlReportGenerator.createVoucherHtml(it)
+                setState(CustomerStatementReducer.Event.PdfGenerationSuccessful(html = html))
+            }
         }
     }
 

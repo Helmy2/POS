@@ -114,12 +114,16 @@ fun ProductMovementScreen(
     if (showStartDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(ProductMovementReducer.Event.SetStartDate(it)) },
-            onDismiss = { showStartDatePicker = false })
+            onDismiss = { showStartDatePicker = false },
+            isStartOfDay = true
+        )
     }
     if (showEndDatePicker) {
         DataPicker(
             onDateSelected = { processEvent(ProductMovementReducer.Event.SetEndDate(it)) },
-            onDismiss = { showEndDatePicker = false })
+            onDismiss = { showEndDatePicker = false },
+            isStartOfDay = false
+        )
     }
 
     Column(modifier = modifier.padding(16.dp).fillMaxSize()) {
