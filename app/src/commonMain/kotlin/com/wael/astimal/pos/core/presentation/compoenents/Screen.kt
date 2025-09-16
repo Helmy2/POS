@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -36,6 +37,7 @@ fun Screen(
             } else {
                 Column(
                     modifier = modifier
+                        .imePadding()
                         .fillMaxSize(),
                     verticalArrangement = verticalArrangement,
                     horizontalAlignment = horizontalAlignment

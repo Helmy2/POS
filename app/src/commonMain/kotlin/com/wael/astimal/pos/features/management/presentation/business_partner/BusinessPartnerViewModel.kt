@@ -57,6 +57,10 @@ class BusinessPartnerViewModel(
         partner: BusinessPartner, amount: Double
     ) {
         viewModelScope.launch {
+            if (state.value.partners.any { partner.name.arName == it.name.arName && partner.id != it.id }) {
+                snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_saving_partner)))
+                return@launch
+            }
             businessPartnerRepository.saveBusinessPartner(partner).onSuccess {
                 if (amount != 0.0) {
                     val voucherToSave = ReceivePayVoucher(

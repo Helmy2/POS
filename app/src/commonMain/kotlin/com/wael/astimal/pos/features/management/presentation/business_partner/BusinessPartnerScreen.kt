@@ -280,7 +280,7 @@ fun BusinessPartnerEditDialog(
     var arName by remember(partner.name.arName) { mutableStateOf(partner.name.arName ?: "") }
     var address by remember(partner.address) { mutableStateOf(partner.address) }
     var user by remember(partner.responsibleEmployee) { mutableStateOf<User?>(partner.responsibleEmployee) }
-    var isReceiveMoney by remember { mutableStateOf(false) }
+    var isReceiveMoney by remember { mutableStateOf<Boolean?>(null) }
     var amount by remember { mutableStateOf("") }
     val isNewPartner = partner.id == ""
     var type by remember { mutableStateOf<PartnerType?>(partner.type) }
@@ -428,7 +428,11 @@ fun BusinessPartnerEditDialog(
                         stringResource(Res.string.owns_partner),
                         stringResource(Res.string.partner_owns),
                     ),
-                    initialText = "",
+                    initialText = when (isReceiveMoney) {
+                        true -> stringResource(Res.string.owns_partner)
+                        false -> stringResource(Res.string.partner_owns)
+                        null -> ""
+                    },
                     onItemSelected = {
                         isReceiveMoney = it == 0
                     },
@@ -448,7 +452,7 @@ fun BusinessPartnerEditDialog(
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        if (type != null && user != null) {
+                        if (type != null && user != null && arName != "") {
                             val updatedPartner = partner.copy(
                                 name = partner.name.copy(enName = enName, arName = arName),
                                 address = address,
@@ -460,7 +464,7 @@ fun BusinessPartnerEditDialog(
                             if (isNewPartner) {
                                 onCreate(
                                     updatedPartner,
-                                    if (!isReceiveMoney) -(amount.toDoubleOrNull()
+                                    if (isReceiveMoney == false) -(amount.toDoubleOrNull()
                                         ?: 0.0) else amount.toDoubleOrNull() ?: 0.0
                                 )
                             } else {
