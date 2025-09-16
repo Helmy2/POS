@@ -38,7 +38,7 @@ class BusinessPartnerRepositoryImpl(
     override suspend fun getClients(query: String): Flow<List<BusinessPartner>> {
         return getBusinessPartners(query).map {
             it.filter {
-                it.type != PartnerType.CLIENT || it.type == PartnerType.BOTH
+                it.type == PartnerType.CLIENT || it.type == PartnerType.BOTH
             }
         }
     }

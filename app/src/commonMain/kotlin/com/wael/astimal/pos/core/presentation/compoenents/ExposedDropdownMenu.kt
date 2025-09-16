@@ -48,8 +48,8 @@ fun ExposedDropdownMenu(
 ) {
     val textFieldState = rememberTextFieldState(initialText)
 
-    val sortedOptions = options.sortedByDescending { it.contains(initialText, ignoreCase = true) }
-
+    val sortedOptions =
+        options.sortedByDescending { it.contains(textFieldState.text, ignoreCase = true) }
 
     val (expanded, setExpanded) = remember { mutableStateOf(false) }
 
