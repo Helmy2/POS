@@ -49,7 +49,6 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import pos.app.generated.resources.Res
-import pos.app.generated.resources.all_stores
 import pos.app.generated.resources.apply_filters
 import pos.app.generated.resources.date
 import pos.app.generated.resources.end_date
@@ -160,7 +159,7 @@ fun StockTransferReportScreen(
                         )
                         ExposedDropdownMenu(
                             label = stringResource(Res.string.to_store),
-                            options = listOf(stringResource(Res.string.all_stores)) + state.stores.map { it.name.get() },
+                            options = state.stores.map { it.name.get() },
                             initialText = state.selectedToStore?.name.get(),
                             onItemSelected = {
                                 processEvent(StockTransferReportReducer.Event.SelectToStore(it?.let {
@@ -261,7 +260,7 @@ private fun TransferRow(transfer: StockTransfer) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                transfer.status.name,
+                stringResource(transfer.status.getStringResourceId()),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End

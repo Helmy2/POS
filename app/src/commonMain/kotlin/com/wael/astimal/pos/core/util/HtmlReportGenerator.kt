@@ -89,38 +89,43 @@ class HtmlReportGenerator(
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
 
-        val transferRows = transfers.joinToString("") { transfer ->
-            val date = Instant.fromEpochMilliseconds(transfer.createdAt)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
+        val transferRows = buildString { // Use buildString for conciseness
+            transfers.forEach { transfer ->
+                val date = Instant.fromEpochMilliseconds(transfer.createdAt)
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
 
-            // --- NEW: Build the nested table for transfer items ---
-            val itemHeaders = if (isRtl) {
-                "<th>الصنف</th><th class='num'>الكمية</th>"
-            } else {
-                "<th>Product</th><th class='num'>Quantity</th>"
-            }
-            val itemsHtml = transfer.items.joinToString("") { item ->
-                """
-                <tr>
-                    <td>${if (isRtl) item.product.name.arName else item.product.name.enName}</td>
-                    <td class="num">${item.quantity}</td>
-                </tr>
-                """.trimIndent()
-            }
-            val itemsTable = """
-            <table class="nested-table">
-                <thead><tr>$itemHeaders</tr></thead>
-                <tbody>$itemsHtml</tbody>
-            </table>
+                // --- NEW: Build the nested table for transfer items ---
+                val itemHeaders = if (isRtl) {
+                    "<th>الصنف</th><th class='num'>الكمية</th>"
+                } else {
+                    "<th>Product</th><th class='num'>Quantity</th>"
+                }
+
+                // You can also replace this inner joinToString if you wish
+                val itemsHtml = transfer.items.joinToString("") { item ->
+                    """
+            <tr>
+                <td>${if (isRtl) item.product.name.arName else item.product.name.enName}</td>
+                <td class="num">${item.quantity}</td>
+            </tr>
             """.trimIndent()
-            // --- END OF NEW LOGIC ---
+                }
 
-            """
+                val itemsTable = """
+        <table class="nested-table">
+            <thead><tr>$itemHeaders</tr></thead>
+            <tbody>$itemsHtml</tbody>
+        </table>
+        """.trimIndent()
+                // --- END OF NEW LOGIC ---
+
+                append(
+                    """
             <tr class="main-row">
                 <td>${date.format()}</td>
                 <td>${if (isRtl) transfer.fromStore.name.arName else transfer.fromStore.name.enName}</td>
                 <td>${if (isRtl) transfer.toStore.name.arName else transfer.toStore.name.enName}</td>
-                <td>${transfer.status.name}</td>
+                <td>${getString(transfer.status.getStringResourceId())}</td>
                 <td>${if (isRtl) transfer.initiatingUser.localizedName.arName else transfer.initiatingUser.localizedName.enName}</td>
             </tr>
             <tr class="details-row">
@@ -129,6 +134,8 @@ class HtmlReportGenerator(
                 </td>
             </tr>
             """.trimIndent()
+                )
+            }
         }
 
         val dateRangeText = if (startDate.format() == endDate.format()) {
