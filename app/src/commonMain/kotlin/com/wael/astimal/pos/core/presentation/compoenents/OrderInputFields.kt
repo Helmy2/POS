@@ -102,7 +102,7 @@ fun OrderItemRow(
                 ExposedDropdownMenu(
                     label = stringResource(Res.string.unit),
                     options = listOfNotNull(
-                        item.product?.subProductUnit, item.product?.mainProductUnit
+                        item.product?.mainProductUnit, item.product?.subProductUnit
                     ).map { it.name.displayName(language) },
                     initialText = if (item.isSelectedUnitIsMax) {
                         item.product?.mainProductUnit?.name?.displayName(language).orEmpty()

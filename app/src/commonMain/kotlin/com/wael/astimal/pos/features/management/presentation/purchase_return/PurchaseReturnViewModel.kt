@@ -232,7 +232,7 @@ class PurchaseReturnViewModel(
                 val validStock =
                     if (!currentState.isEditing)
                         if (item.isSelectedUnitIsMax)
-                            item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) > 0
+                            item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
                         else item.currentStock - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
                     else {
                         val oldStock =
@@ -255,6 +255,7 @@ class PurchaseReturnViewModel(
                             )
                         )
                     )
+                    setState(PurchaseReturnContract.Event.LoadingFinished)
                     return@launch
                 }
             }

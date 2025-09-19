@@ -202,6 +202,7 @@ class SalesViewModel(
             val currentState = state.value
             if (currentState.currentOrderInput.selectedPartner == null || currentState.currentOrderInput.selectedStore == null) {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.error_some_field_are_required)))
+                setState(SalesContract.Event.LoadingFinished)
                 return@launch
             }
             setState(SalesContract.Event.LoadingStarted)
@@ -230,7 +231,7 @@ class SalesViewModel(
                 val validStock =
                     if (!currentState.isEditing)
                         if (item.isSelectedUnitIsMax)
-                            item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) > 0
+                            item.currentStock - (item.mainUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
                         else item.currentStock - (item.subUnitQuantity.toDoubleOrNull() ?: 0.0) >= 0
                     else {
                         val oldStock =
@@ -253,6 +254,7 @@ class SalesViewModel(
                             )
                         )
                     )
+                    setState(SalesContract.Event.LoadingFinished)
                     return@launch
                 }
             }
