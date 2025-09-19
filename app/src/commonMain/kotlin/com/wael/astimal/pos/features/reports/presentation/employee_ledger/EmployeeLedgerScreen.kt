@@ -71,7 +71,7 @@ fun EmployeeLedgerRoute(
 
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
-        baseFileName = "employee_ledger_${state.selectedEmployee?.name ?: "report"}",
+        baseFileName = "employee_ledger",
         onFinish = { viewModel.processEvent(EmployeeLedgerReducer.Event.PdfGenerationFinished) }
     )
 

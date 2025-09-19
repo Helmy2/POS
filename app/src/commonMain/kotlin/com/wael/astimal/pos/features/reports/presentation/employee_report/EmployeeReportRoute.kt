@@ -73,7 +73,7 @@ fun EmployeeReportRoute(
 
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
-        baseFileName = "employee_activity_report_${state.selectedEmployee?.name ?: "report"}",
+        baseFileName = "employee_activity_report",
         onFinish = { viewModel.processEvent(EmployeeReportReducer.Event.PdfGenerationFinished(it)) }
     )
 

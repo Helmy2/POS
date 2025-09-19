@@ -67,7 +67,7 @@ fun CustomerStatementRoute(
 
     PdfGeneratorEffect(
         htmlContent = state.pdfHtmlToGenerate,
-        baseFileName = "customer_statement_${state.selectedPartner?.name?.enName ?: "report"}",
+        baseFileName = "customer_statement",
         onFinish = { viewModel.processEvent(CustomerStatementReducer.Event.PdfGenerationFinished(it)) }
     )
 
@@ -257,7 +257,7 @@ private fun TransactionRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                transaction.date.toString(),
+                transaction.date.format(),
                 modifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.bodySmall
             )
