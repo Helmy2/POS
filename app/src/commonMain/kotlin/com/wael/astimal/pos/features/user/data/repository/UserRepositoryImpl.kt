@@ -140,6 +140,12 @@ class UserRepositoryImpl(
                 return Result.failure(Exception("Password must be at least 6 characters long."))
             }
 
+            val usersWithSameArabicName =
+                userDao.getAllEmployeesFlow().first().any { it.arName == arName }
+            if (usersWithSameArabicName) {
+                return Result.failure(Exception("User with the same Arabic name already exists."))
+            }
+
             val userWithEmail = adminClient().auth.admin.createUserWithEmail {
                 this.email = email
                 this.password = password

@@ -13,6 +13,7 @@ import com.wael.astimal.pos.features.management.domain.repository.BusinessPartne
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -54,6 +55,34 @@ class BusinessPartnerRepositoryImpl(
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun saveBusinessPartner(partner: BusinessPartner): Result<String> {
         return try {
+            val newPhoneNumbers = partner.phone.split(",")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+
+            // Validate new phone numbers format
+            for (phone in newPhoneNumbers) {
+                if (phone.startsWith("01") && phone.length != 11) {
+                    return Result.failure(Exception("Phone number '$phone' is not valid"))
+                }
+            }
+
+            // Fetch all phone numbers from OTHER partners
+            val otherPartnerPhones = partnerDao.searchPartnersFlow("").first()
+                .filter { it.businessPartner.localId != partner.id }
+                .flatMap { it.businessPartner.phone.split(",") }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .toSet()
+
+            val isPhoneNumberNotUniqueWithOthers = newPhoneNumbers.any { newPhone ->
+                otherPartnerPhones.contains(newPhone)
+            }
+
+            if (isPhoneNumberNotUniqueWithOthers) {
+                return Result.failure(Exception("One or more phone numbers already exist for another partner."))
+            }
+
+
             val entity = if (partner.id == "") {
                 partner.toEntity().copy(localId = Uuid.random().toString())
             } else {
