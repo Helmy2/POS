@@ -8,9 +8,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,18 +29,26 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
+import com.wael.astimal.pos.core.domain.navigation.Destination
+import com.wael.astimal.pos.core.presentation.compoenents.BackButton
+import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.features.reports.presentation.reports.ReportsReducer
 import com.wael.astimal.pos.features.user.presentation.components.LanguageSettingRow
 import com.wael.astimal.pos.features.user.presentation.components.ThemeSettingsRow
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.logout
+import pos.app.generated.resources.reports
+import pos.app.generated.resources.settings
 import pos.app.generated.resources.unknown_user
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsRoute(
     viewModel: SettingsViewModel = koinViewModel(),
+    onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val language = LocalAppLocale.current
@@ -43,30 +57,38 @@ fun SettingsRoute(
         viewModel.processEvent(SettingsContract.Event.LoadSettings)
     }
 
-    SettingsScreen(
-        userName = state.user?.localizedName?.displayName(language)
-            ?: stringResource(Res.string.unknown_user),
-        avatarUrl = state.user?.avatarUrl ?: "",
-        themeMode = state.themeMode,
-        showThemeDialog = state.showThemeDialog,
-        language = state.language,
-        showLanguageDialog = state.showLanguageDialog,
-        onShowThemeDialog = {
-            viewModel.processEvent(SettingsContract.Event.ThemeDialogVisibilityChanged(it))
-        },
-        onThemeChange = {
-            viewModel.processEvent(SettingsContract.Event.ThemeChanged(it))
-        },
-        onShowLanguageDialog = {
-            viewModel.processEvent(SettingsContract.Event.LanguageDialogVisibilityChanged(it))
-        },
-        onLanguageChange = {
-            viewModel.processEvent(SettingsContract.Event.LanguageChanged(it))
-        },
-        onLogoutClicked = {
-            viewModel.processEvent(SettingsContract.Event.LogoutClicked)
+    Screen(
+        topBar = {
+            TopAppBar(title = { Text(stringResource(Res.string.settings)) }, navigationIcon = {
+                BackButton(onBack)
+            })
         }
-    )
+    ) {
+        SettingsScreen(
+            userName = state.user?.localizedName?.displayName(language)
+                ?: stringResource(Res.string.unknown_user),
+            avatarUrl = state.user?.avatarUrl ?: "",
+            themeMode = state.themeMode,
+            showThemeDialog = state.showThemeDialog,
+            language = state.language,
+            showLanguageDialog = state.showLanguageDialog,
+            onShowThemeDialog = {
+                viewModel.processEvent(SettingsContract.Event.ThemeDialogVisibilityChanged(it))
+            },
+            onThemeChange = {
+                viewModel.processEvent(SettingsContract.Event.ThemeChanged(it))
+            },
+            onShowLanguageDialog = {
+                viewModel.processEvent(SettingsContract.Event.LanguageDialogVisibilityChanged(it))
+            },
+            onLanguageChange = {
+                viewModel.processEvent(SettingsContract.Event.LanguageChanged(it))
+            },
+            onLogoutClicked = {
+                viewModel.processEvent(SettingsContract.Event.LogoutClicked)
+            }
+        )
+    }
 }
 
 

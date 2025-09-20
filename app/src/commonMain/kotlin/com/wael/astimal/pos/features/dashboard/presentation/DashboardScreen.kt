@@ -88,18 +88,14 @@ fun DashboardScreen(
     onEvent: (DashboardReducer.Event) -> Unit,
     onNavigateToStockTransfer: () -> Unit,
 ) {
-    var showSetting by rememberSaveable {
-        mutableStateOf(false)
-    }
-
     Screen(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
+            .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         topBar = {
             TopAppBar(title = { Text(stringResource(Res.string.dashboard)) }, actions = {
-                IconButton(onClick = { showSetting = true }) {
+                IconButton(onClick = { onEvent(DashboardReducer.Event.NavigateToSettings) }) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = stringResource(Res.string.settings)
@@ -127,14 +123,6 @@ fun DashboardScreen(
         )
         KpiCards(kpiData = state.kpiData)
         SalesAnalyticsChart(state = state)
-
-        AnimatedVisibility(showSetting) {
-            Dialog(onDismissRequest = { showSetting = false }) {
-                Card {
-                    SettingsRoute()
-                }
-            }
-        }
     }
 }
 

@@ -101,4 +101,7 @@ sealed class Destination(
 
     @Serializable
     data object Employee : Destination("Employee")
+
+    @Serializable
+    data object Settings : Destination("Settings")
 }

@@ -1,10 +1,9 @@
 package com.wael.astimal.pos.features.dashboard.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.wael.astimal.pos.core.base.SnackbarController
-import com.wael.astimal.pos.core.base.SnackbarEvent
-import com.wael.astimal.pos.core.base.StringResource
+import com.wael.astimal.pos.core.base.NavigationController
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.dashboard.domain.entity.TimePeriod
 import com.wael.astimal.pos.features.inventory.domain.repository.StockTransferRepository
 import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
@@ -12,15 +11,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import pos.app.generated.resources.Res
-import pos.app.generated.resources.error_loading_dashboard_data
 import java.time.LocalDate
 import java.time.ZoneOffset
 
 class DashboardViewModel(
     private val invoiceRepository: InvoiceRepository,
-    private val snackbarController: SnackbarController,
     private val stockTransferRepository: StockTransferRepository,
+    private val navigationController: NavigationController
 ) : BaseViewModel<DashboardReducer.State, DashboardReducer.Event, Nothing>(
     reducer = DashboardReducer(),
     initialState = DashboardReducer.State()
@@ -40,7 +37,13 @@ class DashboardViewModel(
             is DashboardReducer.Event.RefreshDataClicked -> {
                 loadDashboardData()
             }
-            // All other events are for synchronous state updates only
+
+            is DashboardReducer.Event.NavigateToSettings -> {
+                viewModelScope.launch {
+                    navigationController.navigate(Destination.Settings)
+                }
+            }
+
             else -> setState(event)
         }
     }
@@ -73,9 +76,6 @@ class DashboardViewModel(
                 setState(DashboardReducer.Event.DataLoaded(dailySales))
             }
             .catch {
-                snackbarController.sendEvent(
-                    SnackbarEvent(StringResource.FromResource(Res.string.error_loading_dashboard_data))
-                )
                 setState(DashboardReducer.Event.DataLoaded(emptyList()))
             }
             .launchIn(viewModelScope)

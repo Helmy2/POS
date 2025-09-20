@@ -11,18 +11,30 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
+import com.wael.astimal.pos.features.dashboard.presentation.DashboardReducer
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import pos.app.generated.resources.Res
+import pos.app.generated.resources.dashboard
+import pos.app.generated.resources.inventory
+import pos.app.generated.resources.settings
 
 @Composable
 fun InventoryRoute(
@@ -35,12 +47,24 @@ fun InventoryRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryScreen(
     state: InventoryReducer.State,
     onEvent: (InventoryReducer.Event) -> Unit,
 ) {
-    Screen {
+    Screen(
+        topBar = {
+            TopAppBar(title = { Text(stringResource(Res.string.inventory)) }, actions = {
+                IconButton(onClick = { onEvent(InventoryReducer.Event.ItemClicked(Destination.Settings)) }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = stringResource(Res.string.settings)
+                    )
+                }
+            })
+        }
+    ) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 150.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),

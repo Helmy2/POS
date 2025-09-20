@@ -20,7 +20,9 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -57,7 +59,6 @@ class UserRepositoryImpl(
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
-            syncManager.requestSync()
             supabaseClient.auth.signInWith(Email) {
                 this.email = email
                 this.password = password

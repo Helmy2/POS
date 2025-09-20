@@ -26,6 +26,8 @@ class DashboardReducer : Reducer<DashboardReducer.State, DashboardReducer.Event,
         data class LoadingSyncChange(val isLoading: Boolean) : Event
         data class DataLoaded(val sales: List<DailySale>) : Event
         data class HavePendingTransferChanged(val havePendingTransfer: Boolean) : Event
+
+        data object NavigateToSettings : Event
     }
     
     override fun reduce(
@@ -52,7 +54,7 @@ class DashboardReducer : Reducer<DashboardReducer.State, DashboardReducer.Event,
             is Event.LoadingSyncChange ->
                 previousState.copy(isLoadingSync = event.isLoading) to null
 
-            is Event.RefreshDataClicked -> previousState to null
+            else -> previousState to null
         }
     }
 

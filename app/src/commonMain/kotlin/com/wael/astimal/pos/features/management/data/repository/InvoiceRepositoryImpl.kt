@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -409,7 +410,12 @@ class InvoiceRepositoryImpl(
 
     override fun getDailySales(startMillis: Long, endMillis: Long): Flow<List<DailySale>> {
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-        return invoiceDao.getDailySales(startMillis, endMillis).map { dailyDataList ->
+        return invoiceDao.getDailySales(startMillis, endMillis)
+            .onStart {
+               if ( userRepository.getCurrentUser()?.isAdmin != true)
+                   throw Exception("You are not authorized to view this data")
+            }
+            .map { dailyDataList ->
             dailyDataList.map { dailyData ->
                 DailySale(
                     date = LocalDate.parse(dailyData.saleDate, formatter),
