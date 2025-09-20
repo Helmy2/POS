@@ -50,10 +50,10 @@ class MainActivity : ComponentActivity() {
         permissionUtil.askNotificationPermission()
 
         lifecycleScope.launch {
-            syncManager.requestSync()
             userRepository.getCurrentUser().let {
                 PermissionManager.updatePermissions(it)
                 startDestination.value = if (it != null) {
+                    syncManager.requestSync()
                     Result.success(Destination.Main)
                 } else {
                     Result.success(Destination.Auth)

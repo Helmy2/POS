@@ -53,6 +53,8 @@ class UserRepositoryImpl(
 
     override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
+            syncManager.restSyncDate()
+
             supabaseClient.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
@@ -82,7 +84,6 @@ class UserRepositoryImpl(
 
             PermissionManager.updatePermissions(getCurrentUser())
 
-            syncManager.restSyncDate()
             syncManager.requestSync()
 
             Result.success(Unit)

@@ -62,13 +62,13 @@ fun main() {
                 userRepository.getCurrentUser().let {
                     PermissionManager.updatePermissions(it)
                     startDestination.value = if (it != null) {
+                        launch {
+                            syncManger.requestSync()
+                        }
                         Result.success(Destination.Main)
                     } else {
                         Result.success(Destination.Auth)
                     }
-                }
-                launch {
-                    syncManger.requestSync()
                 }
             }
 
