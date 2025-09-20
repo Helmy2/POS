@@ -82,6 +82,7 @@ class UserRepositoryImpl(
 
             PermissionManager.updatePermissions(getCurrentUser())
 
+            syncManager.restSyncDate()
             syncManager.requestSync()
 
             Result.success(Unit)
