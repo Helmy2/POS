@@ -20,9 +20,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -53,7 +51,7 @@ class UserRepositoryImpl(
     }
 
 
-    override suspend fun login(email: String, password: String): Result<User> {
+    override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
             supabaseClient.auth.signInWith(Email) {
                 this.email = email
@@ -77,31 +75,20 @@ class UserRepositoryImpl(
             val profileResult = profileApiService.getProfile(supabaseUser.id)
 
             profileResult.onSuccess { profileDto ->
-                val syncedUserEntity = syncProfile(profileDto)
-                return Result.success(syncedUserEntity.toDomain())
+                userDao.upsert(profileDto.toEntity())
             }.onFailure {
                 return Result.failure(it)
             }
 
             PermissionManager.updatePermissions(getCurrentUser())
 
-            Result.failure(Exception("Unknown error during profile fetch."))
+            syncManager.requestSync()
+
+            Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
         }
-    }
-
-
-    private suspend fun syncProfile(profileDto: ProfileDto): UserEntity {
-        val existingUser =
-            userDao.getUserBySupabaseId(profileDto.id).first() ?: return profileDto.toEntity()
-        val userEntity = profileDto.toEntity().copy(
-            id = existingUser.id,
-            createdAt = existingUser.createdAt
-        )
-        userDao.upsert(userEntity)
-        return userEntity
     }
 
     override suspend fun logout(): Result<Unit> {

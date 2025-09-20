@@ -23,6 +23,7 @@ interface SyncManager {
 
     suspend fun requestSync()
     val syncFlow: MutableSharedFlow<Unit>
+    fun getDefaultSyncDate(): String
 }
 
 class SyncManagerImpl(
@@ -75,7 +76,7 @@ class SyncManagerImpl(
      * Provides a default date string for the very first sync.
      * For example, one month in the past.
      */
-    private fun getDefaultSyncDate(): String {
+    override fun getDefaultSyncDate(): String {
         return "1970-01-01"
     }
 }

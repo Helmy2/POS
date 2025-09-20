@@ -6,7 +6,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import kotlinx.coroutines.launch
@@ -15,7 +14,6 @@ import pos.app.generated.resources.error_login
 
 class LoginViewModel(
     private val userRepository: UserRepository,
-    private val syncManger: SyncManager,
     private val navigationController: NavigationController,
     private val snackbarController: SnackbarController,
 ) : BaseViewModel<LoginContract.State, LoginContract.Event, Nothing>(
@@ -34,8 +32,6 @@ class LoginViewModel(
         viewModelScope.launch {
             userRepository.login(state.value.email, state.value.password).fold(
                 onSuccess = {
-                    setState(LoginContract.Event.LoginSuccess(it.name))
-                    syncManger.requestSync()
                     navigationController.navigateAsRoot(
                         destination = Destination.Dashboard,
                     )
