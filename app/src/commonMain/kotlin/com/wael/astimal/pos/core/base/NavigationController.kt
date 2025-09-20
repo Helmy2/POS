@@ -11,13 +11,13 @@ sealed interface NavigationEvent {
     /**
      * Navigates to a specific destination.
      * @param destination The target screen.
-     * @param popUpToRoute The route to pop back to before navigating. Clears the back stack.
-     * @param inclusive Whether the `popUpToRoute` should also be popped.
      */
     data class NavigateTo(
         val destination: Destination,
-        val popUpToRoute: Destination? = null,
-        val inclusive: Boolean = false
+    ) : NavigationEvent
+
+    data class NavigateToAsRoot(
+        val destination: Destination,
     ) : NavigationEvent
 
     /**
@@ -36,10 +36,14 @@ object NavigationController {
 
     suspend fun navigate(
         destination: Destination,
-        popUpToRoute: Destination? = null,
-        inclusive: Boolean = false
     ) {
-        _events.send(NavigationEvent.NavigateTo(destination, popUpToRoute, inclusive))
+        _events.send(NavigationEvent.NavigateTo(destination))
+    }
+
+    suspend fun navigateAsRoot(
+        destination: Destination,
+    ) {
+        _events.send(NavigationEvent.NavigateToAsRoot(destination))
     }
 
     suspend fun navigateBack() {

@@ -2,6 +2,7 @@ package com.wael.astimal.pos.features.user.presentation.setting
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +30,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.core.domain.entity.ThemeMode
+import com.wael.astimal.pos.core.domain.entity.get
 import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.compoenents.BackButton
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
@@ -51,7 +53,6 @@ fun SettingsRoute(
     onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val language = LocalAppLocale.current
 
     LaunchedEffect(key1 = Unit) {
         viewModel.processEvent(SettingsContract.Event.LoadSettings)
@@ -65,7 +66,7 @@ fun SettingsRoute(
         }
     ) {
         SettingsScreen(
-            userName = state.user?.localizedName?.displayName(language)
+            userName = state.user?.localizedName?.get()
                 ?: stringResource(Res.string.unknown_user),
             avatarUrl = state.user?.avatarUrl ?: "",
             themeMode = state.themeMode,
@@ -108,10 +109,10 @@ fun SettingsScreen(
 ) {
     Column(
         modifier = Modifier
+            .fillMaxSize()
             .padding(16.dp)
-            .sizeIn(maxWidth = 400.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(

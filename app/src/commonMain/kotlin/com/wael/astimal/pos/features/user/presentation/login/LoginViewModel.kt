@@ -35,12 +35,9 @@ class LoginViewModel(
             userRepository.login(state.value.email, state.value.password).fold(
                 onSuccess = {
                     setState(LoginContract.Event.LoginSuccess(it.name))
-                    // let the user know that he is login in and we now making the sync
                     syncManger.requestSync()
-                    navigationController.navigate(
+                    navigationController.navigateAsRoot(
                         destination = Destination.Dashboard,
-                        popUpToRoute = Destination.Login,
-                        inclusive = true
                     )
                 },
                 onFailure = {

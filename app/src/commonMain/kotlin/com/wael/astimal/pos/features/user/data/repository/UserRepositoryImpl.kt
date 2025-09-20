@@ -52,10 +52,6 @@ class UserRepositoryImpl(
         return user
     }
 
-    override suspend fun isUserLoggedIn(): Boolean {
-        return getCurrentUser() != null
-    }
-
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {

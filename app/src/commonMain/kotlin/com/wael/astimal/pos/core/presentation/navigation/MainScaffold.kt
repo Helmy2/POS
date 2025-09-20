@@ -127,17 +127,20 @@ fun MainScaffold(
     ObserveEffect(navigationController.events, navController) { event ->
         when (event) {
             is NavigationEvent.NavigateTo -> {
-                navController.navigate(event.destination) {
-                    event.popUpToRoute?.let {
-                        popUpTo(it) {
-                            this.inclusive = event.inclusive
-                        }
-                    }
-                }
+                navController.navigate(event.destination)
             }
 
             is NavigationEvent.NavigateBack -> {
                 navController.popBackStack()
+            }
+
+            is NavigationEvent.NavigateToAsRoot ->{
+                navController.navigate(event.destination) {
+                    popUpTo(0) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                }
             }
         }
     }
@@ -162,11 +165,10 @@ fun MainScaffold(
             mainNavigationItems(
                 onDestinationSelected = { destination ->
                     navController.navigate(destination) {
-                        popUpTo(navController.graph.findStartDestination().id) {
+                        popUpTo(0) {
                             saveState = true
                         }
                         launchSingleTop = true
-                        restoreState = true
                     }
                 },
                 navBackStackEntry = navBackStackEntry,
