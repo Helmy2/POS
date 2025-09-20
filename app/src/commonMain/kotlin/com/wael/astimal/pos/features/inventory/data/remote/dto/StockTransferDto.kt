@@ -19,6 +19,7 @@ data class StockTransferDto(
     val status: String,
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String,
+    @SerialName("transfer_date") val transferDate: String,
 )
 
 @Serializable
@@ -40,7 +41,8 @@ fun StockTransferDto.toEntity(): StockTransferEntity {
         status = StockTransferStatus.valueOf(status.uppercase()),
         isSynced = true,
         createdAt = createdAt.parseIsoTimestamp() ?: Clock.now(),
-        updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now()
+        updatedAt = updatedAt.parseIsoTimestamp() ?: Clock.now(),
+        transferDate = transferDate.parseIsoTimestamp() ?: Clock.now(),
     )
 }
 

@@ -213,7 +213,7 @@ class StockTransferReducer() :
                         fromStore = event.transfer.fromStore,
                         toStore = event.transfer.toStore,
                         selectedEmployee = event.transfer.initiatingUser,
-                        transferDate = event.transfer.createdAt,
+                        transferDate = event.transfer.transferDate,
                         items = editableItems
                     ), isSearchActive = false
                 ) to null

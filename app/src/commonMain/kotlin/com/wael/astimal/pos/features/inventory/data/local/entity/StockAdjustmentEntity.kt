@@ -4,6 +4,7 @@ package com.wael.astimal.pos.features.inventory.data.local.entity
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.core.util.Clock
@@ -42,6 +43,13 @@ import com.wael.astimal.pos.features.user.data.local.entity.toDomain
             parentColumns = ["localId"],
             childColumns = ["transactionId"],
         ),
+    ],
+    indices = [
+        Index("storeId"),
+        Index("productId"),
+        Index("userId"),
+        Index("invoiceId"),
+        Index("transactionId"),
     ]
 )
 data class StockAdjustmentEntity(

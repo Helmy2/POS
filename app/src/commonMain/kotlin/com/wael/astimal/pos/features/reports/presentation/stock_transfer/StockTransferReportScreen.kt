@@ -43,9 +43,8 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.format
+import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import pos.app.generated.resources.Res
@@ -58,7 +57,6 @@ import pos.app.generated.resources.status
 import pos.app.generated.resources.stock_transfer_report
 import pos.app.generated.resources.to_store
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -237,15 +235,13 @@ fun StockTransferReportScreen(
 @OptIn(ExperimentalTime::class)
 @Composable
 private fun TransferRow(transfer: StockTransfer) {
-    val date = Instant.fromEpochMilliseconds(transfer.createdAt)
-        .toLocalDateTime(TimeZone.currentSystemDefault()).date
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                date.toString(),
+                transfer.transferDate.toDateString(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium
             )

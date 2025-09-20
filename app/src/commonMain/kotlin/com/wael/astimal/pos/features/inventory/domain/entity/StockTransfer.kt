@@ -21,6 +21,7 @@ data class StockTransfer(
     val isSynced: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
+    val transferDate: Long
 )
 
 enum class StockTransferStatus {
@@ -48,9 +49,10 @@ fun StockTransfer.toDto(): StockTransferDto {
         toStoreId = toStore.id,
         initiatingUserId = initiatingUser.id,
         receivingUserId = receivingUser.id,
-        status = status.name,
         notes = notes,
+        status = status.name,
         createdAt = createdAt.toISOString(),
-        updatedAt = updatedAt.toISOString()
+        updatedAt = updatedAt.toISOString(),
+        transferDate = transferDate.toISOString(),
     )
 }

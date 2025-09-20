@@ -45,6 +45,7 @@ data class StockTransferEntity(
     var isSynced: Boolean = false,
     val createdAt: Long = Clock.now(),
     val updatedAt: Long = Clock.now(),
+    val transferDate: Long = Clock.now(),
     var isDeletedLocally: Boolean = false,
 
     @ColumnInfo(index = true) val fromStoreId: String?,
@@ -123,6 +124,7 @@ fun StockTransferWithItemsAndDetails.toDomain(): StockTransfer {
         notes = transfer.notes,
         status = transfer.status,
         receivingUser = receivingUser?.toDomain() ?: throw NullPointerException(),
+        transferDate = transfer.transferDate
     )
 }
 

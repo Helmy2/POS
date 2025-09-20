@@ -5,7 +5,6 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
-import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransferItem
 import com.wael.astimal.pos.features.inventory.domain.repository.ProductRepository
 import com.wael.astimal.pos.features.inventory.domain.repository.StockRepository
@@ -244,7 +243,7 @@ class StockTransferViewModel(
                 initiatedByUser = currentInput.selectedEmployee!!,
                 receivingUser = currentInput.toStore.employee,
                 items = transferItems,
-                transferDate = Clock.now(),
+                transferDate = currentInput.transferDate,
                 notes = currentInput.notes,
                 status = state.value.selectedTransfer!!.status,
                 createdAt = state.value.selectedTransfer!!.createdAt
@@ -256,7 +255,7 @@ class StockTransferViewModel(
                 initiatedByUser = currentInput.selectedEmployee!!,
                 receivingUser = currentInput.toStore.employee,
                 items = transferItems,
-                transferDate = Clock.now(),
+                transferDate = currentInput.transferDate,
                 notes = currentInput.notes
             )
         }

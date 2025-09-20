@@ -15,7 +15,7 @@ sealed class EmployeeActivity {
     data class InvoiceActivity(val invoice: Invoice) : EmployeeActivity() {
         override val id: String get() = invoice.id
 
-        override val timestamp: Instant get() = Instant.fromEpochMilliseconds(invoice.createdAt)
+        override val timestamp: Instant get() = Instant.fromEpochMilliseconds(invoice.orderDate)
     }
 
     data class FinancialActivity(val transaction: EmployeeTransaction) : EmployeeActivity() {

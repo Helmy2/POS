@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.inventory.data.local.entity
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.wael.astimal.pos.core.domain.entity.LocalizedString
@@ -24,6 +25,9 @@ import pos.app.generated.resources.store_type_unspecified
             parentColumns = ["id"],
             childColumns = ["employeeId"],
         ),
+    ],
+    indices = [
+        Index("employeeId"),
     ]
 )
 data class StoreEntity(

@@ -76,7 +76,7 @@ class StockRepositoryImpl(
             }
 
             stockAdjustmentDao.insert(adjustmentToInsert.toEntity())
-            syncManager.restSyncDate()
+            syncManager.requestSync()
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -90,7 +90,7 @@ class StockRepositoryImpl(
                 targetTableName = "stock_adjustments",
                 targetRecordId = adjustment.id
             ).onSuccess {
-                syncManager.restSyncDate()
+                syncManager.requestSync()
             }
         } catch (e: Exception) {
             e.printStackTrace()

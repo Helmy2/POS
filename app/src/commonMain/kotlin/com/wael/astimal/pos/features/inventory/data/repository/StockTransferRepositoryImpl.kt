@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.data.repository
 
+import com.wael.astimal.pos.core.data.SyncManager
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.core.util.deleteRecordAndLog
 import com.wael.astimal.pos.core.util.toISOString
@@ -24,7 +25,6 @@ import com.wael.astimal.pos.features.user.domain.repository.UserRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.functions.functions
-import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +41,8 @@ class StockTransferRepositoryImpl(
     val stockTransferDao: StockTransferDao,
     val userRepository: UserRepository,
     val stockAdjustmentDao: StockAdjustmentDao,
-    val stockRepository: StockRepository
+    val stockRepository: StockRepository,
+    val syncManager: SyncManager,
 ) : StockTransferRepository {
 
     @OptIn(SupabaseExperimental::class)
@@ -172,47 +173,19 @@ class StockTransferRepositoryImpl(
             if (status == StockTransferStatus.REJECTED) {
                 return Result.failure(Exception("Cannot update a rejected transfer"))
             }
-            val transferDto = StockTransferDto(
-                id = transferLocalId,
-                fromStoreId = fromStore.id,
-                toStoreId = toStore.id,
-                initiatingUserId = initiatedByUser.id,
-                receivingUserId = receivingUser.id,
+            val transfer = stockTransferDao
+                .getStockTransfer(transferLocalId).toDomain()
+            deleteStockTransfer(transfer)
+
+            addStockTransfer(
+                fromStore = fromStore,
+                toStore = toStore,
+                initiatedByUser = initiatedByUser,
+                items = items,
+                transferDate = transferDate,
+                receivingUser = receivingUser,
                 notes = notes,
-                status = "pending",
-                createdAt = createdAt.toISOString(),
-                updatedAt = Clock.now().toISOString()
-            )
-
-            supabaseClient.postgrest["stock_transfers"]
-                .update(transferDto) {
-                    filter {
-                        eq("id", transferLocalId)
-                    }
-                }
-
-            supabaseClient.from("stock_transfer_items").delete {
-                filter {
-                    eq("transfer_id", transferLocalId)
-                }
-            }
-
-            val itemDtos = items.map {
-                StockTransferItemDto(
-                    id = Uuid.random().toString(),
-                    transferId = transferLocalId,
-                    productId = it.product.id,
-                    quantity = it.quantity,
-                )
-            }
-
-            supabaseClient.postgrest["stock_transfer_items"].insert(itemDtos)
-
-            stockTransferDao.updateTransferWithItems(
-                transfer = transferDto.toEntity(),
-                items = itemDtos.map {
-                    it.toEntity()
-                }
+                createdAt = createdAt
             )
 
             Result.success(Unit)
@@ -230,7 +203,8 @@ class StockTransferRepositoryImpl(
         items: List<StockTransferItem>,
         transferDate: Long,
         receivingUser: User,
-        notes: String
+        notes: String,
+        createdAt: Long
     ): Result<Unit> {
         return try {
             val transferDto = StockTransferDto(
@@ -242,7 +216,8 @@ class StockTransferRepositoryImpl(
                 notes = notes,
                 status = "pending",
                 createdAt = Clock.now().toISOString(),
-                updatedAt = Clock.now().toISOString()
+                updatedAt = Clock.now().toISOString(),
+                transferDate = transferDate.toISOString(),
             )
             supabaseClient.postgrest["stock_transfers"]
                 .insert(transferDto)
@@ -302,6 +277,7 @@ class StockTransferRepositoryImpl(
                 targetTableName = "stock_transfers", targetRecordId = transferToDelete.id
             ).getOrThrow()
 
+            syncManager.requestSync()
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()

@@ -1,5 +1,6 @@
 package com.wael.astimal.pos.features.inventory.domain.repository
 
+import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferEntity
 import com.wael.astimal.pos.features.inventory.data.local.entity.StockTransferItemEntity
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
@@ -39,7 +40,8 @@ interface StockTransferRepository {
         items: List<StockTransferItem>,
         transferDate: Long,
         receivingUser: User,
-        notes: String
+        notes: String,
+        createdAt: Long = Clock.now()
     ): Result<Unit>
 
     suspend fun syncTransfersItems(entities: List<StockTransferItemEntity>): Result<Unit>
