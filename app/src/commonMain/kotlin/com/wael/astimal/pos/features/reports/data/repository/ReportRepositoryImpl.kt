@@ -29,7 +29,6 @@ import kotlin.time.Instant
 @OptIn(ExperimentalTime::class)
 class ReportRepositoryImpl(
     val businessPartnerRepository: BusinessPartnerRepository,
-    val invoiceRepository: InvoiceRepository,
     val db: AppDatabase
 ) : ReportRepository {
     override suspend fun getClientsWithDebit(
@@ -37,13 +36,13 @@ class ReportRepositoryImpl(
     ): Flow<List<ClientDebitInfo>> {
         return businessPartnerRepository.getBusinessPartners("").map { allPartners ->
             allPartners.filter { responsibleEmployeeId == null || it.responsibleEmployee.id == responsibleEmployeeId }
-                    .map {
-                        val balance = db.partnerTransactionDao().getPartnerBalance(it.id) ?: 0.0
-                        ClientDebitInfo(
-                            client = it, debitAmount = balance
-                        )
-                    }.filter { it.debitAmount > 0.0 }
-            }
+                .map {
+                    val balance = db.partnerTransactionDao().getPartnerBalance(it.id) ?: 0.0
+                    ClientDebitInfo(
+                        client = it, debitAmount = balance
+                    )
+                }.filter { it.debitAmount > 0.0 }
+        }
     }
 
     override fun getCurrentStock(
@@ -87,13 +86,8 @@ class ReportRepositoryImpl(
                 list.map { entity -> entity.toDomain() }.map { entity ->
                     DetailedTransaction(
                         id = entity.id,
-                        date = if (entity.invoiceId.takeIf { it != "" } == null) Instant.fromEpochMilliseconds(
+                        date = Instant.fromEpochMilliseconds(
                             entity.createdAt
-                        )
-                            .toLocalDateTime(TimeZone.currentSystemDefault())
-                        else Instant.fromEpochMilliseconds(
-                            invoiceRepository.getInvoiceById(entity.invoiceId!!)
-                                .getOrThrow().orderDate
                         ).toLocalDateTime(TimeZone.currentSystemDefault()),
                         transactionType = entity.transactionType,
                         invoiceId = entity.invoiceId.toString(),
@@ -242,9 +236,9 @@ class ReportRepositoryImpl(
 
         return db.stockTransferDao().getAllStockTransfersWithDetailsFlow().map { allTransfers ->
             allTransfers.filter { it.transfer.createdAt in startEpochMilli..endEpochMilli }
-                    .filter { fromStoreId == null || it.transfer.fromStoreId == fromStoreId }
-                    .filter { toStoreId == null || it.transfer.toStoreId == toStoreId }
+                .filter { fromStoreId == null || it.transfer.fromStoreId == fromStoreId }
+                .filter { toStoreId == null || it.transfer.toStoreId == toStoreId }
                 .map { it.toDomain() }.sortedByDescending { it.createdAt }
-            }
+        }
     }
 }
