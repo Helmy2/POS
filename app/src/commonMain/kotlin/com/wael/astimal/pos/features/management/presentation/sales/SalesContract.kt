@@ -53,7 +53,9 @@ object SalesContract {
                     currentOrderInput.selectedStore != null &&
                     currentOrderInput.items.isNotEmpty() &&
                     currentOrderInput.items.all { it.product != null } &&
-                    currentOrderInput.paymentType != null
+                    currentOrderInput.paymentType != null &&
+                    (currentOrderInput.amountPaid.toDoubleOrNull()?: 0.0) <= currentOrderInput.totalAmount
+
         val canCreate: Boolean get() = PermissionManager.canCreate(Destination.SalesOrders()) && isOwnerOrUnassigned
         val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.SalesOrders()) && isOwnerOrUnassigned
         val canDelete: Boolean get() = PermissionManager.canDelete(Destination.SalesOrders()) && isOwnerOrUnassigned
