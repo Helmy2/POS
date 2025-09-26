@@ -25,6 +25,7 @@ import pos.app.generated.resources.account_statement
 import pos.app.generated.resources.amount
 import pos.app.generated.resources.amount_due
 import pos.app.generated.resources.balance
+import pos.app.generated.resources.balance_summary_settled
 import pos.app.generated.resources.bill_to_label
 import pos.app.generated.resources.client
 import pos.app.generated.resources.date
@@ -39,6 +40,7 @@ import pos.app.generated.resources.invoice_no_label
 import pos.app.generated.resources.item_description
 import pos.app.generated.resources.notes
 import pos.app.generated.resources.opening_balance
+import pos.app.generated.resources.owns_you
 import pos.app.generated.resources.paid_amount
 import pos.app.generated.resources.partner_payment
 import pos.app.generated.resources.partner_payment_details_format
@@ -48,6 +50,8 @@ import pos.app.generated.resources.subtotal
 import pos.app.generated.resources.total
 import pos.app.generated.resources.type
 import pos.app.generated.resources.unit_price
+import pos.app.generated.resources.you_owns
+import kotlin.math.abs
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -223,7 +227,8 @@ class HtmlReportGenerator(
     }
 
     suspend fun createInvoiceHtml(
-        invoice: Invoice
+        invoice: Invoice,
+        partnerBalance: Double
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
@@ -241,7 +246,11 @@ class HtmlReportGenerator(
             "total" to getString(Res.string.total),
             "subtotal" to getString(Res.string.subtotal),
             "paid" to getString(Res.string.paid_amount),
-            "due" to getString(Res.string.amount_due)
+            "due" to getString(Res.string.amount_due),
+            "partnerBalanceText" to if (partnerBalance > 0.0)
+                getString(Res.string.owns_you)
+            else if (partnerBalance < 0.0) getString(Res.string.you_owns)
+            else getString(Res.string.balance_summary_settled)
         )
 
 
@@ -263,7 +272,8 @@ class HtmlReportGenerator(
             labels = labels,
             isRtl = isRtl,
             invoice = invoice,
-            itemRows = itemRows
+            itemRows = itemRows,
+            partnerBalance = partnerBalance
         )
 
         return html
@@ -273,7 +283,8 @@ class HtmlReportGenerator(
         labels: Map<String, String>,
         isRtl: Boolean,
         invoice: Invoice,
-        itemRows: String
+        itemRows: String,
+        partnerBalance: Double
     ): String {
         val dir = if (isRtl) "rtl" else "ltr"
         val langAttr = if (isRtl) "ar" else "en"
@@ -329,6 +340,10 @@ class HtmlReportGenerator(
                     <b>${labels["bill_to"]}</b><br>
                     ${if (isRtl) invoice.partner.name.arName else invoice.partner.name.enName}<br>
                     ${invoice.partner.phone}
+                </div>
+                <div>
+                    <b>${labels["partnerBalanceText"]}</b><br>
+                    ${abs(partnerBalance).formate()}
                 </div>
                 <div>
                     <b>${labels["employee"]}</b><br>

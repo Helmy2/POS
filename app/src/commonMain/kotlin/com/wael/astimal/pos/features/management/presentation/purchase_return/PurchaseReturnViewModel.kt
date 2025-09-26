@@ -334,7 +334,8 @@ class PurchaseReturnViewModel(
     private suspend fun generatePdf(
         invoice: Invoice
     ) {
-        val html = htmlReportGenerator.createInvoiceHtml(invoice = invoice)
+        val partnerBalance = partnerRepository.getPartnerBalance(invoice.partner).getOrDefault(0.0)
+        val html = htmlReportGenerator.createInvoiceHtml(invoice = invoice,partnerBalance)
 
         setState(PurchaseReturnContract.Event.PdfGenerationSuccess(html))
     }
