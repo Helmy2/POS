@@ -34,6 +34,7 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         // Form input state
         val inputArName: String = "",
         val inputEnName: String = "",
+        val inputAveragePrice: String = "",
         val inputPurchasePrice: String = "",
         val inputSellingPrice: String = "",
         val inputSubUnitsPerMainUnit: String = "1",
@@ -77,6 +78,7 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
         data class EnNameChanged(val name: String) : Event
         data class PurchasePriceChanged(val price: String) : Event
         data class SellingPriceChanged(val price: String) : Event
+        data class AveragePriceChanged(val price: String) : Event
         data class SubUnitsPerMainUnitChanged(val value: String) : Event
         data class CategoryIdChanged(val category: Category?) : Event
         data class MainUnitIdChanged(val unit: ProductUnit?) : Event
@@ -128,7 +130,7 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
                     inputEnName = event.product.product.name.enName ?: "",
                     inputPurchasePrice = event.product.product.purchasePrice.formate(),
                     inputSellingPrice = event.product.product.sellingPrice.formate(),
-
+                    inputAveragePrice = event.product.product.averagePrice.formate(),
                     inputSubUnitsPerMainUnit = event.product.product.subUnitsPerMainUnit.formate(),
                     selectedCategory = event.product.product.category,
                     // remove the selected store id
@@ -148,6 +150,7 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
                     inputEnName = "",
                     inputPurchasePrice = "",
                     inputSellingPrice = "",
+                    inputAveragePrice = "",
                     inputSubUnitsPerMainUnit = "1",
                     selectedCategory = null,
                     selectedMainUnit = null,
@@ -161,6 +164,7 @@ class ProductReducer : Reducer<ProductReducer.State, ProductReducer.Event, Nothi
             is Event.EnNameChanged -> previousState.copy(inputEnName = event.name) to null
             is Event.PurchasePriceChanged -> previousState.copy(inputPurchasePrice = event.price) to null
             is Event.SellingPriceChanged -> previousState.copy(inputSellingPrice = event.price) to null
+            is Event.AveragePriceChanged -> previousState.copy(inputAveragePrice = event.price) to null
             is Event.SubUnitsPerMainUnitChanged -> previousState.copy(
                 inputSubUnitsPerMainUnit = event.value
             ) to null

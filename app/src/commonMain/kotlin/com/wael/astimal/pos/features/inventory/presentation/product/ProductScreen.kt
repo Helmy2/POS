@@ -97,14 +97,15 @@ fun ProductScreen(
             )
         },
         mainContent = {
-            if (state.selectedProduct?.product?.averagePrice.takeIf { it != 0.0 } != null && state.canEdit) {
-                LabeledTextField(
-                    value = state.selectedProduct?.product?.averagePrice.formate(),
-                    onValueChange = { },
-                    label = stringResource(Res.string.average_cost_price),
-                    enabled = false,
-                )
-            }
+            LabeledTextField(
+                value = state.inputAveragePrice,
+                onValueChange = {
+                    onEvent(ProductReducer.Event.AveragePriceChanged(it))
+                },
+                label = stringResource(Res.string.average_cost_price),
+                enabled = state.canEdit,
+            )
+
             if (state.selectedProduct?.stock != null) {
                 LabeledTextField(
                     value = state.selectedProduct.stock.formate(),
