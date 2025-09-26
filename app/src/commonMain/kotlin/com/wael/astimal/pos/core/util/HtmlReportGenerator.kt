@@ -20,6 +20,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.account_statement
 import pos.app.generated.resources.amount
@@ -737,7 +738,7 @@ class HtmlReportGenerator(
                 }
 
                 is EmployeeActivity.PartnerPaymentActivity -> {
-                    typeString = getString(Res.string.partner_payment)
+                    typeString = getString(activity.transaction.transactionType.getStringRes())
                     val partnerName =
                         if (isRtl) activity.transaction.partner.name.arName else activity.transaction.partner.name.enName
                     detailsString = getString(

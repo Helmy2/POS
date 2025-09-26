@@ -8,6 +8,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.client_debit_report
 import pos.app.generated.resources.current_stock_report
 import pos.app.generated.resources.customer_statement
+import pos.app.generated.resources.employee_activity_report
 import pos.app.generated.resources.employee_daily_report
 import pos.app.generated.resources.employee_ledger_report
 import pos.app.generated.resources.product_movement_report
@@ -60,7 +61,7 @@ class ReportsReducer : Reducer<ReportsReducer.State, ReportsReducer.Event, Nothi
                     if (PermissionManager.canView(Destination.EmployeeReport))
                         add(
                             ReportsItem(
-                                Destination.EmployeeReport, Res.string.employee_daily_report
+                                Destination.EmployeeReport, Res.string.employee_activity_report
                             )
                         )
                     if (PermissionManager.canView(Destination.ProductMovement))

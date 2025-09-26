@@ -30,7 +30,7 @@ import com.wael.astimal.pos.features.reports.presentation.client_debit.ClientDeb
 import com.wael.astimal.pos.features.reports.presentation.current_stock.CurrentStockRoute
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementRoute
 import com.wael.astimal.pos.features.reports.presentation.employee_ledger.EmployeeLedgerRoute
-import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportRoute
+import com.wael.astimal.pos.features.reports.presentation.employee_activity_report.EmployeeReportRoute
 import com.wael.astimal.pos.features.reports.presentation.product_movement.ProductMovementRoute
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsRoute
 import com.wael.astimal.pos.features.reports.presentation.stock_transfer.StockTransferReportRoute

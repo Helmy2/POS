@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.reports.presentation.employee_report
+package com.wael.astimal.pos.features.reports.presentation.employee_activity_report
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,7 +56,6 @@ import pos.app.generated.resources.description
 import pos.app.generated.resources.employee_activity_report
 import pos.app.generated.resources.end_date
 import pos.app.generated.resources.invoice_details_format
-import pos.app.generated.resources.partner_payment
 import pos.app.generated.resources.partner_payment_details_format
 import pos.app.generated.resources.select_employee
 import pos.app.generated.resources.start_date
@@ -254,7 +253,7 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
         }
 
         is EmployeeActivity.PartnerPaymentActivity -> {
-            typeString = stringResource(Res.string.partner_payment)
+            typeString = stringResource(activity.transaction.transactionType.getStringRes())
             detailsString = stringResource(
                 Res.string.partner_payment_details_format,
                 activity.transaction.partner.name.get()

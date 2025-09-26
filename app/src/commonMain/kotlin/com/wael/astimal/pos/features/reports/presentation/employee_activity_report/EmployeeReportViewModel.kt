@@ -1,4 +1,4 @@
-package com.wael.astimal.pos.features.reports.presentation.employee_report
+package com.wael.astimal.pos.features.reports.presentation.employee_activity_report
 
 import androidx.lifecycle.viewModelScope
 import com.wael.astimal.pos.core.base.NavigationController

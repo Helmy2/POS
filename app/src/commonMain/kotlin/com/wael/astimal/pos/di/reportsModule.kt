@@ -7,7 +7,7 @@ import com.wael.astimal.pos.features.reports.presentation.client_debit.ClientDeb
 import com.wael.astimal.pos.features.reports.presentation.current_stock.CurrentStockViewModel
 import com.wael.astimal.pos.features.reports.presentation.customer_statement.CustomerStatementViewModel
 import com.wael.astimal.pos.features.reports.presentation.employee_ledger.EmployeeLedgerViewModel
-import com.wael.astimal.pos.features.reports.presentation.employee_report.EmployeeReportViewModel
+import com.wael.astimal.pos.features.reports.presentation.employee_activity_report.EmployeeReportViewModel
 import com.wael.astimal.pos.features.reports.presentation.product_movement.ProductMovementViewModel
 import com.wael.astimal.pos.features.reports.presentation.reports.ReportsViewModel
 import com.wael.astimal.pos.features.reports.presentation.stock_transfer.StockTransferReportViewModel
