@@ -56,6 +56,7 @@ import pos.app.generated.resources.description
 import pos.app.generated.resources.employee_activity_report
 import pos.app.generated.resources.end_date
 import pos.app.generated.resources.invoice_details_format
+import pos.app.generated.resources.paid_amount
 import pos.app.generated.resources.partner_payment_details_format
 import pos.app.generated.resources.select_employee
 import pos.app.generated.resources.start_date
@@ -206,6 +207,12 @@ fun EmployeeReportScreen(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
+                                stringResource(Res.string.paid_amount),
+                                modifier = Modifier.weight(1.5f),
+                                style = MaterialTheme.typography.titleSmall,
+                                textAlign = TextAlign.End
+                            )
+                            Text(
                                 stringResource(Res.string.total_amount),
                                 modifier = Modifier.weight(1.5f),
                                 style = MaterialTheme.typography.titleSmall,
@@ -233,7 +240,8 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
     // All UI text is now derived here, inside the Composable, where it can access resources.
     val typeString: String
     val detailsString: String
-    val amount: Double
+    val totalAmount: Double
+    val paidAmount: Double
 
     when (activity) {
         is EmployeeActivity.InvoiceActivity -> {
@@ -243,13 +251,15 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 activity.invoice.id,
                 activity.invoice.partner.name.get()
             )
-            amount = activity.invoice.totalAmount
+            totalAmount = activity.invoice.totalAmount
+            paidAmount = activity.invoice.paidAmount
         }
 
         is EmployeeActivity.FinancialActivity -> {
             typeString = stringResource(activity.transaction.type.getStringResId())
             detailsString = activity.transaction.notes ?: typeString
-            amount = activity.transaction.amount
+            totalAmount = activity.transaction.amount
+            paidAmount = activity.transaction.amount
         }
 
         is EmployeeActivity.PartnerPaymentActivity -> {
@@ -258,7 +268,8 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 Res.string.partner_payment_details_format,
                 activity.transaction.partner.name.get()
             )
-            amount = activity.transaction.amount
+            totalAmount = activity.transaction.amount
+            paidAmount = activity.transaction.amount
         }
     }
 
@@ -291,7 +302,13 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 }
             }
             Text(
-                amount.formate(),
+                paidAmount.formate(),
+                modifier = Modifier.weight(1.5f),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.End
+            )
+            Text(
+                totalAmount.formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End

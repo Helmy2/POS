@@ -20,7 +20,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.stringResource
 import pos.app.generated.resources.Res
 import pos.app.generated.resources.account_statement
 import pos.app.generated.resources.amount
@@ -49,6 +48,7 @@ import pos.app.generated.resources.quantity
 import pos.app.generated.resources.store_label
 import pos.app.generated.resources.subtotal
 import pos.app.generated.resources.total
+import pos.app.generated.resources.total_amount
 import pos.app.generated.resources.type
 import pos.app.generated.resources.unit_price
 import pos.app.generated.resources.you_owns
@@ -69,13 +69,15 @@ class HtmlReportGenerator(
         val date: String,
         val type: String,
         val details: String,
-        val amount: String,
+        val totalAmount: String,
+        val paidAmount: String,
     )
 
     private data class CustomerStatementRowData(
         val date: String,
         val type: String,
-        val balance: String,
+        val totalAmount: String,
+        val paidAmount: String,
     )
 
     private data class LedgerReportRowData(
@@ -644,7 +646,8 @@ class HtmlReportGenerator(
             CustomerStatementRowData(
                 date = trx.date.format(),
                 type = typeString,
-                balance = trx.totalAmount.formate()
+                totalAmount = trx.totalAmount.formate(),
+                paidAmount = trx.paidAmount.formate(),
             )
         }
 
@@ -653,7 +656,8 @@ class HtmlReportGenerator(
         <tr>
             <td>${row.date}</td>
             <td>${row.type}</td> 
-            <td class="num">${row.balance}</td>
+            <td class="num">${row.paidAmount}</td>
+            <td class="num">${row.totalAmount}</td>
         </tr>
         """.trimIndent() // <-- MODIFIED: Added cell for type
         }
@@ -666,25 +670,24 @@ class HtmlReportGenerator(
             if (isRtl) "تقرير للفترة: $formattedStartDate إلى $formattedEndDate" else "Report for period: $formattedStartDate to $formattedEndDate"
         }
 
-        val title = if (isRtl) getString(Res.string.account_statement) else "Account Statement"
+        val title =  getString(Res.string.account_statement)
         val subtitle = if (isRtl) partner.name.arName ?: "" else partner.name.enName ?: ""
 
         // MODIFIED: Add "Type" header
-        val headers = if (isRtl) {
-            listOf(
+        val headers = listOf(
                 getString(Res.string.date),
                 getString(Res.string.type),
-                getString(Res.string.balance)
+                getString(Res.string.paid_amount),
+                getString(Res.string.total_amount)
             )
-        } else {
-            listOf("Date", "Type", "Balance")
-        }
+
 
         // MODIFIED: Update colspan from 2 to 3
         val footer =
             """
         <tr style="font-weight: bold; border-top: 2px solid #333;">
-            <td colspan="3">${getString(Res.string.total)}</td>
+            <td colspan="2">${getString(Res.string.total)}</td>
+            <td class="num">${transactions.sumOf { it.paidAmount }.formate()}</td>
             <td class="num">${transactions.sumOf { it.totalAmount }.formate()}</td>
         </tr>
         """.trimIndent()
@@ -716,7 +719,8 @@ class HtmlReportGenerator(
             val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
             val typeString: String
             val detailsString: String
-            val amount: Double
+            val totalAmount: Double
+            val paidAmount: Double
 
             when (activity) {
                 is EmployeeActivity.InvoiceActivity -> {
@@ -727,14 +731,16 @@ class HtmlReportGenerator(
                         Res.string.invoice_details_format,
                         partnerName ?: ""
                     )
-                    amount = activity.invoice.totalAmount
+                    totalAmount = activity.invoice.totalAmount
+                    paidAmount = activity.invoice.paidAmount
                 }
 
                 is EmployeeActivity.FinancialActivity -> {
                     typeString = getString(activity.transaction.type.getStringResId())
                     detailsString =
                         activity.transaction.notes.takeIf { it?.isNotBlank() == true } ?: typeString
-                    amount = activity.transaction.amount
+                    totalAmount = activity.transaction.amount
+                    paidAmount = activity.transaction.amount
                 }
 
                 is EmployeeActivity.PartnerPaymentActivity -> {
@@ -745,7 +751,8 @@ class HtmlReportGenerator(
                         Res.string.partner_payment_details_format,
                         partnerName ?: ""
                     )
-                    amount = activity.transaction.amount
+                    totalAmount = activity.transaction.amount
+                    paidAmount = activity.transaction.amount
                 }
             }
 
@@ -753,7 +760,8 @@ class HtmlReportGenerator(
                 date = date.format(),
                 type = typeString,
                 details = detailsString,
-                amount = amount.formate()
+                totalAmount = totalAmount.formate(),
+                paidAmount = paidAmount.formate()
             )
         }
 
@@ -763,7 +771,8 @@ class HtmlReportGenerator(
             <td>${row.date}</td>
             <td>${row.type}</td>
             <td>${row.details}</td>
-            <td class="num">${row.amount}</td>
+            <td class="num">${row.paidAmount}</td>
+            <td class="num">${row.totalAmount}</td>
         </tr>
         """.trimIndent()
         }
@@ -778,13 +787,22 @@ class HtmlReportGenerator(
             }
         }
 
+        val paidAmount = activities.sumOf { activity ->
+            when (activity) {
+                is EmployeeActivity.InvoiceActivity -> activity.invoice.paidAmount
+                is EmployeeActivity.FinancialActivity -> activity.transaction.amount
+                is EmployeeActivity.PartnerPaymentActivity -> activity.transaction.amount
+            }
+        }
+
         // 2. Create the HTML for the total row
-        val totalLabel = if (isRtl) getString(Res.string.total) else "Total"
+        val totalLabel = getString(Res.string.total)
         val totalRow = """
-    <tr style="font-weight: bold; border-top: 2px solid #333;">
+        <tr style="font-weight: bold; border-top: 2px solid #333;">
         <td colspan="3">$totalLabel</td>
+        <td class="num">${paidAmount.formate()}</td>
         <td class="num">${totalAmount.formate()}</td>
-    </tr>
+        </tr>
     """.trimIndent()
 
         val formattedStartDate = startDate
@@ -799,16 +817,14 @@ class HtmlReportGenerator(
             if (isRtl) getString(Res.string.employee_activity_report) else "Employee Activity Report"
         val subtitle = if (isRtl) employee.localizedName.arName
             ?: employee.name else employee.localizedName.enName ?: employee.name
-        val headers = if (isRtl) {
-            listOf(
-                getString(Res.string.date),
-                getString(Res.string.type),
-                getString(Res.string.details),
-                getString(Res.string.amount)
-            )
-        } else {
-            listOf("Date", "Type", "Details", "Amount")
-        }
+        val headers = listOf(
+            getString(Res.string.date),
+            getString(Res.string.type),
+            getString(Res.string.details),
+            getString(Res.string.paid_amount),
+            getString(Res.string.total_amount)
+        )
+
 
         return generateHtmlShell(
             title = title,
