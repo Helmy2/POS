@@ -7,6 +7,7 @@ import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
+import com.wael.astimal.pos.features.management.domain.repository.InvoiceRepository
 import com.wael.astimal.pos.features.reports.domain.model.ClientDebitInfo
 import com.wael.astimal.pos.features.reports.domain.model.CurrentStockInfo
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
@@ -28,6 +29,7 @@ import kotlin.time.Instant
 @OptIn(ExperimentalTime::class)
 class ReportRepositoryImpl(
     val businessPartnerRepository: BusinessPartnerRepository,
+    val invoiceRepository: InvoiceRepository,
     val db: AppDatabase
 ) : ReportRepository {
     override suspend fun getClientsWithDebit(
@@ -91,7 +93,8 @@ class ReportRepositoryImpl(
                         transactionType = entity.transactionType,
                         invoiceId = entity.invoiceId.toString(),
                         totalAmount = entity.amount,
-                        partnerName = entity.partner.name
+                        partnerName = entity.partner.name,
+                        paidAmount = entity.invoiceId?.let { invoiceRepository.getInvoiceById(it).getOrNull()?.paidAmount ?:  entity.amount } ?:  entity.amount
                     )
                 }.sortedByDescending { it.date }
             }

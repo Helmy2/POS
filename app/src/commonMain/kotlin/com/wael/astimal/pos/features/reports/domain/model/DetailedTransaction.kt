@@ -12,4 +12,5 @@ data class DetailedTransaction(
     val invoiceId: String,
     val totalAmount: Double,
     val partnerName: LocalizedString,
+    val paidAmount: Double,
 )

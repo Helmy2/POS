@@ -43,6 +43,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.format
+import com.wael.astimal.pos.core.util.formate
 import com.wael.astimal.pos.features.reports.domain.model.DetailedTransaction
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -52,6 +53,7 @@ import pos.app.generated.resources.customer_statement
 import pos.app.generated.resources.date
 import pos.app.generated.resources.description
 import pos.app.generated.resources.end_date
+import pos.app.generated.resources.paid_amount
 import pos.app.generated.resources.select_customer
 import pos.app.generated.resources.start_date
 import pos.app.generated.resources.total
@@ -197,6 +199,12 @@ fun CustomerStatementScreen(
                             style = MaterialTheme.typography.titleSmall
                         )
                         Text(
+                            stringResource(Res.string.paid_amount),
+                            modifier = Modifier.weight(1.5f),
+                            style = MaterialTheme.typography.titleSmall,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        )
+                        Text(
                             stringResource(Res.string.total_amount),
                             modifier = Modifier.weight(1.5f),
                             style = MaterialTheme.typography.titleSmall,
@@ -225,6 +233,12 @@ fun CustomerStatementScreen(
                                 "",
                                 modifier = Modifier.weight(3f),
                                 style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                state.transactions.sumOf { it.paidAmount }.toString(),
+                                modifier = Modifier.weight(1.5f),
+                                style = MaterialTheme.typography.titleSmall,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                             Text(
                                 state.transactions.sumOf { it.totalAmount }.toString(),
@@ -267,7 +281,13 @@ private fun TransactionRow(
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                transaction.totalAmount.toString(),
+                transaction.paidAmount.formate(),
+                modifier = Modifier.weight(1.5f),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
+            )
+            Text(
+                transaction.totalAmount.formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.End
