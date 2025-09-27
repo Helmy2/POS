@@ -64,7 +64,7 @@ class InvoiceRepositoryImpl(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun addSalesOrder(invoice: Invoice): Result<Unit> {
+    override suspend fun addSalesOrder(invoice: Invoice): Result<Invoice> {
         return withContext(Dispatchers.IO) {
             try {
                 val invoiceId = Uuid.random().toString()
@@ -86,7 +86,7 @@ class InvoiceRepositoryImpl(
 
                 syncManager.requestSync()
 
-                Result.success(Unit)
+                Result.success(newInvoice)
             } catch (e: Exception) {
                 e.printStackTrace()
                 Result.failure(e)
@@ -213,7 +213,7 @@ class InvoiceRepositoryImpl(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun updateOrder(invoice: Invoice): Result<Unit> {
+    override suspend fun updateOrder(invoice: Invoice): Result<Invoice> {
         return withContext(Dispatchers.IO) {
             try {
                 if (!connectivity.statusUpdates.first().isConnected) throw Exception("No Internet")
@@ -246,7 +246,7 @@ class InvoiceRepositoryImpl(
 
                 // 7. Request sync
                 syncManager.requestSync()
-                Result.success(Unit)
+                Result.success(updatedInvoice)
             } catch (e: Exception) {
                 e.printStackTrace()
                 Result.failure(e)

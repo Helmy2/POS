@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.management.presentation.sales
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseContract
 
 class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing> {
     override fun reduce(
@@ -66,7 +67,6 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
             }
 
             is SalesContract.Event.NewOrderClicked,
-            is SalesContract.Event.SaveSucceeded,
             is SalesContract.Event.DeleteSucceeded ->
                 previousState.copy(
                     isLoading = false,
@@ -251,7 +251,21 @@ class SalesReducer() : Reducer<SalesContract.State, SalesContract.Event, Nothing
             is SalesContract.Event.PdfGenerationSuccess -> previousState.copy(
                 pdfHtmlToGenerate = event.html
             ) to null
+            is SalesContract.Event.SaveSucceeded ->
+                previousState.copy(
+                    invoiceForPdfDialog = event.invoice,
+                    isLoading = false,
+                    selectedOrder = null,
+                    currentOrderInput = SalesContract.EditableOrder(
+                        date = Clock.now(),
+                        selectedStore = previousState.currentOrderInput.selectedStore,
+                        selectedPartner = previousState.currentOrderInput.selectedPartner
+                    ),
+                ) to null
 
+            is SalesContract.Event.DismissInvoiceForPdfDialog -> previousState .copy(
+                invoiceForPdfDialog = null
+            ) to null
 
             else -> previousState to null
         }

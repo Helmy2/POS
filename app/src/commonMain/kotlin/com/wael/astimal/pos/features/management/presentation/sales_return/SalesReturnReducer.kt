@@ -3,6 +3,7 @@ package com.wael.astimal.pos.features.management.presentation.sales_return
 import com.wael.astimal.pos.core.base.mvi.Reducer
 import com.wael.astimal.pos.core.util.Clock
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
+import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseContract
 
 class SalesReturnReducer() :
     Reducer<SalesReturnContract.State, SalesReturnContract.Event, Nothing> {
@@ -67,7 +68,6 @@ class SalesReturnReducer() :
             }
 
             is SalesReturnContract.Event.NewOrderClicked,
-            is SalesReturnContract.Event.SaveSucceeded,
             is SalesReturnContract.Event.DeleteSucceeded ->
                 previousState.copy(
                     isLoading = false,
@@ -253,7 +253,21 @@ class SalesReturnReducer() :
                 pdfHtmlToGenerate = event.html
             ) to null
 
+            is SalesReturnContract.Event.SaveSucceeded ->
+                previousState.copy(
+                    invoiceForPdfDialog = event.invoice,
+                    isLoading = false,
+                    selectedOrder = null,
+                    currentOrderInput = SalesReturnContract.EditableOrder(
+                        date = Clock.now(),
+                        selectedStore = previousState.currentOrderInput.selectedStore,
+                        selectedPartner = previousState.currentOrderInput.selectedPartner
+                    ),
+                ) to null
 
+            is SalesReturnContract.Event.DismissInvoiceForPdfDialog -> previousState .copy(
+                invoiceForPdfDialog = null
+            ) to null
             else -> previousState to null
         }
     }

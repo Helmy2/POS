@@ -1,16 +1,21 @@
 package com.wael.astimal.pos.features.management.presentation.purchase_return
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.displayName
+import com.wael.astimal.pos.core.presentation.compoenents.AppButton
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.EditableOrderItems
 import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
@@ -21,9 +26,11 @@ import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.toDateString
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
+import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseContract
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import pos.app.generated.resources.Res
+import pos.app.generated.resources.cancel
 import pos.app.generated.resources.client
 import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.order_to_with_args
@@ -98,6 +105,36 @@ fun PurchaseReturnScreen(
             )
         },
         mainContent = {
+            if (state.invoiceForPdfDialog != null) {
+                Dialog(
+                    onDismissRequest = { onEvent(PurchaseReturnContract.Event.DismissInvoiceForPdfDialog) },
+                ){
+                    Card {
+                        Column (
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            AppButton(
+                                {
+                                    onEvent(PurchaseReturnContract.Event.DismissInvoiceForPdfDialog)
+                                },
+                                modifier = Modifier.width(320.dp),
+                            ) {
+                                Text(text = stringResource(Res.string.cancel))
+                            }
+                            AppButton(
+                                {
+                                    onEvent(PurchaseReturnContract.Event.GeneratePdf(state.invoiceForPdfDialog))
+                                    onEvent(PurchaseReturnContract.Event.DismissInvoiceForPdfDialog)
+                                },
+                                modifier = Modifier.width(320.dp)
+                            ) {
+                                Text(text = stringResource(Res.string.generate_pdf))
+                            }
+                        }
+                    }
+                }
+            }
             if (state.selectedOrder != null) {
                 Button(
                     {

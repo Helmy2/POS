@@ -43,6 +43,7 @@ object PurchaseContract {
         val dropdownData: DropdownData = DropdownData(),
         val currentOrderInput: EditableOrder,
         val pdfHtmlToGenerate: String? = null,
+        val invoiceForPdfDialog : Invoice? = null
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
 
@@ -100,7 +101,8 @@ object PurchaseContract {
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val data: DropdownData) : Event
         data class OrdersLoaded(val orders: List<Invoice>) : Event
-        data object SaveSucceeded : Event
+        data class SaveSucceeded(val invoice: Invoice) : Event
+        data object DismissInvoiceForPdfDialog : Event
         data object DeleteSucceeded : Event
         data object LoadingStarted : Event
         data object LoadingFinished : Event

@@ -283,7 +283,7 @@ class SalesViewModel(
 
             result.onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.order_saved)))
-                setState(SalesContract.Event.SaveSucceeded)
+                setState(SalesContract.Event.SaveSucceeded(it))
             }.onFailure {
                 it.printStackTrace()
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.something_went_wrong)))

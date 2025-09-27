@@ -8,6 +8,7 @@ import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
+import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseContract
 import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -43,6 +44,7 @@ object SalesContract {
         val dropdownData: DropdownData = DropdownData(),
         val currentOrderInput: EditableOrder,
         val pdfHtmlToGenerate: String? = null,
+        val invoiceForPdfDialog : Invoice? = null
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
         val isOwnerOrUnassigned =
@@ -97,7 +99,8 @@ object SalesContract {
         data class UserLoaded(val user: User?) : Event
         data class DropdownDataLoaded(val data: DropdownData) : Event
         data class OrdersLoaded(val orders: List<Invoice>) : Event
-        data object SaveSucceeded : Event
+        data class SaveSucceeded(val invoice: Invoice) :Event
+        data object DismissInvoiceForPdfDialog : Event
         data object DeleteSucceeded : Event
         data object LoadingStarted : Event
         data object LoadingFinished : Event

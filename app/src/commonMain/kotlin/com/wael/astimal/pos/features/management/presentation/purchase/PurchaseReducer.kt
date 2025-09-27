@@ -66,7 +66,6 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
             }
 
             is PurchaseContract.Event.NewOrderClicked,
-            is PurchaseContract.Event.SaveSucceeded,
             is PurchaseContract.Event.DeleteSucceeded ->
                 previousState.copy(
                     isLoading = false,
@@ -252,6 +251,23 @@ class PurchaseReducer() : Reducer<PurchaseContract.State, PurchaseContract.Event
                 pdfHtmlToGenerate = event.html
             ) to null
 
+
+
+            is PurchaseContract.Event.SaveSucceeded ->
+                previousState.copy(
+                    invoiceForPdfDialog = event.invoice,
+                    isLoading = false,
+                    selectedOrder = null,
+                    currentOrderInput = PurchaseContract.EditableOrder(
+                        date = Clock.now(),
+                        selectedStore = previousState.currentOrderInput.selectedStore,
+                        selectedPartner = previousState.currentOrderInput.selectedPartner
+                    ),
+                ) to null
+
+            is PurchaseContract.Event.DismissInvoiceForPdfDialog -> previousState .copy(
+                invoiceForPdfDialog = null
+            ) to null
 
             else -> previousState to null
         }

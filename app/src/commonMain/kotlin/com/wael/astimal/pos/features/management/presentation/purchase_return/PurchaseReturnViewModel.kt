@@ -284,7 +284,7 @@ class PurchaseReturnViewModel(
 
             result.onSuccess {
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.order_saved)))
-                setState(PurchaseReturnContract.Event.SaveSucceeded)
+                setState(PurchaseReturnContract.Event.SaveSucceeded(it))
             }.onFailure {
                 it.printStackTrace()
                 snackbarController.sendEvent(SnackbarEvent(StringResource.FromResource(Res.string.something_went_wrong)))

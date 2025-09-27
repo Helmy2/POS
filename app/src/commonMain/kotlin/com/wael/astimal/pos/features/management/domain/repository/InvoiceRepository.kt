@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface InvoiceRepository {
     fun getInvoices(): Flow<List<Invoice>>
-    suspend fun addSalesOrder(invoice: Invoice): Result<Unit>
-    suspend fun updateOrder(invoice: Invoice): Result<Unit>
+    suspend fun addSalesOrder(invoice: Invoice): Result<Invoice>
+    suspend fun updateOrder(invoice: Invoice): Result<Invoice>
     suspend fun deleteSalesOrder(orderId: String): Result<Unit>
 
     suspend fun syncInvoices(entities: List<InvoiceEntity>): Result<Unit>
