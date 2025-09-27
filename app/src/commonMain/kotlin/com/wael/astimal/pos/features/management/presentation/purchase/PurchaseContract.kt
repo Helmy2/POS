@@ -49,6 +49,10 @@ object PurchaseContract {
         val isOwnerOrUnassigned =
             currentUser?.id == selectedOrder?.employee?.id || selectedOrder == null
 
+        val isEditableTimeframe = currentUser?.isAdmin == true || selectedOrder?.createdAt?.let {
+            it + (24 * 60 * 60 * 1000) > System.currentTimeMillis()
+        } ?: false
+
         val enabledFab: Boolean
             get() = currentOrderInput.selectedPartner != null &&
                     currentOrderInput.selectedStore != null &&
@@ -58,8 +62,8 @@ object PurchaseContract {
                     (currentOrderInput.amountPaid.toDoubleOrNull()?: 0.0) <= currentOrderInput.totalAmount
 
         val canCreate: Boolean get() = PermissionManager.canCreate(Destination.PurchaseOrders()) && isOwnerOrUnassigned
-        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseOrders()) && isOwnerOrUnassigned
-        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseOrders()) && isOwnerOrUnassigned
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.PurchaseOrders()) && isOwnerOrUnassigned && isEditableTimeframe
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.PurchaseOrders()) && isOwnerOrUnassigned && isEditableTimeframe
         val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 

@@ -48,6 +48,10 @@ object SalesReturnContract {
         val isOwnerOrUnassigned =
             currentUser?.id == selectedOrder?.employee?.id || selectedOrder == null
 
+        val isEditableTimeframe = currentUser?.isAdmin == true || selectedOrder?.createdAt?.let {
+            it + (24 * 60 * 60 * 1000) > System.currentTimeMillis()
+        } ?: false
+
         val enabledFab: Boolean
             get() = currentOrderInput.selectedPartner != null &&
                     currentOrderInput.selectedStore != null &&
@@ -58,8 +62,8 @@ object SalesReturnContract {
 
 
         val canCreate: Boolean get() = PermissionManager.canCreate(Destination.SalesReturns()) && isOwnerOrUnassigned
-        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.SalesReturns()) && isOwnerOrUnassigned
-        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.SalesReturns()) && isOwnerOrUnassigned
+        val canUpdate: Boolean get() = PermissionManager.canUpdate(Destination.SalesReturns()) && isOwnerOrUnassigned && isEditableTimeframe
+        val canDelete: Boolean get() = PermissionManager.canDelete(Destination.SalesReturns()) && isOwnerOrUnassigned && isEditableTimeframe
         val canEdit: Boolean get() = canCreate && !isEditing || canUpdate && isEditing
     }
 
