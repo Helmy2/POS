@@ -234,10 +234,10 @@ class ReportRepositoryImpl(
         val endEpochMilli = endDate.toEpochMillis()
 
         return db.stockTransferDao().getAllStockTransfersWithDetailsFlow().map { allTransfers ->
-            allTransfers.filter { it.transfer.createdAt in startEpochMilli..endEpochMilli }
+            allTransfers.filter { it.transfer.transferDate in startEpochMilli..endEpochMilli }
                 .filter { fromStoreId == null || it.transfer.fromStoreId == fromStoreId }
                 .filter { toStoreId == null || it.transfer.toStoreId == toStoreId }
-                .map { it.toDomain() }.sortedByDescending { it.createdAt }
+                .map { it.toDomain() }.sortedByDescending { it.transferDate }
         }
     }
 }

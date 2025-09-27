@@ -119,7 +119,7 @@ class StockTransferRepositoryImpl(
                     id = Uuid.random().toString(),
                     product = item.product,
                     quantityChange = -item.quantity,
-                    createdAt = Clock.now(),
+                    createdAt = transfer.transferDate,
                     updatedAt = Clock.now(),
                     user = transfer.initiatingUser,
                     reason = StockAdjustmentReason.INVOICE,
@@ -132,7 +132,7 @@ class StockTransferRepositoryImpl(
                     id = Uuid.random().toString(),
                     product = item.product,
                     quantityChange = item.quantity,
-                    createdAt = Clock.now(),
+                    createdAt = transfer.transferDate,
                     updatedAt = Clock.now(),
                     user = transfer.initiatingUser,
                     reason = StockAdjustmentReason.INVOICE,
@@ -185,7 +185,7 @@ class StockTransferRepositoryImpl(
                 transferDate = transferDate,
                 receivingUser = receivingUser,
                 notes = notes,
-                createdAt = createdAt
+                createdAt = transferDate
             )
 
             Result.success(Unit)
