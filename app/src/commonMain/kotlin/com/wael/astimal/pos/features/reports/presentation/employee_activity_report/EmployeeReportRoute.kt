@@ -302,13 +302,13 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 }
             }
             Text(
-                paidAmount.formate(),
+                (-paidAmount).formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End
             )
             Text(
-                totalAmount.formate(),
+                (-totalAmount).formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End

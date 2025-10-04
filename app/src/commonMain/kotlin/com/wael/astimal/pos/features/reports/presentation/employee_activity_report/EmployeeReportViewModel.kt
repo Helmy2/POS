@@ -9,6 +9,7 @@ import com.wael.astimal.pos.core.domain.navigation.Destination
 import com.wael.astimal.pos.core.presentation.navigation.AppKoinComponent.snackbarController
 import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
+import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import com.wael.astimal.pos.features.reports.domain.repository.ReportRepository
 import com.wael.astimal.pos.features.user.domain.PermissionManager
@@ -51,7 +52,13 @@ class EmployeeReportViewModel(
                 setState(event)
             }
 
-            is EmployeeReportReducer.Event.SelectActivity -> navigateToTransaction(event.activity)
+            is EmployeeReportReducer.Event.SelectActivity -> {
+                if (event.activity is EmployeeActivity.PartnerPaymentActivity) {
+                    printTransaction(event.activity.transaction)
+                } else {
+                    navigateToTransaction(event.activity)
+                }
+            }
 
             else -> setState(event)
         }
@@ -77,6 +84,13 @@ class EmployeeReportViewModel(
                 .collect { activities ->
                     setState(EmployeeReportReducer.Event.ShowActivities(activities))
                 }
+        }
+    }
+
+    private fun printTransaction(transaction: ReceivePayVoucher) {
+        viewModelScope.launch {
+            val html = htmlReportGenerator.createVoucherHtml(transaction)
+            setState(EmployeeReportReducer.Event.PdfGenerationSuccess(html))
         }
     }
 

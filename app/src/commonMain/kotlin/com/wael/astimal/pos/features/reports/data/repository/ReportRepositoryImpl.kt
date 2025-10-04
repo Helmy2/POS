@@ -4,6 +4,7 @@ import com.wael.astimal.pos.core.data.AppDatabase
 import com.wael.astimal.pos.core.util.toEpochMillis
 import com.wael.astimal.pos.features.inventory.data.local.entity.toDomain
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.data.local.entity.toDomain
 import com.wael.astimal.pos.features.management.domain.entity.EmployeeTransactionType
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
@@ -162,10 +163,19 @@ class ReportRepositoryImpl(
         return combine(
             invoicesFlow, vouchersFlow, partnerTransactionsFlow
         ) { invoices, vouchers, partnerTransactions ->
-            val invoiceActivities = invoices.map { EmployeeActivity.InvoiceActivity(it.toDomain()) }
-            val financialActivities = vouchers.map { EmployeeActivity.FinancialActivity(it) }
+            val invoiceActivities = invoices.map { EmployeeActivity.InvoiceActivity(it.toDomain()) }.filter {
+                it.invoice.totalAmount != 0.0 || it.invoice.paidAmount != 0.0
+            }
+            val financialActivities = vouchers.map { EmployeeActivity.FinancialActivity(it) }.filter {
+                it.transaction.amount != 0.0
+            }
             val partnerPaymentActivities =
-                partnerTransactions.map { EmployeeActivity.PartnerPaymentActivity(it.toDomain()) }
+                partnerTransactions.filter {
+                    it.voucher.transactionType != TransactionType.OPENING_BALANCE
+                }.map { EmployeeActivity.PartnerPaymentActivity(it.toDomain()) }
+                    .filter {
+                        it.transaction.amount != 0.0
+                    }
 
             (invoiceActivities + financialActivities + partnerPaymentActivities).sortedByDescending { it.timestamp }
         }

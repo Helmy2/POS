@@ -24,7 +24,6 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.account_statement
 import pos.app.generated.resources.amount
 import pos.app.generated.resources.amount_due
-import pos.app.generated.resources.balance
 import pos.app.generated.resources.balance_summary_settled
 import pos.app.generated.resources.bill_to_label
 import pos.app.generated.resources.client
@@ -65,7 +64,7 @@ class HtmlReportGenerator(
     val settingsManager: SettingsManager,
 ) {
 
-    private data class ReportRowData(
+    data class ReportRowData(
         val date: String,
         val type: String,
         val details: String,
@@ -670,16 +669,16 @@ class HtmlReportGenerator(
             if (isRtl) "تقرير للفترة: $formattedStartDate إلى $formattedEndDate" else "Report for period: $formattedStartDate to $formattedEndDate"
         }
 
-        val title =  getString(Res.string.account_statement)
+        val title = getString(Res.string.account_statement)
         val subtitle = if (isRtl) partner.name.arName ?: "" else partner.name.enName ?: ""
 
         // MODIFIED: Add "Type" header
         val headers = listOf(
-                getString(Res.string.date),
-                getString(Res.string.type),
-                getString(Res.string.paid_amount),
-                getString(Res.string.total_amount)
-            )
+            getString(Res.string.date),
+            getString(Res.string.type),
+            getString(Res.string.paid_amount),
+            getString(Res.string.total_amount)
+        )
 
 
         // MODIFIED: Update colspan from 2 to 3
@@ -760,9 +759,11 @@ class HtmlReportGenerator(
                 date = date.format(),
                 type = typeString,
                 details = detailsString,
-                totalAmount = totalAmount.formate(),
-                paidAmount = paidAmount.formate()
+                totalAmount = (-totalAmount).formate(),
+                paidAmount = (-paidAmount).formate()
             )
+        }.filter {
+            it.paidAmount != "0.00" || it.totalAmount != "0.00"
         }
 
         val activityRows = processedDataJobs.joinToString("") { row ->
@@ -777,7 +778,6 @@ class HtmlReportGenerator(
         """.trimIndent()
         }
 
-        // --- NEW: START ---
         // 1. Calculate the total amount from the original activities list
         val totalAmount = activities.sumOf { activity ->
             when (activity) {
@@ -800,8 +800,8 @@ class HtmlReportGenerator(
         val totalRow = """
         <tr style="font-weight: bold; border-top: 2px solid #333;">
         <td colspan="3">$totalLabel</td>
-        <td class="num">${paidAmount.formate()}</td>
-        <td class="num">${totalAmount.formate()}</td>
+        <td class="num">${(-paidAmount).formate()}</td>
+        <td class="num">${(-totalAmount).formate()}</td>
         </tr>
     """.trimIndent()
 
