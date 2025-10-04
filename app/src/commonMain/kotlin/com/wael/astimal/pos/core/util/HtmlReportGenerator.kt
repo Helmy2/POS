@@ -3,6 +3,7 @@ package com.wael.astimal.pos.core.util
 
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
@@ -24,6 +25,7 @@ import pos.app.generated.resources.Res
 import pos.app.generated.resources.account_statement
 import pos.app.generated.resources.amount
 import pos.app.generated.resources.amount_due
+import pos.app.generated.resources.balance_before_transaction
 import pos.app.generated.resources.balance_summary_settled
 import pos.app.generated.resources.bill_to_label
 import pos.app.generated.resources.client
@@ -88,9 +90,7 @@ class HtmlReportGenerator(
     )
 
     suspend fun createStockTransferReportHtml(
-        transfers: List<StockTransfer>,
-        startDate: LocalDateTime,
-        endDate: LocalDateTime
+        transfers: List<StockTransfer>, startDate: LocalDateTime, endDate: LocalDateTime
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
@@ -229,8 +229,7 @@ class HtmlReportGenerator(
     }
 
     suspend fun createInvoiceHtml(
-        invoice: Invoice,
-        partnerBalance: Double
+        invoice: Invoice, partnerBalance: Double
     ): String {
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
@@ -249,10 +248,10 @@ class HtmlReportGenerator(
             "subtotal" to getString(Res.string.subtotal),
             "paid" to getString(Res.string.paid_amount),
             "due" to getString(Res.string.amount_due),
-            "partnerBalanceText" to if (partnerBalance > 0.0)
-                getString(Res.string.owns_you)
+            "partnerBalanceText" to if (partnerBalance > 0.0) getString(Res.string.owns_you)
             else if (partnerBalance < 0.0) getString(Res.string.you_owns)
-            else getString(Res.string.balance_summary_settled)
+            else getString(Res.string.balance_summary_settled),
+            "balanceBeforeTransaction" to getString(Res.string.balance_before_transaction)
         )
 
 
@@ -281,7 +280,7 @@ class HtmlReportGenerator(
         return html
     }
 
-    private fun generateInvoiceHtmlShell(
+    private suspend fun generateInvoiceHtmlShell(
         labels: Map<String, String>,
         isRtl: Boolean,
         invoice: Invoice,
@@ -298,6 +297,11 @@ class HtmlReportGenerator(
         val date = Instant.fromEpochMilliseconds(invoice.orderDate)
             .toLocalDateTime(TimeZone.currentSystemDefault())
         val orderDate = date.format()
+
+        val balanceBeforeTransaction = when (invoice.invoiceType) {
+            InvoiceType.SALES, InvoiceType.PURCHASE_RETURN -> partnerBalance - (invoice.totalAmount - invoice.paidAmount)
+            InvoiceType.PURCHASE, InvoiceType.SALES_RETURN -> partnerBalance + (invoice.totalAmount - invoice.paidAmount)
+        }
 
         return """
     <!DOCTYPE html>
@@ -343,10 +347,19 @@ class HtmlReportGenerator(
                     ${if (isRtl) invoice.partner.name.arName else invoice.partner.name.enName}<br>
                     ${invoice.partner.phone}
                 </div>
+                  <div>
+                    <b>${labels["balanceBeforeTransaction"]}</b>
+                    <br>
+                    ${
+            if (balanceBeforeTransaction > 0.0) getString(Res.string.owns_you)
+            else if (balanceBeforeTransaction < 0.0) getString(Res.string.you_owns)
+            else getString(Res.string.balance_summary_settled)
+        } :  ${abs(balanceBeforeTransaction).formate()} 
+                </div>
                 <div>
                     <b>${labels["partnerBalanceText"]}</b><br>
                     ${abs(partnerBalance).formate()}
-                </div>
+                </div>  
                 <div>
                     <b>${labels["employee"]}</b><br>
                     ${invoice.employee.name}
@@ -496,13 +509,11 @@ class HtmlReportGenerator(
                 <td>${entry.date}</td>
                 <td>$description</td>
                 <td class="num">${
-                    if (entry.quantityIn > 0)
-                        entry.quantityIn.formate()
+                    if (entry.quantityIn > 0) entry.quantityIn.formate()
                     else ""
                 }</td>
                 <td class="num">${
-                    if (entry.quantityOut > 0)
-                        entry.quantityOut.formate()
+                    if (entry.quantityOut > 0) entry.quantityOut.formate()
                     else ""
                 }</td>
                 <td class="num">${entry.balance.formate()}</td>
@@ -682,8 +693,7 @@ class HtmlReportGenerator(
 
 
         // MODIFIED: Update colspan from 2 to 3
-        val footer =
-            """
+        val footer = """
         <tr style="font-weight: bold; border-top: 2px solid #333;">
             <td colspan="2">${getString(Res.string.total)}</td>
             <td class="num">${transactions.sumOf { it.paidAmount }.formate()}</td>
@@ -727,8 +737,7 @@ class HtmlReportGenerator(
                     val partnerName =
                         if (isRtl) activity.invoice.partner.name.arName else activity.invoice.partner.name.enName
                     detailsString = getString(
-                        Res.string.invoice_details_format,
-                        partnerName ?: ""
+                        Res.string.invoice_details_format, partnerName ?: ""
                     )
                     totalAmount = activity.invoice.totalAmount
                     paidAmount = activity.invoice.paidAmount
@@ -747,8 +756,7 @@ class HtmlReportGenerator(
                     val partnerName =
                         if (isRtl) activity.transaction.partner.name.arName else activity.transaction.partner.name.enName
                     detailsString = getString(
-                        Res.string.partner_payment_details_format,
-                        partnerName ?: ""
+                        Res.string.partner_payment_details_format, partnerName ?: ""
                     )
                     totalAmount = activity.transaction.amount
                     paidAmount = activity.transaction.amount

@@ -485,4 +485,5 @@
     <string name="no_permission">تم رفض الوصول. يرجى الاتصال بالمسؤول.</string>
     <string name="transfer_approved_successfully">تم قبول التحويل بنجاح.</string>
     <string name="transfer_rejected_successfully">تم رفض التحويل بنجاح.</string>
+    <string name="balance_before_transaction">الرصيد قبل المعاملة</string>
 </resources>

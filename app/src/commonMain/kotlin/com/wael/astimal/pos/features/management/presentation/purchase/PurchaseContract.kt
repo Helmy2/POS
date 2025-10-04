@@ -47,10 +47,10 @@ object PurchaseContract {
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
 
-        val isOwnerOrUnassigned =
+        val isOwnerOrUnassigned get() =
             currentUser?.id == selectedOrder?.employee?.id || selectedOrder == null
 
-        val isEditableTimeframe = currentUser?.isAdmin == true || selectedOrder?.createdAt?.let {
+        val isEditableTimeframe get() =  currentUser?.isAdmin == true || selectedOrder?.createdAt?.let {
             it + (24 * 60 * 60 * 1000) > System.currentTimeMillis()
         } ?: false
 

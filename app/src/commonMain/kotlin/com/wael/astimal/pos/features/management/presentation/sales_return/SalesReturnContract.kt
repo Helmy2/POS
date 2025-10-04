@@ -8,7 +8,6 @@ import com.wael.astimal.pos.features.management.data.local.entity.PaymentMethod
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.EditableItem
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
-import com.wael.astimal.pos.features.management.presentation.purchase.PurchaseContract
 import com.wael.astimal.pos.features.user.domain.PermissionManager
 import com.wael.astimal.pos.features.user.domain.entity.User
 
@@ -47,10 +46,10 @@ object SalesReturnContract {
         val invoiceForPdfDialog : Invoice? = null
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = selectedOrder != null
-        val isOwnerOrUnassigned =
+        val isOwnerOrUnassigned get() =
             currentUser?.id == selectedOrder?.employee?.id || selectedOrder == null
 
-        val isEditableTimeframe = currentUser?.isAdmin == true || selectedOrder?.createdAt?.let {
+        val isEditableTimeframe get() =  currentUser?.isAdmin == true || selectedOrder?.createdAt?.let {
             it + (24 * 60 * 60 * 1000) > System.currentTimeMillis()
         } ?: false
 
