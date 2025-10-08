@@ -145,7 +145,7 @@ class ReportRepositoryImpl(
 
         // Flow 1: Get all invoices created by the employee
         val invoicesFlow = db.invoiceDao()
-            .getInvoicesCreatedByEmployeeInRange(employeeId, startEpochMilli, endEpochMilli)
+            .getInvoicesCreatedByEmployeeInRangeByDate(employeeId, startEpochMilli, endEpochMilli)
 
         // Flow 2: Get only payment/receipt vouchers created by the employee
         val vouchersFlow = db.employeeFinancesDao()
