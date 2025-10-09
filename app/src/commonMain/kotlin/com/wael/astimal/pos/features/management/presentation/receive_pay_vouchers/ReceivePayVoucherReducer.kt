@@ -74,9 +74,13 @@ class ReceivePayVoucherReducer() :
             is ReceivePayVoucherContract.Event.SearchQueryChanged ->
                 previousState.copy(searchQuery = event.query) to null
 
-            is ReceivePayVoucherContract.Event.BackClicked,
-            is ReceivePayVoucherContract.Event.DeleteVoucherClicked,
-            is ReceivePayVoucherContract.Event.SaveChangesClicked -> previousState to null
+            is ReceivePayVoucherContract.Event.PdfGenerationFinished ->
+                previousState.copy(pdfHtmlToGenerate = null) to null
+
+            is ReceivePayVoucherContract.Event.PdfGenerationSuccess ->
+                previousState.copy(pdfHtmlToGenerate = event.html) to null
+
+            else -> previousState to null
         }
     }
 }

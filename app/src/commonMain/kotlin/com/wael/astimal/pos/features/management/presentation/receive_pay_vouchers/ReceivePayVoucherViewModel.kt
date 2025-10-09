@@ -6,12 +6,14 @@ import com.wael.astimal.pos.core.base.SnackbarController
 import com.wael.astimal.pos.core.base.SnackbarEvent
 import com.wael.astimal.pos.core.base.StringResource
 import com.wael.astimal.pos.core.base.mvi.BaseViewModel
+import com.wael.astimal.pos.core.util.HtmlReportGenerator
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import com.wael.astimal.pos.features.management.domain.entity.matchesQuery
 import com.wael.astimal.pos.features.management.domain.repository.BusinessPartnerRepository
 import com.wael.astimal.pos.features.management.domain.repository.PartnerTransactionRepository
 import com.wael.astimal.pos.features.user.domain.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -35,7 +37,8 @@ class ReceivePayVoucherViewModel(
     private val userRepository: UserRepository,
     private val snackbarController: SnackbarController,
     private val navigationController: NavigationController,
-) : BaseViewModel<ReceivePayVoucherContract.State, ReceivePayVoucherContract.Event, Nothing>(
+    private val htmlReportGenerator: HtmlReportGenerator,
+    ) : BaseViewModel<ReceivePayVoucherContract.State, ReceivePayVoucherContract.Event, Nothing>(
     reducer = ReceivePayVoucherReducer(),
     initialState = ReceivePayVoucherContract.State()
 ) {
@@ -64,6 +67,12 @@ class ReceivePayVoucherViewModel(
             is ReceivePayVoucherContract.Event.SaveChangesClicked -> saveVoucher()
             is ReceivePayVoucherContract.Event.DeleteVoucherClicked -> deleteVoucher(event.voucher)
             is ReceivePayVoucherContract.Event.BackClicked -> navigateBack()
+            is ReceivePayVoucherContract.Event.GeneratePdf -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    println("voucherToEdit")
+                    generatePdf(event.voucherToEdit)
+                }
+            }
             else -> setState(event)
         }
     }
@@ -146,5 +155,17 @@ class ReceivePayVoucherViewModel(
         viewModelScope.launch {
             navigationController.navigateBack()
         }
+    }
+
+    private suspend fun generatePdf(
+        payVoucher: ReceivePayVoucher?
+    ) {
+        payVoucher?.let {
+            val partnerBalance = partnerRepository.getPartnerBalance(payVoucher.partner).getOrDefault(0.0)
+            val html = htmlReportGenerator.createReceivePayVoucherHtml(payVoucher = payVoucher,partnerBalance=partnerBalance)
+
+            setState(ReceivePayVoucherContract.Event.PdfGenerationSuccess(html))
+        }
+
     }
 }

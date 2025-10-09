@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wael.astimal.pos.core.domain.entity.get
+import com.wael.astimal.pos.core.presentation.compoenents.AppButton
 import com.wael.astimal.pos.core.presentation.compoenents.ConfirmDeleteDialog
 import com.wael.astimal.pos.core.presentation.compoenents.DataPicker
 import com.wael.astimal.pos.core.presentation.compoenents.ExposedDropdownMenu
@@ -43,6 +45,7 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.presentation.compoenents.Screen
 import com.wael.astimal.pos.core.presentation.compoenents.SearchBarWithBackButton
 import com.wael.astimal.pos.core.presentation.theme.LocalAppLocale
+import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.ReceivePayVoucher
 import org.jetbrains.compose.resources.stringResource
@@ -53,6 +56,7 @@ import pos.app.generated.resources.amount
 import pos.app.generated.resources.business_partner
 import pos.app.generated.resources.cancel
 import pos.app.generated.resources.edit_voucher
+import pos.app.generated.resources.generate_pdf
 import pos.app.generated.resources.new_voucher
 import pos.app.generated.resources.notes_optional
 import pos.app.generated.resources.owns_partner
@@ -74,6 +78,12 @@ fun ReceivePayVoucherRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val filteredVouchers by viewModel.filteredVouchersState.collectAsStateWithLifecycle()
+
+    PdfGeneratorEffect(
+        htmlContent = state.pdfHtmlToGenerate,
+        baseFileName = "receive_pay_voucher_report",
+        onFinish = { viewModel.processEvent(ReceivePayVoucherContract.Event.PdfGenerationFinished) })
+
 
     ReceivePayVoucherScreen(
         onBack = { viewModel.processEvent(ReceivePayVoucherContract.Event.BackClicked) },
@@ -145,8 +155,7 @@ fun ReceivePayVoucherScreen(
 
 @Composable
 fun VoucherEditDialog(
-    state: ReceivePayVoucherContract.State,
-    onEvent: (ReceivePayVoucherContract.Event) -> Unit
+    state: ReceivePayVoucherContract.State, onEvent: (ReceivePayVoucherContract.Event) -> Unit
 ) {
     val dialogState = state.dialogState
 
@@ -162,6 +171,16 @@ fun VoucherEditDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
+                AppButton(
+                    onClick = {
+                        onEvent(
+                            ReceivePayVoucherContract.Event.GeneratePdf(dialogState.voucherToEdit)
+                        )
+                    }, modifier = Modifier.width(320.dp)
+                ) {
+                    Text(text = stringResource(Res.string.generate_pdf))
+                }
+
                 ExposedDropdownMenu(
                     label = stringResource(Res.string.transaction_type),
                     options = TransactionType.getTypesForDropdown()
@@ -171,8 +190,7 @@ fun VoucherEditDialog(
                     onItemSelected = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogTransactionTypeSelected(
-                                it?.let { TransactionType.getTypesForDropdown().getOrNull(it) }
-                            )
+                                it?.let { TransactionType.getTypesForDropdown().getOrNull(it) })
                         )
                     },
                     enabled = state.canEdit
@@ -188,8 +206,7 @@ fun VoucherEditDialog(
                             ReceivePayVoucherContract.Event.DialogPartnerSelected(
                                 it?.let {
                                     state.partyDropdownData.getOrNull(it)
-                                }
-                            )
+                                })
                         )
                     },
                     enabled = state.canEdit && dialogState.voucherToEdit == null
@@ -244,16 +261,13 @@ fun VoucherEditDialog(
                 )
 
                 LabeledTextField(
-                    value = dialogState.notes,
-                    onValueChange = {
+                    value = dialogState.notes, onValueChange = {
                         onEvent(
                             ReceivePayVoucherContract.Event.DialogNotesChanged(
                                 it
                             )
                         )
-                    },
-                    label = stringResource(Res.string.notes_optional),
-                    enabled = state.canEdit
+                    }, label = stringResource(Res.string.notes_optional), enabled = state.canEdit
                 )
             }
         },

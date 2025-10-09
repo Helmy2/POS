@@ -28,6 +28,7 @@ object ReceivePayVoucherContract {
         val currentUser: User? = null,
         val dialogState: DialogState = DialogState(),
         val searchQuery: String = "",
+        val pdfHtmlToGenerate: String? = null,
     ) : Reducer.ViewState {
         val isEditing: Boolean get() = dialogState.voucherToEdit != null
 
@@ -62,5 +63,9 @@ object ReceivePayVoucherContract {
         data class DropdownDataLoaded(val data: List<BusinessPartner>) : Event
         data class VouchersLoaded(val vouchers: List<ReceivePayVoucher>) : Event
         data object SaveSucceeded : Event
+
+        data object PdfGenerationFinished : Event
+        data class GeneratePdf(val voucherToEdit: ReceivePayVoucher?) : Event
+        data class PdfGenerationSuccess(val html: String) : Event
     }
 }

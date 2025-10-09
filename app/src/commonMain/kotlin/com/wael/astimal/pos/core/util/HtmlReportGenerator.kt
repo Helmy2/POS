@@ -29,6 +29,7 @@ import pos.app.generated.resources.balance_before_transaction
 import pos.app.generated.resources.balance_summary_settled
 import pos.app.generated.resources.bill_to_label
 import pos.app.generated.resources.client
+import pos.app.generated.resources.current_balance
 import pos.app.generated.resources.date
 import pos.app.generated.resources.date_label
 import pos.app.generated.resources.details
@@ -46,6 +47,7 @@ import pos.app.generated.resources.paid_amount
 import pos.app.generated.resources.partner_payment
 import pos.app.generated.resources.partner_payment_details_format
 import pos.app.generated.resources.quantity
+import pos.app.generated.resources.receive_pay_voucher
 import pos.app.generated.resources.store_label
 import pos.app.generated.resources.subtotal
 import pos.app.generated.resources.total
@@ -977,4 +979,47 @@ class HtmlReportGenerator(
         """.trimIndent()
     }
 
+    suspend fun createReceivePayVoucherHtml(payVoucher: ReceivePayVoucher, partnerBalance: Double): String {
+        val lang = settingsManager.getLanguage().first()
+        val isRtl = lang == Language.Arabic
+
+        // 1. Prepare all the necessary strings and formatted values
+        val title = getString(Res.string.receive_pay_voucher)
+        val partnerName = if (isRtl) payVoucher.partner.name.arName else payVoucher.partner.name.enName
+        val transactionTypeString = getString(payVoucher.transactionType.getStringRes())
+        val formattedAmount = payVoucher.amount.formate()
+        val formattedDate = payVoucher.createdAt.toDateString()
+
+        // 2. Determine the balance label (e.g., "Owes you" or "You owe")
+        val balanceStatusLabel = when {
+            partnerBalance > 0.0 -> getString(Res.string.owns_you)
+            partnerBalance < 0.0 -> getString(Res.string.you_owns)
+            else -> getString(Res.string.balance_summary_settled)
+        }
+
+        // 3. Build the simple HTML table rows with the required information
+        val reportRows = """
+            <tr>
+                <td>${getString(Res.string.type)}</td>
+                <td><strong>$transactionTypeString</strong></td>
+            </tr>
+            <tr>
+                <td>${getString(Res.string.amount)}</td>
+                <td><strong>$formattedAmount</strong></td>
+            </tr>
+            <tr>
+                <td>${getString(Res.string.current_balance)}</td>
+                <td>$balanceStatusLabel: <strong>${abs(partnerBalance).formate()}</strong></td>
+            </tr>
+        """.trimIndent()
+
+        // 4. Generate the final HTML using the generic shell function
+        return generateHtmlShell(
+            title = title,
+            subtitle = partnerName ?: "",
+            dateRange = formattedDate,
+            isRtl = isRtl,
+            rows = reportRows
+        )
+    }
 }
