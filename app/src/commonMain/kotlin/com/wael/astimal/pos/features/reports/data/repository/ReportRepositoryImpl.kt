@@ -171,7 +171,7 @@ class ReportRepositoryImpl(
             }
             val partnerPaymentActivities =
                 partnerTransactions.filter {
-                    it.voucher.transactionType != TransactionType.OPENING_BALANCE
+                    it.voucher.transactionType == TransactionType.PAYMENT
                 }.map { EmployeeActivity.PartnerPaymentActivity(it.toDomain()) }
                     .filter {
                         it.transaction.amount != 0.0

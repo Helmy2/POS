@@ -3,7 +3,10 @@ package com.wael.astimal.pos.core.util
 
 import com.wael.astimal.pos.core.domain.entity.Language
 import com.wael.astimal.pos.features.inventory.domain.entity.StockTransfer
-import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.PURCHASE
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.PURCHASE_RETURN
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.SALES
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.SALES_RETURN
 import com.wael.astimal.pos.features.management.data.local.entity.TransactionType
 import com.wael.astimal.pos.features.management.domain.entity.BusinessPartner
 import com.wael.astimal.pos.features.management.domain.entity.Invoice
@@ -72,8 +75,8 @@ class HtmlReportGenerator(
         val date: String,
         val type: String,
         val details: String,
-        val totalAmount: String,
-        val paidAmount: String,
+        val totalAmount: Double,
+        val paidAmount: Double,
     )
 
     private data class CustomerStatementRowData(
@@ -301,8 +304,8 @@ class HtmlReportGenerator(
         val orderDate = date.format()
 
         val balanceBeforeTransaction = when (invoice.invoiceType) {
-            InvoiceType.SALES, InvoiceType.PURCHASE_RETURN -> partnerBalance - (invoice.totalAmount - invoice.paidAmount)
-            InvoiceType.PURCHASE, InvoiceType.SALES_RETURN -> partnerBalance + (invoice.totalAmount - invoice.paidAmount)
+            SALES, PURCHASE_RETURN -> partnerBalance - (invoice.totalAmount - invoice.paidAmount)
+            PURCHASE, SALES_RETURN -> partnerBalance + (invoice.totalAmount - invoice.paidAmount)
         }
 
         return """
@@ -726,7 +729,7 @@ class HtmlReportGenerator(
         val lang = settingsManager.getLanguage().first()
         val isRtl = lang == Language.Arabic
 
-        val processedDataJobs = activities.map { activity ->
+        val reportRowsData = activities.map { activity ->
             val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
             val typeString: String
             val detailsString: String
@@ -741,16 +744,22 @@ class HtmlReportGenerator(
                     detailsString = getString(
                         Res.string.invoice_details_format, partnerName ?: ""
                     )
-                    totalAmount = activity.invoice.totalAmount
-                    paidAmount = activity.invoice.paidAmount
+                    totalAmount = when (activity.invoice.invoiceType) {
+                        SALES, PURCHASE_RETURN -> activity.invoice.paidAmount
+                        PURCHASE, SALES_RETURN -> -activity.invoice.paidAmount
+                    }
+                    paidAmount = when (activity.invoice.invoiceType) {
+                        SALES, PURCHASE_RETURN -> activity.invoice.totalAmount
+                        PURCHASE, SALES_RETURN -> -activity.invoice.totalAmount
+                    }
                 }
 
                 is EmployeeActivity.FinancialActivity -> {
                     typeString = getString(activity.transaction.type.getStringResId())
                     detailsString =
                         activity.transaction.notes.takeIf { it?.isNotBlank() == true } ?: typeString
-                    totalAmount = activity.transaction.amount
-                    paidAmount = activity.transaction.amount
+                    totalAmount = -activity.transaction.amount
+                    paidAmount = -activity.transaction.amount
                 }
 
                 is EmployeeActivity.PartnerPaymentActivity -> {
@@ -760,8 +769,8 @@ class HtmlReportGenerator(
                     detailsString = getString(
                         Res.string.partner_payment_details_format, partnerName ?: ""
                     )
-                    totalAmount = activity.transaction.amount
-                    paidAmount = activity.transaction.amount
+                    totalAmount = -activity.transaction.amount
+                    paidAmount = -activity.transaction.amount
                 }
             }
 
@@ -769,49 +778,37 @@ class HtmlReportGenerator(
                 date = date.format(),
                 type = typeString,
                 details = detailsString,
-                totalAmount = (-totalAmount).formate(),
-                paidAmount = (-paidAmount).formate()
+                totalAmount = totalAmount,
+                paidAmount = paidAmount
             )
         }.filter {
-            it.paidAmount != "0.00" || it.totalAmount != "0.00"
+            it.paidAmount != 0.0 || it.totalAmount != 0.0
         }
 
-        val activityRows = processedDataJobs.joinToString("") { row ->
+        val activityRows = reportRowsData.joinToString("") { row ->
             """
         <tr>
             <td>${row.date}</td>
             <td>${row.type}</td>
             <td>${row.details}</td>
-            <td class="num">${row.paidAmount}</td>
-            <td class="num">${row.totalAmount}</td>
+            <td class="num">${row.paidAmount.formate()}</td>
+            <td class="num">${row.totalAmount.formate()}</td>
         </tr>
         """.trimIndent()
         }
 
         // 1. Calculate the total amount from the original activities list
-        val totalAmount = activities.sumOf { activity ->
-            when (activity) {
-                is EmployeeActivity.InvoiceActivity -> activity.invoice.totalAmount
-                is EmployeeActivity.FinancialActivity -> activity.transaction.amount
-                is EmployeeActivity.PartnerPaymentActivity -> activity.transaction.amount
-            }
-        }
+        val totalAmount = reportRowsData.sumOf { it.totalAmount }
 
-        val paidAmount = activities.sumOf { activity ->
-            when (activity) {
-                is EmployeeActivity.InvoiceActivity -> activity.invoice.paidAmount
-                is EmployeeActivity.FinancialActivity -> activity.transaction.amount
-                is EmployeeActivity.PartnerPaymentActivity -> activity.transaction.amount
-            }
-        }
+        val paidAmount = reportRowsData.sumOf { it.paidAmount }
 
         // 2. Create the HTML for the total row
         val totalLabel = getString(Res.string.total)
         val totalRow = """
         <tr style="font-weight: bold; border-top: 2px solid #333;">
         <td colspan="3">$totalLabel</td>
-        <td class="num">${(-paidAmount).formate()}</td>
-        <td class="num">${(-totalAmount).formate()}</td>
+        <td class="num">${(paidAmount).formate()}</td>
+        <td class="num">${(totalAmount).formate()}</td>
         </tr>
     """.trimIndent()
 

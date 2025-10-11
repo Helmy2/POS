@@ -44,6 +44,10 @@ import com.wael.astimal.pos.core.presentation.compoenents.LabeledTextField
 import com.wael.astimal.pos.core.util.PdfGeneratorEffect
 import com.wael.astimal.pos.core.util.format
 import com.wael.astimal.pos.core.util.formate
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.PURCHASE
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.PURCHASE_RETURN
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.SALES
+import com.wael.astimal.pos.features.management.data.local.entity.InvoiceType.SALES_RETURN
 import com.wael.astimal.pos.features.reports.domain.model.EmployeeActivity
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -121,7 +125,7 @@ fun EmployeeReportScreen(
             onDismiss = { showStartDatePicker = false },
             isStartOfDay = true,
 
-        )
+            )
     }
     if (showEndDatePicker) {
         DataPicker(
@@ -236,7 +240,6 @@ fun EmployeeReportScreen(
 private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
     val date = activity.timestamp.toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-    // --- NEW LOCALIZATION LOGIC ---
     // All UI text is now derived here, inside the Composable, where it can access resources.
     val typeString: String
     val detailsString: String
@@ -248,18 +251,23 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
             typeString = stringResource(activity.invoice.invoiceType.getStringResId())
             detailsString = stringResource(
                 Res.string.invoice_details_format,
-                activity.invoice.id,
                 activity.invoice.partner.name.get()
             )
-            totalAmount = activity.invoice.totalAmount
-            paidAmount = activity.invoice.paidAmount
+            totalAmount = when (activity.invoice.invoiceType) {
+                SALES, PURCHASE_RETURN -> activity.invoice.paidAmount
+                PURCHASE, SALES_RETURN -> -activity.invoice.paidAmount
+            }
+            paidAmount = when (activity.invoice.invoiceType) {
+                SALES, PURCHASE_RETURN -> activity.invoice.totalAmount
+                PURCHASE, SALES_RETURN -> -activity.invoice.totalAmount
+            }
         }
 
         is EmployeeActivity.FinancialActivity -> {
             typeString = stringResource(activity.transaction.type.getStringResId())
             detailsString = activity.transaction.notes ?: typeString
-            totalAmount = activity.transaction.amount
-            paidAmount = activity.transaction.amount
+            totalAmount = -activity.transaction.amount
+            paidAmount = -activity.transaction.amount
         }
 
         is EmployeeActivity.PartnerPaymentActivity -> {
@@ -268,8 +276,8 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 Res.string.partner_payment_details_format,
                 activity.transaction.partner.name.get()
             )
-            totalAmount = activity.transaction.amount
-            paidAmount = activity.transaction.amount
+            totalAmount = -activity.transaction.amount
+            paidAmount = -activity.transaction.amount
         }
     }
 
@@ -293,7 +301,7 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 )
-                if (detailsString != typeString) { // Only show details if they are different from the type
+                if (detailsString != typeString) {
                     Text(
                         detailsString,
                         style = MaterialTheme.typography.bodySmall,
@@ -302,13 +310,13 @@ private fun ActivityRow(activity: EmployeeActivity, onClick: () -> Unit) {
                 }
             }
             Text(
-                (-paidAmount).formate(),
+                paidAmount.formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End
             )
             Text(
-                (-totalAmount).formate(),
+                totalAmount.formate(),
                 modifier = Modifier.weight(1.5f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End
